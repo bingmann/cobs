@@ -12,7 +12,7 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/array.hpp>
 #include <iostream>
-#include "types.hpp"
+#include "helpers.hpp"
 
 
 template<unsigned int N>

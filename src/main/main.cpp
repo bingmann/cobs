@@ -22,38 +22,22 @@
 #include "xxhash.h"
 #include "../lib/kmer.hpp"
 #include "../lib/sample.hpp"
+#include "../lib/helpers.hpp"
 
 std::unique_ptr<boost::dynamic_bitset<>> create_signature(size_t num_bits, size_t num_hashes, const std::string& file_path) {
-    std::ifstream ifs(file_path);
-    auto signature = std::make_unique<boost::dynamic_bitset<>>(num_bits);
-    std::string kmer;
-    while (ifs >> kmer) {
-        for (unsigned int i = 0; i < num_hashes; i++) {
-            size_t hash = XXH32(kmer.c_str(), kmer.length(), i);
-            signature->set(hash % num_bits);
-        }
-    }
-    ifs.close();
-    return signature;
+//    std::ifstream ifs(file_path);
+//    auto signature = std::make_unique<boost::dynamic_bitset<>>(num_bits);
+//    std::string kmer;
+//    while (ifs >> kmer) {
+//        for (unsigned int i = 0; i < num_hashes; i++) {
+//            size_t hash = XXH32(kmer.c_str(), kmer.length(), i);
+//            signature->set(hash % num_bits);
+//        }
+//    }
+//    ifs.close();
+//    return signature;
 }
 
-
-template<class T>
-void serialize(const T& t, const std::string& file_path) {
-    std::ofstream ofs(file_path);
-    boost::archive::binary_oarchive ar(ofs);
-    ar << t;
-    ofs.close();
-}
-
-template<class T>
-T deserialize(const std::string& file_path) {
-    std::ifstream ifs(file_path);
-    boost::archive::binary_iarchive ia(ifs);
-    T result;
-    ia >> result;
-    return result;
-}
 
 void create_matrix(size_t num_rows, const std::string& path) {
     for (size_t i = 0; i < num_rows; i++) {

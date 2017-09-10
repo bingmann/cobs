@@ -7,7 +7,7 @@
 #include <vector>
 #include <functional>
 #include <string>
-#include "types.hpp"
+#include "helpers.hpp"
 #include "kmer.hpp"
 
 //#include <boost/serialization/vector.hpp>
@@ -27,6 +27,7 @@ public:
     size_t size() const;
     kmer<N> get(size_t i) const;
     void print(std::ostream& ostream) const;
+    const std::vector<byte>& data() const;
 };
 
 template<unsigned int N>
@@ -68,4 +69,9 @@ void sample<N>::print(std::ostream &ostream) const {
     for (size_t i = 0; i < size(); i++) {
         ostream << get(i) << std::endl;
     }
+}
+
+template<unsigned int N>
+const std::vector<byte> &sample<N>::data() const {
+    return m_data;
 }
