@@ -33,9 +33,9 @@ int main(int argc, char* argv[]) {
         i++;
         std::cout << i << std::endl << num_kmers << std::endl << frequencies.size() << std::endl << std::endl;
         if (frequencies.size() > 90000000) {
-            write_frequencies(frequencies, "/users/flo/projects/thesis/data/freq_" + std::to_string(i) + ".f");
+//            write_frequencies(frequencies, "/users/flo/projects/thesis/data/freq_" + std::to_string(i) + ".f");
             frequencies.clear();
         }
     }
-    write_frequencies(frequencies, "/users/flo/projects/thesis/data/freq_" + std::to_string(i) + ".f");
+//    write_frequencies(frequencies, "/users/flo/projects/thesis/data/freq_" + std::to_string(i) + ".f");
 }
