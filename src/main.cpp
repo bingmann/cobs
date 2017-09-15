@@ -48,16 +48,6 @@ void create_matrix(size_t num_rows, const std::string& path) {
     }
 }
 
-template<unsigned int N>
-void format_sample(const std::string& cmd, sample<N>& sample) {
-    boost::process::ipstream is;
-    boost::process::child child(cmd, boost::process::std_out > is);
-    sample.init(is, [&](std::string& line) {
-        return child.running() && std::getline(is, line) && !line.empty();
-    });
-    child.wait();
-}
-
 void bulk_process(std::string file_paths_string) {
     std::vector<std::string> file_paths;
     boost::split(file_paths, file_paths_string, boost::is_any_of(" "));

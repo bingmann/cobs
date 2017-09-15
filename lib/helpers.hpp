@@ -65,3 +65,19 @@ inline std::vector<std::string> get_files_in_dir(const boost::filesystem::path& 
     return result;
 }
 
+
+template <std::size_t N, typename T, bool = (2 * 8 * N <= sizeof(typename std::tuple_element<0U, T>::type))>
+struct stbdH;
+
+template <std::size_t N, typename T0, typename ... Ts>
+struct stbdH<N, std::tuple<T0, Ts...>, true> {
+    using type = T0;
+};
+
+template <std::size_t N, typename T0, typename ... Ts>
+struct stbdH<N, std::tuple<T0, Ts...>, false> {
+    using type = typename stbdH<N, std::tuple<Ts...>>::type;
+};
+
+template <std::size_t N, typename ... Ts>
+struct selectTypeByDim : stbdH<N, std::tuple<Ts...>> { };

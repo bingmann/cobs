@@ -19,15 +19,17 @@ configure_file(.stxxl .stxxl COPYONLY)
 
 set(XX_HASH xxHash-0.6.2)
 
-set(HEADER_FILES ${XX_HASH}/xxhash lib/kmer.hpp lib/sample.hpp lib/helpers.hpp)
+set(HEADER_FILES ${XX_HASH}/xxhash lib/kmer.hpp lib/kmer.tpp lib/sample.hpp lib/sample.tpp lib/helpers.hpp)
 
-include_directories(${XX_HASH} ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS})
+include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS})
 
 set(LIBRARIES ${Boost_LIBRARIES} ${STXXL_LIBRARIES})
 
-add_executable(bin src/main.cpp)
+add_executable(bin src/main.cpp ${HEADER_FILES})
+add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
 add_executable(freq src/main_freq.cpp)
 target_link_libraries(bin ${LIBRARIES})
+target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
 target_link_libraries(freq ${LIBRARIES})

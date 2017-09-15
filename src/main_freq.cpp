@@ -32,12 +32,21 @@ void print_result(const std::string& path) {
     size_t total_count = 0;
     size_t unique_count = 0;
     for(auto it = counts_sorted.begin(); it != counts_sorted.end(); ++it) {
-        std::cout << it->first << "," << it->second << "," << it->first * it->second << std::endl;
+        std::cout << it->first << "," << it->second << "," << it->first * it->second << "," << it->first * it->second + total_count << std::endl;
         total_count += it->first * it->second;
         unique_count += it->second;
     }
     std::cout << total_count << std::endl;
-    std::cout << unique_count << std::endl;
+
+    double entropy = 0;
+    for (auto it = counts_sorted.begin(); it != counts_sorted.end(); ++it) {
+        if (entropy == 0) {
+            it++;
+        }
+        double probability = it->first / (double) total_count;
+        entropy -= it->second * (probability * log2(probability));
+        std::cout << entropy << std::endl;
+    }
 }
 
 void print_file_sizes(const std::string& path) {
@@ -50,7 +59,7 @@ void print_file_sizes(const std::string& path) {
 
 
 int main(int argc, char* argv[]) {
-    print_file_sizes("/users/flo/projects/thesis/data/bin");
+//    print_file_sizes("/users/flo/projects/thesis/data/bin");
     print_result("/users/flo/projects/thesis/data/freq_total.b");
 
     std::vector<std::string> fileNames = get_files_in_dir("/users/flo/projects/thesis/data/freq");

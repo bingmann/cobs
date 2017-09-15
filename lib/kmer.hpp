@@ -17,12 +17,14 @@
 
 template<unsigned int N>
 class kmer {
+public:
+    static_assert( N < 33U, "Maximum k-mer size is 32");
+    using data_type = typename selectTypeByDim<N, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t>::type;
 private:
     friend class boost::serialization::access;
     static const std::map<unsigned int, byte> m_bps_to_byte;
     static const std::map<byte, std::string> m_byte_to_bps;
-    static const size_t m_size = (N + 3) / 4;
-    std::array<byte, m_size> m_data;
+    data_type m_data;
 
     void initialize_map();
     static unsigned int chars_to_int(char c1, char c2, char c3, char c4);
@@ -30,14 +32,14 @@ private:
     void serialize(Archive & ar, unsigned int version);
 public:
     kmer();
+    explicit kmer(data_type data);
     template<typename Iterator>
     kmer(Iterator begin, Iterator end);
     explicit kmer(const char* kmer_string);
-    template <typename OutputIterator>
-    static void initialize_data(const char* kmer_string, OutputIterator outputIterator);
-    static size_t size();
+    static typename kmer<N>::data_type initialize_data(const char* kmer_string);
     byte* data();
     void print(std::ostream& ostream) const;
+    explicit operator data_type();
 };
 
 #include "kmer.tpp"

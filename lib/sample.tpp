@@ -1,23 +1,22 @@
 #pragma once
 
 #include "sample.hpp"
+#include <algorithm>
 
 template<unsigned int N>
-sample<N>::sample(std::istream &is, std::function<bool(std::string &)> get_line) {
-    init(is, get_line);
+sample<N>::sample(std::function<bool(char*, unsigned int)> get_line) {
+    init(get_line);
 }
 
 template<unsigned int N>
-void sample<N>::init(std::istream &is, std::function<bool(std::string&)> get_line) {
+void sample<N>::init(std::function<bool(char*, unsigned int)> get_line) {
     m_data.resize(0);
-    std::string line;
-    std::back_insert_iterator<std::vector<byte>> iter(m_data);
-    size_t s = 0;
-    while(get_line(line)) {
-        kmer<N>::initialize_data(line.c_str(), iter);
-//        std::cout << line << std::endl << get(s) << std::endl << std::flush;
-        s++;
+    char buffer[128];
+    while(get_line(buffer, 128)) {
+        m_data.push_back(kmer<N>::initialize_data(buffer));
+//        std::cout << kmer<N>(m_data.back()) << std::endl;
     }
+    std::sort(m_data.begin(), m_data.end());
 }
 
 template<unsigned int N>
@@ -28,12 +27,12 @@ void sample<N>::serialize(Archive &ar, unsigned int version) {
 
 template<unsigned int N>
 size_t sample<N>::size() const {
-    return m_data.size() / kmer<N>::size();
+    return m_data.size();
 }
 
 template<unsigned int N>
 kmer<N> sample<N>::get(size_t i) const {
-    return kmer<N>(m_data.data() + i * kmer<N>::size(), m_data.data() + (i + 1) * kmer<N>::size());
+    return kmer<N>(m_data[i]);
 }
 
 template<unsigned int N>
@@ -44,6 +43,6 @@ void sample<N>::print(std::ostream &ostream) const {
 }
 
 template<unsigned int N>
-const std::vector<byte> &sample<N>::data() const {
+const std::vector<typename kmer<N>::data_type> &sample<N>::data() const {
     return m_data;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "kmer.hpp"
+
 template<unsigned int N>
 unsigned int kmer<N>::chars_to_int(char c1, char c2, char c3, char c4) {
     unsigned int result = 0;
@@ -23,19 +25,21 @@ void kmer<N>::initialize_map() {
 }
 
 template<unsigned int N>
-template <typename OutputIterator>
-void kmer<N>::initialize_data(const char* kmer_string, OutputIterator outputIterator) {
+typename kmer<N>::data_type kmer<N>::initialize_data(const char* kmer_string) {
+    data_type data = 0;
     for (int i = 0; i < N; i += 4) {
+        data = data << 8;
         if (i < N - 3) {
-            *outputIterator++ = m_bps_to_byte.at(*((unsigned int *) (kmer_string + i)));
+            data |= m_bps_to_byte.at(*((unsigned int *) (kmer_string + i)));
         } else {
             i = N / 4 * 4;
             char c2 = i + 1 >= N ? 'A' : kmer_string[i + 1];
             char c3 = i + 2 >= N ? 'A' : kmer_string[i + 2];
             char c4 = i + 3 >= N ? 'A' : kmer_string[i + 3];
-            *outputIterator++ = m_bps_to_byte.at(chars_to_int(c4, c3, c2, kmer_string[i]));
+            data |= m_bps_to_byte.at(chars_to_int(c4, c3, c2, kmer_string[i]));
         }
     }
+    return data;
 }
 
 template<unsigned int N>
@@ -44,13 +48,18 @@ kmer<N>::kmer() {
 }
 
 template<unsigned int N>
+kmer<N>::kmer(kmer::data_type data) {
+    m_data = data;
+}
+
+template<unsigned int N>
 kmer<N>::kmer(const char* kmer_string) : kmer() {
-    initialize_data(kmer_string, m_data.begin());
+    initialize_data(kmer_string);
 }
 
 template<unsigned int N>
 byte* kmer<N>::data() {
-    return m_data.data();
+    return nullptr;
 }
 
 template<unsigned int N>
@@ -68,25 +77,25 @@ void kmer<N>::serialize(Archive &ar, const unsigned int version) {
 //}
 
 template<unsigned int N>
-size_t kmer<N>::size() {
-    return m_size;
-}
-
-
-template<unsigned int N>
 template<typename Iterator>
 kmer<N>::kmer(Iterator begin, Iterator end) {
-    std::copy(begin, end, m_data.begin());
+//    std::copy(begin, end, m_data.begin());
 }
 
 template<unsigned int N>
 void kmer<N>::print(std::ostream &ostream) const {
-//    std::transform(m_data.begin(), m_data.end(), std::ostream_iterator<std::ostream>(ostream), [&](byte b){
-//        return kmer<N>::m_byte_to_bps.at(b);
-//    });
-    for(size_t i = 0; i < m_data.size(); i++) {
-        ostream << m_byte_to_bps.at(m_data[i]);
+    for(int i = 8 * (sizeof(data_type) - 1); i >= 0; i -= 8) {
+        std::string byte_string = m_byte_to_bps.at(static_cast<byte>((m_data >> i) & 0xff));
+        if (i == 0 && N % 4 != 0) {
+            byte_string = byte_string.substr(0, N % 4);
+        }
+        ostream << byte_string;
     }
+}
+
+template<unsigned int N>
+kmer<N>::operator data_type() {
+    return m_data;
 }
 
 template<unsigned int N>
@@ -179,3 +188,5 @@ const std::map<byte, std::string> kmer<N>::m_byte_to_bps = {
         {240, "AATT"}, {241, "CATT"}, {242, "GATT"}, {243, "TATT"}, {244, "ACTT"}, {245, "CCTT"}, {246, "GCTT"}, {247, "TCTT"},
         {248, "AGTT"}, {249, "CGTT"}, {250, "GGTT"}, {251, "TGTT"}, {252, "ATTT"}, {253, "CTTT"}, {254, "GTTT"}, {255, "TTTT"}
 };
+
+

@@ -8,22 +8,23 @@
 #include <ostream>
 #include <istream>
 #include "kmer.hpp"
+#include <kmer.hpp>
 
 template<unsigned int N>
 class sample {
 private:
     friend class boost::serialization::access;
-    std::vector<byte> m_data;
+    std::vector<typename kmer<N>::data_type> m_data;
     template<class Archive>
     void serialize(Archive & ar, unsigned int version);
 public:
     sample() = default;
-    sample(std::istream& is, std::function<bool(std::string&)> get_line);
-    void init(std::istream& is, std::function<bool(std::string&)> get_line);
+    sample(std::function<bool(char*, unsigned int)> get_line);
+    void init(std::function<bool(char*, unsigned int)> get_line);
     size_t size() const;
     kmer<N> get(size_t i) const;
     void print(std::ostream& ostream) const;
-    const std::vector<byte>& data() const;
+    const std::vector<typename kmer<N>::data_type>& data() const;
 };
 
 #include "sample.tpp"
