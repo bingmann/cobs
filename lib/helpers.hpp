@@ -1,7 +1,3 @@
-//
-// Created by Florian Gauger on 09.09.2017.
-//
-
 #pragma once
 
 #include <vector>
@@ -65,19 +61,20 @@ inline std::vector<std::string> get_files_in_dir(const boost::filesystem::path& 
     return result;
 }
 
+inline void initialize_map() {
+    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
+    int b = 0;
+    for (byte i = 0; i < 4; i++) {
+        for (byte j = 0; j < 4; j++) {
+            for (byte k = 0; k < 4; k++) {
+                for (byte o = 0; o < 4; o++) {
+                    char c[4] = {chars[i], chars[j], chars[k], chars[o]};
+                    std::cout << "{" << *((unsigned int*) c) << ", " << b++ << "}, " << std::endl << std::flush;
+//                    std::cout << "{" << (unsigned int) b++ << ", \"" << chars[i] << chars[j] << chars[k] << chars[o] << "\"}, " << std::endl << std::flush;
+//                    m_bps_to_byte[chars_to_int(chars[i], chars[j], chars[k], chars[o])] = b++;
+                }
+            }
+        }
+    }
+}
 
-template <std::size_t N, typename T, bool = (2 * 8 * N <= sizeof(typename std::tuple_element<0U, T>::type))>
-struct stbdH;
-
-template <std::size_t N, typename T0, typename ... Ts>
-struct stbdH<N, std::tuple<T0, Ts...>, true> {
-    using type = T0;
-};
-
-template <std::size_t N, typename T0, typename ... Ts>
-struct stbdH<N, std::tuple<T0, Ts...>, false> {
-    using type = typename stbdH<N, std::tuple<Ts...>>::type;
-};
-
-template <std::size_t N, typename ... Ts>
-struct selectTypeByDim : stbdH<N, std::tuple<Ts...>> { };
