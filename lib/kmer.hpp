@@ -23,6 +23,7 @@ private:
     static unsigned int chars_to_int(char c1, char c2, char c3, char c4);
 public:
     kmer();
+    kmer(std::array<byte, size> m_data);
     template<typename InputIterator>
     explicit kmer(InputIterator inputIterator);
     template<typename InputIterator, typename OutputIterator>

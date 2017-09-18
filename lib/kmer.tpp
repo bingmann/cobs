@@ -2,6 +2,12 @@
 
 #include "kmer.hpp"
 
+
+
+template<unsigned int N>
+kmer<N>::kmer(std::array<byte, size> data) : m_data(std::move(data)) {
+}
+
 template<unsigned int N>
 unsigned int kmer<N>::chars_to_int(char c1, char c2, char c3, char c4) {
     unsigned int result = 0;
@@ -43,10 +49,17 @@ const std::array<byte, kmer<N>::size>& kmer<N>::data() const {
 template<unsigned int N>
 std::string kmer<N>::string() const {
     std::string result;
+//    for(size_t i = 0; i < m_data.size(); i++) {
+//        std::string byte_string = m_byte_to_bps.at(m_data[i]);
+//        if (i == 0 && N % 4 != 0) {
+//            byte_string = byte_string.substr(4 - N % 4, std::string::npos);
+//        }
+//        result += byte_string;
+//    }
     for(size_t i = 0; i < m_data.size(); i++) {
-        std::string byte_string = m_byte_to_bps.at(m_data[i]);
-        if (i + 1 == m_data.size() && N % 4 != 0) {
-            byte_string = byte_string.substr(0, N % 4);
+        std::string byte_string = m_byte_to_bps.at(m_data[m_data.size() - i - 1]);
+        if (i == 0 && N % 4 != 0) {
+            byte_string = byte_string.substr(4 - N % 4, std::string::npos);
         }
         result += byte_string;
     }
