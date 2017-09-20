@@ -33,6 +33,4 @@ public:
     void print(std::ostream& ostream) const;
 };
 
-
-
 #include "kmer.tpp"

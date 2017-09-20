@@ -4,11 +4,12 @@
 #include <boost/filesystem/operations.hpp>
 
 namespace {
-    std::string in_path = "test/resources/sample.ctx";
-    std::string out_path = "test/out/sample.b";
-    std::string in_dir = "test/resources/";
-    std::string out_dir = "test/out/";
-    std::string sample_path = "test/resources/sample_sorted.txt";
+    std::string in_dir = "test/resources/cortex/input/";
+    std::string out_dir = "test/out/cortex/";
+    std::string in_path = in_dir + "sample.ctx";
+    std::string out_path = out_dir + "sample.b";
+    std::string out_path_rec = out_dir + "sample_rec.b";
+    std::string sample_path = "test/resources/cortex/result/sample_sorted.txt";
 
     template<unsigned int N>
     void assert_equals_sample(sample<N> sample) {
@@ -43,7 +44,7 @@ namespace {
         boost::filesystem::remove_all(out_dir);
         cortex::process_all_in_directory<31>(in_dir, out_dir);
         sample<31> sample;
-        cortex::deserialize(sample, out_dir + "sample_rec.b");
+        cortex::deserialize(sample, out_path_rec);
         assert_equals_sample(sample);
     }
 }

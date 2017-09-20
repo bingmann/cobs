@@ -23,18 +23,22 @@ file(COPY test/resources DESTINATION test)
 
 set(XX_HASH xxHash-0.6.2)
 
-set(HEADER_FILES ${XX_HASH}/xxhash lib/kmer.hpp lib/kmer.tpp lib/sample.hpp lib/sample.tpp lib/helpers.hpp lib/cortex.hpp)
+set(HEADER_FILES ${XX_HASH}/xxhash
+        lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/timer.hpp lib/helpers.hpp
+        lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp)
 
 include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS})
 
-set(LIBRARIES ${Boost_LIBRARIES} ${STXXL_LIBRARIES} ${GTEST_BOTH_LIBRARIES})
+add_library(thesis_lib lib/timer.cpp)
+
+set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES} ${GTEST_BOTH_LIBRARIES})
 
 add_executable(bin src/main.cpp ${HEADER_FILES})
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
 add_executable(freq src/main_freq.cpp)
 add_executable(performance src/main_performance.cpp)
-add_executable(tests test/src/cortex.cpp)
+add_executable(tests test/src/cortex.cpp test/src/frequency.cpp)
 add_executable(t src/main_test.cpp)
 
 target_link_libraries(bin ${LIBRARIES})
