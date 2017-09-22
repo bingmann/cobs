@@ -133,16 +133,16 @@ namespace {
 
     TEST(frequency, bin) {
         boost::filesystem::remove_all(out_dir);
-        frequency::process_all_in_directory<frequency::bin_pq_element>(in_dir, out_dir);
+        frequency::process_all_in_directory<frequency::bin_pq_element>(in_dir, out_dir, 40);
         size_t total_count = (boost::filesystem::file_size(sample_1) + boost::filesystem::file_size(sample_2) + boost::filesystem::file_size(sample_3)) / 8;
-        ASSERT_EQ(get_count(out_dir + "1.f"), total_count);
-        assert_equals_files(result_bin, out_dir + "1.f");
+        ASSERT_EQ(get_count(out_dir + "[sample_1-sample_3].f"), total_count);
+        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3].f");
     }
 
     TEST(frequency, freq) {
         boost::filesystem::remove_all(out_dir);
-        frequency::process_all_in_directory<frequency::freq_pq_element>(in_dir, out_dir);
-        assert_equals_files(result_freq, out_dir + "1.f");
+        frequency::process_all_in_directory<frequency::freq_pq_element>(in_dir, out_dir, 40);
+        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5].f");
     }
 }
 

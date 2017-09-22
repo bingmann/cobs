@@ -31,20 +31,18 @@ include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} 
 
 add_library(thesis_lib lib/timer.cpp)
 
-set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES} ${GTEST_BOTH_LIBRARIES})
+set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES})
 
-add_executable(bin src/main.cpp ${HEADER_FILES})
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
-add_executable(freq src/main_freq.cpp)
-add_executable(performance src/main_performance.cpp)
 add_executable(tests test/src/cortex.cpp test/src/frequency.cpp)
-add_executable(t src/main_test.cpp)
 
-target_link_libraries(bin ${LIBRARIES})
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
-target_link_libraries(freq ${LIBRARIES})
+target_link_libraries(tests ${LIBRARIES} ${GTEST_BOTH_LIBRARIES})
+
+
+add_executable(performance src/main_performance.cpp)
+add_executable(main src/main.cpp)
 target_link_libraries(performance ${LIBRARIES})
-target_link_libraries(tests ${LIBRARIES})
-target_link_libraries(t ${LIBRARIES})
+target_link_libraries(main ${LIBRARIES})

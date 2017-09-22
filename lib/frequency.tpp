@@ -47,7 +47,7 @@ namespace frequency {
     }
 
     template<typename PqElement>
-    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir) {
+    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
         timer t = {"process"};
         t.start();
 
@@ -57,14 +57,26 @@ namespace frequency {
         std::copy(it, end, std::back_inserter(paths));
         std::sort(paths.begin(), paths.end());
 
+        std::string first_filename = "";
+        std::string last_filename = "";
+
         std::vector<std::ifstream> ifstreams;
         for (size_t i = 0; i < paths.size(); i++) {
-            if(boost::filesystem::is_regular_file(paths[i]) && paths[i].extension() == PqElement::file_extension()) {
+            if (boost::filesystem::is_regular_file(paths[i]) && paths[i].extension() == PqElement::file_extension()) {
+                std::string filename = paths[i].stem().string();
+                if (first_filename == "") {
+                    first_filename = filename;
+                }
+                last_filename = filename;
                 ifstreams.emplace_back(std::ifstream(paths[i].string(), std::ios::in | std::ios::binary));
             }
-            if (ifstreams.size() == 50 || i + 1 == paths.size()) {
-                process<PqElement>(ifstreams, out_dir / "1.f");
+            if (ifstreams.size() == batch_size || (!ifstreams.empty() && i + 1 == paths.size())) {
+                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "].f");
+                if (!boost::filesystem::exists(out_file)) {
+                    process<PqElement>(ifstreams, out_file);
+                }
                 ifstreams.clear();
+                first_filename = "";
             }
         }
 
