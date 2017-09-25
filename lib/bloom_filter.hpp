@@ -1,6 +1,8 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
+#include <helpers.hpp>
+#include <kmer.hpp>
 
 namespace genome::bloom_filter {
     void process_all_in_directory(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
