@@ -9,14 +9,13 @@
 
 namespace genome::bloom_filter {
 
-    template<size_t BLOCK_SIZE>
-    void set_bit(std::vector<byte>& v, size_t pos, size_t bit_in_block) {
-        v[BLOCK_SIZE * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
+    void set_bit(std::vector<byte>& v, size_t pos, size_t bit_in_block, size_t block_size) {
+        v[block_size * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
     };
 
-    template<size_t BLOOM_FILTER_SIZE, size_t BLOCK_SIZE, size_t NUM_HASHES>
-    void process(const std::vector<boost::filesystem::path> &paths, const boost::filesystem::path &out_file, timer &t) {
-        std::vector<byte> signatures(BLOOM_FILTER_SIZE * BLOCK_SIZE);
+    void process(const std::vector<boost::filesystem::path> &paths, const boost::filesystem::path &out_file, timer &t,
+                 size_t bloom_filter_size, size_t block_size, size_t num_hashes) {
+        std::vector<byte> signatures(bloom_filter_size * block_size);
 
         std::vector<char> v;
         for (size_t i = 0; i < paths.size(); i++) {
@@ -24,9 +23,9 @@ namespace genome::bloom_filter {
             read_file(paths[i], v);
             t.next();
             for (size_t j = 0; j < v.size(); j += 8) {
-                for (unsigned int k = 0; k < NUM_HASHES; k++) {
+                for (unsigned int k = 0; k < num_hashes; k++) {
                     size_t hash = XXH32(v.data() + j, 8, k);
-                    set_bit<BLOCK_SIZE>(signatures, hash % BLOOM_FILTER_SIZE, i);
+                    set_bit(signatures, hash % bloom_filter_size, i, block_size);
                 }
             }
             t.end();
@@ -39,8 +38,8 @@ namespace genome::bloom_filter {
         t.end();
     }
 
-    template<size_t BLOOM_FILTER_SIZE, size_t BLOCK_SIZE, size_t NUM_HASHES>
-    void process_all_in_directory(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir) {
+    void process_all_in_directory(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
+                                  size_t bloom_filter_size, size_t block_size, size_t num_hashes) {
         timer t = {"read", "process", "write"};
         boost::filesystem::create_directories(out_dir);
         boost::filesystem::recursive_directory_iterator it(in_dir), end;
@@ -61,10 +60,10 @@ namespace genome::bloom_filter {
                 last_filename = filename;
                 paths.push_back(sorted_paths[i]);
             }
-            if (paths.size() == 8 * BLOOM_FILTER_SIZE || (!paths.empty() && i + 1 == sorted_paths.size())) {
+            if (paths.size() == 8 * bloom_filter_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
                 boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "].bl");
                 if (!boost::filesystem::exists(out_file)) {
-                    process<BLOOM_FILTER_SIZE, BLOCK_SIZE, NUM_HASHES>(paths, out_file, t);
+                    process(paths, out_file, t, bloom_filter_size, block_size, num_hashes);
                 } else {
                     std::cout << "file exists - " << out_file.string() << std::endl;
                 }
@@ -75,17 +74,16 @@ namespace genome::bloom_filter {
         std::cout << t;
     }
 
-    template<size_t BLOCK_SIZE>
-    bool is_set(const std::vector<byte>& v, size_t pos, size_t bit_in_block) {
-        byte b = v[BLOCK_SIZE * pos + bit_in_block / 8];
+    bool is_set(const std::vector<byte>& v, size_t pos, size_t bit_in_block, size_t block_size) {
+        byte b = v[block_size * pos + bit_in_block / 8];
         return  (b & (1 << (bit_in_block % 8))) != 0;
     };
 
-    template<size_t BLOOM_FILTER_SIZE, size_t BLOCK_SIZE, size_t NUM_HASHES>
-    bool contains(const std::vector<byte>& signature, kmer<31> kmer, size_t bit_in_block) {
-        for (unsigned int k = 0; k < NUM_HASHES; k++) {
+    bool contains(const std::vector<byte>& signature, const kmer<31>& kmer,
+                  size_t bit_in_block, size_t bloom_filter_size, size_t block_size, size_t num_hashes) {
+        for (unsigned int k = 0; k < num_hashes; k++) {
             size_t hash = XXH32(&kmer, 8, k);
-            if (!is_set<BLOCK_SIZE>(signature, hash % BLOOM_FILTER_SIZE, bit_in_block)) {
+            if (!is_set(signature, hash % bloom_filter_size, bit_in_block, block_size)) {
                 return false;
             }
         }

@@ -32,10 +32,12 @@ set(LIBRARIES thesis_lib ${Boost_LIBRARIES})
 
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
+add_executable(bloom_filter src/main_bloom_filter.cpp)
 add_executable(tests test/src/cortex.cpp test/src/frequency.cpp test/src/bloom_filter.cpp test/src/util.hpp ${HEADER_FILES})
 
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
+target_link_libraries(bloom_filter ${LIBRARIES})
 target_link_libraries(tests ${LIBRARIES} ${GTEST_BOTH_LIBRARIES})
 
 

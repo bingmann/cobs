@@ -21,11 +21,14 @@ namespace {
     std::string sample_3 = in_dir_1 + "sample_3.b";
     std::string sample_4 = in_dir_2 + "sample_4.b";
     std::string sample_9 = in_dir_3 + "sample_9.b";
+    size_t bloom_filter_size = 200000;
+    size_t block_size = 1;
+    size_t num_hashes = 7;
 
 
     TEST(bloom_filter, contains) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory<200000, 1, 7>(in_dir_1, out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_1, out_dir, bloom_filter_size, block_size, num_hashes);
 
         std::vector<byte> signature;
         read_file(out_file_1, signature);
@@ -34,26 +37,26 @@ namespace {
 
         read_file(sample_1, s.data());
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains<200000, 1, 7>(signature, kmer, 0);
+            bool contains = genome::bloom_filter::contains(signature, kmer, 0, bloom_filter_size, block_size, num_hashes);
             ASSERT_TRUE(contains);
         }
 
         read_file(sample_2, s.data());
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains<200000, 1, 7>(signature, kmer, 1);
+            bool contains = genome::bloom_filter::contains(signature, kmer, 1, bloom_filter_size, block_size, num_hashes);
             ASSERT_TRUE(contains);
         }
 
         read_file(sample_3, s.data());
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains<200000, 1, 7>(signature, kmer, 2);
+            bool contains = genome::bloom_filter::contains(signature, kmer, 2, bloom_filter_size, block_size, num_hashes);
             ASSERT_TRUE(contains);
         }
     }
 
     TEST(bloom_filter, contains_big_block) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory<200000, 3, 7>(in_dir_3, out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_3, out_dir, bloom_filter_size, block_size, num_hashes);
 
         std::vector<byte> signature;
         read_file(out_file_3, signature);
@@ -62,14 +65,14 @@ namespace {
 
         read_file(sample_9, s.data());
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains<200000, 3, 7>(signature, kmer, 8);
+            bool contains = genome::bloom_filter::contains(signature, kmer, 8, bloom_filter_size, block_size, num_hashes);
             ASSERT_TRUE(contains);
         }
     }
 
     TEST(bloom_filter, false_positive) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory<200000, 1, 7>(in_dir_1, out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_1, out_dir, bloom_filter_size, block_size, num_hashes);
 
         std::vector<byte> signature;
         read_file(out_file_1, signature);
@@ -80,7 +83,7 @@ namespace {
             std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
                                      (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
             kmer<31> k(a);
-            if (genome::bloom_filter::contains<200000, 1, 7>(signature, k, 0)) {
+            if (genome::bloom_filter::contains(signature, k, 0, bloom_filter_size, block_size, num_hashes)) {
                 num_positive++;
             }
         }
@@ -89,7 +92,7 @@ namespace {
 
     TEST(bloom_filter, equal_ones_and_zeros) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory<200000, 1, 7>(in_dir_2, out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
 
         std::vector<byte> signature;
         read_file(out_file_2, signature);
@@ -105,7 +108,7 @@ namespace {
 
     TEST(bloom_filter, others_zero) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory<200000, 1, 7>(in_dir_2, out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
 
         std::vector<byte> signature;
         read_file(out_file_2, signature);
@@ -115,7 +118,7 @@ namespace {
             std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
                                      (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
             kmer<31> k(a);
-            bool contains = genome::bloom_filter::contains<200000, 1, 7>(signature, k, i % 5 + 3);
+            bool contains = genome::bloom_filter::contains(signature, k, i % 5 + 3, bloom_filter_size, block_size, num_hashes);
             ASSERT_FALSE(contains);
         }
     }
