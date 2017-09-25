@@ -255,14 +255,14 @@ static void BMK_benchMem(const void* buffer, size_t bufferSize)
     /* XXH32 bench */
     BMK_benchHash(localXXH32, "XXH32", buffer, bufferSize);
 
-    /* Bench XXH32 on Unaligned input */
+    /* Bench XXH32 on Unaligned input_1 */
     if (bufferSize>1)
         BMK_benchHash(localXXH32, "XXH32 unaligned", ((const char*)buffer)+1, bufferSize-1);
 
     /* Bench XXH64 */
     BMK_benchHash(localXXH64, "XXH64", buffer, bufferSize);
 
-    /* Bench XXH64 on Unaligned input */
+    /* Bench XXH64 on Unaligned input_1 */
     if (bufferSize>1)
         BMK_benchHash(localXXH64, "XXH64 unaligned", ((const char*)buffer)+1, bufferSize-1);
 }
@@ -301,7 +301,7 @@ static int BMK_benchFiles(const char** fileNamesTable, int nbFiles)
             return 12;
         }
 
-        /* Fill input buffer */
+        /* Fill input_1 buffer */
         DISPLAY("\rLoading %s...        \n", inFileName);
         {   size_t const readSize = fread(alignedBuffer, 1, benchedSize, inFile);
             fclose(inFile);
@@ -998,7 +998,7 @@ static int checkFile(const char* inFileName,
 
     /* note : stdinName is special constant pointer.  It is not a string. */
     if (inFileName == stdinName) {
-        /* note : Since we expect text input for xxhash -c mode,
+        /* note : Since we expect text input_1 for xxhash -c mode,
          * Don't set binary mode for stdin */
         inFile = stdin;
     } else {
@@ -1088,7 +1088,7 @@ static int usage(const char* exename)
     DISPLAY( WELCOME_MESSAGE(exename) );
     DISPLAY( "Usage :\n");
     DISPLAY( "      %s [arg] [filenames]\n", exename);
-    DISPLAY( "When no filename provided, or - provided : use stdin as input\n");
+    DISPLAY( "When no filename provided, or - provided : use stdin as input_1\n");
     DISPLAY( "Arguments :\n");
     DISPLAY( " -H# : hash selection : 0=32bits, 1=64bits (default: %i)\n", (int)g_defaultAlgo);
     DISPLAY( " -c  : read xxHash sums from the [filenames] and check them\n");
@@ -1224,7 +1224,7 @@ int main(int argc, const char** argv)
         return BMK_benchFiles(argv+filenamesStart, argc-filenamesStart);
     }
 
-    /* Check if input is defined as console; trigger an error in this case */
+    /* Check if input_1 is defined as console; trigger an error in this case */
     if ( (filenamesStart==0) && IS_CONSOLE(stdin) ) return badusage(exename);
 
     if (filenamesStart==0) filenamesStart = argc;

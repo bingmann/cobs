@@ -12,57 +12,52 @@
 #include <boost/process.hpp>
 #include <boost/filesystem.hpp>
 
-typedef unsigned char byte;
+namespace genome {
+    typedef unsigned char byte;
 
-template<class T>
-inline auto operator<<(std::ostream& os, const T& t) -> decltype(t.print(os), os) {
-    t.print(os);
-    return os;
-}
+    template<class T>
+    inline auto operator<<(std::ostream& os, const T& t) -> decltype(t.print(os), os) {
+        t.print(os);
+        return os;
+    }
 
-template<class T>
-inline void serialize(const T& t, const std::string& file_path) {
-    std::ofstream ofs(file_path);
-    boost::archive::binary_oarchive ar(ofs);
-    ar << t;
-    ofs.close();
-}
+    template<typename T>
+    inline void read_file(const boost::filesystem::path& path, std::vector<T>& v) {
+        std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
+        ifs.seekg(0, std::ios_base::end);
+        size_t size = ifs.tellg();
+        ifs.seekg(0, std::ios_base::beg);
+        v.resize(size / sizeof(T));
+        ifs.read(reinterpret_cast<char*>(v.data()), size);
+    }
 
-template<class T>
-inline T deserialize(const std::string& file_path) {
-    std::ifstream ifs(file_path);
-    boost::archive::binary_iarchive ia(ifs);
-    T result;
-    ia >> result;
-    return result;
-}
-
-inline void for_each_file_in_dir(const boost::filesystem::path& path, std::function<void(const boost::filesystem::path&)> callback) {
-    boost::filesystem::directory_iterator end_itr;
-    for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr) {
-        if (boost::filesystem::is_regular_file(itr->path()) && itr->path().filename().string() != ".DS_Store") {
-            callback(itr->path());
+    inline void for_each_file_in_dir(const boost::filesystem::path& path,
+                                     std::function<void(const boost::filesystem::path&)> callback) {
+        boost::filesystem::directory_iterator end_itr;
+        for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr) {
+            if (boost::filesystem::is_regular_file(itr->path()) && itr->path().filename().string() != ".DS_Store") {
+                callback(itr->path());
+            }
         }
     }
-}
 
-inline std::vector<size_t> get_file_sizes_in_dir(const boost::filesystem::path& path) {
-    std::vector<size_t> result;
-    for_each_file_in_dir(path, [&](const auto& p) {
-        result.push_back(boost::filesystem::file_size(p));
-    });
-    return result;
-}
+    inline std::vector<size_t> get_file_sizes_in_dir(const boost::filesystem::path& path) {
+        std::vector<size_t> result;
+        for_each_file_in_dir(path, [&](const auto& p) {
+            result.push_back(boost::filesystem::file_size(p));
+        });
+        return result;
+    }
 
-inline std::vector<std::string> get_files_in_dir(const boost::filesystem::path& path) {
-    std::vector<std::string> result;
-    for_each_file_in_dir(path, [&](const auto& p) {
-        result.push_back(p.string());
-    });
-    return result;
-}
+    inline std::vector<std::string> get_files_in_dir(const boost::filesystem::path& path) {
+        std::vector<std::string> result;
+        for_each_file_in_dir(path, [&](const auto& p) {
+            result.push_back(p.string());
+        });
+        return result;
+    }
 
-inline void initialize_map() {
+    inline void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;
 //    for (byte i = 0; i < 4; i++) {
@@ -77,5 +72,5 @@ inline void initialize_map() {
 //            }
 //        }
 //    }
+    }
 }
-

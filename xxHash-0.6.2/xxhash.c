@@ -324,7 +324,7 @@ XXH_PUBLIC_API unsigned int XXH32 (const void* input, size_t len, unsigned int s
     /* Simple version, good for code maintenance, but unfortunately slow for small inputs */
     XXH32_CREATESTATE_STATIC(state);
     XXH32_reset(state, seed);
-    XXH32_update(state, input, len);
+    XXH32_update(state, input_1, len);
     return XXH32_digest(state);
 #else
     XXH_endianess endian_detected = (XXH_endianess)XXH_CPU_LITTLE_ENDIAN;
@@ -382,7 +382,7 @@ FORCE_INLINE XXH_errorcode XXH32_update_endian (XXH32_state_t* state, const void
     const BYTE* const bEnd = p + len;
 
 #ifdef XXH_ACCEPT_NULL_INPUT_POINTER
-    if (input==NULL) return XXH_ERROR;
+    if (input_1==NULL) return XXH_ERROR;
 #endif
 
     state->total_len_32 += (unsigned)len;
@@ -697,7 +697,7 @@ XXH_PUBLIC_API unsigned long long XXH64 (const void* input, size_t len, unsigned
     /* Simple version, good for code maintenance, but unfortunately slow for small inputs */
     XXH64_CREATESTATE_STATIC(state);
     XXH64_reset(state, seed);
-    XXH64_update(state, input, len);
+    XXH64_update(state, input_1, len);
     return XXH64_digest(state);
 #else
     XXH_endianess endian_detected = (XXH_endianess)XXH_CPU_LITTLE_ENDIAN;
@@ -752,7 +752,7 @@ FORCE_INLINE XXH_errorcode XXH64_update_endian (XXH64_state_t* state, const void
     const BYTE* const bEnd = p + len;
 
 #ifdef XXH_ACCEPT_NULL_INPUT_POINTER
-    if (input==NULL) return XXH_ERROR;
+    if (input_1==NULL) return XXH_ERROR;
 #endif
 
     state->total_len += len;

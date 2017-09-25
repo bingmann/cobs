@@ -185,22 +185,22 @@ XXH_PUBLIC_API XXH_errorcode XXH32_update (XXH32_state_t* statePtr, const void* 
 XXH_PUBLIC_API XXH32_hash_t  XXH32_digest (const XXH32_state_t* statePtr);
 
 /*
-These functions generate the xxHash of an input provided in multiple segments.
-Note that, for small input, they are slower than single-call functions, due to state management.
-For small input, prefer `XXH32()` and `XXH64()` .
+These functions generate the xxHash of an input_1 provided in multiple segments.
+Note that, for small input_1, they are slower than single-call functions, due to state management.
+For small input_1, prefer `XXH32()` and `XXH64()` .
 
 XXH state must first be allocated, using XXH*_createState() .
 
 Start a new hash by initializing state with a seed, using XXH*_reset().
 
 Then, feed the hash state by calling XXH*_update() as many times as necessary.
-Obviously, input must be allocated and read accessible.
+Obviously, input_1 must be allocated and read accessible.
 The function returns an error code, with 0 meaning OK, and any other value meaning there is an error.
 
 Finally, a hash value can be produced anytime, by using XXH*_digest().
 This function returns the nn-bits hash as an int or long long.
 
-It's still possible to continue inserting input into the hash state after a digest,
+It's still possible to continue inserting input_1 into the hash state after a digest,
 and generate some new hashes later on, by calling again XXH*_digest().
 
 When done, free XXH state space if it was allocated dynamically.
