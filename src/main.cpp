@@ -1,11 +1,10 @@
-#include <boost/filesystem/path.hpp>
-#include <bloom_filter.hpp>
+#include <file_format/bloom_filter_header.hpp>
+#include <fstream>
+#include <iostream>
 
 int main(int argc, char** argv) {
-    boost::filesystem::path in_dir = "/users/flo/projects/thesis/data/bin";
-    boost::filesystem::path out_dir = "/users/flo/projects/thesis/data/bloom";
-    genome::bloom_filter::process_all_in_directory(in_dir, out_dir);
-
-
-    int a = 0;
+    genome::file_format::bloom_filter_header a(200000, 1, 7);
+    std::cout << sizeof(genome::file_format::bloom_filter_header);
+    std::ofstream ofs("test.tt", std::ios::out | std::ios::binary);
+    ofs << a;
 }

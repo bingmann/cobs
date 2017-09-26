@@ -2,8 +2,6 @@
 
 #include <vector>
 #include <iostream>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/dynamic_bitset/serialization.hpp>
 #include <boost/serialization/unique_ptr.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -29,6 +27,19 @@ namespace genome {
         ifs.seekg(0, std::ios_base::beg);
         v.resize(size / sizeof(T));
         ifs.read(reinterpret_cast<char*>(v.data()), size);
+    }
+
+    template<typename T>
+    inline void write(std::ostream& ost, const T& t) {
+        ost.write(reinterpret_cast<const char*>(&t), sizeof(T));
+    }
+
+    inline void serialize(std::ostream& ost) {}
+
+    template<typename T, typename... Args>
+    inline void serialize(std::ostream& ost, const T& t, const Args&... args) {
+        ost.write(reinterpret_cast<const char*>(&t), sizeof(T));
+        serialize(ost, args...);
     }
 
     inline void for_each_file_in_dir(const boost::filesystem::path& path,

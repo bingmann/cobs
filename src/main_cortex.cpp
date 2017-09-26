@@ -8,5 +8,4 @@ int main(int argc, char** argv) {
     } else {
         std::cout << "wrong number of args: in_dir out_dir" << std::endl;
     }
-
 }
