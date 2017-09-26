@@ -1,4 +1,4 @@
-#cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.8)
 project(thesis)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -8,8 +8,37 @@ enable_testing()
 MESSAGE(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 
 find_package(Boost COMPONENTS serialization filesystem)
-find_package(GTest)
+#find_package(GTest)
 set(Boost_USE_STATIC_LIBS OFF)
+
+
+
+
+
+
+# Download and unpack googletest at configure time
+configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+if(result)
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
+add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src ${CMAKE_BINARY_DIR}/googletest-build)
+
+
+
+
+
+
+
+
 
 if(GTEST_FOUND)
   set(GTEST_INCLUDE_DIRS /usr/include/gtest)
@@ -17,6 +46,7 @@ endif()
 
 message(STATUS "BOOST_FOUND: ${Boost_FOUND}")
 message(STATUS "GTEST_FOUND: ${GTEST_FOUND}")
+message(STATUS "GTEST_FOUND: ${GTEST_BOTH_LIBRARIES}")
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -46,8 +76,7 @@ add_executable(tests test/src/cortex.cpp test/src/frequency.cpp test/src/bloom_f
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
 target_link_libraries(bloom_filter ${LIBRARIES})
-target_link_libraries(tests ${LIBRARIES} ${GTEST_BOTH_LIBRARIES})
-
+target_link_libraries(tests ${LIBRARIES} gtest_main)
 
 add_executable(performance src/main_performance.cpp)
 add_executable(main src/main.cpp)
