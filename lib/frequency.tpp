@@ -4,7 +4,7 @@
 #include <iostream>
 #include <queue>
 
-namespace frequency {
+namespace genome::frequency {
 
 
     template<typename PqElement>
@@ -74,6 +74,8 @@ namespace frequency {
                 boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "].f");
                 if (!boost::filesystem::exists(out_file)) {
                     process<PqElement>(ifstreams, out_file);
+                } else {
+                    std::cout << "file exists - " << out_file.string() << std::endl;
                 }
                 ifstreams.clear();
                 first_filename = "";

@@ -28,21 +28,24 @@ file(COPY test/resources DESTINATION test)
 set(XX_HASH xxHash-0.6.2)
 
 set(HEADER_FILES ${XX_HASH}/xxhash
-        lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/timer.hpp lib/helpers.hpp
-        lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp)
+        lib/timer.hpp lib/helpers.hpp lib/file_format/header.hpp lib/file_format/bloom_filter_header.hpp
+        lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/bloom_filter.hpp
+        lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/bloom_filter.tpp)
 
 include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS})
 
-add_library(thesis_lib lib/timer.cpp)
+add_library(thesis_lib lib/timer.cpp lib/file_format/header.cpp lib/file_format/bloom_filter_header.cpp ${XX_HASH}/xxhash.c)
 
 set(LIBRARIES thesis_lib ${Boost_LIBRARIES})
 
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
-add_executable(tests test/src/cortex.cpp test/src/frequency.cpp)
+add_executable(bloom_filter src/main_bloom_filter.cpp)
+add_executable(tests test/src/cortex.cpp test/src/frequency.cpp test/src/bloom_filter.cpp test/src/util.hpp ${HEADER_FILES})
 
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
+target_link_libraries(bloom_filter ${LIBRARIES})
 target_link_libraries(tests ${LIBRARIES} ${GTEST_BOTH_LIBRARIES})
 
 

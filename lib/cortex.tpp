@@ -13,23 +13,13 @@
 #include "helpers.hpp"
 #include "sample.hpp"
 
-namespace cortex {
+namespace genome::cortex {
 
     template<unsigned int N>
-    void serialize(const sample<N>& sample, const boost::filesystem::path& path) {
+    void serialize(const sample <N>& sample, const boost::filesystem::path& path) {
         boost::filesystem::create_directories(path.parent_path());
         std::ofstream ofs(path.string(), std::ios::out | std::ios::binary);
         ofs.write(reinterpret_cast<const char*>(sample.data().data()), kmer<N>::size * sample.data().size());
-    }
-
-    template<unsigned int N>
-    void deserialize(sample<N>& sample, const boost::filesystem::path& path) {
-        std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
-        ifs.seekg(0, std::ios_base::end);
-        int64_t size = ifs.tellg();
-        ifs.seekg(0, std::ios_base::beg);
-        sample.data().resize(size / kmer<N>::size);
-        ifs.read(reinterpret_cast<char*>(sample.data().data()), size);
     }
 
     template<typename size_type, typename ForwardIterator>
@@ -41,7 +31,7 @@ namespace cortex {
     void check_magic_number(ForwardIterator& iter) {
         std::string magic_word = "CORTEX";
         for (size_t i = 0; i < magic_word.size(); i++) {
-            if(*iter != magic_word[i]) {
+            if (*iter != magic_word[i]) {
                 throw std::invalid_argument("magic number does not match");
             }
             std::advance(iter, 1);
@@ -52,11 +42,11 @@ namespace cortex {
     header skip_header(ForwardIterator& iter) {
         header h{};
         check_magic_number(iter);
-        h.version  = cast<uint32_t>(iter);
+        h.version = cast<uint32_t>(iter);
         std::advance(iter, 4);
-        h.kmer_size  = cast<uint32_t>(iter);
+        h.kmer_size = cast<uint32_t>(iter);
         std::advance(iter, 4);
-        h.num_words_per_kmer  = cast<uint32_t>(iter);
+        h.num_words_per_kmer = cast<uint32_t>(iter);
         std::advance(iter, 4);
         h.num_colors = cast<uint32_t>(iter);
         std::advance(iter, 16 * h.num_colors);
@@ -75,31 +65,27 @@ namespace cortex {
     }
 
     template<typename ForwardIterator, unsigned int N>
-    void read_sample(ForwardIterator iter, ForwardIterator end, header h, sample<N>& sample) {
+    void read_sample(ForwardIterator iter, ForwardIterator end, header h, sample <N>& sample) {
         auto sample_data = reinterpret_cast<byte*>(sample.data().data());
         size_t num_bytes_per_kmer = 8 * h.num_words_per_kmer;
 
-        while(iter != end) {
+        while (iter != end) {
             std::copy(iter, std::next(iter, num_bytes_per_kmer), sample_data);
             std::advance(iter, num_bytes_per_kmer + 5 * h.num_colors);
             std::advance(sample_data, num_bytes_per_kmer);
         }
         t.next();
 
-        std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())), reinterpret_cast<uint64_t*>(&(*sample.data().end())));
+        std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
+                  reinterpret_cast<uint64_t*>(&(*sample.data().end())));
 
         auto c3 = std::chrono::high_resolution_clock::now();
     }
 
     template<unsigned int N>
-    void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample<N>& s) {
+    void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample <N>& s) {
         t.start();
-        std::ifstream ifs(in_path.string(), std::ios::in | std::ios::binary);
-        ifs.seekg(0, std::ios_base::end);
-        size_t size = ifs.tellg();
-        ifs.seekg(0, std::ios_base::beg);
-        v.resize(size);
-        ifs.read(v.data(), size);
+        read_file(in_path, v);
         t.next();
         auto iter = v.begin();
         auto h = skip_header(iter);
@@ -116,11 +102,11 @@ namespace cortex {
         sample<N> sample;
         t.reset();
         size_t i = 0;
-        for(boost::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
-            if(boost::filesystem::is_regular_file(*it)
-               && it->path().extension() == ".ctx"
-               && it->path().string().find("uncleaned") == std::string::npos
-               && !boost::filesystem::exists(out_dir / it->path().stem().concat(".b"))) {
+        for (boost::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
+            if (boost::filesystem::is_regular_file(*it)
+                && it->path().extension() == ".ctx"
+                && it->path().string().find("uncleaned") == std::string::npos
+                && !boost::filesystem::exists(out_dir / it->path().stem().concat(".b"))) {
                 try {
                     process_file(it->path(), out_dir / it->path().stem().concat(".b"), sample);
                     std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::endl;

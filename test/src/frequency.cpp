@@ -3,8 +3,10 @@
 #include <boost/filesystem/operations.hpp>
 #include <fstream>
 #include <frequency.hpp>
+#include "util.hpp"
 
 namespace {
+    using namespace genome;
 
     std::string in_dir = "test/resources/frequency/input/";
     std::string out_dir = "test/out/frequency/";
@@ -96,21 +98,6 @@ namespace {
         }
         ofs.write(reinterpret_cast<const char*>(&kmer), 8);
         ofs.write(reinterpret_cast<const char*>(&count), 4);
-    }
-
-    void assert_equals_files(const std::string& f1, const std::string& f2) {
-        std::ifstream ifs1(f1, std::ios::in | std::ios::binary);
-        std::ifstream ifs2(f2, std::ios::in | std::ios::binary);
-        std::istream_iterator<char> start1(ifs1);
-        std::istream_iterator<char> start2(ifs2);
-        std::istream_iterator<char> end;
-        std::vector<char> v1(start1, end);
-        std::vector<char> v2(start2, end);
-
-        ASSERT_EQ(v1.size(), v2.size());
-        for (size_t i = 0; i < v1.size(); i++) {
-            ASSERT_EQ(v1[i], v2[i]);
-        }
     }
 
     size_t get_count(const std::string& file) {

@@ -6,7 +6,7 @@
 #include "timer.hpp"
 #include <boost/filesystem.hpp>
 
-namespace cortex {
+namespace genome::cortex {
     struct header {
         uint32_t version;
         uint32_t kmer_size;

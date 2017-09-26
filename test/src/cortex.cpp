@@ -2,8 +2,12 @@
 #include <cortex.hpp>
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
+#include <helpers.hpp>
+
 
 namespace {
+    using namespace genome;
+
     std::string in_dir = "test/resources/cortex/input/";
     std::string out_dir = "test/out/cortex/";
     std::string in_path = in_dir + "sample.ctx";
@@ -34,8 +38,7 @@ namespace {
         sample<31> sample1;
         sample<31> sample2;
         cortex::process_file(in_path, out_path, sample1);
-        cortex::deserialize(sample1, out_path);
-        cortex::deserialize(sample2, out_path);
+        read_file(out_path, sample2.data());
         assert_equals_sample(sample1);
         assert_equals_sample(sample2);
     }
@@ -44,7 +47,7 @@ namespace {
         boost::filesystem::remove_all(out_dir);
         cortex::process_all_in_directory<31>(in_dir, out_dir);
         sample<31> sample;
-        cortex::deserialize(sample, out_path_rec);
+        read_file(out_path_rec, sample.data());
         assert_equals_sample(sample);
     }
 }
