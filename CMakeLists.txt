@@ -8,36 +8,42 @@ enable_testing()
 MESSAGE(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 
 find_package(Boost COMPONENTS serialization filesystem)
-#find_package(GTest)
 set(Boost_USE_STATIC_LIBS OFF)
 
 
-
-
-
+set(DEPENDENCY_DIR ${CMAKE_BINARY_DIR}/dependencies)
 
 # Download and unpack googletest at configure time
-configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+configure_file(dependencies/CMakeLists_gtest.txt.in dependencies/gtest/download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
         RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+        WORKING_DIRECTORY ${DEPENDENCY_DIR}/gtest/download)
 if(result)
   message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
         RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+        WORKING_DIRECTORY ${DEPENDENCY_DIR}/gtest/download)
 if(result)
   message(FATAL_ERROR "Build step for googletest failed: ${result}")
 endif()
-add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src ${CMAKE_BINARY_DIR}/googletest-build)
+add_subdirectory(${DEPENDENCY_DIR}/gtest/src ${DEPENDENCY_DIR}/gtest/build)
 
 
-
-
-
-
-
+configure_file(dependencies/CMakeLists_xxhash.txt.in dependencies/xxhash/download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${DEPENDENCY_DIR}/xxhash/download)
+if(result)
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${DEPENDENCY_DIR}/xxhash/download)
+if(result)
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif()
+add_subdirectory(${DEPENDENCY_DIR}/xxhash/src/cmake_unofficial)
 
 
 if(GTEST_FOUND)
@@ -63,11 +69,11 @@ set(HEADER_FILES ${XX_HASH}/xxhash
         lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/bloom_filter.hpp
         lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/bloom_filter.tpp)
 
-include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS})
+include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS})
 
 add_library(thesis_lib lib/timer.cpp lib/file_format/header.cpp lib/file_format/bloom_filter_header.cpp ${XX_HASH}/xxhash.c)
 
-set(LIBRARIES thesis_lib ${Boost_LIBRARIES})
+set(LIBRARIES thesis_lib ${Boost_LIBRARIES} xxhash)
 
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
@@ -77,7 +83,7 @@ add_executable(tests test/src/cortex.cpp test/src/frequency.cpp test/src/bloom_f
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
 target_link_libraries(bloom_filter ${LIBRARIES})
-target_link_libraries(tests ${LIBRARIES} gtest_main)
+target_link_libraries(tests ${LIBRARIES} gtest gtest_main)
 
 add_executable(performance src/main_performance.cpp)
 add_executable(main src/main.cpp)
