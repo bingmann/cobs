@@ -8,7 +8,6 @@
 #include <future>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/process.hpp>
 
 #include "helpers.hpp"
 #include "sample.hpp"

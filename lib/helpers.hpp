@@ -7,7 +7,6 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/process.hpp>
 #include <boost/filesystem.hpp>
 
 namespace genome {
