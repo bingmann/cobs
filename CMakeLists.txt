@@ -5,74 +5,23 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
-MESSAGE(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
-
-find_package(Boost COMPONENTS serialization filesystem)
+find_package(Boost REQUIRED COMPONENTS serialization filesystem)
 set(Boost_USE_STATIC_LIBS OFF)
-
-
-set(DEPENDENCY_DIR ${CMAKE_BINARY_DIR}/dependencies)
-
-# Download and unpack googletest at configure time
-configure_file(dependencies/CMakeLists_gtest.txt.in dependencies/gtest/download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${DEPENDENCY_DIR}/gtest/download)
-if(result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${DEPENDENCY_DIR}/gtest/download)
-if(result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-add_subdirectory(${DEPENDENCY_DIR}/gtest/src ${DEPENDENCY_DIR}/gtest/build)
-
-
-configure_file(dependencies/CMakeLists_xxhash.txt.in dependencies/xxhash/download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${DEPENDENCY_DIR}/xxhash/download)
-if(result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${DEPENDENCY_DIR}/xxhash/download)
-if(result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-add_subdirectory(${DEPENDENCY_DIR}/xxhash/src/cmake_unofficial)
-
-
-if(GTEST_FOUND)
-  set(GTEST_INCLUDE_DIRS "/usr/include")
-  set(GTEST_BOTH_LIBRARIES "~/gtest_lib/libgtest.a" "~/gtest_lib/libgtest_main.a")
-endif()
-
-message(STATUS "BOOST_FOUND: ${Boost_FOUND}")
-message(STATUS "GTEST_FOUND: ${GTEST_FOUND}")
-message(STATUS "GTEST_FOUND: ${GTEST_BOTH_LIBRARIES}")
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_system")
+include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
 
-set(XX_HASH xxHash-0.6.2)
-
-set(HEADER_FILES ${XX_HASH}/xxhash
+set(HEADER_FILES
         lib/timer.hpp lib/helpers.hpp lib/file_format/header.hpp lib/file_format/bloom_filter_header.hpp
         lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/bloom_filter.hpp
         lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/bloom_filter.tpp)
 
-include_directories(lib/ ${XX_HASH} ${Boost_INCLUDE_DIRS})
-
-add_library(thesis_lib lib/timer.cpp lib/file_format/header.cpp lib/file_format/bloom_filter_header.cpp ${XX_HASH}/xxhash.c)
-
+include_directories(lib/ ${Boost_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
+add_library(thesis_lib lib/timer.cpp lib/file_format/header.cpp lib/file_format/bloom_filter_header.cpp)
 set(LIBRARIES thesis_lib ${Boost_LIBRARIES} xxhash)
 
 add_executable(cortex src/main_cortex.cpp)
