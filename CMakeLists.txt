@@ -12,7 +12,8 @@ find_package(GTest)
 set(Boost_USE_STATIC_LIBS OFF)
 
 if(GTEST_FOUND)
-  set(GTEST_INCLUDE_DIRS /usr/include/gtest)
+  set(GTEST_INCLUDE_DIRS "/usr/include")
+  set(GTEST_BOTH_LIBRARIES "~/gtest_lib/libgtest.a" "~/gtest_lib/libgtest_main.a")
 endif()
 
 message(STATUS "BOOST_FOUND: ${Boost_FOUND}")
