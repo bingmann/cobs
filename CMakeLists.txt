@@ -1,12 +1,19 @@
-cmake_minimum_required(VERSION 3.8)
+#cmake_minimum_required(VERSION 3.8)
 project(thesis)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
-find_package(Boost 1.65.0 COMPONENTS serialization filesystem)
-find_package(GTest REQUIRED)
+MESSAGE(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
+
+find_package(Boost COMPONENTS serialization filesystem)
+find_package(GTest)
+set(Boost_USE_STATIC_LIBS OFF)
+
+if(GTEST_FOUND)
+  set(GTEST_INCLUDE_DIRS /usr/include/gtest)
+endif()
 
 message(STATUS "BOOST_FOUND: ${Boost_FOUND}")
 message(STATUS "GTEST_FOUND: ${GTEST_FOUND}")
