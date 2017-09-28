@@ -3,6 +3,7 @@
 #include "helpers.hpp"
 #include <iostream>
 #include <queue>
+#include <file/util.hpp>
 
 namespace genome::frequency {
 
@@ -17,7 +18,8 @@ namespace genome::frequency {
     template<typename PqElement>
     void process(std::vector<std::ifstream>& ifstreams, const boost::filesystem::path& out_file) {
         std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&, const PqElement&)>> pq(PqElement::comp);
-        std::ofstream ofs (out_file.string(), std::ios::out | std::ios::binary);
+        std::ofstream ofs;
+        file::serialize_header<file::frequency_header>(ofs, out_file);
 
         for(auto& ifs: ifstreams) {
             add_pq_element(pq, &ifs);
@@ -44,6 +46,8 @@ namespace genome::frequency {
         }
         ofs.write(reinterpret_cast<const char*>(&kmer), 8);
         ofs.write(reinterpret_cast<const char*>(&count), 4);
+        ofs.flush();
+        ofs.close();
     }
 
     template<typename PqElement>
@@ -68,10 +72,11 @@ namespace genome::frequency {
                     first_filename = filename;
                 }
                 last_filename = filename;
-                ifstreams.emplace_back(std::ifstream(paths[i].string(), std::ios::in | std::ios::binary));
+                ifstreams.emplace_back(std::ifstream());
+                PqElement::deserialize_header(ifstreams.back(), paths[i]);
             }
             if (ifstreams.size() == batch_size || (!ifstreams.empty() && i + 1 == paths.size())) {
-                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "].f");
+                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file::frequency_header::file_extension);
                 if (!boost::filesystem::exists(out_file)) {
                     process<PqElement>(ifstreams, out_file);
                 } else {
@@ -85,5 +90,4 @@ namespace genome::frequency {
         t.end();
         std::cout << t;
     }
-
 }

@@ -41,6 +41,14 @@ namespace genome {
         serialize(ost, args...);
     }
 
+    inline void deserialize(std::ifstream& ifs) {}
+
+    template<typename T, typename... Args>
+    inline void deserialize(std::ifstream& ifs, T& t, Args&... args) {
+        ifs.read(reinterpret_cast<char*>(&t), sizeof(T));
+        deserialize(ifs, args...);
+    }
+
     inline void for_each_file_in_dir(const boost::filesystem::path& path,
                                      std::function<void(const boost::filesystem::path&)> callback) {
         boost::filesystem::directory_iterator end_itr;

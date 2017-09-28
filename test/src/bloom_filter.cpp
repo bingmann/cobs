@@ -5,6 +5,9 @@
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
 #include <helpers.hpp>
+#include <file/sample_header.hpp>
+#include <file/frequency_header.hpp>
+#include <file/util.hpp>
 
 namespace {
     using namespace genome;
@@ -13,14 +16,15 @@ namespace {
     std::string in_dir_2 = "test/resources/bloom_filter/input_2/";
     std::string in_dir_3 = "test/resources/bloom_filter/input_3/";
     std::string out_dir = "test/out/bloom_filter/";
-    std::string out_file_1 = out_dir + "[sample_1-sample_3].bl";
-    std::string out_file_2 = out_dir + "[sample_4-sample_4].bl";
-    std::string out_file_3 = out_dir + "[sample_1-sample_9].bl";
-    std::string sample_1 = in_dir_1 + "sample_1.b";
-    std::string sample_2 = in_dir_1 + "sample_2.b";
-    std::string sample_3 = in_dir_1 + "sample_3.b";
-    std::string sample_4 = in_dir_2 + "sample_4.b";
-    std::string sample_9 = in_dir_3 + "sample_9.b";
+    std::string out_file_1 = out_dir + "[sample_1-sample_3].g_blo";
+    std::string out_file_2 = out_dir + "[sample_4-sample_4].g_blo";
+    std::string out_file_3 = out_dir + "[sample_1-sample_9].g_blo";
+    std::string out_file_4 = out_dir + "[sample_9-sample_9].g_blo";
+    std::string sample_1 = in_dir_1 + "sample_1.g_sam";
+    std::string sample_2 = in_dir_1 + "sample_2.g_sam";
+    std::string sample_3 = in_dir_1 + "sample_3.g_sam";
+    std::string sample_4 = in_dir_2 + "sample_4.g_sam";
+    std::string sample_9 = in_dir_3 + "sample_9.g_sam";
     size_t bloom_filter_size = 200000;
     size_t block_size = 1;
     size_t num_hashes = 7;
@@ -30,52 +34,60 @@ namespace {
         boost::filesystem::remove_all(out_dir);
         genome::bloom_filter::process_all_in_directory(in_dir_1, out_dir, bloom_filter_size, block_size, num_hashes);
 
-        std::vector<byte> signature;
-        read_file(out_file_1, signature);
+        bloom_filter bf;
+        file::deserialize(out_file_1, bf);
 
         genome::sample<31> s;
-
-        read_file(sample_1, s.data());
+        file::deserialize(sample_1, s);
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains(signature, kmer, 0, bloom_filter_size, block_size, num_hashes);
-            ASSERT_TRUE(contains);
+            ASSERT_TRUE(bf.contains(kmer, 0));
         }
 
-        read_file(sample_2, s.data());
+        file::deserialize(sample_2, s);
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains(signature, kmer, 1, bloom_filter_size, block_size, num_hashes);
-            ASSERT_TRUE(contains);
+            ASSERT_TRUE(bf.contains(kmer, 1));
         }
 
-        read_file(sample_3, s.data());
+        file::deserialize(sample_3, s);
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains(signature, kmer, 2, bloom_filter_size, block_size, num_hashes);
-            ASSERT_TRUE(contains);
+            ASSERT_TRUE(bf.contains(kmer, 2));
         }
     }
 
     TEST(bloom_filter, contains_big_block) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory(in_dir_3, out_dir, bloom_filter_size, block_size, num_hashes);
+        genome::bloom_filter::process_all_in_directory(in_dir_3, out_dir, bloom_filter_size, 2, num_hashes);
 
-        std::vector<byte> signature;
-        read_file(out_file_3, signature);
+        bloom_filter bf;
+        file::deserialize(out_file_3, bf);
 
         genome::sample<31> s;
-
-        read_file(sample_9, s.data());
+        file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
-            bool contains = genome::bloom_filter::contains(signature, kmer, 8, bloom_filter_size, block_size, num_hashes);
-            ASSERT_TRUE(contains);
+            ASSERT_TRUE(bf.contains(kmer, 8));
+        }
+    }
+
+    TEST(bloom_filter, two_outputs) {
+        boost::filesystem::remove_all(out_dir);
+        genome::bloom_filter::process_all_in_directory(in_dir_3, out_dir, bloom_filter_size, block_size, num_hashes);
+
+        bloom_filter bf;
+        file::deserialize(out_file_4, bf);
+
+        genome::sample<31> s;
+        file::deserialize(sample_9, s);
+        for (auto kmer: s.data()) {
+            ASSERT_TRUE(bf.contains(kmer, 0));
         }
     }
 
     TEST(bloom_filter, false_positive) {
         boost::filesystem::remove_all(out_dir);
-        genome::bloom_filter::process_all_in_directory(in_dir_1, out_dir, bloom_filter_size, block_size, num_hashes);
+        genome::bloom_filter::process_all_in_directory(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
 
-        std::vector<byte> signature;
-        read_file(out_file_1, signature);
+        bloom_filter bf;
+        file::deserialize(out_file_2, bf);
 
         size_t num_tests = 100000;
         size_t num_positive = 0;
@@ -83,7 +95,7 @@ namespace {
             std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
                                      (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
             kmer<31> k(a);
-            if (genome::bloom_filter::contains(signature, k, 0, bloom_filter_size, block_size, num_hashes)) {
+            if (bf.contains(k, 0)) {
                 num_positive++;
             }
         }
@@ -94,14 +106,15 @@ namespace {
         boost::filesystem::remove_all(out_dir);
         genome::bloom_filter::process_all_in_directory(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
 
-        std::vector<byte> signature;
-        read_file(out_file_2, signature);
+        bloom_filter bf;
+        file::deserialize(out_file_2, bf);
+
         size_t ones = 0;
-        for (auto b: signature) {
+        for (auto b: bf.data()) {
             ASSERT_TRUE(b == 0 || b == 1);
             ones += b;
         }
-        size_t zeros = signature.size() - ones;
+        size_t zeros = bf.data().size() - ones;
         ASSERT_EQ(zeros, 97734);
         ASSERT_EQ(ones, 102266);
     }
@@ -110,16 +123,15 @@ namespace {
         boost::filesystem::remove_all(out_dir);
         genome::bloom_filter::process_all_in_directory(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
 
-        std::vector<byte> signature;
-        read_file(out_file_2, signature);
+        bloom_filter bf;
+        file::deserialize(out_file_2, bf);
 
         size_t num_positive = 0;
         for (size_t i = 0; i < 100000; i++) {
             std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
                                      (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
             kmer<31> k(a);
-            bool contains = genome::bloom_filter::contains(signature, k, i % 5 + 3, bloom_filter_size, block_size, num_hashes);
-            ASSERT_FALSE(contains);
+            ASSERT_FALSE(bf.contains(k, i % 5 + 3));
         }
     }
 }

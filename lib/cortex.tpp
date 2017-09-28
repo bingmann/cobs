@@ -8,18 +8,12 @@
 #include <future>
 
 #include <boost/algorithm/string.hpp>
+#include <file/util.hpp>
 
-#include "helpers.hpp"
 #include "sample.hpp"
+#include "file/sample_header.hpp"
 
 namespace genome::cortex {
-
-    template<unsigned int N>
-    void serialize(const sample <N>& sample, const boost::filesystem::path& path) {
-        boost::filesystem::create_directories(path.parent_path());
-        std::ofstream ofs(path.string(), std::ios::out | std::ios::binary);
-        ofs.write(reinterpret_cast<const char*>(sample.data().data()), kmer<N>::size * sample.data().size());
-    }
 
     template<typename size_type, typename ForwardIterator>
     size_type cast(ForwardIterator iter) {
@@ -92,7 +86,7 @@ namespace genome::cortex {
 
         read_sample(iter, v.end(), h, s);
         t.next();
-        serialize(s, out_path);
+        file::serialize(out_path, s);
         t.end();
     }
 
@@ -105,9 +99,9 @@ namespace genome::cortex {
             if (boost::filesystem::is_regular_file(*it)
                 && it->path().extension() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
-                && !boost::filesystem::exists(out_dir / it->path().stem().concat(".b"))) {
+                && !boost::filesystem::exists(out_dir / it->path().stem().concat(file::sample_header::file_extension))) {
                 try {
-                    process_file(it->path(), out_dir / it->path().stem().concat(".b"), sample);
+                    process_file(it->path(), out_dir / it->path().stem().concat(file::sample_header::file_extension), sample);
                     std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::endl;
                     i++;
                 } catch (const std::exception& e) {

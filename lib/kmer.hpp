@@ -1,7 +1,3 @@
-//
-// Created by Florian Gauger on 08.09.2017.
-//
-
 #pragma once
 
 #include <array>
@@ -9,7 +5,6 @@
 #include <map>
 #include <ostream>
 #include "helpers.hpp"
-
 
 namespace genome {
     template<unsigned int N>

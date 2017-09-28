@@ -10,34 +10,28 @@ namespace {
 
     std::string in_dir = "test/resources/frequency/input/";
     std::string out_dir = "test/out/frequency/";
-    std::string result_bin = "test/resources/frequency/result/bin.f";
-    std::string result_freq = "test/resources/frequency/result/freq.f";
-    std::string sample_1 = in_dir + "sample_1.b";
-    std::string sample_2 = in_dir + "sample_2.b";
-    std::string sample_3 = in_dir + "sample_3.b";
-    std::string sample_4 = in_dir + "sample_4.f";
-    std::string sample_5 = in_dir + "sample_5.f";
-
-    template<class OutputIterator>
-    void read_sample(const std::string& file, OutputIterator& iter) {
-        std::ifstream ifs(file, std::ios::in | std::ios::binary);
-        while(ifs && ifs.peek() != EOF) {
-            uint64_t kmer;
-            ifs.read(reinterpret_cast<char*>(&kmer), 8);
-            *iter++ = kmer;
-        }
-    }
+    std::string result_bin = "test/resources/frequency/result/bin.g_fre";
+    std::string result_freq = "test/resources/frequency/result/freq.g_fre";
+    std::string sample_1 = in_dir + "sample_1.g_sam";
+    std::string sample_2 = in_dir + "sample_2.g_sam";
+    std::string sample_3 = in_dir + "sample_3.g_sam";
+    std::string sample_4 = in_dir + "sample_4.g_fre";
+    std::string sample_5 = in_dir + "sample_5.g_fre";
 
     void generate_result_bin() {
         boost::filesystem::create_directories(out_dir);
         std::vector<uint64_t> v;
-        std::back_insert_iterator<std::vector<uint64_t>> iter(v);
-        read_sample(sample_1, iter);
-        read_sample(sample_2, iter);
-        read_sample(sample_3, iter);
+        sample<31> s;
+        file::deserialize(sample_1, s);
+        v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
+        file::deserialize(sample_2, s);
+        v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
+        file::deserialize(sample_3, s);
+        v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
         std::sort(v.begin(), v.end());
 
-        std::ofstream ofs("bin.f", std::ios::out | std::ios::binary);
+        std::ofstream ofs;
+        file::serialize_header<file::frequency_header>(ofs, "bin" + file::frequency_header::file_extension);
         uint64_t kmer = v[0];
         uint32_t count = 1;
         for(size_t i = 1; i < v.size(); i++) {
@@ -56,7 +50,8 @@ namespace {
 
     template<class OutputIteratorKmer, class OutputIteratorCount>
     void read_sample(const std::string& file, OutputIteratorKmer& iter_kmer, OutputIteratorCount& iter_count) {
-        std::ifstream ifs(file, std::ios::in | std::ios::binary);
+        std::ifstream ifs;
+        file::deserialize_header<file::frequency_header>(ifs, file);
         while(ifs && ifs.peek() != EOF) {
             uint64_t kmer;
             uint32_t count;
@@ -83,7 +78,8 @@ namespace {
             return kmers[i1] < kmers[i2];
         });
 
-        std::ofstream ofs("freq.f", std::ios::out | std::ios::binary);
+        std::ofstream ofs;
+        file::serialize_header<file::frequency_header>(ofs, "freq" + file::frequency_header::file_extension);
         uint64_t kmer = kmers[indices[0]];
         uint32_t count = counts[indices[0]];
         for(size_t i = 1; i < kmers.size(); i++) {
@@ -100,8 +96,21 @@ namespace {
         ofs.write(reinterpret_cast<const char*>(&count), 4);
     }
 
-    size_t get_count(const std::string& file) {
-        std::ifstream ifs(file, std::ios::in | std::ios::binary);
+    size_t get_count_sample(const std::string& file) {
+        std::ifstream ifs;
+        file::deserialize_header<file::sample_header>(ifs, file);
+        size_t total_count = 0;
+        uint64_t kmer;
+        while (ifs && ifs.peek() != EOF) {
+            ifs.read(reinterpret_cast<char*>(&kmer), 8);
+            total_count++;
+        }
+        return total_count;
+    }
+
+    size_t get_count_frequency(const std::string& file) {
+        std::ifstream ifs;
+        file::deserialize_header<file::frequency_header>(ifs, file);
         size_t total_count = 0;
         uint64_t kmer;
         uint32_t count;
@@ -121,15 +130,15 @@ namespace {
     TEST(frequency, bin) {
         boost::filesystem::remove_all(out_dir);
         frequency::process_all_in_directory<frequency::bin_pq_element>(in_dir, out_dir, 40);
-        size_t total_count = (boost::filesystem::file_size(sample_1) + boost::filesystem::file_size(sample_2) + boost::filesystem::file_size(sample_3)) / 8;
-        ASSERT_EQ(get_count(out_dir + "[sample_1-sample_3].f"), total_count);
-        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3].f");
+        size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
+        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + file::frequency_header::file_extension), total_count);
+        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + file::frequency_header::file_extension);
     }
 
     TEST(frequency, freq) {
         boost::filesystem::remove_all(out_dir);
         frequency::process_all_in_directory<frequency::freq_pq_element>(in_dir, out_dir, 40);
-        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5].f");
+        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + file::frequency_header::file_extension);
     }
 }
 

@@ -30,9 +30,6 @@ namespace genome::cortex {
     void read_sample(ForwardIterator iter, ForwardIterator end, header h, sample<N>& sample);
 
     template<unsigned int N>
-    void serialize(const sample<N>& sample, const boost::filesystem::path& path);
-
-    template<unsigned int N>
     void deserialize(sample<N>& sample, const boost::filesystem::path& path);
 
     template<unsigned int N>
