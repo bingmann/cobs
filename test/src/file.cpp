@@ -1,15 +1,17 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <file/header.hpp>
-#include <file/bloom_filter_header.hpp>
 #include <boost/filesystem.hpp>
+#include <file/util.hpp>
+#include <bloom_filter.hpp>
 
 
 namespace {
     using namespace genome::file;
 
     std::string out_dir = "test/out/file/";
-    std::string out_path = out_dir + "bloom_filter.h";
+    std::string out_path_s = out_dir + "bloom_filter.g_sam";
+    std::string out_path_bf = out_dir + "bloom_filter.g_blo";
 
     class file : public ::testing::Test {
     protected:
@@ -22,18 +24,22 @@ namespace {
         }
     };
 
-    TEST_F(file, bloom_filter) {
-        bloom_filter_header out(1234567, 1234321, 7654321);
-        std::ofstream ofs(out_path, std::ios::out | std::ios::binary);
-        header<bloom_filter_header>::serialize(ofs, out);
-        ofs.flush();
-        ofs.close();
+    TEST_F(file, sample) {
+        genome::sample<31> s_out;
+        serialize(out_path_s, s_out);
 
-        std::ifstream ifs(out_path, std::ios::in | std::ios::binary);
-        bloom_filter_header in;
-        header<bloom_filter_header>::deserialize(ifs, in);
-        ASSERT_EQ(out.bloom_filter_size(), in.bloom_filter_size());
-        ASSERT_EQ(out.block_size(), in.block_size());
-        ASSERT_EQ(out.num_hashes(), in.num_hashes());
+        genome::sample<31> s_in;
+        deserialize(out_path_s, s_in);
+    }
+
+    TEST_F(file, bloom_filter) {
+        genome::bloom_filter bf_out(123, 12, 1234);
+        serialize(out_path_bf, bf_out);
+
+        genome::bloom_filter bf_in;
+        deserialize(out_path_bf, bf_in);
+        ASSERT_EQ(bf_out.bloom_filter_size(), bf_in.bloom_filter_size());
+        ASSERT_EQ(bf_out.block_size(), bf_in.block_size());
+        ASSERT_EQ(bf_out.num_hashes(), bf_in.num_hashes());
     }
 }
