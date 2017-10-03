@@ -20,9 +20,9 @@ namespace genome::file {
 
 
     template<class T>
-    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p);
+    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p, const T& h);
     template<class T>
-    void deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p);
+    T deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p);
 }
 
 #include "util.tpp"

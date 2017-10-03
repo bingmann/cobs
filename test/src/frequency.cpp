@@ -31,7 +31,7 @@ namespace {
         std::sort(v.begin(), v.end());
 
         std::ofstream ofs;
-        file::serialize_header<file::frequency_header>(ofs, "bin" + file::frequency_header::file_extension);
+        file::serialize_header<file::frequency_header>(ofs, "bin" + file::frequency_header::file_extension, file::frequency_header());
         uint64_t kmer = v[0];
         uint32_t count = 1;
         for(size_t i = 1; i < v.size(); i++) {
@@ -79,7 +79,7 @@ namespace {
         });
 
         std::ofstream ofs;
-        file::serialize_header<file::frequency_header>(ofs, "freq" + file::frequency_header::file_extension);
+        file::serialize_header<file::frequency_header>(ofs, "freq" + file::frequency_header::file_extension, file::frequency_header());
         uint64_t kmer = kmers[indices[0]];
         uint32_t count = counts[indices[0]];
         for(size_t i = 1; i < kmers.size(); i++) {

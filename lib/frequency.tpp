@@ -19,7 +19,7 @@ namespace genome::frequency {
     void process(std::vector<std::ifstream>& ifstreams, const boost::filesystem::path& out_file) {
         std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&, const PqElement&)>> pq(PqElement::comp);
         std::ofstream ofs;
-        file::serialize_header<file::frequency_header>(ofs, out_file);
+        file::serialize_header<file::frequency_header>(ofs, out_file, file::frequency_header());
 
         for(auto& ifs: ifstreams) {
             add_pq_element(pq, &ifs);
@@ -54,39 +54,16 @@ namespace genome::frequency {
     void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
         timer t = {"process"};
         t.start();
-
-        boost::filesystem::create_directories(out_dir);
-        boost::filesystem::recursive_directory_iterator it(in_dir), end;
-        std::vector<boost::filesystem::path> paths;
-        std::copy(it, end, std::back_inserter(paths));
-        std::sort(paths.begin(), paths.end());
-
-        std::string first_filename = "";
-        std::string last_filename = "";
-
         std::vector<std::ifstream> ifstreams;
-        for (size_t i = 0; i < paths.size(); i++) {
-            if (boost::filesystem::is_regular_file(paths[i]) && paths[i].extension() == PqElement::file_extension()) {
-                std::string filename = paths[i].stem().string();
-                if (first_filename == "") {
-                    first_filename = filename;
-                }
-                last_filename = filename;
+        bulk_process_files(in_dir, out_dir, batch_size, PqElement::file_extension(), file::frequency_header::file_extension,
+        [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+            for (const auto& p: paths) {
                 ifstreams.emplace_back(std::ifstream());
-                PqElement::deserialize_header(ifstreams.back(), paths[i]);
+                PqElement::deserialize_header(ifstreams.back(), p);
             }
-            if (ifstreams.size() == batch_size || (!ifstreams.empty() && i + 1 == paths.size())) {
-                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file::frequency_header::file_extension);
-                if (!boost::filesystem::exists(out_file)) {
-                    process<PqElement>(ifstreams, out_file);
-                } else {
-                    std::cout << "file exists - " << out_file.string() << std::endl;
-                }
-                ifstreams.clear();
-                first_filename = "";
-            }
-        }
-
+            process<PqElement>(ifstreams, out_file);
+            ifstreams.clear();
+        });
         t.end();
         std::cout << t;
     }

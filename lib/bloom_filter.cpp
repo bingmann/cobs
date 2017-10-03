@@ -10,7 +10,7 @@
 
 namespace genome {
 
-    void bloom_filter::process(const std::vector<boost::filesystem::path> &paths, const boost::filesystem::path &out_file, timer &t) {
+    void bloom_filter::process(const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file, timer& t) {
         sample<31> s;
         for (size_t i = 0; i < paths.size(); i++) {
             t.start();
@@ -31,41 +31,53 @@ namespace genome {
         t.end();
     }
 
-    void bloom_filter::process_all_in_directory(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
+    void bloom_filter::create_from_samples(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
                                                 size_t bloom_filter_size, size_t block_size, size_t num_hashes) {
         timer t = {"read", "process", "write"};
-        boost::filesystem::create_directories(out_dir);
-        boost::filesystem::recursive_directory_iterator it(in_dir), end;
-        std::vector<boost::filesystem::path> sorted_paths;
-        std::copy(it, end, std::back_inserter(sorted_paths));
-        std::sort(sorted_paths.begin(), sorted_paths.end());
-
-        std::string first_filename;
-        std::string last_filename;
-
         bloom_filter bf(bloom_filter_size, block_size, num_hashes);
+        bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::bloom_filter_header::file_extension,
+                           [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+                               bf.process(paths, out_file, t);
+                           });
+        std::cout << t;
+    }
 
-        std::vector<boost::filesystem::path> paths;
-        for (size_t i = 0; i < sorted_paths.size(); i++) {
-            if (boost::filesystem::is_regular_file(sorted_paths[i]) && sorted_paths[i].extension() == file::sample_header::file_extension) {
-                std::string filename = sorted_paths[i].stem().string();
-                if (first_filename.empty()) {
-                    first_filename = filename;
-                }
-                last_filename = filename;
-                paths.push_back(sorted_paths[i]);
+
+    void bloom_filter::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const boost::filesystem::path& out_file,
+                               size_t bloom_filter_size, size_t block_size, size_t num_hash, timer& t) {
+        std::ofstream ofs;
+        file::bloom_filter_header bfh(bloom_filter_size, block_size, num_hash);
+        file::serialize_header(ofs, out_file, bfh);
+
+        std::vector<char> block(block_size);
+        for (size_t i = 0; i < bloom_filter_size; i++) {
+            size_t pos = 0;
+            for (auto& ifs: ifstreams) {
+                ifs.first.read(&(*(block.begin() + pos)), ifs.second);
+                pos += ifs.second;
             }
-            if (paths.size() == 8 * block_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
-                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file::bloom_filter_header::file_extension);
-                if (!boost::filesystem::exists(out_file)) {
-                    bf.process(paths, out_file, t);
-                } else {
-                    std::cout << "file exists - " << out_file.string() << std::endl;
-                }
-                paths.clear();
-                first_filename.clear();
-            }
+            ofs.write(&(*block.begin()), block_size);
         }
+    }
+
+    void bloom_filter::combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
+                                             size_t bloom_filter_size, size_t num_hashes, size_t batch_size) {
+        timer t = {"read", "process", "write"};
+        std::vector<std::pair<std::ifstream, size_t>> ifstreams;
+        bulk_process_files(in_dir, out_dir, batch_size, file::bloom_filter_header::file_extension, file::bloom_filter_header::file_extension,
+                           [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+                               size_t new_block_size = 0;
+                               for (const auto& p: paths) {
+                                   ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
+                                   auto bfh = file::deserialize_header<file::bloom_filter_header>(ifstreams.back().first, p);
+                                   assert(bfh.bloom_filter_size() == bloom_filter_size);
+                                   assert(bfh.num_hashes() == num_hashes);
+                                   ifstreams.back().second = bfh.block_size();
+                                   new_block_size += bfh.block_size();
+                               }
+                               combine(ifstreams, out_file, bloom_filter_size, new_block_size, num_hashes, t);
+                               ifstreams.clear();
+                           });
         std::cout << t;
     }
 
@@ -79,7 +91,7 @@ namespace genome {
 
     bool bloom_filter::is_set(size_t pos, size_t bit_in_block) {
         byte b = m_data[m_block_size * pos + bit_in_block / 8];
-        return  (b & (1 << (bit_in_block % 8))) != 0;
+        return (b & (1 << (bit_in_block % 8))) != 0;
     };
     bool bloom_filter::contains(const kmer<31>& kmer, size_t bit_in_block) {
         assert(bit_in_block < 8 * m_block_size);
