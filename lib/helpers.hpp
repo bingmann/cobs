@@ -71,6 +71,45 @@ namespace genome {
         return result;
     }
 
+    inline void get_sorted_file_names(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, std::vector<boost::filesystem::path>& paths) {
+        boost::filesystem::create_directories(out_dir);
+        boost::filesystem::recursive_directory_iterator it(in_dir), end;
+        std::copy(it, end, std::back_inserter(paths));
+        std::sort(paths.begin(), paths.end());
+    }
+
+    inline void bulk_process_files(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t bulk_size,
+                                   const std::string& file_extension_in, const std::string& file_extension_out,
+                                   const std::function<void(const std::vector<boost::filesystem::path>&, const boost::filesystem::path&)>& callback) {
+        std::vector<boost::filesystem::path> sorted_paths;
+        get_sorted_file_names(in_dir, out_dir, sorted_paths);
+
+        std::string first_filename;
+        std::string last_filename;
+
+        std::vector<boost::filesystem::path> paths;
+        for (size_t i = 0; i < sorted_paths.size(); i++) {
+            if (boost::filesystem::is_regular_file(sorted_paths[i]) && sorted_paths[i].extension() == file_extension_in) {
+                std::string filename = sorted_paths[i].stem().string();
+                if (first_filename.empty()) {
+                    first_filename = filename;
+                }
+                last_filename = filename;
+                paths.push_back(sorted_paths[i]);
+            }
+            if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
+                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
+                if (!boost::filesystem::exists(out_file)) {
+                    callback(paths, out_file);
+                } else {
+                    std::cout << "file exists - " << out_file.string() << std::endl;
+                }
+                paths.clear();
+                first_filename.clear();
+            }
+        }
+    }
+
     inline void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;

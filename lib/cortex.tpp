@@ -79,14 +79,16 @@ namespace genome::cortex {
     void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample <N>& s) {
         t.start();
         read_file(in_path, v);
-        t.next();
-        auto iter = v.begin();
-        auto h = skip_header(iter);
-        s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
+        if (!v.empty()) {
+            t.next();
+            auto iter = v.begin();
+            auto h = skip_header(iter);
+            s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
-        read_sample(iter, v.end(), h, s);
-        t.next();
-        file::serialize(out_path, s);
+            read_sample(iter, v.end(), h, s);
+            t.next();
+            file::serialize(out_path, s);
+        }
         t.end();
     }
 

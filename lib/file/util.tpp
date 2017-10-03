@@ -72,16 +72,16 @@ namespace genome::file {
     }
 
     template<class T>
-    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p) {
+    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p, const T& h) {
         ofs.open(p.string(), std::ios::out | std::ios::binary);
-        T h;
         header<T>::serialize(ofs, h);
     }
 
     template<class T>
-    void deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p) {
+    T deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p) {
         ifs.open(p.string(), std::ios::in | std::ios::binary);
         T h;
         header<T>::deserialize(ifs, h);
+        return h;
     }
 }
