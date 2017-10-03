@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.5)
 project(thesis)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_FLAGS "-lboost_system")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
-find_package(Boost REQUIRED COMPONENTS serialization filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 set(Boost_USE_STATIC_LIBS OFF)
 
 set(Boost_USE_STATIC_LIBS OFF)
