@@ -28,8 +28,9 @@ namespace genome::file {
 
     template<class T>
     void header<T>::check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
-        std::string mw(magic_word.size(), ' ');
-        ifs.read(mw.data(), magic_word.size());
+        std::vector<char> mw_v(magic_word.size(), ' ');
+        ifs.read(mw_v.data(), magic_word.size());
+        std::string mw(mw_v.data(), mw_v.size());
         assert(mw == magic_word);
     }
 }
