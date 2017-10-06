@@ -1,5 +1,5 @@
 #include <boost/filesystem/path.hpp>
-#include <server.hpp>
+#include <server/server.hpp>
 
 void generate_test_bloom(boost::filesystem::path p) {
     size_t bloom_filter_size = 10000000;

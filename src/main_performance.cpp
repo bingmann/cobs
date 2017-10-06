@@ -5,11 +5,11 @@ void sample() {
 }
 
 void bloom_filter() {
-    genome::bloom_filter::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 15000000, 2, 3);
+    genome::bloom_filter::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
 }
 
 void bloom_filter_2() {
-    genome::bloom_filter::combine_bloom_filters("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 15000000, 3, 7);
+//    genome::bloom_filter::combine_bloom_filters("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 15000000, 3, 7);
 }
 
 int main(int argc, char** argv) {

@@ -19,15 +19,28 @@ file(COPY test/resources DESTINATION test)
 
 set(HEADER_FILES
         lib/timer.hpp lib/helpers.hpp lib/bloom_filter.hpp lib/file/sample_header.hpp lib/file/bloom_filter_header.hpp
-        lib/file/frequency_header.hpp
-        lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/file/util.hpp lib/file/header.hpp lib/server.hpp
-        lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/file/util.tpp lib/file/header.tpp lib/server.tpp)
+        lib/file/frequency_header.hpp lib/server/server_mmap.hpp lib/server/server_ifs.hpp
+        lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/file/util.hpp lib/file/header.hpp lib/server/server.hpp
+        lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/file/util.tpp lib/file/header.tpp lib/server/server.ipp)
 
-set(TEST_FILES test/src/cortex.cpp test/src/frequency.cpp test/src/bloom_filter.cpp test/src/file.cpp test/src/util.hpp)
+set(TEST_FILES
+        test/src/cortex.cpp
+        test/src/frequency.cpp
+        test/src/bloom_filter.cpp
+        test/src/file.cpp
+        test/src/util.hpp
+        test/src/server.cpp)
 
 include_directories(lib/ ${Boost_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
-add_library(thesis_lib lib/timer.cpp lib/file/bloom_filter_header.cpp lib/file/sample_header.cpp lib/bloom_filter.cpp
-        lib/file/frequency_header.cpp)
+add_library(thesis_lib
+        lib/timer.cpp
+        lib/bloom_filter.cpp
+        lib/file/bloom_filter_header.cpp
+        lib/file/sample_header.cpp
+        lib/file/frequency_header.cpp
+        lib/server/server.cpp
+        lib/server/server_mmap.cpp
+        lib/server/server_ifs.cpp)
 set(LIBRARIES thesis_lib ${Boost_LIBRARIES} xxhash)
 
 add_executable(cortex src/main_cortex.cpp)
