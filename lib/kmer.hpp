@@ -21,6 +21,7 @@ namespace genome {
     public:
         kmer();
         explicit kmer(std::array<byte, size> m_data);
+        void init(const char* chars);
         const std::array<byte, size>& data() const;
         std::string string() const;
         void print(std::ostream& ostream) const;

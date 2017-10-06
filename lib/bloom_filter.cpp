@@ -10,6 +10,14 @@
 
 namespace genome {
 
+    void bloom_filter::create_hashes(const void* input, size_t len, size_t bloom_filter_size, size_t num_hashes,
+                                     const std::function<void(size_t)>& callback) {
+        for (unsigned int i = 0; i < num_hashes; i++) {
+            size_t hash = XXH32(input, len, i);
+            callback(hash % bloom_filter_size);
+        }
+    }
+
     void bloom_filter::process(const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file, timer& t) {
         sample<31> s;
         for (size_t i = 0; i < paths.size(); i++) {
@@ -17,17 +25,20 @@ namespace genome {
             file::deserialize(paths[i], s);
             t.next();
             for (const auto& kmer: s.data()) {
-                for (unsigned int k = 0; k < m_num_hashes; k++) {
-                    size_t hash = XXH32(&kmer, kmer.size, k);
-                    bloom_filter::set_bit(hash % m_bloom_filter_size, i);
-                }
+                create_hashes(&kmer, kmer.size, m_bloom_filter_size, m_num_hashes, [&](size_t hash) {
+                    bloom_filter::set_bit(hash, i);
+                });
             }
             t.end();
         }
         t.start();
         t.next();
         t.next();
-        file::serialize(out_file, *this);
+        std::vector<std::string> file_names(8 * m_block_size);
+        std::transform(paths.begin(), paths.end(), file_names.begin(), [](const auto& p) {
+            return p.stem().string();
+        });
+        file::serialize(out_file, *this, file_names);
         t.end();
     }
 
@@ -44,9 +55,9 @@ namespace genome {
 
 
     void bloom_filter::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const boost::filesystem::path& out_file,
-                               size_t bloom_filter_size, size_t block_size, size_t num_hash, timer& t) {
+                               size_t bloom_filter_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names) {
         std::ofstream ofs;
-        file::bloom_filter_header bfh(bloom_filter_size, block_size, num_hash);
+        file::bloom_filter_header bfh(bloom_filter_size, block_size, num_hash, file_names);
         file::serialize_header(ofs, out_file, bfh);
 
         std::vector<char> block(block_size);
@@ -64,6 +75,7 @@ namespace genome {
                                              size_t bloom_filter_size, size_t num_hashes, size_t batch_size) {
         timer t = {"read", "process", "write"};
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
+        std::vector<std::string> file_names;
         bulk_process_files(in_dir, out_dir, batch_size, file::bloom_filter_header::file_extension, file::bloom_filter_header::file_extension,
                            [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
                                size_t new_block_size = 0;
@@ -74,9 +86,11 @@ namespace genome {
                                    assert(bfh.num_hashes() == num_hashes);
                                    ifstreams.back().second = bfh.block_size();
                                    new_block_size += bfh.block_size();
+                                   std::copy(bfh.file_names().begin(), bfh.file_names().end(), std::back_inserter(file_names));
                                }
-                               combine(ifstreams, out_file, bloom_filter_size, new_block_size, num_hashes, t);
+                               combine(ifstreams, out_file, bloom_filter_size, new_block_size, num_hashes, t, file_names);
                                ifstreams.clear();
+                               file_names.clear();
                            });
         std::cout << t;
     }

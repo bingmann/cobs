@@ -34,7 +34,7 @@ namespace {
 
     TEST_F(file, bloom_filter) {
         genome::bloom_filter bf_out(123, 12, 1234);
-        serialize(out_path_bf, bf_out);
+        serialize(out_path_bf, bf_out, std::vector<std::string>(12 * 8));
 
         genome::bloom_filter bf_in;
         deserialize(out_path_bf, bf_in);

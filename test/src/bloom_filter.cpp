@@ -58,6 +58,20 @@ namespace {
         }
     }
 
+    TEST(bloom_filter, file_names) {
+        boost::filesystem::remove_all(out_dir);
+        genome::bloom_filter::create_from_samples(in_dir_1, out_dir, bloom_filter_size, block_size, num_hashes);
+
+        bloom_filter bf;
+        file::bloom_filter_header bfh;
+        file::deserialize(out_file_1, bf, bfh);
+
+        ASSERT_EQ(bfh.file_names()[0], "sample_1");
+        ASSERT_EQ(bfh.file_names()[1], "sample_2");
+        ASSERT_EQ(bfh.file_names()[2], "sample_3");
+    }
+
+
     TEST(bloom_filter, false_positive) {
         boost::filesystem::remove_all(out_dir);
         genome::bloom_filter::create_from_samples(in_dir_2, out_dir, bloom_filter_size, block_size, num_hashes);
@@ -170,7 +184,6 @@ namespace {
 
         genome::sample<31> s;
         file::deserialize(sample_3, s);
-
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bf.contains(kmer, 2));
         }

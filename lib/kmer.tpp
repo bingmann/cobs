@@ -5,7 +5,19 @@
 namespace genome {
 
     template<unsigned int N>
-    kmer<N>::kmer(std::array<byte, size> data) : m_data(std::move(data)) {
+    kmer<N>::kmer(std::array<byte, size> data) : m_data(std::move(data)) {}
+
+    template<unsigned int N>
+    void kmer<N>::init(const char* chars) {
+        for (int i = N - 4; i >= -3; i -= 4) {
+            if (i >= 0) {
+                m_data[(N - (i + 4)) / 4] = m_bps_to_byte.at(*((uint32_t *) (chars + i)));
+            } else {
+                char c2 = i < -1 ? 'A' : chars[i + 1];
+                char c3 = i < -2 ? 'A' : chars[i + 2];
+                m_data[m_data.size() - 1] = m_bps_to_byte.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
+            }
+        }
     }
 
     template<unsigned int N>

@@ -19,21 +19,20 @@ namespace genome::file {
         serialize(ofs, s);
     }
 
-    inline void serialize(std::ofstream& ofs, const bloom_filter& bf) {
-        bloom_filter_header bfh(bf.bloom_filter_size(), bf.block_size(), bf.num_hashes());
+    inline void serialize(std::ofstream& ofs, const bloom_filter& bf, const std::vector<std::string>& file_names) {
+        bloom_filter_header bfh(bf.bloom_filter_size(), bf.block_size(), bf.num_hashes(), file_names);
         header<bloom_filter_header>::serialize(ofs, bfh);
         ofs.write(reinterpret_cast<const char*>(bf.data().data()), bf.data().size());
     }
 
-    inline void serialize(const boost::filesystem::path& p, const bloom_filter& bf) {
+    inline void serialize(const boost::filesystem::path& p, const bloom_filter& bf, const std::vector<std::string>& file_names) {
         boost::filesystem::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
-        serialize(ofs, bf);
+        serialize(ofs, bf, file_names);
     }
 
     template<uint32_t N>
-    void deserialize(std::ifstream& ifs, sample<N>& s) {
-        sample_header h;
+    void deserialize(std::ifstream& ifs, sample<N>& s, sample_header& h) {
         header<sample_header>::deserialize(ifs, h);
         assert(N == h.kmer_size());
 
@@ -46,13 +45,12 @@ namespace genome::file {
     }
 
     template<uint32_t N>
-    void deserialize(const boost::filesystem::path& p, sample<N>& s) {
+    void deserialize(const boost::filesystem::path& p, sample<N>& s, sample_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
-        deserialize(ifs, s);
+        deserialize(ifs, s, h);
     }
 
-    inline void deserialize(std::ifstream& ifs, bloom_filter& bf) {
-        bloom_filter_header h;
+    inline void deserialize(std::ifstream& ifs, bloom_filter& bf, bloom_filter_header& h) {
         header<bloom_filter_header>::deserialize(ifs, h);
         bf.bloom_filter_size(h.bloom_filter_size());
         bf.block_size(h.block_size());
@@ -66,9 +64,9 @@ namespace genome::file {
         ifs.read(reinterpret_cast<char*>(bf.data().data()), size);
     }
 
-    inline void deserialize(const boost::filesystem::path& p, bloom_filter& bf) {
+    inline void deserialize(const boost::filesystem::path& p, bloom_filter& bf, bloom_filter_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
-        deserialize(ifs, bf);
+        deserialize(ifs, bf, h);
     }
 
     template<class T>
