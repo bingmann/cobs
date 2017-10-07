@@ -62,7 +62,7 @@ namespace {
         }
     }
 
-    void generate_result_freq() {
+    void generate_result_fre() {
         boost::filesystem::create_directories(out_dir);
         std::vector<uint64_t> kmers;
         std::vector<uint32_t> counts;
@@ -137,7 +137,7 @@ namespace {
 
     TEST(frequency, freq) {
         boost::filesystem::remove_all(out_dir);
-        frequency::process_all_in_directory<frequency::freq_pq_element>(in_dir, out_dir, 40);
+        frequency::process_all_in_directory<frequency::fre_pq_element>(in_dir, out_dir, 40);
         assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + file::frequency_header::file_extension);
     }
 }

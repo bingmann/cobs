@@ -1,5 +1,7 @@
 #include <boost/filesystem/path.hpp>
 #include <server/server.hpp>
+#include <server/server_mmap.hpp>
+#include <server/server_ifs.hpp>
 
 void generate_test_bloom(boost::filesystem::path p) {
     size_t bloom_filter_size = 10000000;
@@ -19,19 +21,19 @@ void generate_test_bloom(boost::filesystem::path p) {
     }
 }
 
-void run_mmap(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<std::string, double>>& result) {
-    genome::server s(p);
+void run_mmap(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
+    genome::server_mmap s(p);
     s.search_bloom_filter<31>(query, result);
 }
 
-void run_ifs(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<std::string, double>>& result) {
-    genome::server s(p, 0);
-    s.search_bloom_filter_2<31>(query, result);
+void run_ifs(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
+    genome::server_ifs s(p);
+    s.search_bloom_filter<31>(query, result);
 }
 
 int main(int argc, char** argv) {
-    std::vector<std::pair<std::string, double>> result_1;
-    std::vector<std::pair<std::string, double>> result_2;
+    std::vector<std::pair<double, std::string>> result_1;
+    std::vector<std::pair<double, std::string>> result_2;
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_blo");
 //    generate_test_bloom(p);
     std::string query =

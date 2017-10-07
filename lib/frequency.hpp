@@ -56,9 +56,9 @@ namespace genome::frequency {
         }
     };
 
-    class freq_pq_element : public pq_element<file::frequency_header> {
+    class fre_pq_element : public pq_element<file::frequency_header> {
     public:
-        explicit freq_pq_element(std::ifstream* ifs) : pq_element(ifs) {
+        explicit fre_pq_element(std::ifstream* ifs) : pq_element(ifs) {
             ifs->read(reinterpret_cast<char*>(&m_count), 4);
         }
     };
