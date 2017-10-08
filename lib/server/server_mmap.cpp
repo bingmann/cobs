@@ -23,6 +23,7 @@ namespace genome {
         std::vector<byte> count(m_bfh.block_size(), 0xFF);
         auto* count_64 = reinterpret_cast<uint64_t*>(count.data());
         for (size_t i = 0; i < hashes.size(); i++) {
+            m_timer.active("mmap_access");
             auto data_64 = reinterpret_cast<uint64_t*>(m_data + hashes[i] * m_bfh.block_size());
             size_t j = 1;
             while (j * 8 <= m_bfh.block_size()) {
@@ -34,11 +35,8 @@ namespace genome {
                 count[j] &= m_data[hashes[i] * m_bfh.block_size() + j];
                 j++;
             }
-//            for (size_t j = 0; j < m_block_size_64; j += 8) {
-//                count[j] &= m_data[hashes[i] * m_bfh.block_size() + j];
-//                count_64[j] &= 0;
-//            }
             if (i % m_bfh.num_hashes() == m_bfh.num_hashes() - 1) {
+                m_timer.active("compute_counts");
                 for (size_t j = 0; j < m_bfh.block_size(); j++) {
                     for (size_t k = 0; k < 8; k++) {
                         counts[8 * j + k] += (count[j] >> k) & 1;

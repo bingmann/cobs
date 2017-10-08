@@ -52,8 +52,8 @@ namespace genome::frequency {
 
     template<typename PqElement>
     void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
-        timer t = {"process"};
-        t.start();
+        timer t;
+        t.active("process");
         std::vector<std::ifstream> ifstreams;
         bulk_process_files(in_dir, out_dir, batch_size, PqElement::file_extension(), file::frequency_header::file_extension,
         [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
@@ -64,7 +64,7 @@ namespace genome::frequency {
             process<PqElement>(ifstreams, out_file);
             ifstreams.clear();
         });
-        t.end();
+        t.stop();
         std::cout << t;
     }
 }

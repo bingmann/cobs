@@ -67,8 +67,8 @@ namespace genome::cortex {
             std::advance(iter, num_bytes_per_kmer + 5 * h.num_colors);
             std::advance(sample_data, num_bytes_per_kmer);
         }
-        t.next();
 
+        t.active("sort");
         std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
                   reinterpret_cast<uint64_t*>(&(*sample.data().end())));
 
@@ -77,19 +77,19 @@ namespace genome::cortex {
 
     template<unsigned int N>
     void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample <N>& s) {
-        t.start();
+        t.active("read");
         read_file(in_path, v);
         if (!v.empty()) {
-            t.next();
+            t.active("iter");
             auto iter = v.begin();
             auto h = skip_header(iter);
             s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
             read_sample(iter, v.end(), h, s);
-            t.next();
+            t.active("write");
             file::serialize(out_path, s);
         }
-        t.end();
+        t.stop();
     }
 
     template<unsigned int N>
@@ -108,7 +108,7 @@ namespace genome::cortex {
                     i++;
                 } catch (const std::exception& e) {
                     std::cerr << it->path().string() << " - " << e.what() << std::endl;
-                    t.end();
+                    t.stop();
                 }
             }
         }

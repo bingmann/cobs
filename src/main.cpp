@@ -21,21 +21,19 @@ void generate_test_bloom(boost::filesystem::path p) {
     }
 }
 
-void run_mmap(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
-    genome::server_mmap s(p);
-    s.search_bloom_filter<31>(query, result);
-}
-
-void run_ifs(const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
-    genome::server_ifs s(p);
-    s.search_bloom_filter<31>(query, result);
+void run(genome::server& s, const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
+    for (size_t i = 0; i < 50; i++) {
+        s.search_bloom_filter<31>(query, result);
+    }
+    std::cout << s.timer() << std::endl;
 }
 
 int main(int argc, char** argv) {
     std::vector<std::pair<double, std::string>> result_1;
     std::vector<std::pair<double, std::string>> result_2;
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_blo");
-//    generate_test_bloom(p);
+    genome::server_mmap s_mmap(p);
+    genome::server_ifs s_ifs(p);
     std::string query =
             "AATGATCTACTCTTCCACACGCCAGCATTAGAAACCTAGGTGCAGTTGCATATGGTACTT"
             "TGTGTTCTCATCCATTCCCACTGAATGGATTTTGCTACTGAGCGTAGCGGTACGACTCGA"
@@ -45,20 +43,8 @@ int main(int argc, char** argv) {
             "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
             "CCTATTTCAACAACCTGATCGAAAGGCGTACCAAACCAATGGCGGGAAGGCGCTCATATG"
             "AAAAATCCGAATCTCTCAGGTGGAAGTTCGGTCTCATGGTAAAGGCAATGGCCCTTCCAT";
-//    genome::search::search_bloom_filter<31>(, p, result_1);
-    genome::timer t = {"process"};
-    t.start();
-    for (size_t i = 0; i < 50; i++) {
-        run_mmap(query, p, result_1);
-    }
-    t.end();
-    std::cout << t << std::endl;
-    t.reset();
-    t.start();
-    for (size_t i = 0; i < 50; i++) {
-        run_ifs(query, p, result_2);
-    }
-    t.end();
-    std::cout << t << std::endl;
+
+    run(s_mmap, query, p, result_1);
+    run(s_ifs, query, p, result_1);
     int a = 0;
 }

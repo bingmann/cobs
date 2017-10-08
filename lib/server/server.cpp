@@ -10,4 +10,8 @@ namespace genome {
         }
         std::sort(result.begin(), result.end());
     }
+
+    const timer& server::timer() const {
+        return m_timer;
+    }
 }

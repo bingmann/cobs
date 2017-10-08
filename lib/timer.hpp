@@ -4,31 +4,24 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <unordered_map>
 
 namespace genome {
     class timer {
     private:
-        std::vector<std::pair<std::string, std::chrono::duration<double>>> measurements;
+        std::unordered_map<std::string, std::chrono::duration<double>> timers;
         std::string total_name = "total";
         std::chrono::duration<double> total_duration;
-        std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
-        size_t position = 0;
-        bool running = false;
-        size_t max_name_length = total_name.size();
 
-        void print(std::ostream& ostream, const std::string& name, std::chrono::duration<double> duration) const;
+        std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
+        std::string running;
+
+        void print(std::ostream& ostream, size_t max_name_length, const std::string& name, std::chrono::duration<double> duration) const;
 
     public:
-        timer(std::initializer_list<std::string> values);
-
-        void start();
-
-        void end();
-
-        void next();
-
+        void active(const std::string& timer);
+        void stop();
         void reset();
-
         void print(std::ostream& ostream) const;
     };
 }

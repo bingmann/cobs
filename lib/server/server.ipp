@@ -19,11 +19,15 @@ namespace genome {
 
     template<unsigned int N>
     void server::search_bloom_filter(const std::string& query, std::vector<std::pair<double, std::string>>& result) {
+        m_timer.active("hashes");
         std::vector<size_t> hashes;
         create_hashes<N>(hashes, query);
-        std::vector<size_t> counts(8 * m_bfh.block_size());
+        m_timer.stop();
 
+        std::vector<size_t> counts(8 * m_bfh.block_size());
         get_counts(hashes, counts);
+        m_timer.active("counts_to_result");
         counts_to_result(counts, query.size() - N + 1, result);
+        m_timer.stop();
     }
 }

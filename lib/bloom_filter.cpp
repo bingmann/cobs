@@ -21,30 +21,27 @@ namespace genome {
     void bloom_filter::process(const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file, timer& t) {
         sample<31> s;
         for (size_t i = 0; i < paths.size(); i++) {
-            t.start();
+            t.active("read");
             file::deserialize(paths[i], s);
-            t.next();
+            t.active("process");
             for (const auto& kmer: s.data()) {
                 create_hashes(&kmer, kmer.size, m_bloom_filter_size, m_num_hashes, [&](size_t hash) {
                     bloom_filter::set_bit(hash, i);
                 });
             }
-            t.end();
         }
-        t.start();
-        t.next();
-        t.next();
+        t.active("write");
         std::vector<std::string> file_names(8 * m_block_size);
         std::transform(paths.begin(), paths.end(), file_names.begin(), [](const auto& p) {
             return p.stem().string();
         });
         file::serialize(out_file, *this, file_names);
-        t.end();
+        t.stop();
     }
 
     void bloom_filter::create_from_samples(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
                                                 size_t bloom_filter_size, size_t block_size, size_t num_hashes) {
-        timer t = {"read", "process", "write"};
+        timer t;
         bloom_filter bf(bloom_filter_size, block_size, num_hashes);
         bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::bloom_filter_header::file_extension,
                            [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
@@ -63,17 +60,20 @@ namespace genome {
         std::vector<char> block(block_size);
         for (size_t i = 0; i < bloom_filter_size; i++) {
             size_t pos = 0;
+            t.active("read");
             for (auto& ifs: ifstreams) {
                 ifs.first.read(&(*(block.begin() + pos)), ifs.second);
                 pos += ifs.second;
             }
+            t.active("write");
             ofs.write(&(*block.begin()), block_size);
         }
+        t.stop();
     }
 
     void bloom_filter::combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
                                              size_t bloom_filter_size, size_t num_hashes, size_t batch_size) {
-        timer t = {"read", "process", "write"};
+        timer t;
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
         bulk_process_files(in_dir, out_dir, batch_size, file::bloom_filter_header::file_extension, file::bloom_filter_header::file_extension,

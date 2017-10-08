@@ -15,7 +15,7 @@ namespace genome::cortex {
     };
 
     std::vector<char> v;
-    timer t = {"read", "iter", "sort", "write"};
+    timer t;
 
     template<typename size_type, typename ForwardIterator>
     size_type cast(ForwardIterator iter);
