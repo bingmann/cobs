@@ -4,6 +4,8 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <iomanip>
+
 
 namespace genome {
     typedef unsigned char byte;
@@ -87,6 +89,7 @@ namespace genome {
         std::string first_filename;
         std::string last_filename;
 
+        size_t j = 1;
         std::vector<boost::filesystem::path> paths;
         for (size_t i = 0; i < sorted_paths.size(); i++) {
             if (boost::filesystem::is_regular_file(sorted_paths[i]) && sorted_paths[i].extension() == file_extension_in) {
@@ -99,13 +102,16 @@ namespace genome {
             }
             if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
                 boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
+                std::cout << std::left << std::setw(6) << j << "BEG " << out_file << std::flush;
                 if (!boost::filesystem::exists(out_file)) {
                     callback(paths, out_file);
+                    std::cout << "\r" << std::left << std::setw(6) << j << "END " << out_file << std::endl;
                 } else {
-                    std::cout << "file exists - " << out_file.string() << std::endl;
+                    std::cout << "\r" << std::left << std::setw(6) << j << "EXI " << out_file << std::endl;
                 }
                 paths.clear();
                 first_filename.clear();
+                j++;
             }
         }
     }
