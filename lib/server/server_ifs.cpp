@@ -6,14 +6,16 @@ namespace genome {
         m_pos_data_beg = m_ifs.tellg();
     }
 
-    void server_ifs::get_counts(const std::vector<size_t>& hashes, std::vector<size_t>& counts) {
+    void server_ifs::get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) {
         bloom_filter bf(hashes.size(), m_bfh.block_size(), m_bfh.num_hashes());
         auto data_ptr = reinterpret_cast<char*>(bf.data().data());
+        m_timer.active("ifs_access");
         for (size_t i = 0; i < hashes.size(); i++) {
             m_ifs.seekg(m_pos_data_beg + m_bfh.block_size() * hashes[i]);
             m_ifs.read(data_ptr + i * m_bfh.block_size(), m_bfh.block_size());
         }
 
+        m_timer.active("compute_counts");
         std::vector<byte> count(bf.block_size(), 0xFF);
         for (size_t i = 0; i < hashes.size(); i++) {
             for (size_t j = 0; j < bf.block_size(); j++) {

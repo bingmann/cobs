@@ -11,14 +11,15 @@ namespace genome {
         long m_pos_data_beg;
         template<unsigned int N>
         void create_hashes(std::vector<size_t>& hashes, const std::string& query) const;
-        void counts_to_result(const std::vector<size_t>& counts, size_t max_count, std::vector<std::pair<double, std::string>>& result) const;
+        void counts_to_result(const std::vector<uint16_t>& counts, size_t max_count, std::vector<std::pair<uint16_t, std::string>>& result) const;
     protected:
         timer m_timer;
+        static const uint64_t m_count_expansions[16];
         file::bloom_filter_header m_bfh;
-        virtual void get_counts(const std::vector<size_t>& hashes, std::vector<size_t>& counts) = 0;
+        virtual void get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
     public:
         template<unsigned int N>
-        void search_bloom_filter(const std::string& query, std::vector<std::pair<double, std::string>>& result);
+        void search_bloom_filter(const std::string& query, std::vector<std::pair<uint16_t, std::string>>& result);
         const timer& timer() const;
     };
 }

@@ -16,6 +16,7 @@ namespace genome {
             total_duration += new_time_point - time_point;
         }
         time_point = new_time_point;
+        running = "";
     }
 
     void timer::reset() {

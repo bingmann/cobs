@@ -2,6 +2,7 @@
 #include <server/server.hpp>
 #include <server/server_mmap.hpp>
 #include <server/server_ifs.hpp>
+#include <helpers.hpp>
 
 void generate_test_bloom(boost::filesystem::path p) {
     size_t bloom_filter_size = 10000000;
@@ -21,7 +22,7 @@ void generate_test_bloom(boost::filesystem::path p) {
     }
 }
 
-void run(genome::server& s, const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<double, std::string>>& result) {
+void run(genome::server& s, const std::string& query, const boost::filesystem::path& p, std::vector<std::pair<uint16_t, std::string>>& result) {
     for (size_t i = 0; i < 50; i++) {
         s.search_bloom_filter<31>(query, result);
     }
@@ -29,8 +30,8 @@ void run(genome::server& s, const std::string& query, const boost::filesystem::p
 }
 
 int main(int argc, char** argv) {
-    std::vector<std::pair<double, std::string>> result_1;
-    std::vector<std::pair<double, std::string>> result_2;
+    std::vector<std::pair<uint16_t, std::string>> result_1;
+    std::vector<std::pair<uint16_t, std::string>> result_2;
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_blo");
     genome::server_mmap s_mmap(p);
     genome::server_ifs s_ifs(p);

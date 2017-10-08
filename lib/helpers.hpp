@@ -132,4 +132,23 @@ namespace genome {
 //        }
 //    }
     }
+    inline void initialize_map_server() {
+        std::cout << "{";
+        for (uint64_t i = 0; i < 16; i++) {
+            uint64_t result = 0;
+            result |= (i & 1);
+            result |= (i & 2) << 15;
+            result |= (i & 4) << 30;
+            result |= (i & 8) << 45;
+            std::cout << result << ", ";
+        };
+        std::cout << "}" << std::endl;
+    }
 }
+
+
+
+
+
+
+

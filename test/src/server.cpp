@@ -9,12 +9,12 @@ namespace {
     std::string in_dir = "test/resources/server/input/";
     std::string sample_1 = in_dir + "sample_1.g_blo";
     std::string sample_2 = in_dir + "sample_2.g_blo";
-    std::string sample_result = "test/resources/server/result/sample_1_sorted.txt";
+    std::string sample_result = "test/resources/server/result/sample_sorted.txt";
     std::string file_name = "ERR102554";
 
     TEST(server, block_size_4) {
-        std::vector<std::pair<double, std::string>> result_mmap;
-        std::vector<std::pair<double, std::string>> result_ifs;
+        std::vector<std::pair<uint16_t, std::string>> result_mmap;
+        std::vector<std::pair<uint16_t, std::string>> result_ifs;
         server_mmap s_mmap(sample_1);
         server_mmap s_ifs(sample_1);
 
@@ -37,8 +37,8 @@ namespace {
     }
 
     TEST(server, block_size_15) {
-        std::vector<std::pair<double, std::string>> result_mmap;
-        std::vector<std::pair<double, std::string>> result_ifs;
+        std::vector<std::pair<uint16_t, std::string>> result_mmap;
+        std::vector<std::pair<uint16_t, std::string>> result_ifs;
         server_mmap s_mmap(sample_2);
         server_mmap s_ifs(sample_2);
 
