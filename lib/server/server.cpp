@@ -9,11 +9,21 @@ namespace genome {
 
     void server::counts_to_result(const std::vector<uint16_t>& counts, size_t max_count, std::vector<std::pair<uint16_t, std::string>>& result) const {
         result.clear();
-        result.reserve(counts.size());
-        for (size_t i = 0; i < counts.size(); i++) {
-            result.emplace_back(std::make_pair(counts[i], m_bfh.file_names()[i]));
+//        result.reserve(counts.size());
+
+        std::vector<uint32_t> sorted_indices;
+        sorted_indices.reserve(counts.size());
+        for (uint32_t i = 0; i < counts.size(); i++) {
+            sorted_indices[i] = i;
+//            result.emplace_back(std::make_pair(counts[i], m_bfh.file_names()[i]));
         }
-        std::sort(result.begin(), result.end(), std::greater<>());
+        std::sort(sorted_indices.begin(), sorted_indices.end(), [&](const auto v1, const auto v2){
+            return counts[v1] < counts[v2];
+        });
+
+        for (size_t i = 0; i < 10; i++) {
+            result.emplace_back(std::make_pair(counts[sorted_indices[i]], m_bfh.file_names()[sorted_indices[i]]));
+        }
     }
 
     const timer& server::get_timer() const {
