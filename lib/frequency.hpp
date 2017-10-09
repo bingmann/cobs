@@ -7,6 +7,7 @@
 
 namespace genome::frequency {
     void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir);
+    void combine(const boost::filesystem::path& in_file, const boost::filesystem::path& out_file);
 
     template<typename H>
     class pq_element {

@@ -2,6 +2,7 @@
 #include <server/server.hpp>
 #include <server/server_mmap.hpp>
 #include <server/server_ifs.hpp>
+#include <frequency.hpp>
 #include <helpers.hpp>
 
 void generate_test_bloom(boost::filesystem::path p) {
@@ -29,7 +30,7 @@ void run(genome::server& s, const std::string& query, const boost::filesystem::p
     std::cout << s.get_timer() << std::endl;
 }
 
-int main(int argc, char** argv) {
+void server() {
     std::vector<std::pair<uint16_t, std::string>> result_1;
     std::vector<std::pair<uint16_t, std::string>> result_2;
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_blo");
@@ -37,15 +38,18 @@ int main(int argc, char** argv) {
     genome::server_ifs s_ifs(p);
     std::string query =
             "AATGATCTACTCTTCCACACGCCAGCATTAGAAACCTAGGTGCAGTTGCATATGGTACTT"
-            "TGTGTTCTCATCCATTCCCACTGAATGGATTTTGCTACTGAGCGTAGCGGTACGACTCGA"
-            "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
-            "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
-            "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
-            "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
-            "CCTATTTCAACAACCTGATCGAAAGGCGTACCAAACCAATGGCGGGAAGGCGCTCATATG"
-            "AAAAATCCGAATCTCTCAGGTGGAAGTTCGGTCTCATGGTAAAGGCAATGGCCCTTCCAT";
+                    "TGTGTTCTCATCCATTCCCACTGAATGGATTTTGCTACTGAGCGTAGCGGTACGACTCGA"
+                    "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
+                    "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
+                    "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
+                    "GTATGGCCTGCCAATTGAGACGATATACTCCCCGATGGCGGATCCACCCGCTGCGGCATG"
+                    "CCTATTTCAACAACCTGATCGAAAGGCGTACCAAACCAATGGCGGGAAGGCGCTCATATG"
+                    "AAAAATCCGAATCTCTCAGGTGGAAGTTCGGTCTCATGGTAAAGGCAATGGCCCTTCCAT";
 
     run(s_mmap, query, p, result_1);
     run(s_ifs, query, p, result_1);
     int a = 0;
+}
+
+int main(int argc, char** argv) {
 }
