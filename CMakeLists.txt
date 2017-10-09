@@ -46,11 +46,13 @@ set(LIBRARIES thesis_lib ${Boost_LIBRARIES} xxhash)
 add_executable(cortex src/main_cortex.cpp)
 add_executable(frequency src/main_frequency.cpp)
 add_executable(bloom_filter src/main_bloom_filter.cpp)
+add_executable(dummy_bloom src/main_dummy_bloom.cpp)
 add_executable(tests ${TEST_FILES} ${HEADER_FILES})
 
 target_link_libraries(cortex ${LIBRARIES})
 target_link_libraries(frequency ${LIBRARIES})
 target_link_libraries(bloom_filter ${LIBRARIES})
+target_link_libraries(dummy_bloom ${LIBRARIES})
 target_link_libraries(tests ${LIBRARIES} gtest gtest_main)
 
 add_executable(performance src/main_performance.cpp)
