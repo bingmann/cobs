@@ -52,4 +52,15 @@ void server() {
 }
 
 int main(int argc, char** argv) {
+    std::ifstream ifs("/Users/flo/freq.txt");
+    std::ofstream ofs("/Users/flo/freq_sum.txt");
+    std::string line;
+    uint32_t sum = 0;
+    while (std::getline(ifs, line)) {
+        std::vector<std::string> strs;
+        boost::split(strs, line, boost::is_any_of(","));
+        uint32_t a = std::stoi(strs[0]);
+        sum += std::stoi(strs[1]);
+        ofs << a << "," << sum << "\n";
+    }
 }
