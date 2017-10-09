@@ -16,7 +16,7 @@ namespace genome {
         std::sort(result.begin(), result.end(), std::greater<>());
     }
 
-    const timer& server::timer() const {
+    const timer& server::get_timer() const {
         return m_timer;
     }
 }

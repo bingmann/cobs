@@ -26,7 +26,7 @@ void run(genome::server& s, const std::string& query, const boost::filesystem::p
     for (size_t i = 0; i < 50; i++) {
         s.search_bloom_filter<31>(query, result);
     }
-    std::cout << s.timer() << std::endl;
+    std::cout << s.get_timer() << std::endl;
 }
 
 int main(int argc, char** argv) {

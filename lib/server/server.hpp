@@ -20,7 +20,7 @@ namespace genome {
     public:
         template<unsigned int N>
         void search_bloom_filter(const std::string& query, std::vector<std::pair<uint16_t, std::string>>& result);
-        const timer& timer() const;
+        const timer& get_timer() const;
     };
 }
 
