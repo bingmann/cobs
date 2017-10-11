@@ -4,13 +4,13 @@
 
 namespace genome::file {
     template<class T>
-    const std::string header<T>::m_magic_word = "HEADER";
+    const std::string header<T>::magic_word = "HEADER";
     template<class T>
     const uint32_t header<T>::m_version = 1;
 
     template<class T>
     void header<T>::serialize(std::ofstream& ofs, const header& h) {
-        ofs << m_magic_word;
+        ofs << magic_word;
         genome::serialize(ofs, m_version);
         h.serialize(ofs);
         ofs << T::magic_word;
@@ -18,7 +18,7 @@ namespace genome::file {
 
     template<class T>
     void header<T>::deserialize(std::ifstream& ifs, header& h) {
-        check_magic_word(ifs, m_magic_word);
+        check_magic_word(ifs, magic_word);
         uint32_t v;
         genome::deserialize(ifs, v);
         assert(v == m_version);

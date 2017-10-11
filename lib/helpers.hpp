@@ -116,6 +116,16 @@ namespace genome {
         }
     }
 
+    inline std::string random_query(size_t len) {
+        std::array<char, 4> basepairs = {'A', 'C', 'G', 'T'};
+        std::string result;
+        std::srand(std::time(0));
+        for (size_t i = 0; i < len; i++) {
+            result += basepairs[std::rand() % 4];
+        }
+        return result;
+    }
+
     inline void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;
