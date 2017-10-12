@@ -7,9 +7,8 @@ namespace genome {
                                                    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
                                                    281479271743488, 281479271743489};
 
-    void server::counts_to_result(const std::vector<uint16_t>& counts, size_t max_count, std::vector<std::pair<uint16_t, std::string>>& result) const {
-        result.clear();
-//        result.reserve(counts.size());
+    void server::counts_to_result(const std::vector<uint16_t>& counts, size_t max_count,
+                                  std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) const {
 
         std::vector<uint32_t> sorted_indices;
         sorted_indices.reserve(counts.size());
@@ -21,7 +20,8 @@ namespace genome {
             return counts[v1] < counts[v2];
         });
 
-        for (size_t i = 0; i < 10; i++) {
+        result.reserve(num_results);
+        for (size_t i = 0; i < num_results; i++) {
             result.emplace_back(std::make_pair(counts[sorted_indices[i]], m_bfh.file_names()[sorted_indices[i]]));
         }
     }

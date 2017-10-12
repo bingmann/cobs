@@ -6,6 +6,10 @@
 #include <helpers.hpp>
 #include <file/msbf_header.hpp>
 #include <omp.h>
+#include <stxxl/bits/io/request.h>
+#include <stxxl/bits/io/file.h>
+#include <stxxl/bits/io/syscall_file.h>
+#include <server/server_stxxl.hpp>
 
 void generate_test_bloom(boost::filesystem::path p) {
     size_t bloom_filter_size = 10000000;
@@ -26,10 +30,11 @@ void generate_test_bloom(boost::filesystem::path p) {
 }
 
 void run(genome::server& s, size_t query_len, const boost::filesystem::path& p, std::vector<std::pair<uint16_t, std::string>>& result) {
+    sync();
     genome::timer t;
     t.active("total");
     for (size_t i = 0; i < 1; i++) {
-        s.search_bloom_filter<31>(genome::random_query(query_len), result);
+        s.search_bloom_filter<31>(genome::random_query(query_len), result, 10);
     }
     t.stop();
     std::cout << s.get_timer() << std::endl;
@@ -39,12 +44,15 @@ void run(genome::server& s, size_t query_len, const boost::filesystem::path& p, 
 void server() {
     std::vector<std::pair<uint16_t, std::string>> result_1;
     std::vector<std::pair<uint16_t, std::string>> result_2;
+    std::vector<std::pair<uint16_t, std::string>> result_3;
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_blo");
     genome::server_mmap s_mmap(p);
     genome::server_ifs s_ifs(p);
+    genome::server_stxxl s_stxxl(p);
     size_t query_len = 900;
-    run(s_mmap, query_len, p, result_1);
 //    run(s_ifs, query_len, p, result_1);
+    run(s_mmap, query_len, p, result_1);
+    run(s_stxxl, query_len, p, result_3);
     int a = 0;
 }
 
@@ -62,6 +70,8 @@ int main(int argc, char** argv) {
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
     server();
+
+//    int a = 0;
 
 //    genome::file::msbf_header h;
 //    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");

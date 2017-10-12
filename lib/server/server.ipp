@@ -18,7 +18,7 @@ namespace genome {
     }
 
     template<unsigned int N>
-    void server::search_bloom_filter(const std::string& query, std::vector<std::pair<uint16_t, std::string>>& result) {
+    void server::search_bloom_filter(const std::string& query, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) {
         assert(query.size() - N + 1 <= UINT16_MAX);
         m_timer.active("hashes");
         std::vector<size_t> hashes;
@@ -28,7 +28,7 @@ namespace genome {
         std::vector<uint16_t> counts(8 * m_bfh.block_size());
         get_counts(hashes, counts);
         m_timer.active("counts_to_result");
-        counts_to_result(counts, query.size() - N + 1, result);
+        counts_to_result(counts, query.size() - N + 1, result, num_results == 0 ? m_bfh.file_names().size() : num_results);
         m_timer.stop();
     }
 }

@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 
 namespace genome {
+
     server_mmap::server_mmap(const boost::filesystem::path& path) : server() {
         std::ifstream ifs;
         m_bfh = file::deserialize_header<file::bloom_filter_header>(ifs, path);
@@ -18,8 +19,7 @@ namespace genome {
 //  | MAP_POPULATE
         m_data = start_pos + reinterpret_cast<byte*>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
     }
-
-    /*
+/*
     void server_mmap::get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) {
         std::vector<byte> count(m_bfh.block_size(), 0xFF);
         auto* count_64 = reinterpret_cast<uint64_t*>(count.data());
@@ -50,8 +50,7 @@ namespace genome {
             }
         }
     }
-     */
-
+    */
     void server_mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
         m_timer.active("mmap_access");
         #pragma omp parallel for
