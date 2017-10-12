@@ -3,7 +3,7 @@ project(thesis)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-lboost_system -L/software/boost/1.62.0/lib")
+set(CMAKE_CXX_FLAGS "-fopenmp -lboost_system -L/software/boost/1.62.0/lib")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 

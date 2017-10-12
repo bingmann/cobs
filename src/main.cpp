@@ -5,6 +5,7 @@
 #include <frequency.hpp>
 #include <helpers.hpp>
 #include <file/msbf_header.hpp>
+#include <omp.h>
 
 void generate_test_bloom(boost::filesystem::path p) {
     size_t bloom_filter_size = 10000000;
@@ -60,10 +61,10 @@ int main(int argc, char** argv) {
 //        sum += std::stoi(strs[1]);
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
-//    server();
+    server();
 
-    genome::file::msbf_header h;
-    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
-    std::ofstream ofs;
-    genome::file::serialize_header(ofs, p, h);
+//    genome::file::msbf_header h;
+//    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
+//    std::ofstream ofs;
+//    genome::file::serialize_header(ofs, p, h);
 }
