@@ -21,26 +21,18 @@ namespace {
         std::ifstream ifs(sample_result);
         std::string line;
 
-        timer t;
-
         while (std::getline(ifs, line)) {
-            t.stop();
-            std::cout << t << std::endl;
-            t.active("stuff");
-//            std::cout << line << std::endl;
             s_mmap.search_bloom_filter<31>(line, result_mmap);
-//            s_ifs.search_bloom_filter<31>(line, result_ifs, 4 * 8);
+            s_ifs.search_bloom_filter<31>(line, result_ifs);
             double res = 0;
-//            ASSERT_EQ(result_mmap.size(), result_ifs.size());
-            t.active("stuff_2");
+            ASSERT_EQ(result_mmap.size(), result_ifs.size());
             for (size_t i = 0; i < result_mmap.size(); i++) {
-//                ASSERT_EQ(result_mmap[i], result_ifs[i]);
-//                if (result_mmap[i].second == file_name) {
+                ASSERT_EQ(result_mmap[i], result_ifs[i]);
+                if (result_mmap[i].second == file_name) {
                     res = result_mmap[i].first;
-//                }
+                }
             }
-//            ASSERT_TRUE(res);
-            t.active("read");
+            ASSERT_TRUE(res);
         }
     }
 
@@ -55,7 +47,7 @@ namespace {
 
         while (std::getline(ifs, line)) {
             s_mmap.search_bloom_filter<31>(line, result_mmap);
-            s_ifs.search_bloom_filter<31>(line, result_ifs, 15 * 8);
+            s_ifs.search_bloom_filter<31>(line, result_ifs);
             double res = 0;
             ASSERT_EQ(result_mmap.size(), result_ifs.size());
             for (size_t i = 0; i < result_mmap.size(); i++) {

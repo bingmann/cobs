@@ -80,7 +80,7 @@ namespace genome {
         std::sort(paths.begin(), paths.end());
     }
 
-    inline void bulk_process_files(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t bulk_size,
+    inline bool bulk_process_files(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t bulk_size,
                                    const std::string& file_extension_in, const std::string& file_extension_out,
                                    const std::function<void(const std::vector<boost::filesystem::path>&, const boost::filesystem::path&)>& callback) {
         std::vector<boost::filesystem::path> sorted_paths;
@@ -114,6 +114,7 @@ namespace genome {
                 j++;
             }
         }
+        return j < 3;
     }
 
     inline std::string random_query(size_t len) {

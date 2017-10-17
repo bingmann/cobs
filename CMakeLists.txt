@@ -24,7 +24,7 @@ file(COPY test/resources DESTINATION test)
 set(HEADER_FILES
         lib/timer.hpp lib/helpers.hpp lib/bloom_filter.hpp lib/file/sample_header.hpp lib/file/bloom_filter_header.hpp
         lib/file/frequency_header.hpp lib/server/server_mmap.hpp lib/server/server_ifs.hpp lib/file/msbf_header.hpp
-        lib/server/server_stxxl.hpp
+        lib/server/server_stxxl.hpp lib/msbf.hpp
         lib/kmer.hpp lib/sample.hpp lib/cortex.hpp lib/frequency.hpp lib/file/util.hpp lib/file/header.hpp lib/server/server.hpp
         lib/kmer.tpp lib/sample.tpp lib/cortex.tpp lib/frequency.tpp lib/file/util.tpp lib/file/header.tpp lib/server/server.ipp)
 

@@ -71,12 +71,12 @@ namespace genome {
         t.stop();
     }
 
-    void bloom_filter::combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
+    bool bloom_filter::combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
                                              size_t bloom_filter_size, size_t num_hashes, size_t batch_size) {
         timer t;
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
-        bulk_process_files(in_dir, out_dir, batch_size, file::bloom_filter_header::file_extension, file::bloom_filter_header::file_extension,
+        bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::bloom_filter_header::file_extension, file::bloom_filter_header::file_extension,
                            [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
                                size_t new_block_size = 0;
                                for (const auto& p: paths) {
@@ -93,6 +93,7 @@ namespace genome {
                                file_names.clear();
                            });
         std::cout << t;
+        return all_combined;
     }
 
     bloom_filter::bloom_filter(uint64_t bloom_filter_size, uint64_t block_size, uint64_t num_hashes)

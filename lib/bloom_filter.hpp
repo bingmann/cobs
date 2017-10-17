@@ -23,7 +23,7 @@ namespace genome {
         bloom_filter(uint64_t bloom_filter_size, uint64_t block_size, uint64_t num_hashes);
         static void create_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
                                                      size_t bloom_filter_size, size_t block_size, size_t num_hashes);
-        static void combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
+        static bool combine_bloom_filters(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
                                                      size_t batch_size, size_t bloom_filter_size, size_t num_hashes);
         static void create_hashes(const void* input, size_t len, size_t bloom_filter_size, size_t num_hashes,
                                   const std::function<void(size_t)>& callback);

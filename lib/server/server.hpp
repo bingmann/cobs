@@ -12,8 +12,7 @@ namespace genome {
         long m_pos_data_beg;
         template<unsigned int N>
         void create_hashes(std::vector<size_t>& hashes, const std::string& query) const;
-        void counts_to_result(const std::vector<uint16_t>& counts, size_t max_count,
-                              std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) const;
+        void counts_to_result(const std::vector<uint16_t>& counts, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) const;
     protected:
         timer m_timer;
         static const uint64_t m_count_expansions[16];

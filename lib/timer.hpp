@@ -11,7 +11,7 @@ namespace genome {
     private:
         std::unordered_map<std::string, std::chrono::duration<double>> timers;
         std::string total_name = "total";
-        std::chrono::duration<double> total_duration;
+        std::chrono::duration<double> total_duration = std::chrono::duration<double>::zero();
 
         std::chrono::time_point<std::chrono::high_resolution_clock> time_point;
         std::string running;

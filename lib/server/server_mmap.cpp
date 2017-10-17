@@ -56,7 +56,7 @@ namespace genome {
         #pragma omp parallel for
         for (size_t i = 0; i < hashes.size(); i++) {
             auto data_64 = reinterpret_cast<uint64_t*>(m_data + hashes[i] * m_bfh.block_size());
-            auto rows_64 = reinterpret_cast<uint64_t*>(rows);
+            auto rows_64 = reinterpret_cast<uint64_t*>(rows + i * m_bfh.block_size());
             size_t j = 1;
             while (j * 8 <= m_bfh.block_size()) {
                 rows_64[j - 1] = data_64[j - 1];
@@ -64,10 +64,9 @@ namespace genome {
             }
             j = (j - 1) * 8;
             while (j < m_bfh.block_size()) {
-                rows[j] = m_data[j];
+                rows[i * m_bfh.block_size() + j] = m_data[j];
                 j++;
             }
-            rows += m_bfh.block_size();
         }
     }
 
@@ -76,32 +75,34 @@ namespace genome {
         auto* count_64 = reinterpret_cast<uint64_t*>(count.data());
         auto* counts_64 = reinterpret_cast<uint64_t*>(counts.data());
 
-        std::vector<char> rows(m_bfh.block_size() * hashes.size(), 'a');
+        std::vector<char> rows(m_bfh.block_size() * hashes.size());
         read_from_disk(hashes, rows.data());
 
         m_timer.active("compute_counts");
         #pragma omp parallel for
-        for (size_t i = 0; i < hashes.size(); i++) {
-            char* rows_8 = rows.data() + i * m_bfh.block_size();
-            auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
-            size_t j = 1;
-            while (j * 8 <= m_bfh.block_size()) {
-                count_64[j - 1] &= rows_64[j - 1];
-                j++;
-            }
-            j = (j - 1) * 8;
-            while (j < m_bfh.block_size()) {
-                count[j] &= rows_8[j];
-                j++;
-            }
-            if (i % m_bfh.num_hashes() == m_bfh.num_hashes() - 1) {
-                for (size_t k = 0; k < m_bfh.block_size(); k++) {
-                    counts_64[2 * k] += m_count_expansions[count[k] & 0xF];
-                    counts_64[2 * k + 1] += m_count_expansions[count[k] >> 4];
+        for (uint64_t i = 0; i < hashes.size(); i += m_bfh.num_hashes()) {
+            for (size_t j = 0; j < m_bfh.num_hashes(); j++) {
+                char* rows_8 = rows.data() + (i + j) * m_bfh.block_size();
+                auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
+                size_t k = 1;
+                while (k * 8 <= m_bfh.block_size()) {
+                    count_64[k - 1] &= rows_64[k - 1];
+                    k++;
+                }
+                k = (k - 1) * 8;
+                while (k < m_bfh.block_size()) {
+                    count[k] &= rows_8[k];
+                    k++;
+                }
+                if (j + 1 == m_bfh.num_hashes()) {
+                    for (size_t k = 0; k < m_bfh.block_size(); k++) {
+                        counts_64[2 * k] += m_count_expansions[count[k] & 0xF];
+                        counts_64[2 * k + 1] += m_count_expansions[count[k] >> 4];
 //                    counts_64[2 * k] += m_count_expansions[count_1[i * hashes.size() + k] & 0xF];
 //                    counts_64[2 * k + 1] += m_count_expansions[count_1[i * hashes.size() + k] >> 4];
+                    }
+                    std::fill(count.begin(), count.end(), 0xFF);
                 }
-                std::fill(count.begin(), count.end(), 0xFF);
             }
         }
     }

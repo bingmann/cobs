@@ -8,7 +8,7 @@
 namespace genome {
     class server_stxxl : public server {
     private:
-        stxxl::linuxaio_file m_file;
+        stxxl::syscall_file m_file;
         size_t m_header_end;
 
         void read_from_disk(const std::vector<size_t>& hashes, char* rows) {
