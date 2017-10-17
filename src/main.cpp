@@ -35,7 +35,7 @@ void run(genome::server& s, size_t query_len, std::vector<std::pair<uint16_t, st
     genome::timer t;
     t.active("total");
     for (size_t i = 0; i < 1; i++) {
-        s.search_bloom_filter<31>(genome::random_query(query_len), result, 10);
+        s.search_bloom_filter(genome::random_query(query_len), 31, result, 10);
     }
     t.stop();
     std::cout << s.get_timer() << std::endl;

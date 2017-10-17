@@ -22,8 +22,8 @@ namespace {
         std::string line;
 
         while (std::getline(ifs, line)) {
-            s_mmap.search_bloom_filter<31>(line, result_mmap);
-            s_ifs.search_bloom_filter<31>(line, result_ifs);
+            s_mmap.search_bloom_filter(line, 31, result_mmap);
+            s_ifs.search_bloom_filter(line, 31, result_ifs);
             double res = 0;
             ASSERT_EQ(result_mmap.size(), result_ifs.size());
             for (size_t i = 0; i < result_mmap.size(); i++) {
@@ -46,8 +46,8 @@ namespace {
         std::string line;
 
         while (std::getline(ifs, line)) {
-            s_mmap.search_bloom_filter<31>(line, result_mmap);
-            s_ifs.search_bloom_filter<31>(line, result_ifs);
+            s_mmap.search_bloom_filter(line, 31, result_mmap);
+            s_ifs.search_bloom_filter(line, 31, result_ifs);
             double res = 0;
             ASSERT_EQ(result_mmap.size(), result_ifs.size());
             for (size_t i = 0; i < result_mmap.size(); i++) {

@@ -1,6 +1,7 @@
 #include "server_mmap.hpp"
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <file/util.hpp>
 
 namespace genome {
 

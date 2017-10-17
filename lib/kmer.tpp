@@ -21,6 +21,20 @@ namespace genome {
     }
 
     template<unsigned int N>
+    void kmer<N>::init(const char* chars, char* kmer_data, uint32_t kmer_size) {
+        int kmer_size_int = kmer_size;
+        for (int i = kmer_size_int - 4; i >= -3; i -= 4) {
+            if (i >= 0) {
+                kmer_data[(kmer_size_int - (i + 4)) / 4] = m_bps_to_byte.at(*((uint32_t *) (chars + i)));
+            } else {
+                char c2 = i < -1 ? 'A' : chars[i + 1];
+                char c3 = i < -2 ? 'A' : chars[i + 2];
+                kmer_data[data_size(kmer_size) - 1] = m_bps_to_byte.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
+            }
+        }
+    }
+
+    template<unsigned int N>
     unsigned int kmer<N>::chars_to_int(char c1, char c2, char c3, char c4) {
         unsigned int result = 0;
         return result + (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;

@@ -25,6 +25,11 @@ namespace genome {
         const std::array<byte, size>& data() const;
         std::string string() const;
         void print(std::ostream& ostream) const;
+
+        static void init(const char* chars, char* kmer, uint32_t kmer_size);
+        static uint32_t data_size(uint32_t kmer_size) {
+            return (kmer_size + 3) / 4;
+        }
     };
 }
 

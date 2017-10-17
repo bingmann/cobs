@@ -1,3 +1,4 @@
+#include <file/util.hpp>
 #include "server_ifs.hpp"
 
 namespace genome {
