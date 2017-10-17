@@ -12,7 +12,7 @@ namespace genome {
 
         std::vector<uint32_t> sorted_indices(counts.size());
         std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
-        std::sort(sorted_indices.begin(), sorted_indices.end(), [&](const auto v1, const auto v2){
+        std::nth_element(sorted_indices.begin(), sorted_indices.begin() + num_results, sorted_indices.end(), [&](const auto v1, const auto v2){
             return counts[v1] > counts[v2];
         });
 
