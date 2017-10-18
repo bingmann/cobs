@@ -13,7 +13,6 @@ namespace genome {
     private:
         std::vector<kmer<N>> m_data;
     public:
-        sample() = default;
         void print(std::ostream& ostream) const;
         std::vector<kmer<N>>& data();
         const std::vector<kmer<N>>& data() const;

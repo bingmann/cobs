@@ -7,6 +7,8 @@
 #include "helpers.hpp"
 
 namespace genome {
+    typedef unsigned char byte;
+
     template<unsigned int N>
     class kmer {
     public:

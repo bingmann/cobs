@@ -65,6 +65,23 @@ namespace genome::file {
         deserialize(ifs, bf, h);
     }
 
+    inline void deserialize(const boost::filesystem::path& p, std::vector<std::vector<byte>>& data, msbf_header& msbfh) {
+        std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+        deserialize(ifs, data, msbfh);
+    }
+
+    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, msbf_header& msbfh) {
+        header<msbf_header>::deserialize(ifs, msbfh);
+        data.clear();
+        data.resize(msbfh.parameters().size());
+        for (size_t i = 0; i < msbfh.parameters().size(); i++) {
+            size_t bf_size = std::get<0>(msbfh.parameters()[i]) * std::get<1>(msbfh.parameters()[i]);
+            std::vector<byte> d(bf_size);
+            ifs.read(reinterpret_cast<char*>(d.data()), bf_size);
+            data[i] = std::move(d);
+        }
+    }
+
     template<class T>
     void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p, const T& h) {
         ofs.open(p.string(), std::ios::out | std::ios::binary);

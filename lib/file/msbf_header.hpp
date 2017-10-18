@@ -8,8 +8,8 @@ namespace genome::file {
     private:
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> m_parameters;
         std::vector<std::string> m_file_names;
-        const uint32_t m_page_size;
-        size_t padding_size(long stream_position) const;
+        uint32_t m_page_size;
+        size_t padding_size(uint64_t curr_stream_pos) const;
     protected:
         void serialize(std::ofstream& ofs) const override;
         void deserialize(std::ifstream& ifs) override;

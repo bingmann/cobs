@@ -5,25 +5,66 @@
 namespace {
     using namespace genome;
 
-    std::string in_dir_1 = "test/resources/bloom_filter/input_1/";
-    std::string in_dir_2 = "test/resources/bloom_filter/input_2/";
-    std::string in_dir_3 = "test/resources/bloom_filter/input_3/";
-    std::string out_dir = "test/out/bloom_filter/";
-    std::string out_file_1 = out_dir + "[sample_1-sample_3].g_blo";
-    std::string out_file_2 = out_dir + "[sample_4-sample_4].g_blo";
-    std::string out_file_3 = out_dir + "[sample_1-sample_9].g_blo";
-    std::string out_file_4 = out_dir + "[sample_9-sample_9].g_blo";
-    std::string out_file_5 = out_dir + "[sample_1-sample_8].g_blo";
-    std::string out_file_6 = out_dir + "[[sample_1-sample_8]-[sample_9-sample_9]].g_blo";
-    std::string out_file_7 =
-            out_dir + "[[[sample_1-sample_3]-[sample_4-sample_4]]-[[sample_9-sample_9]-[sample_9-sample_9]]].g_blo";
-    std::string sample_1 = in_dir_1 + "sample_1.g_sam";
-    std::string sample_2 = in_dir_1 + "sample_2.g_sam";
-    std::string sample_3 = in_dir_1 + "sample_3.g_sam";
-    std::string sample_4 = in_dir_2 + "sample_4.g_sam";
-    std::string sample_8 = in_dir_3 + "sample_8.g_sam";
-    std::string sample_9 = in_dir_3 + "sample_9.g_sam";
-    size_t bloom_filter_size = 200000;
-    size_t block_size = 1;
-    size_t num_hashes = 7;
+    std::string in_dir = "test/resources/msbf/input_1/";
+    std::string msbf_path = in_dir + "filter.g_mbf";
+    std::string tmp_dir = "test/out/tmp";
+    std::string query = "CAATCGAGCAAGTCCATTATCAACGAGTGTGTTGCAGTTTTATTCTCTCGCCAGCATTGTAATAGGCACTAAAAGAGTGATGATAGTCATGAGTGCTGAGCTAAGA"
+            "CGGCGTCGGTGCATAGCGGACTTTCGGTCAGTCGCAATTCCTCACGAGACCCGTCCTGTTGAGCGTATCACTCTCAATGTACAAGCAACCCGAGAAGGCTGTGCCT"
+            "GGACTCAACCGGATGCAGGATGGACTCCAGACACGGGGCCACCACTCTTCACACGTAAAGCAAGAACGTCGAGCAGTCATGAAAGTCTTAGTACCGCACGTGCCAT"
+            "CTTACTGCGAATATTGCCTGAAGCTGTACCGTTATTGGGGGGCAAAGATGAAGTTCTCCTCTTTTCATAATTGTACTGACGACAGCCGTGTTCCCGGTTTCTTCAG"
+            "AGGTTAAAGAATAAGGGCTTATTGTAGGCAGAGGGACGCCCTTTTAGTGGCTGGCGTTAAGTATCTTCGGACCCCCTTGTCTATCCAGATTAATCGAATTCTCTCA"
+            "TTTAGGACCCTAGTAAGTCATCATTGGTATTTGAATGCGACCCCGAAGAAACCGCCTAAAAATGTCAATGGTTGGTCCACTAAACTTCATTTAATCAACTCCTAAA"
+            "TCGGCGCGATAGGCCATTAGAGGTTTAATTTTGTATGGCAAGGTACTTCCGATCTTAATGAATGGCCGGAAGAGGTACGGACGCGATATGCGGGGGTGAGAGGGCA"
+            "AATAGGCAGGTTCGCCTTCGTCACGCTAGGAGGCAATTCTATAAGAATGCACATTGCATCGATACATAAAATGTCTCGACCGCATGCGCAACTTGTGAAGTGTCTA"
+            "CTATCCCTAAGCCCATTTCCCGCATAATAACCCCTGATTGTGTCCGCATCTGATGCTACCCGGGTTGAGTTAGCGTCGAGCTCGCGGAACTTATTGCATGAGTAGA"
+            "GTTGAGTAAGAGCTGTTAGATGGCTCGCTGAGCTAATAGTTGCCCA";
+
+    void generate_test_case() {
+        std::vector<sample<31>> samples(33);
+        kmer<31> k;
+        for (size_t i = 0; i < query.size() - 31; i++) {
+            k.init(query.data() + i);
+            for (size_t j = 0; j < samples.size(); j++) {
+                if (j % (i % (samples.size() - 1) + 1) == 0) {
+                    samples[j].data().push_back(k);
+                }
+            }
+        }
+
+        for (size_t i = 0; i < samples.size(); i++) {
+            genome::file::serialize(tmp_dir + "/sample_" + std::to_string(i) + genome::file::sample_header::file_extension, samples[i]);
+        }
+
+    }
+
+    class msbf : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            boost::filesystem::create_directories(in_dir);
+            boost::filesystem::create_directories(tmp_dir);
+            generate_test_case();
+            genome::msbf::create_folders(tmp_dir, in_dir, 16);
+            genome::msbf::create_msbf_from_samples(in_dir, 8, 3, 0.1);
+        }
+
+        virtual void TearDown() {
+            boost::filesystem::remove_all(in_dir);
+            boost::filesystem::remove_all(tmp_dir);
+        }
+    };
+
+    TEST_F(msbf, padding) {
+        std::ifstream ifs;
+        auto msbfh = genome::file::deserialize_header<genome::file::msbf_header>(ifs, msbf_path);
+        genome::stream_metadata smd = genome::get_stream_metadata(ifs);
+        ASSERT_EQ(smd.curr_pos % getpagesize(), 0U);
+    }
+
+    TEST_F(msbf, deserialization) {
+        std::vector<std::vector<byte>> data;
+        genome::file::msbf_header msbfh;
+        genome::file::deserialize(msbf_path, data, msbfh);
+        ASSERT_EQ(msbfh.file_names().size(), 40U);
+        ASSERT_EQ(data.size(), 3U);
+    }
 }

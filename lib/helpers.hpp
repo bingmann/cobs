@@ -5,10 +5,12 @@
 #include <boost/filesystem.hpp>
 #include <iomanip>
 #include <cassert>
+#include "sample.hpp"
 
+
+typedef unsigned char byte;
 
 namespace genome {
-    typedef unsigned char byte;
 
     template<class T>
     inline auto operator<<(std::ostream& os, const T& t) -> decltype(t.print(os), os) {
@@ -166,6 +168,7 @@ namespace genome {
         ifs.seekg(0, std::ios::end);
         std::streamoff end_pos = ifs.tellg();
         ifs.seekg(curr_pos, std::ios::beg);
+        assert(ifs.good());
         assert(curr_pos >= 0);
         assert(end_pos >= 0);
         assert(end_pos >= curr_pos);

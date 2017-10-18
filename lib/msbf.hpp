@@ -142,12 +142,12 @@ namespace genome::msbf {
 
     void create_msbf_from_samples(const boost::filesystem::path& in_dir, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
         boost::filesystem::path samples_dir = in_dir / "samples/";
-        std::string bloom_dir = in_dir.string() +  "/bloom";
+        std::string bloom_dir = in_dir.string() +  "/bloom_";
         size_t iteration = 1;
         create_bloom_filters_from_samples(samples_dir, bloom_dir + std::to_string(iteration), processing_batch_size, num_hashes, false_positive_probability);
         while(!combine_bloom_filters(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), processing_batch_size)) {
             iteration++;
         }
-        create_msbf(bloom_dir + std::to_string(iteration), in_dir / ("filter" + genome::file::msbf_header::file_extension));
+        create_msbf(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + genome::file::msbf_header::file_extension));
     }
 }
