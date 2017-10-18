@@ -62,7 +62,8 @@ namespace genome {
         explicit server_stxxl(const boost::filesystem::path& path) : m_file(path.string(), stxxl::file::RDONLY) {
             std::ifstream ifs;
             m_bfh = file::deserialize_header<file::bloom_filter_header>(ifs, path);
-            m_header_end = ifs.tellg();
+            stream_metadata smd = get_stream_metadata(ifs);
+            m_header_end = smd.curr_pos;
         }
     };
 }

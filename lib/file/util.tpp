@@ -36,10 +36,8 @@ namespace genome::file {
         header<sample_header>::deserialize(ifs, h);
         assert(N == h.kmer_size());
 
-        std::streamoff pos = ifs.tellg();
-        ifs.seekg(0, std::ios::end);
-        size_t size = ifs.tellg() - pos;
-        ifs.seekg(pos, std::ios::beg);
+        stream_metadata smd = get_stream_metadata(ifs);
+        size_t size = smd.end_pos - smd.curr_pos;
         s.data().resize(size / kmer<N>::size);
         ifs.read(reinterpret_cast<char*>(s.data().data()), size);
     }
@@ -56,10 +54,8 @@ namespace genome::file {
         bf.block_size(h.block_size());
         bf.num_hashes(h.num_hashes());
 
-        std::streamoff pos = ifs.tellg();
-        ifs.seekg(0, std::ios::end);
-        size_t size = ifs.tellg() - pos;
-        ifs.seekg(pos, std::ios::beg);
+        stream_metadata smd = get_stream_metadata(ifs);
+        size_t size = smd.end_pos - smd.curr_pos;
         bf.data().resize(size);
         ifs.read(reinterpret_cast<char*>(bf.data().data()), size);
     }

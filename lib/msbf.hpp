@@ -4,6 +4,10 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 #include <file/sample_header.hpp>
+#include <file/util.hpp>
+#include <file/msbf_header.hpp>
+#include <cmath>
+#include <bloom_filter.hpp>
 
 namespace genome::msbf {
     void create_folders(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
@@ -21,7 +25,7 @@ namespace genome::msbf {
         boost::filesystem::path sub_out_dir;
         for(const auto& p: paths) {
             if (i % batch_size == 0) {
-                sub_out_dir = out_dir.string() + "/" + std::to_string(batch);
+                sub_out_dir = out_dir.string() + "/samples/" + std::to_string(batch);
                 boost::filesystem::create_directories(sub_out_dir);
                 batch++;
             }
@@ -125,10 +129,8 @@ namespace genome::msbf {
         for (const auto& p: paths) {
             std::ifstream ifs;
             genome::file::deserialize_header<genome::file::bloom_filter_header>(ifs, p);
-            long start_pos = ifs.tellg();
-            ifs.seekg(0, std::ios::end);
-            size_t data_size = ifs.tellg() - start_pos;
-            ifs.seekg(start_pos, std::ios::beg);
+            genome::stream_metadata smd = get_stream_metadata(ifs);
+            size_t data_size = smd.end_pos - smd.curr_pos;
             while(data_size > 0) {
                 size_t num_bytes = std::min(buffer.size(), data_size);
                 ifs.read(buffer.data(), num_bytes);
@@ -138,16 +140,14 @@ namespace genome::msbf {
         }
     }
 
-    void create_msbf_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
-                                  size_t msbf_batch_size, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
-        boost::filesystem::path samples_dir = out_dir / "samples/";
-        std::string bloom_dir = out_dir.string() +  "/bloom";
+    void create_msbf_from_samples(const boost::filesystem::path& in_dir, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
+        boost::filesystem::path samples_dir = in_dir / "samples/";
+        std::string bloom_dir = in_dir.string() +  "/bloom";
         size_t iteration = 1;
-        create_folders(in_dir, samples_dir, msbf_batch_size);
         create_bloom_filters_from_samples(samples_dir, bloom_dir + std::to_string(iteration), processing_batch_size, num_hashes, false_positive_probability);
         while(!combine_bloom_filters(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), processing_batch_size)) {
             iteration++;
         }
-        create_msbf(bloom_dir + std::to_string(iteration), out_dir / ("filter" + genome::file::msbf_header::file_extension));
+        create_msbf(bloom_dir + std::to_string(iteration), in_dir / ("filter" + genome::file::msbf_header::file_extension));
     }
 }

@@ -12,7 +12,7 @@ void bloom_filter_2() {
 //    genome::bloom_filter::combine_bloom_filters("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 15000000, 3, 7);
 }
 
-int main(int argc, char** argv) {
+int main() {
     clock_t begin = clock();
     sample();
     bloom_filter();

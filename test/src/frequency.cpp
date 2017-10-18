@@ -15,9 +15,10 @@ namespace {
     std::string sample_1 = in_dir + "sample_1.g_sam";
     std::string sample_2 = in_dir + "sample_2.g_sam";
     std::string sample_3 = in_dir + "sample_3.g_sam";
+
+    /*
     std::string sample_4 = in_dir + "sample_4.g_fre";
     std::string sample_5 = in_dir + "sample_5.g_fre";
-
     void generate_result_bin() {
         boost::filesystem::create_directories(out_dir);
         std::vector<uint64_t> v;
@@ -96,6 +97,13 @@ namespace {
         ofs.write(reinterpret_cast<const char*>(&count), 4);
     }
 
+    TEST(frequency, generate_results) {
+        generate_result_bin();
+        generate_result_freq();
+    }
+    */
+
+
     size_t get_count_sample(const std::string& file) {
         std::ifstream ifs;
         file::deserialize_header<file::sample_header>(ifs, file);
@@ -120,11 +128,6 @@ namespace {
             total_count += count;
         }
         return total_count;
-    }
-
-    TEST(frequency, generate_results) {
-//        generate_result_bin();
-//        generate_result_freq();
     }
 
     TEST(frequency, bin) {

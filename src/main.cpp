@@ -90,7 +90,8 @@ int main() {
 //    genome::msbf::create_folders("/users/flo/projects/thesis/data/msbf_out", "/users/flo/projects/thesis/data/msbf_out_2", 64);
 //    genome::msbf::create_bloom_filters_from_samples("/users/flo/projects/thesis/data/msbf_out_2", "/users/flo/projects/thesis/data/msbf_out_3", 32, 1, 0.3);
 //    genome::msbf::combine_bloom_filters("/users/flo/projects/thesis/data/msbf_out_3", "/users/flo/projects/thesis/data/msbf_out_4", 32);
-    genome::msbf::create_msbf_from_samples("/users/flo/projects/thesis/data/msbf_in", "/users/flo/projects/thesis/data/msbf", 16, 8, 1, 0.3);
+    genome::msbf::create_folders("/users/flo/projects/thesis/data/msbf_in", "/users/flo/projects/thesis/data/msbf", 16);
+    genome::msbf::create_msbf_from_samples("/users/flo/projects/thesis/data/msbf", 8, 1, 0.3);
 //    genome::file::msbf_header h;
 //    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;

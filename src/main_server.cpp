@@ -6,13 +6,12 @@
 int main(int argc, char** argv) {
     std::vector<std::pair<uint16_t, std::string>> result;
     if (argc == 4) {
-        char* pEnd;
         std::string type = argv[1];
         std::string bloom_filter_path = argv[2];
         std::string query = argv[3];
 
         genome::server_mmap s_mmap(bloom_filter_path);
-        s_mmap.search_bloom_filter<31>(query, result);
+        s_mmap.search_bloom_filter(query, 31, result);
         std::cout << s_mmap.get_timer();
 //        if (type == "mmap") {
 //        } else if (type == "ifs") {

@@ -71,8 +71,6 @@ namespace genome::cortex {
         t.active("sort");
         std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
                   reinterpret_cast<uint64_t*>(&(*sample.data().end())));
-
-        auto c3 = std::chrono::high_resolution_clock::now();
     }
 
     template<unsigned int N>

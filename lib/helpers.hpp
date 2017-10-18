@@ -2,9 +2,9 @@
 
 #include <vector>
 #include <iostream>
-#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <iomanip>
+#include <cassert>
 
 
 namespace genome {
@@ -31,7 +31,7 @@ namespace genome {
         ost.write(reinterpret_cast<const char*>(&t), sizeof(T));
     }
 
-    inline void serialize(std::ostream& ost) {}
+    inline void serialize(std::ostream& /*ost*/) {}
 
     template<typename T, typename... Args>
     inline void serialize(std::ostream& ost, const T& t, const Args&... args) {
@@ -39,7 +39,7 @@ namespace genome {
         serialize(ost, args...);
     }
 
-    inline void deserialize(std::ifstream& ifs) {}
+    inline void deserialize(std::ifstream& /*ifs*/) {}
 
     template<typename T, typename... Args>
     inline void deserialize(std::ifstream& ifs, T& t, Args&... args) {
@@ -155,7 +155,23 @@ namespace genome {
         };
         std::cout << "}" << std::endl;
     }
-}
+
+    struct stream_metadata {
+        uint64_t curr_pos;
+        uint64_t end_pos;
+    };
+
+    inline stream_metadata get_stream_metadata(std::ifstream& ifs) {
+        std::streamoff curr_pos = ifs.tellg();
+        ifs.seekg(0, std::ios::end);
+        std::streamoff end_pos = ifs.tellg();
+        ifs.seekg(curr_pos, std::ios::beg);
+        assert(curr_pos >= 0);
+        assert(end_pos >= 0);
+        assert(end_pos >= curr_pos);
+        return {(uint64_t) curr_pos, (uint64_t) end_pos};
+    };
+};
 
 
 

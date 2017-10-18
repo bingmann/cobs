@@ -2,25 +2,21 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <file/util.hpp>
+#include <helpers.hpp>
 
 namespace genome {
 
     server_mmap::server_mmap(const boost::filesystem::path& path) : server() {
         std::ifstream ifs;
         m_bfh = file::deserialize_header<file::bloom_filter_header>(ifs, path);
-
-        long start_pos = ifs.tellg();
-        ifs.seekg(0, std::ios::end);
-        size_t size = ifs.tellg();
-        ifs.close();
-
+        stream_metadata smd = get_stream_metadata(ifs);
         int fd = open(path.string().data(), O_RDONLY, 0);
         assert(fd != -1);
 
 //  | MAP_POPULATE
-        m_data = reinterpret_cast<byte*>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
+        m_data = reinterpret_cast<byte*>(mmap(NULL, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0));
 //        assert(madvise(m_data, size, MADV_RANDOM) == 0);
-        m_data += start_pos;
+        m_data += smd.curr_pos;
     }
 
     void server_mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {

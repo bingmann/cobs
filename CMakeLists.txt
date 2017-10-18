@@ -3,7 +3,8 @@ project(thesis)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-W -Wall -fopenmp -lboost_system -L/software/boost/1.62.0/lib")
+set(CMAKE_CXX_FLAGS "-W -Wall -fopenmp")
+# -lboost_system -L/software/boost/1.62.0/lib
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
@@ -34,7 +35,8 @@ set(TEST_FILES
         test/src/bloom_filter.cpp
         test/src/file.cpp
         test/src/util.hpp
-        test/src/server.cpp)
+        test/src/server.cpp
+        test/src/msbf.cpp)
 
 include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
 add_library(thesis_lib

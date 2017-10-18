@@ -89,7 +89,7 @@ namespace {
                 num_positive++;
             }
         }
-        ASSERT_EQ(num_positive, 945);
+        ASSERT_EQ(num_positive, 945U);
     }
 
     TEST(bloom_filter, equal_ones_and_zeros) {
@@ -105,8 +105,8 @@ namespace {
             ones += b;
         }
         size_t zeros = bf.data().size() - ones;
-        ASSERT_EQ(zeros, 97734);
-        ASSERT_EQ(ones, 102266);
+        ASSERT_EQ(zeros, 97734U);
+        ASSERT_EQ(ones, 102266U);
     }
 
     TEST(bloom_filter, others_zero) {
@@ -116,7 +116,6 @@ namespace {
         bloom_filter bf;
         file::deserialize(out_file_2, bf);
 
-        size_t num_positive = 0;
         for (size_t i = 0; i < 100000; i++) {
             std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
                                      (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
