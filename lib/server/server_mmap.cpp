@@ -18,7 +18,9 @@ namespace genome {
         assert(fd != -1);
 
 //  | MAP_POPULATE
-        m_data = start_pos + reinterpret_cast<byte*>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
+        m_data = reinterpret_cast<byte*>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
+//        assert(madvise(m_data, size, MADV_RANDOM) == 0);
+        m_data += start_pos;
     }
 
     void server_mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {

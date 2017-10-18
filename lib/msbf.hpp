@@ -10,7 +10,7 @@ namespace genome::msbf {
         std::vector<boost::filesystem::path> paths;
         boost::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return boost::filesystem::is_regular_file(p);
+            return boost::filesystem::is_regular_file(p) && p.path().extension() == genome::file::sample_header::file_extension;
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
             return boost::filesystem::file_size(p1) < boost::filesystem::file_size(p2);
@@ -20,15 +20,13 @@ namespace genome::msbf {
         size_t i = 0;
         boost::filesystem::path sub_out_dir;
         for(const auto& p: paths) {
-            if (p.extension() == genome::file::sample_header::file_extension) {
-                if (i % batch_size == 0) {
-                    sub_out_dir = out_dir.string() + "/" + std::to_string(batch);
-                    boost::filesystem::create_directories(sub_out_dir);
-                    batch++;
-                }
-                boost::filesystem::rename(p, sub_out_dir / p.filename());
-                i++;
+            if (i % batch_size == 0) {
+                sub_out_dir = out_dir.string() + "/" + std::to_string(batch);
+                boost::filesystem::create_directories(sub_out_dir);
+                batch++;
             }
+            boost::filesystem::rename(p, sub_out_dir / p.filename());
+            i++;
         }
     }
 
@@ -85,8 +83,8 @@ namespace genome::msbf {
                 }
                 if (bloom_filter_size != 0) {
                     all_combined = genome::bloom_filter::combine_bloom_filters(in_dir / it->path().filename(), out_dir / it->path().filename(),
-                                                                bloom_filter_size, num_hashes,
-                                                                batch_size);
+                                                                               bloom_filter_size, num_hashes,
+                                                                               batch_size);
                 } else {
                     std::cerr << "empty directory" << std::endl;
                 }
@@ -95,8 +93,53 @@ namespace genome::msbf {
         return all_combined;
     }
 
+    void create_msbf(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_file) {
+        std::vector<boost::filesystem::path> paths;
+        boost::filesystem::recursive_directory_iterator it(in_dir), end;
+        std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
+            return boost::filesystem::is_regular_file(p) && p.path().extension() == genome::file::bloom_filter_header::file_extension;
+        });
+        std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
+            return boost::filesystem::file_size(p1) < boost::filesystem::file_size(p2);
+        });
+
+
+        uint32_t page_size = getpagesize();
+        assert(page_size == 4096); //todo just in case
+
+        std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> parameters;
+        std::vector<std::string> file_names;
+        for (const auto& p: paths) {
+            std::ifstream ifs;
+            auto bfh = genome::file::deserialize_header<genome::file::bloom_filter_header>(ifs, p);
+            parameters.emplace_back(std::make_tuple(bfh.bloom_filter_size(), bfh.block_size(), bfh.num_hashes()));
+            file_names.insert(file_names.end(), bfh.file_names().begin(), bfh.file_names().end());
+//            assert(bfh.block_size() == page_size);
+        }
+
+        genome::file::msbf_header msbfh(parameters, file_names, page_size);
+        std::ofstream ofs;
+        genome::file::serialize_header(ofs, out_file, msbfh);
+
+        std::vector<char> buffer(32 * page_size);
+        for (const auto& p: paths) {
+            std::ifstream ifs;
+            genome::file::deserialize_header<genome::file::bloom_filter_header>(ifs, p);
+            long start_pos = ifs.tellg();
+            ifs.seekg(0, std::ios::end);
+            size_t data_size = ifs.tellg() - start_pos;
+            ifs.seekg(start_pos, std::ios::beg);
+            while(data_size > 0) {
+                size_t num_bytes = std::min(buffer.size(), data_size);
+                ifs.read(buffer.data(), num_bytes);
+                data_size -= num_bytes;
+                ofs.write(buffer.data(), num_bytes);
+            }
+        }
+    }
+
     void create_msbf_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
-                                           size_t msbf_batch_size, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
+                                  size_t msbf_batch_size, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
         boost::filesystem::path samples_dir = out_dir / "samples/";
         std::string bloom_dir = out_dir.string() +  "/bloom";
         size_t iteration = 1;
@@ -105,5 +148,6 @@ namespace genome::msbf {
         while(!combine_bloom_filters(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), processing_batch_size)) {
             iteration++;
         }
+        create_msbf(bloom_dir + std::to_string(iteration), out_dir / ("filter" + genome::file::msbf_header::file_extension));
     }
 }

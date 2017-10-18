@@ -34,7 +34,7 @@ void run(genome::server& s, size_t query_len, std::vector<std::pair<uint16_t, st
     sync();
     genome::timer t;
     t.active("total");
-    for (size_t i = 0; i < 1; i++) {
+    for (size_t i = 0; i < 100; i++) {
         s.search_bloom_filter(genome::random_query(query_len), 31, result, 10);
     }
     t.stop();
@@ -53,7 +53,7 @@ void server() {
     size_t query_len = 900;
 //    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);
-    run(s_stxxl, query_len, result_3);
+//    run(s_stxxl, query_len, result_3);
 }
 
 int main() {
@@ -69,7 +69,7 @@ int main() {
 //        sum += std::stoi(strs[1]);
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
-    server();
+//    server();
 
 //    std::cout << getpagesize() << std::endl;
 
@@ -90,7 +90,7 @@ int main() {
 //    genome::msbf::create_folders("/users/flo/projects/thesis/data/msbf_out", "/users/flo/projects/thesis/data/msbf_out_2", 64);
 //    genome::msbf::create_bloom_filters_from_samples("/users/flo/projects/thesis/data/msbf_out_2", "/users/flo/projects/thesis/data/msbf_out_3", 32, 1, 0.3);
 //    genome::msbf::combine_bloom_filters("/users/flo/projects/thesis/data/msbf_out_3", "/users/flo/projects/thesis/data/msbf_out_4", 32);
-//    genome::msbf::create_msbf_from_samples("/users/flo/projects/thesis/data/msbf_out_2", "/users/flo/projects/thesis/data/msbf", 16, 8, 1, 0.3);
+    genome::msbf::create_msbf_from_samples("/users/flo/projects/thesis/data/msbf_in", "/users/flo/projects/thesis/data/msbf", 16, 8, 1, 0.3);
 //    genome::file::msbf_header h;
 //    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;

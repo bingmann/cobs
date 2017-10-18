@@ -15,7 +15,7 @@ namespace genome::file {
         for (const auto& parameter: m_parameters) {
             genome::serialize(ofs, std::get<0>(parameter), std::get<1>(parameter), std::get<2>(parameter));
         }
-        for(const auto& file_name: m_file_names) {
+        for (const auto& file_name: m_file_names) {
             ofs << file_name << std::endl;
         }
 
@@ -29,8 +29,8 @@ namespace genome::file {
         uint32_t parameters_size;
         genome::deserialize(ifs, parameters_size);
         m_parameters.resize(parameters_size);
-        for(size_t i = 0; i < parameters_size; i++) {
-            genome::deserialize(ifs, std::get<0>(m_parameters[i]), std::get<1>(m_parameters[i]), std::get<2>(m_parameters[i]));
+        for (auto& parameter: m_parameters) {
+            genome::deserialize(ifs, std::get<0>(parameter), std::get<1>(parameter), std::get<2>(parameter));
         }
         for (auto& file_name: m_file_names) {
             std::getline(ifs, file_name);
