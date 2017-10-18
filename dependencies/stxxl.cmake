@@ -5,7 +5,7 @@ project(gtest-download NONE)
 include(ExternalProject)
 ExternalProject_Add(gtest
         GIT_REPOSITORY    http://github.com/stxxl/stxxl.git
-        GIT_TAG           1.4.1
+        GIT_TAG           master
         SOURCE_DIR        "${CMAKE_BINARY_DIR}/dependencies/stxxl/src"
         BINARY_DIR        "${CMAKE_BINARY_DIR}/dependencies/stxxl/build"
         CONFIGURE_COMMAND ""
