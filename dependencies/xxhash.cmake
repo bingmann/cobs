@@ -5,7 +5,7 @@ project(xxhash-download NONE)
 include(ExternalProject)
 ExternalProject_Add(xxhash
         GIT_REPOSITORY    https://github.com/Cyan4973/xxHash.git
-        GIT_TAG           master
+        GIT_TAG           v0.6.3
         SOURCE_DIR        "${CMAKE_BINARY_DIR}/dependencies/xxhash/src"
         BINARY_DIR        ""
         CONFIGURE_COMMAND ""

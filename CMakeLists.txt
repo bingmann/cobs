@@ -4,15 +4,10 @@ project(thesis)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-W -Wall -fopenmp")
-# -lboost_system -L/software/boost/1.62.0/lib
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
-
-add_subdirectory(stxxl/stxxl)
-
 find_package(Boost REQUIRED COMPONENTS filesystem)
-#find_package(STXXL REQUIRED)
 set(Boost_USE_STATIC_LIBS OFF)
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -21,6 +16,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
+include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
 
 set(HEADER_FILES
         lib/timer.hpp lib/helpers.hpp lib/bloom_filter.hpp lib/file/sample_header.hpp lib/file/bloom_filter_header.hpp
@@ -38,7 +34,6 @@ set(TEST_FILES
         test/src/server.cpp
         test/src/msbf.cpp)
 
-include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
 add_library(thesis_lib
         lib/timer.cpp
         lib/bloom_filter.cpp
