@@ -7,6 +7,16 @@ if (CMAKE_VERSION VERSION_GREATER 3.7)
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp")
 
+file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/lib/*.hpp" "${PROJECT_SOURCE_DIR}/lib/*.tpp")
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/lib/*.cpp")
+file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
+file(GLOB_RECURSE EXECUTABLE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+
+MESSAGE("HEADER_FILES     ${HEADER_FILES}")
+MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
+MESSAGE("TEST_FILES       ${TEST_FILES}")
+MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
+
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 set(Boost_USE_STATIC_LIBS OFF)
 
@@ -17,11 +27,6 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
 include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
-
-file(GLOB_RECURSE HEADER_FILES "lib/*.hpp" "lib/*.tpp")
-file(GLOB_RECURSE SOURCE_FILES "lib/*.cpp")
-file(GLOB_RECURSE TEST_FILES "test/src/*.hpp" "test/src/*.cpp")
-file(GLOB_RECURSE EXECUTABLE_FILES "src/*.cpp")
 
 add_library(thesis_lib ${SOURCE_FILES})
 set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES} xxhash)
