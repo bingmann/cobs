@@ -80,8 +80,8 @@ namespace {
         size_t num_tests = 100000;
         size_t num_positive = 0;
         for (size_t i = 0; i < num_tests; i++) {
-            std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
-                                     (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
+            std::array<genome::byte, 8> a = {(genome::byte) (i >> 0), (genome::byte) (i >> 8), (genome::byte) (i >> 16), (genome::byte) (i >> 24),
+                                     (genome::byte) (i >> 32), (genome::byte) (i >> 40), (genome::byte) (i >> 48), (genome::byte) (i >> 56)};
             genome::kmer<31> k(a);
             if (bss.contains(k, 0)) {
                 num_positive++;
@@ -115,8 +115,8 @@ namespace {
         genome::file::deserialize(out_file_2, bss);
 
         for (size_t i = 0; i < 100000; i++) {
-            std::array<byte, 8> a = {(byte) (i >> 0), (byte) (i >> 8), (byte) (i >> 16), (byte) (i >> 24),
-                                     (byte) (i >> 32), (byte) (i >> 40), (byte) (i >> 48), (byte) (i >> 56)};
+            std::array<genome::byte, 8> a = {(genome::byte) (i >> 0), (genome::byte) (i >> 8), (genome::byte) (i >> 16), (genome::byte) (i >> 24),
+                                     (genome::byte) (i >> 32), (genome::byte) (i >> 40), (genome::byte) (i >> 48), (genome::byte) (i >> 56)};
             genome::kmer<31> k(a);
             ASSERT_FALSE(bss.contains(k, i % 5 + 3));
         }

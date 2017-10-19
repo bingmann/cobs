@@ -2,18 +2,15 @@
 #include "ifs.hpp"
 
 namespace genome::server::bss {
-    ifs::ifs(const boost::filesystem::path& path) : base() {
-        m_bssh = file::deserialize_header<file::bss_header>(m_ifs, path);
-        m_pos_data_beg = m_ifs.tellg();
-    }
+    ifs::ifs(const boost::filesystem::path& path) : base(path) {}
 
     void ifs::get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) {
-        genome::bss bss(hashes.size(), m_bssh.block_size(), m_bssh.num_hashes());
+        genome::bss bss(hashes.size(), m_header.block_size(), m_header.num_hashes());
         auto data_ptr = reinterpret_cast<char*>(bss.data().data());
         m_timer.active("ifs_access");
         for (size_t i = 0; i < hashes.size(); i++) {
-            m_ifs.seekg(m_pos_data_beg + m_bssh.block_size() * hashes[i]);
-            m_ifs.read(data_ptr + i * m_bssh.block_size(), m_bssh.block_size());
+            m_ifs.seekg(m_pos_data_beg + m_header.block_size() * hashes[i]);
+            m_ifs.read(data_ptr + i * m_header.block_size(), m_header.block_size());
         }
 
         m_timer.active("compute_counts");

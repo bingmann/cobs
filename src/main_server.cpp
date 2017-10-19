@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
         std::string query = argv[3];
 
         genome::server::bss::mmap s_mmap(bss_path);
-        s_mmap.search_bss(query, 31, result);
+        s_mmap.search(query, 31, result);
         std::cout << s_mmap.get_timer();
 //        if (type == "mmap") {
 //        } else if (type == "ifs") {

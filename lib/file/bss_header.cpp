@@ -6,15 +6,16 @@ namespace genome::file {
     const std::string bss_header::file_extension = ".g_bss";
 
     void bss_header::serialize(std::ofstream& ofs) const {
-        genome::serialize(ofs, m_signature_size, m_block_size, m_num_hashes);
-        for(const auto& file_name: m_file_names) {
+        genome::serialize(ofs, (uint32_t) m_file_names.size(), m_signature_size, m_block_size, m_num_hashes);
+        for (const auto& file_name: m_file_names) {
             ofs << file_name << std::endl;
         }
     }
 
     void bss_header::deserialize(std::ifstream& ifs) {
-        genome::deserialize(ifs, m_signature_size, m_block_size, m_num_hashes);
-        m_file_names.resize(8 * m_block_size);
+        uint32_t file_names_size;
+        genome::deserialize(ifs, file_names_size, m_signature_size, m_block_size, m_num_hashes);
+        m_file_names.resize(file_names_size);
         for (auto& file_name: m_file_names) {
             std::getline(ifs, file_name);
         }

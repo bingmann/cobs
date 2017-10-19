@@ -16,11 +16,8 @@ namespace {
     class file : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            boost::filesystem::create_directories(out_dir);
-        }
-
-        virtual void TearDown() {
             boost::filesystem::remove_all(out_dir);
+            boost::filesystem::create_directories(out_dir);
         }
     };
 

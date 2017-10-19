@@ -4,11 +4,9 @@
 #include <string>
 #include <map>
 #include <ostream>
-#include "util.hpp"
+#include <util.hpp>
 
 namespace genome {
-    typedef unsigned char byte;
-
     template<unsigned int N>
     class kmer {
     public:

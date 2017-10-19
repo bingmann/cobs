@@ -5,12 +5,9 @@
 #include <boost/filesystem.hpp>
 #include <iomanip>
 #include <cassert>
-#include "sample.hpp"
-
-
-typedef unsigned char byte;
 
 namespace genome {
+    typedef unsigned char byte;
 
     template<class T>
     inline auto operator<<(std::ostream& os, const T& t) -> decltype(t.print(os), os) {
@@ -174,6 +171,13 @@ namespace genome {
         assert(end_pos >= curr_pos);
         return {(uint64_t) curr_pos, (uint64_t) end_pos};
     };
+
+    inline uint64_t get_page_size() {
+        int page_size = getpagesize();
+        assert(page_size > 0);
+        assert(page_size == 4096); //todo check for experiments
+        return (uint64_t) page_size;
+    }
 };
 
 

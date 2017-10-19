@@ -5,10 +5,15 @@
 
 namespace genome::file {
     class abss_header : public header<abss_header> {
+    public:
+        struct parameter {
+            uint64_t signature_size;
+            uint64_t num_hashes;
+        };
     private:
-        std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> m_parameters;
+        std::vector<parameter> m_parameters;
         std::vector<std::string> m_file_names;
-        uint32_t m_page_size;
+        uint64_t m_page_size;
         size_t padding_size(uint64_t curr_stream_pos) const;
     protected:
         void serialize(std::ofstream& ofs) const override;
@@ -16,9 +21,10 @@ namespace genome::file {
     public:
         static const std::string magic_word;
         static const std::string file_extension;
-        explicit abss_header(uint32_t page_size = 16384);
-        abss_header(const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters, const std::vector<std::string>& file_names, uint32_t page_size = 16384);
-        const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters() const;
+        explicit abss_header(uint64_t page_size = 4096);
+        abss_header(const std::vector<parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size = 4096);
+        const std::vector<parameter>& parameters() const;
         const std::vector<std::string>& file_names() const;
+        uint64_t page_size() const;
     };
 }

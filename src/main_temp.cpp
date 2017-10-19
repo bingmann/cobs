@@ -35,7 +35,7 @@ void run(genome::server::bss::base& s, size_t query_len, std::vector<std::pair<u
     genome::timer t;
     t.active("total");
     for (size_t i = 0; i < 100; i++) {
-        s.search_bss(genome::random_query(query_len), 31, result, 10);
+        s.search(genome::random_query(query_len), 31, result, 10);
     }
     t.stop();
     std::cout << s.get_timer() << std::endl;
@@ -49,7 +49,7 @@ void server() {
     boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
     genome::server::bss::mmap s_mmap(p);
     genome::server::bss::ifs s_ifs(p);
-    genome::server::bss::asio s_asio(p);
+//    genome::server::bss::asio s_asio(p);
     size_t query_len = 900;
 //    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);

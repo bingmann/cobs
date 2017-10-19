@@ -5,9 +5,9 @@
 namespace {
     using namespace genome;
 
-    std::string in_dir = "test/resources/abss/input_1/";
+    std::string in_dir = "test/out/abss/input_1/";
     std::string abss_path = in_dir + "filter.g_abss";
-    std::string tmp_dir = "test/out/tmp";
+    std::string tmp_dir = "test/out/abss/tmp";
     std::string query = "CAATCGAGCAAGTCCATTATCAACGAGTGTGTTGCAGTTTTATTCTCTCGCCAGCATTGTAATAGGCACTAAAAGAGTGATGATAGTCATGAGTGCTGAGCTAAGA"
             "CGGCGTCGGTGCATAGCGGACTTTCGGTCAGTCGCAATTCCTCACGAGACCCGTCCTGTTGAGCGTATCACTCTCAATGTACAAGCAACCCGAGAAGGCTGTGCCT"
             "GGACTCAACCGGATGCAGGATGGACTCCAGACACGGGGCCACCACTCTTCACACGTAAAGCAAGAACGTCGAGCAGTCATGAAAGTCTTAGTACCGCACGTGCCAT"
@@ -40,27 +40,27 @@ namespace {
     class abss : public ::testing::Test {
     protected:
         virtual void SetUp() {
+            boost::filesystem::remove_all(in_dir);
+            boost::filesystem::remove_all(tmp_dir);
             boost::filesystem::create_directories(in_dir);
             boost::filesystem::create_directories(tmp_dir);
             generate_test_case();
-            genome::abss::create_folders(tmp_dir, in_dir, 16);
-            genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1);
-        }
-
-        virtual void TearDown() {
-            boost::filesystem::remove_all(in_dir);
-            boost::filesystem::remove_all(tmp_dir);
         }
     };
 
     TEST_F(abss, padding) {
+        size_t page_size = get_page_size();
+        genome::abss::create_folders(tmp_dir, in_dir, page_size);
+        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, page_size);
         std::ifstream ifs;
         auto abssh = genome::file::deserialize_header<genome::file::abss_header>(ifs, abss_path);
         genome::stream_metadata smd = genome::get_stream_metadata(ifs);
-        ASSERT_EQ(smd.curr_pos % getpagesize(), 0U);
+        ASSERT_EQ(smd.curr_pos % page_size, 0U);
     }
 
     TEST_F(abss, deserialization) {
+        genome::abss::create_folders(tmp_dir, in_dir, 2);
+        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<byte>> data;
         genome::file::abss_header abssh;
         genome::file::deserialize(abss_path, data, abssh);

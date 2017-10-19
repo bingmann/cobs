@@ -75,9 +75,9 @@ namespace genome::file {
         data.clear();
         data.resize(h.parameters().size());
         for (size_t i = 0; i < h.parameters().size(); i++) {
-            size_t bf_size = std::get<0>(h.parameters()[i]) * std::get<1>(h.parameters()[i]);
-            std::vector<byte> d(bf_size);
-            ifs.read(reinterpret_cast<char*>(d.data()), bf_size);
+            size_t data_size = h.page_size() * h.parameters()[i].signature_size;
+            std::vector<byte> d(data_size);
+            ifs.read(reinterpret_cast<char*>(d.data()), data_size);
             data[i] = std::move(d);
         }
     }

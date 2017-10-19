@@ -8,9 +8,10 @@
 #include <file/abss_header.hpp>
 #include <cmath>
 #include <bit_sliced_signatures/bss.hpp>
+#include <boost/utility.hpp>
 
 namespace genome::abss {
-    void create_folders(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
+    void create_folders(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, uint64_t page_size = get_page_size()) {
         std::vector<boost::filesystem::path> paths;
         boost::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -24,7 +25,7 @@ namespace genome::abss {
         size_t i = 0;
         boost::filesystem::path sub_out_dir;
         for(const auto& p: paths) {
-            if (i % batch_size == 0) {
+            if (i % (8 * page_size) == 0) {
                 sub_out_dir = out_dir.string() + "/samples/" + std::to_string(batch);
                 boost::filesystem::create_directories(sub_out_dir);
                 batch++;
@@ -48,22 +49,33 @@ namespace genome::abss {
         return result;
     }
 
-    void create_bsss_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
-                                           size_t batch_size, size_t num_hashes, double false_positive_probability) {
+    void create_bss_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size,
+                                 size_t num_hashes, double false_positive_probability, uint64_t page_size) {
         assert(batch_size % 8 == 0);
-        boost::system::error_code ec;
-        for (boost::filesystem::directory_iterator it(in_dir), end; it != end; it.increment(ec)) {
-            boost::filesystem::path p = it->path();
-            if(boost::filesystem::is_directory(p)) {
-                size_t max_file_size = 0;
-                for (boost::filesystem::directory_iterator sub_it(p); sub_it != end; sub_it.increment(ec)) {
-                    if (sub_it->path().extension() == genome::file::sample_header::file_extension) {
-                        max_file_size = std::max(max_file_size, boost::filesystem::file_size(sub_it->path()));
-                    }
-                }
+        std::vector<boost::filesystem::path> paths;
+        std::copy_if(boost::filesystem::directory_iterator(in_dir), boost::filesystem::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
+            return boost::filesystem::is_directory(p);
+        });
+        std::sort(paths.begin(), paths.end());
 
-                size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-                bss::create_from_samples(p, out_dir / p.filename(), signature_size, batch_size / 8, num_hashes);
+        boost::system::error_code ec;
+        for (const auto& p: paths) {
+            size_t num_files = 0;
+            size_t max_file_size = 0;
+            for (boost::filesystem::directory_iterator sub_it(p), end; sub_it != end; sub_it.increment(ec)) {
+                if (sub_it->path().extension() == genome::file::sample_header::file_extension) {
+                    max_file_size = std::max(max_file_size, boost::filesystem::file_size(sub_it->path()));
+                    num_files++;
+                }
+            }
+            size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
+            bss::create_from_samples(p, out_dir / p.filename(), signature_size, batch_size / 8, num_hashes);
+
+            if (num_files != 8 * page_size) {
+                assert(num_files < 8 * page_size);
+                assert(p == paths.back());
+                genome::bss bss(signature_size, (8 * page_size - num_files) / 8, num_hashes);
+                genome::file::serialize(out_dir / p.filename() / ("padding" + file::bss_header::file_extension), bss, std::vector<std::string>());
             }
         }
     }
@@ -87,8 +99,8 @@ namespace genome::abss {
                 }
                 if (signature_size != 0) {
                     all_combined = genome::bss::combine_bss(in_dir / it->path().filename(), out_dir / it->path().filename(),
-                                                                               signature_size, num_hashes,
-                                                                               batch_size);
+                                                            signature_size, num_hashes,
+                                                            batch_size);
                 } else {
                     std::cerr << "empty directory" << std::endl;
                 }
@@ -97,7 +109,7 @@ namespace genome::abss {
         return all_combined;
     }
 
-    void create_abss(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_file) {
+    void create_abss(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_file, uint64_t page_size) {
         std::vector<boost::filesystem::path> paths;
         boost::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -107,18 +119,14 @@ namespace genome::abss {
             return boost::filesystem::file_size(p1) < boost::filesystem::file_size(p2);
         });
 
-
-        uint32_t page_size = getpagesize();
-        assert(page_size == 4096); //todo just in case
-
-        std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> parameters;
+        std::vector<genome::file::abss_header::parameter> parameters;
         std::vector<std::string> file_names;
         for (const auto& p: paths) {
             std::ifstream ifs;
             auto bssh = genome::file::deserialize_header<genome::file::bss_header>(ifs, p);
-            parameters.emplace_back(std::make_tuple(bssh.signature_size(), bssh.block_size(), bssh.num_hashes()));
+            parameters.push_back({bssh.signature_size(), bssh.num_hashes()});
             file_names.insert(file_names.end(), bssh.file_names().begin(), bssh.file_names().end());
-//            assert(bssh.block_size() == page_size);
+            assert(bssh.block_size() == page_size);
         }
 
         genome::file::abss_header abssh(parameters, file_names, page_size);
@@ -140,14 +148,15 @@ namespace genome::abss {
         }
     }
 
-    void create_abss_from_samples(const boost::filesystem::path& in_dir, size_t processing_batch_size, size_t num_hashes, double false_positive_probability) {
+    void create_abss_from_samples(const boost::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
+                                  double false_positive_probability, uint64_t page_size = get_page_size()) {
         boost::filesystem::path samples_dir = in_dir / "samples/";
         std::string bloom_dir = in_dir.string() +  "/bloom_";
         size_t iteration = 1;
-        create_bsss_from_samples(samples_dir, bloom_dir + std::to_string(iteration), processing_batch_size, num_hashes, false_positive_probability);
-        while(!combine_bss(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), processing_batch_size)) {
+        create_bss_from_samples(samples_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
+        while(!combine_bss(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
             iteration++;
         }
-        create_abss(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + genome::file::abss_header::file_extension));
+        create_abss(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + genome::file::abss_header::file_extension), page_size);
     }
 }
