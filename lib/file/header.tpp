@@ -1,6 +1,6 @@
 #include "header.hpp"
-#include "bloom_filter_header.hpp"
-#include <helpers.hpp>
+#include "bss_header.hpp"
+#include <util.hpp>
 
 namespace genome::file {
     template<class T>
@@ -31,6 +31,7 @@ namespace genome::file {
         std::vector<char> mw_v(magic_word.size(), ' ');
         ifs.read(mw_v.data(), magic_word.size());
         std::string mw(mw_v.data(), mw_v.size());
+        assert(ifs.good());
         assert(mw == magic_word);
     }
 }

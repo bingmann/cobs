@@ -10,15 +10,15 @@ namespace {
 
     std::string in_dir = "test/resources/frequency/input/";
     std::string out_dir = "test/out/frequency/";
-    std::string result_bin = "test/resources/frequency/result/bin.g_fre";
-    std::string result_freq = "test/resources/frequency/result/freq.g_fre";
+    std::string result_bin = "test/resources/frequency/result/bin.g_freq";
+    std::string result_freq = "test/resources/frequency/result/freq.g_freq";
     std::string sample_1 = in_dir + "sample_1.g_sam";
     std::string sample_2 = in_dir + "sample_2.g_sam";
     std::string sample_3 = in_dir + "sample_3.g_sam";
 
     /*
-    std::string sample_4 = in_dir + "sample_4.g_fre";
-    std::string sample_5 = in_dir + "sample_5.g_fre";
+    std::string sample_4 = in_dir + "sample_4.g_freq";
+    std::string sample_5 = in_dir + "sample_5.g_freq";
     void generate_result_bin() {
         boost::filesystem::create_directories(out_dir);
         std::vector<uint64_t> v;

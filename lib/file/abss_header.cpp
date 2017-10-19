@@ -1,15 +1,15 @@
-#include "msbf_header.hpp"
+#include "abss_header.hpp"
 
 namespace genome::file {
-    const std::string msbf_header::magic_word = "MSBF";
-    const std::string msbf_header::file_extension = ".g_mbf";
+    const std::string abss_header::magic_word = "ABSS";
+    const std::string abss_header::file_extension = ".g_abss";
 
 
-    size_t msbf_header::padding_size(uint64_t curr_stream_pos) const {
-        return (m_page_size - ((curr_stream_pos + msbf_header::magic_word.size()) % m_page_size)) % m_page_size;
+    size_t abss_header::padding_size(uint64_t curr_stream_pos) const {
+        return (m_page_size - ((curr_stream_pos + abss_header::magic_word.size()) % m_page_size)) % m_page_size;
     }
 
-    void msbf_header::serialize(std::ofstream& ofs) const {
+    void abss_header::serialize(std::ofstream& ofs) const {
         genome::serialize(ofs, (uint32_t) m_parameters.size(), m_page_size);
         ofs.flush();
         for (const auto& parameter: m_parameters) {
@@ -25,7 +25,7 @@ namespace genome::file {
         ofs.flush();
     }
 
-    void msbf_header::deserialize(std::ifstream& ifs) {
+    void abss_header::deserialize(std::ifstream& ifs) {
         uint32_t parameters_size;
         size_t num_file_names = 0;
         genome::deserialize(ifs, parameters_size, m_page_size);
@@ -44,16 +44,16 @@ namespace genome::file {
         ifs.seekg(smd.curr_pos + padding_size(smd.curr_pos), std::ios::beg);
     }
 
-    msbf_header::msbf_header(uint32_t page_size) : m_page_size(page_size) {}
+    abss_header::abss_header(uint32_t page_size) : m_page_size(page_size) {}
 
-    msbf_header::msbf_header(const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters, const std::vector<std::string>& file_names, uint32_t page_size)
+    abss_header::abss_header(const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters, const std::vector<std::string>& file_names, uint32_t page_size)
             : m_parameters(parameters), m_file_names(file_names), m_page_size(page_size) { }
 
-    const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& msbf_header::parameters() const {
+    const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& abss_header::parameters() const {
         return m_parameters;
     }
 
-    const std::vector<std::string>& msbf_header::file_names() const {
+    const std::vector<std::string>& abss_header::file_names() const {
         return m_file_names;
     }
 }

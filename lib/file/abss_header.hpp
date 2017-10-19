@@ -4,7 +4,7 @@
 #include "header.hpp"
 
 namespace genome::file {
-    class msbf_header : public header<msbf_header> {
+    class abss_header : public header<abss_header> {
     private:
         std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> m_parameters;
         std::vector<std::string> m_file_names;
@@ -16,8 +16,8 @@ namespace genome::file {
     public:
         static const std::string magic_word;
         static const std::string file_extension;
-        explicit msbf_header(uint32_t page_size = 16384);
-        msbf_header(const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters, const std::vector<std::string>& file_names, uint32_t page_size = 16384);
+        explicit abss_header(uint32_t page_size = 16384);
+        abss_header(const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters, const std::vector<std::string>& file_names, uint32_t page_size = 16384);
         const std::vector<std::tuple<uint64_t, uint64_t, uint64_t>>& parameters() const;
         const std::vector<std::string>& file_names() const;
     };

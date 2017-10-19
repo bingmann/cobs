@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
-#include <msbf.hpp>
+#include <bit_sliced_signatures/abss.hpp>
 #include <iostream>
 
 namespace {
     using namespace genome;
 
-    std::string in_dir = "test/resources/msbf/input_1/";
-    std::string msbf_path = in_dir + "filter.g_mbf";
+    std::string in_dir = "test/resources/abss/input_1/";
+    std::string abss_path = in_dir + "filter.g_abss";
     std::string tmp_dir = "test/out/tmp";
     std::string query = "CAATCGAGCAAGTCCATTATCAACGAGTGTGTTGCAGTTTTATTCTCTCGCCAGCATTGTAATAGGCACTAAAAGAGTGATGATAGTCATGAGTGCTGAGCTAAGA"
             "CGGCGTCGGTGCATAGCGGACTTTCGGTCAGTCGCAATTCCTCACGAGACCCGTCCTGTTGAGCGTATCACTCTCAATGTACAAGCAACCCGAGAAGGCTGTGCCT"
@@ -37,14 +37,14 @@ namespace {
 
     }
 
-    class msbf : public ::testing::Test {
+    class abss : public ::testing::Test {
     protected:
         virtual void SetUp() {
             boost::filesystem::create_directories(in_dir);
             boost::filesystem::create_directories(tmp_dir);
             generate_test_case();
-            genome::msbf::create_folders(tmp_dir, in_dir, 16);
-            genome::msbf::create_msbf_from_samples(in_dir, 8, 3, 0.1);
+            genome::abss::create_folders(tmp_dir, in_dir, 16);
+            genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1);
         }
 
         virtual void TearDown() {
@@ -53,18 +53,19 @@ namespace {
         }
     };
 
-    TEST_F(msbf, padding) {
+    TEST_F(abss, padding) {
         std::ifstream ifs;
-        auto msbfh = genome::file::deserialize_header<genome::file::msbf_header>(ifs, msbf_path);
+        auto abssh = genome::file::deserialize_header<genome::file::abss_header>(ifs, abss_path);
         genome::stream_metadata smd = genome::get_stream_metadata(ifs);
         ASSERT_EQ(smd.curr_pos % getpagesize(), 0U);
     }
 
-    TEST_F(msbf, deserialization) {
+    TEST_F(abss, deserialization) {
         std::vector<std::vector<byte>> data;
-        genome::file::msbf_header msbfh;
-        genome::file::deserialize(msbf_path, data, msbfh);
-        ASSERT_EQ(msbfh.file_names().size(), 40U);
+        genome::file::abss_header abssh;
+        genome::file::deserialize(abss_path, data, abssh);
+        ASSERT_EQ(abssh.file_names().size(), 40U);
+        ASSERT_EQ(abssh.parameters().size(), 3U);
         ASSERT_EQ(data.size(), 3U);
     }
 }

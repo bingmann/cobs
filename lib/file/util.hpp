@@ -1,15 +1,15 @@
 #pragma once
 
 #include "sample.hpp"
-#include "bloom_filter.hpp"
-#include "bloom_filter_header.hpp"
+#include "bit_sliced_signatures/bss.hpp"
+#include "bss_header.hpp"
 #include "sample_header.hpp"
-#include "msbf_header.hpp"
+#include "abss_header.hpp"
 
 namespace genome::file {
     static sample_header dummy_sh;
-    static bloom_filter_header dummy_bfh;
-    static msbf_header dummy_msbfh;
+    static bss_header dummy_bssh;
+    static abss_header dummy_abssh;
 
     template<uint32_t N>
     void serialize(std::ofstream& ofs, const sample<N>& s);
@@ -20,13 +20,13 @@ namespace genome::file {
     template<uint32_t N>
     void deserialize(const boost::filesystem::path& p, sample<N>& s, sample_header& sh = dummy_sh);
 
-    void serialize(std::ofstream& ofs, const bloom_filter& bf, const std::vector<std::string>& file_names);
-    void serialize(const boost::filesystem::path& p, const bloom_filter& bf, const std::vector<std::string>& file_names);
-    void deserialize(std::ifstream& ifs, bloom_filter& bf, bloom_filter_header& bfh = dummy_bfh);
-    void deserialize(const boost::filesystem::path& p, bloom_filter& bf, bloom_filter_header& bfh = dummy_bfh);
+    void serialize(std::ofstream& ofs, const bss& bf, const std::vector<std::string>& file_names);
+    void serialize(const boost::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names);
+    void deserialize(std::ifstream& ifs, bss& bf, bss_header& bssh = dummy_bssh);
+    void deserialize(const boost::filesystem::path& p, bss& bf, bss_header& bssh = dummy_bssh);
 
-    void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, msbf_header& msbfh = dummy_msbfh);
-    void deserialize(const boost::filesystem::path& p, std::vector<std::vector<byte>>& data, msbf_header& msbfh = dummy_msbfh);
+    void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, abss_header& abssh = dummy_abssh);
+    void deserialize(const boost::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& abssh = dummy_abssh);
 
 
     template<class T>

@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <ostream>
-#include "helpers.hpp"
+#include "util.hpp"
 
 namespace genome {
     typedef unsigned char byte;
