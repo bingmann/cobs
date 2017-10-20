@@ -30,14 +30,13 @@ namespace genome::server {
 
         void counts_to_result(const std::vector<std::string>& file_names, const std::vector<uint16_t>& counts,
                               std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) const {
-            std::vector<uint32_t> sorted_indices(counts.size());
+            std::vector<uint32_t> sorted_indices(file_names.size());
             std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
             std::nth_element(sorted_indices.begin(), sorted_indices.begin() + num_results, sorted_indices.end(), [&](const auto v1, const auto v2){
                 return counts[v1] > counts[v2];
             });
 
-            result.reserve(num_results);
-            result.clear();
+            result.resize(num_results);
             for (size_t i = 0; i < num_results; i++) {
                 result.emplace_back(std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]));
             }

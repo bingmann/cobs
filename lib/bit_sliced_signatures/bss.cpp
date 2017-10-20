@@ -79,11 +79,14 @@ namespace genome {
         bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::bss_header::file_extension, file::bss_header::file_extension,
                            [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
                                size_t new_block_size = 0;
-                               for (const auto& p: paths) {
+                               for (size_t i = 0; i < paths.size(); i++) {
                                    ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                                   auto bssh = file::deserialize_header<file::bss_header>(ifstreams.back().first, p);
+                                   auto bssh = file::deserialize_header<file::bss_header>(ifstreams.back().first, paths[i]);
                                    assert(bssh.signature_size() == signature_size);
                                    assert(bssh.num_hashes() == num_hashes);
+                                   if (i < paths.size() - 1) {
+                                       assert(bssh.file_names().size() == 8 * bssh.block_size());
+                                   }
                                    ifstreams.back().second = bssh.block_size();
                                    new_block_size += bssh.block_size();
                                    std::copy(bssh.file_names().begin(), bssh.file_names().end(), std::back_inserter(file_names));
