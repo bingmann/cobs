@@ -6,7 +6,6 @@
 #include <file/sample_header.hpp>
 #include <file/util.hpp>
 #include <file/abss_header.hpp>
-#include <cmath>
 #include <bit_sliced_signatures/bss.hpp>
 #include <boost/utility.hpp>
 
@@ -33,20 +32,6 @@ namespace genome::abss {
             boost::filesystem::rename(p, sub_out_dir / p.filename());
             i++;
         }
-    }
-
-    double calc_signature_size_ratio(double num_hashes, double false_positive_probability) {
-        double denominator = std::log(1 - std::pow(false_positive_probability, 1 / num_hashes));
-        double result = -num_hashes / denominator;
-        assert(result > 0);
-        return result;
-    }
-
-    uint64_t calc_signature_size(size_t num_elements, double num_hashes, double false_positive_probability) {
-        double signature_size_ratio = calc_signature_size_ratio(num_hashes, false_positive_probability);
-        double result = std::ceil(num_elements * signature_size_ratio);
-        assert(result <= UINT64_MAX);
-        return result;
     }
 
     void create_bss_from_samples(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size,

@@ -5,9 +5,35 @@
 #include <boost/filesystem.hpp>
 #include <iomanip>
 #include <cassert>
+#include <cmath>
+
 
 namespace genome {
     typedef unsigned char byte;
+
+    struct stream_metadata {
+        uint64_t curr_pos;
+        uint64_t end_pos;
+    };
+
+    inline stream_metadata get_stream_metadata(std::ifstream& ifs) {
+        std::streamoff curr_pos = ifs.tellg();
+        ifs.seekg(0, std::ios::end);
+        std::streamoff end_pos = ifs.tellg();
+        ifs.seekg(curr_pos, std::ios::beg);
+        assert(ifs.good());
+        assert(curr_pos >= 0);
+        assert(end_pos >= 0);
+        assert(end_pos >= curr_pos);
+        return {(uint64_t) curr_pos, (uint64_t) end_pos};
+    };
+
+    inline uint64_t get_page_size() {
+        int page_size = getpagesize();
+        assert(page_size > 0);
+        assert(page_size == 4096); //todo check for experiments
+        return (uint64_t) page_size;
+    }
 
     template<class T>
     inline auto operator<<(std::ostream& os, const T& t) -> decltype(t.print(os), os) {
@@ -18,11 +44,10 @@ namespace genome {
     template<typename T>
     inline void read_file(const boost::filesystem::path& path, std::vector<T>& v) {
         std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
-        ifs.seekg(0, std::ios_base::end);
-        size_t size = ifs.tellg();
-        ifs.seekg(0, std::ios_base::beg);
-        v.resize(size / sizeof(T));
-        ifs.read(reinterpret_cast<char*>(v.data()), size);
+        stream_metadata smd = get_stream_metadata(ifs);
+        assert(smd.end_pos % sizeof(T) == 0);
+        v.resize(smd.end_pos / sizeof(T));
+        ifs.read(reinterpret_cast<char*>(v.data()), smd.end_pos);
     }
 
     template<typename T>
@@ -44,32 +69,6 @@ namespace genome {
     inline void deserialize(std::ifstream& ifs, T& t, Args&... args) {
         ifs.read(reinterpret_cast<char*>(&t), sizeof(T));
         deserialize(ifs, args...);
-    }
-
-    inline void for_each_file_in_dir(const boost::filesystem::path& path,
-                                     std::function<void(const boost::filesystem::path&)> callback) {
-        boost::filesystem::directory_iterator end_itr;
-        for (boost::filesystem::directory_iterator itr(path); itr != end_itr; ++itr) {
-            if (boost::filesystem::is_regular_file(itr->path()) && itr->path().filename().string() != ".DS_Store") {
-                callback(itr->path());
-            }
-        }
-    }
-
-    inline std::vector<size_t> get_file_sizes_in_dir(const boost::filesystem::path& path) {
-        std::vector<size_t> result;
-        for_each_file_in_dir(path, [&](const auto& p) {
-            result.push_back(boost::filesystem::file_size(p));
-        });
-        return result;
-    }
-
-    inline std::vector<std::string> get_files_in_dir(const boost::filesystem::path& path) {
-        std::vector<std::string> result;
-        for_each_file_in_dir(path, [&](const auto& p) {
-            result.push_back(p.string());
-        });
-        return result;
     }
 
     inline void get_sorted_file_names(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, std::vector<boost::filesystem::path>& paths) {
@@ -116,7 +115,7 @@ namespace genome {
         return j < 3;
     }
 
-    inline std::string random_query(size_t len) {
+    inline std::string random_sequence(size_t len) {
         std::array<char, 4> basepairs = {'A', 'C', 'G', 'T'};
         std::string result;
         std::srand(std::time(0));
@@ -125,6 +124,21 @@ namespace genome {
         }
         return result;
     }
+
+    inline double calc_signature_size_ratio(double num_hashes, double false_positive_probability) {
+        double denominator = std::log(1 - std::pow(false_positive_probability, 1 / num_hashes));
+        double result = -num_hashes / denominator;
+        assert(result > 0);
+        return result;
+    }
+
+    inline uint64_t calc_signature_size(size_t num_elements, double num_hashes, double false_positive_probability) {
+        double signature_size_ratio = calc_signature_size_ratio(num_hashes, false_positive_probability);
+        double result = std::ceil(num_elements * signature_size_ratio);
+        assert(result <= UINT64_MAX);
+        return result;
+    }
+
 
     inline void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
@@ -153,30 +167,6 @@ namespace genome {
             std::cout << result << ", ";
         };
         std::cout << "}" << std::endl;
-    }
-
-    struct stream_metadata {
-        uint64_t curr_pos;
-        uint64_t end_pos;
-    };
-
-    inline stream_metadata get_stream_metadata(std::ifstream& ifs) {
-        std::streamoff curr_pos = ifs.tellg();
-        ifs.seekg(0, std::ios::end);
-        std::streamoff end_pos = ifs.tellg();
-        ifs.seekg(curr_pos, std::ios::beg);
-        assert(ifs.good());
-        assert(curr_pos >= 0);
-        assert(end_pos >= 0);
-        assert(end_pos >= curr_pos);
-        return {(uint64_t) curr_pos, (uint64_t) end_pos};
-    };
-
-    inline uint64_t get_page_size() {
-        int page_size = getpagesize();
-        assert(page_size > 0);
-        assert(page_size == 4096); //todo check for experiments
-        return (uint64_t) page_size;
     }
 };
 

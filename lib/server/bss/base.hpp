@@ -7,10 +7,11 @@
 namespace genome::server::bss {
     class base : public server::base<file::bss_header> {
     protected:
-        virtual void get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
         explicit base(const boost::filesystem::path& path);
+        uint64_t num_hashes() const override;
+        uint64_t max_hash_value() const override;
+        uint64_t counts_size() const override;
     public:
-        void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results = 0) override;
         virtual ~base() = default;
     };
 }

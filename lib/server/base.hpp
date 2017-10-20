@@ -47,13 +47,32 @@ namespace genome::server {
             m_header = file::deserialize_header<T>(ifs, path);
             m_smd = get_stream_metadata(ifs);
         }
+
+        virtual void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
+        virtual uint64_t num_hashes() const = 0;
+        virtual uint64_t max_hash_value() const = 0;
+        virtual uint64_t counts_size() const = 0;
+
     public:
-        virtual void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results = 0) = 0;
         virtual ~base() = default;
 
         const timer& get_timer() const {
             return m_timer;
         }
+
+        void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results = 0) {
+            assert(query.size() >= kmer_size);
+            assert(query.size() - kmer_size + 1 <= UINT16_MAX);
+            m_timer.active("hashes");
+            std::vector<size_t> hashes;
+            create_hashes(hashes, query, kmer_size, max_hash_value(), num_hashes());
+            std::vector<uint16_t> counts(counts_size());
+            calculate_counts(hashes, counts);
+            m_timer.active("counts_to_result");
+            counts_to_result(m_header.file_names(), counts, result, num_results == 0 ? m_header.file_names().size() : num_results);
+            m_timer.stop();
+        }
+
     };
 
     template<class T>

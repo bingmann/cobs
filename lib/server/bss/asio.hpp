@@ -24,7 +24,7 @@ namespace genome::server::bss {
 //            stxxl::wait_all(requests.data(), requests.size());
 //        }
 //    protected:
-//        void get_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) override {
+//        void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) override {
 //            std::vector<byte> count(m_bssh.block_size(), 0xFF);
 //            auto* count_64 = reinterpret_cast<uint64_t*>(count.data());
 //            auto* counts_64 = reinterpret_cast<uint64_t*>(counts.data());

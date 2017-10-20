@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <util.hpp>
 
 namespace genome::server {
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "server/bss/base.hpp"
 
+#include <server/abss/base.hpp>
 
-namespace genome::server::bss {
+namespace genome::server::abss {
     class mmap : public base {
     private:
         byte* m_data;
