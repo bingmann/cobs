@@ -1,0 +1,39 @@
+#include <gtest/gtest.h>
+#include <util.hpp>
+
+namespace {
+    size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
+        uint64_t signature_size = genome::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+
+        std::vector<bool> signature(signature_size);
+        std::srand(1);
+        for (size_t i = 0; i < num_hashes * num_elements; i++) {
+            signature[std::rand() % signature.size()] = true;
+        }
+
+        size_t num_positives = 0;
+        for (size_t i = 0; i < num_tests; i++) {
+            size_t num_hits = 0;
+            for (size_t j = 0; j < num_hashes; j++) {
+                num_hits += signature[std::rand() % signature.size()] ? 1 : 0;
+            }
+            num_positives += num_hits == num_hashes ? 1 : 0;
+        }
+        return num_positives;
+    }
+
+    TEST(bss_parameter, false_positive) {
+        size_t num_positives = get_num_positives(100000, 1, 0.3, 100000);
+        ASSERT_EQ(num_positives, 29886U);
+        num_positives = get_num_positives(100000, 2, 0.3, 100000);
+        ASSERT_EQ(num_positives, 29915U);
+        num_positives = get_num_positives(100000, 3, 0.3, 100000);
+        ASSERT_EQ(num_positives, 30285U);
+        num_positives = get_num_positives(100000, 1, 0.1, 100000);
+        ASSERT_EQ(num_positives, 9895U);
+        num_positives = get_num_positives(100000, 2, 0.1, 100000);
+        ASSERT_EQ(num_positives, 9903U);
+        num_positives = get_num_positives(100000, 3, 0.1, 100000);
+        ASSERT_EQ(num_positives, 10171U);
+    }
+}
