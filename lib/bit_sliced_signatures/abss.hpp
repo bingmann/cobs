@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 #include <file/sample_header.hpp>
@@ -100,9 +99,7 @@ namespace genome::abss {
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
             return boost::filesystem::is_regular_file(p) && p.path().extension() == genome::file::bss_header::file_extension;
         });
-        std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
-            return boost::filesystem::file_size(p1) < boost::filesystem::file_size(p2);
-        });
+        std::sort(paths.begin(), paths.end());
 
         std::vector<genome::file::abss_header::parameter> parameters;
         std::vector<std::string> file_names;

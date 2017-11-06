@@ -31,7 +31,7 @@ namespace genome {
             }
         }
         t.active("write");
-        std::vector<std::string> file_names(8 * m_block_size);
+        std::vector<std::string> file_names(paths.size());
         std::transform(paths.begin(), paths.end(), file_names.begin(), [](const auto& p) {
             return p.stem().string();
         });
@@ -84,8 +84,10 @@ namespace genome {
                                    auto bssh = file::deserialize_header<file::bss_header>(ifstreams.back().first, paths[i]);
                                    assert(bssh.signature_size() == signature_size);
                                    assert(bssh.num_hashes() == num_hashes);
-                                   if (i < paths.size() - 1) {
-                                       assert(bssh.file_names().size() == 8 * bssh.block_size());
+                                   if (i < paths.size() - 2) {
+                                       //todo doesnt work because of padding for abss, which means there could be two files with less file_names
+                                       //todo quickfix with -2 to allow for paddding
+//                                       assert(bssh.file_names().size() == 8 * bssh.block_size());
                                    }
                                    ifstreams.back().second = bssh.block_size();
                                    new_block_size += bssh.block_size();

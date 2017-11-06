@@ -35,7 +35,7 @@ void run(genome::server::bss::base& s, size_t query_len, std::vector<std::pair<u
     genome::timer t;
     t.active("total");
     for (size_t i = 0; i < 100; i++) {
-        s.search(genome::random_query(query_len), 31, result, 10);
+        s.search(genome::random_sequence(query_len), 31, result, 10);
     }
     t.stop();
     std::cout << s.get_timer() << std::endl;
@@ -69,7 +69,7 @@ int main() {
 //        sum += std::stoi(strs[1]);
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
-//    server();
+    server();
 
 //    std::cout << getpagesize() << std::endl;
 
@@ -90,8 +90,8 @@ int main() {
 //    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_out", "/users/flo/projects/thesis/data/abss_out_2", 64);
 //    genome::abss::create_bsss_from_samples("/users/flo/projects/thesis/data/abss_out_2", "/users/flo/projects/thesis/data/abss_out_3", 32, 1, 0.3);
 //    genome::abss::combine_bsss("/users/flo/projects/thesis/data/abss_out_3", "/users/flo/projects/thesis/data/abss_out_4", 32);
-    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
-    genome::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
+//    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
+//    genome::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
 //    genome::file::abss_header h;
 //    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;

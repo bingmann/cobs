@@ -122,7 +122,7 @@ namespace {
         }
     }
 
-    TEST(bss, contains_big_bssck) {
+    TEST(bss, contains_big_bss) {
         boost::filesystem::remove_all(out_dir);
         genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, 2, num_hashes);
 
