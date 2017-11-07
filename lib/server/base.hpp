@@ -44,6 +44,45 @@ namespace genome::server {
             }
         }
 
+        void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const char* rows) {
+            auto rows_b = reinterpret_cast<const byte*>(rows);
+            #pragma omp declare reduction (merge : std::vector<uint16_t> : \
+                            std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<>())) \
+                            initializer(omp_priv = omp_orig)
+
+            #pragma omp parallel for reduction(merge: counts)
+            for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
+                auto counts_64 = reinterpret_cast<uint64_t*>(counts.data());
+                auto rows_8 = rows_b + i * block_size();
+                for (size_t k = 0; k < block_size(); k++) {
+                    counts_64[2 * k] += m_count_expansions[rows_8[k] & 0xF];
+                    counts_64[2 * k + 1] += m_count_expansions[rows_8[k] >> 4];
+                }
+            }
+        }
+
+        void aggregate_rows(size_t hashes_size, char* rows) {
+            #pragma omp parallel for
+            for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
+                auto rows_8 = rows + i * block_size();
+                auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
+                for (size_t j = 1; j < num_hashes(); j++) {
+                    auto rows_8_j = rows_8 + j * block_size();
+                    auto rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
+                    size_t k = 0;
+                    while ((k + 1) * 8 <= block_size()) {
+                        rows_64[k] &= rows_64_j[k];
+                        k++;
+                    }
+                    k = k * 8;
+                    while (k < block_size()) {
+                        rows_8[k] &= rows_8_j[k];
+                        k++;
+                    }
+                }
+            }
+        }
+
         explicit base(const boost::filesystem::path& path) {
             std::ifstream ifs;
             m_header = file::deserialize_header<T>(ifs, path);
@@ -51,6 +90,7 @@ namespace genome::server {
         }
 
         virtual void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
+        virtual uint64_t block_size() const = 0;
         virtual uint64_t num_hashes() const = 0;
         virtual uint64_t max_hash_value() const = 0;
         virtual uint64_t counts_size() const = 0;

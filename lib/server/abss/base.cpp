@@ -15,6 +15,10 @@ namespace genome::server::abss {
         return m_num_hashes;
     }
 
+    uint64_t base::block_size() const {
+        return m_block_size;
+    }
+
     uint64_t base::max_hash_value() const {
         return UINT64_MAX;
     }

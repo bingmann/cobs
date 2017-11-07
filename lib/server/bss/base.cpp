@@ -10,6 +10,10 @@ namespace genome::server::bss {
             return m_header.num_hashes();
     }
 
+    uint64_t base::block_size() const {
+        return m_header.block_size();
+    }
+
     uint64_t base::max_hash_value() const {
             return m_header.signature_size();
     }
