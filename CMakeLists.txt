@@ -32,7 +32,7 @@ else()
 endif()
 
 add_library(thesis_lib ${SOURCE_FILES})
-set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES} xxhash)
+set(LIBRARIES thesis_lib stdc++fs ${Boost_LIBRARIES} ${STXXL_LIBRARIES} xxhash)
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)
