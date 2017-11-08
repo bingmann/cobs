@@ -18,10 +18,6 @@ namespace {
         virtual void SetUp() {
             std::error_code ec;
             std::experimental::filesystem::remove_all(out_dir, ec);
-
-            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
-                throw std::system_error();
-            }
             std::experimental::filesystem::create_directories(out_dir);
         }
     };
