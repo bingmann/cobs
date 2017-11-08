@@ -11,7 +11,7 @@ namespace genome {
         uint64_t m_signature_size;
         uint64_t m_block_size;
         uint64_t m_num_hashes;
-        std::vector<byte> m_data;
+        std::vector<byte> m_data;  // replace by std::vector<uint8_t> ???
 
         void set_bit(size_t pos, size_t bit_in_block);
         bool is_set(size_t pos, size_t bit_in_block);
