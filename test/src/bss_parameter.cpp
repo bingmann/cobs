@@ -22,18 +22,23 @@ namespace {
         return num_positives;
     }
 
+    void assert_between(size_t num, size_t min, size_t max) {
+        ASSERT_GE(num, min);
+        ASSERT_LE(num, max);
+    }
+
     TEST(bss_parameter, false_positive) {
         size_t num_positives = get_num_positives(100000, 1, 0.3, 100000);
-        ASSERT_EQ(num_positives, 29886U);
+        assert_between(num_positives, 29000, 31000);
         num_positives = get_num_positives(100000, 2, 0.3, 100000);
-        ASSERT_EQ(num_positives, 29915U);
+        assert_between(num_positives, 29000, 31000);
         num_positives = get_num_positives(100000, 3, 0.3, 100000);
-        ASSERT_EQ(num_positives, 30285U);
+        assert_between(num_positives, 29000, 31000);
         num_positives = get_num_positives(100000, 1, 0.1, 100000);
-        ASSERT_EQ(num_positives, 9895U);
+        assert_between(num_positives, 9800, 10200);
         num_positives = get_num_positives(100000, 2, 0.1, 100000);
-        ASSERT_EQ(num_positives, 9903U);
+        assert_between(num_positives, 9800, 10200);
         num_positives = get_num_positives(100000, 3, 0.1, 100000);
-        ASSERT_EQ(num_positives, 10171U);
+        assert_between(num_positives, 9800, 10200);
     }
 }
