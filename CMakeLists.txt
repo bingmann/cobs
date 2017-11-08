@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(thesis)
 
-set(CMAKE_CXX_STANDARD 14)
-if (CMAKE_VERSION VERSION_GREATER 3.7)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp -std=c++17 -lstdc++fs")
 
 file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/lib/*.hpp" "${PROJECT_SOURCE_DIR}/lib/*.tpp")
 file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/lib/*.cpp")

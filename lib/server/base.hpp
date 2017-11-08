@@ -50,10 +50,13 @@ namespace genome::server {
                             std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<>())) \
                             initializer(omp_priv = omp_orig)
 
+            //todo pull virtual methods out
             #pragma omp parallel for reduction(merge: counts)
             for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
+               //todo i+= num_hahses() * blocksize ...
                 auto counts_64 = reinterpret_cast<uint64_t*>(counts.data());
                 auto rows_8 = rows_b + i * block_size();
+                //todo each thread should only use k % thread_id ==0
                 for (size_t k = 0; k < block_size(); k++) {
                     counts_64[2 * k] += m_count_expansions[rows_8[k] & 0xF];
                     counts_64[2 * k + 1] += m_count_expansions[rows_8[k] >> 4];

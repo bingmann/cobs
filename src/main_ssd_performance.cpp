@@ -1,4 +1,3 @@
-#include <boost/filesystem/path.hpp>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <fstream>
@@ -8,6 +7,7 @@
 #include <stxxl/aligned_alloc>
 #include <stxxl/bits/io/syscall_file.h>
 #include <stxxl/request>
+#include <experimental/filesystem>
 
 void clear_caches() {
     sync();
@@ -79,13 +79,13 @@ void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
         clear_caches();
         sum += test(file_mmap, i * getpagesize(), max / i, file_size, t);
         clear_caches();
-        sum += test(file_asio, i * getpagesize(), max / i, file_size, t);
+//        sum += test(file_asio, i * getpagesize(), max / i, file_size, t);
     }
     std::cout << t << std::endl << sum;
 }
 
 int main() {
-    boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
 
     uint64_t end_pos;
     {
@@ -99,6 +99,8 @@ int main() {
     assert(fd != -1);
 
     char* file_mmap = reinterpret_cast<char*>(mmap(NULL, end_pos, PROT_READ, MAP_PRIVATE, fd, 0));
+
+    assert(madvise(file_mmap, end_pos, MADV_RANDOM) == 0);
     stxxl::syscall_file file_asio(p.string(), stxxl::file::RDONLY);
     test(file_mmap, file_asio, end_pos);
 };
