@@ -24,6 +24,13 @@ include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
 include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
 
+if(libstdc++fs)
+    add_library(stdc++fs UNKNOWN IMPORTED)
+    set_property(TARGET stdc++fs PROPERTY IMPORTED_LOCATION ${libstdc++fs})
+else()
+    message(WARNING "libstdc++fs was not specified use: -D libstdc++fs='\"<path_to_libstdc++fs.a>\"'")
+endif()
+
 add_library(thesis_lib ${SOURCE_FILES})
 set(LIBRARIES thesis_lib ${Boost_LIBRARIES} ${STXXL_LIBRARIES} xxhash)
 
