@@ -1,7 +1,7 @@
 #include <file/bss_header.hpp>
 #include <file/util.hpp>
 
-void generate_dummy_bloom(boost::filesystem::path p, size_t signature_size, size_t block_size, size_t num_hashes) {
+void generate_dummy_bloom(std::experimental::filesystem::path p, size_t signature_size, size_t block_size, size_t num_hashes) {
     std::vector<std::string> file_names;
     for(size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));

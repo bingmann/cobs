@@ -1,4 +1,4 @@
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 #include <bit_sliced_signatures/bss.hpp>
 
 int main(int argc, char** argv) {

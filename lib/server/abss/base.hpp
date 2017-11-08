@@ -9,7 +9,7 @@ namespace genome::server::abss {
     protected:
         size_t m_num_hashes;
         size_t m_block_size;
-        explicit base(const boost::filesystem::path& path);
+        explicit base(const std::experimental::filesystem::path& path);
         uint64_t num_hashes() const override;
         uint64_t block_size() const override;
         uint64_t max_hash_value() const override;

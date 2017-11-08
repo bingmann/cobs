@@ -3,7 +3,7 @@
 #include <kmer.hpp>
 #include <bit_sliced_signatures/bss.hpp>
 #include <iostream>
-#include <boost/filesystem/operations.hpp>
+#include <experimental/filesystem>
 #include <util.hpp>
 #include <file/sample_header.hpp>
 #include <file/frequency_header.hpp>
@@ -31,9 +31,19 @@ namespace {
     size_t block_size = 1;
     size_t num_hashes = 7;
 
+    class bss : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            std::error_code ec;
+            std::experimental::filesystem::remove_all(out_dir, ec);
 
-    TEST(bss, contains) {
-        boost::filesystem::remove_all(out_dir);
+            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
+                throw std::system_error();
+            }
+        }
+    };
+
+    TEST_F(bss, contains) {
         genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -56,8 +66,7 @@ namespace {
         }
     }
 
-    TEST(bss, file_names) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, file_names) {
         genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -70,8 +79,7 @@ namespace {
     }
 
 
-    TEST(bss, false_positive) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, false_positive) {
         genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -90,8 +98,7 @@ namespace {
         ASSERT_EQ(num_positive, 945U);
     }
 
-    TEST(bss, equal_ones_and_zeros) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, equal_ones_and_zeros) {
         genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -107,8 +114,7 @@ namespace {
         ASSERT_EQ(ones, 102266U);
     }
 
-    TEST(bss, others_zero) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, others_zero) {
         genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -122,8 +128,7 @@ namespace {
         }
     }
 
-    TEST(bss, contains_big_bss) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, contains_big_bss) {
         genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, 2, num_hashes);
 
         genome::bss bss;
@@ -136,8 +141,7 @@ namespace {
         }
     }
 
-    TEST(bss, two_outputs) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, two_outputs) {
         genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
 
         genome::bss bss;
@@ -150,8 +154,7 @@ namespace {
         }
     }
 
-    TEST(bss, multi_level_1) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, multi_level_1) {
         genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
         genome::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 2);
 
@@ -168,8 +171,7 @@ namespace {
         }
     }
 
-    TEST(bss, multi_level_2) {
-        boost::filesystem::remove_all(out_dir);
+    TEST_F(bss, multi_level_2) {
         genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
         genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
         genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);

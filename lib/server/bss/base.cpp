@@ -4,7 +4,7 @@
 #include <file/util.hpp>
 
 namespace genome::server::bss {
-    base::base(const boost::filesystem::path& path) : server::base<file::bss_header>(path) { }
+    base::base(const std::experimental::filesystem::path& path) : server::base<file::bss_header>(path) { }
 
     uint64_t base::num_hashes() const {
             return m_header.num_hashes();

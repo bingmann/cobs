@@ -16,7 +16,7 @@ namespace genome::frequency {
     }
 
     template<typename PqElement>
-    void process(std::vector<std::ifstream>& ifstreams, const boost::filesystem::path& out_file) {
+    void process(std::vector<std::ifstream>& ifstreams, const std::experimental::filesystem::path& out_file) {
         std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&, const PqElement&)>> pq(PqElement::comp);
         std::ofstream ofs;
         file::serialize_header<file::frequency_header>(ofs, out_file, file::frequency_header());
@@ -51,12 +51,12 @@ namespace genome::frequency {
     }
 
     template<typename PqElement>
-    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t batch_size) {
+    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
         timer t;
         t.active("process");
         std::vector<std::ifstream> ifstreams;
         bulk_process_files(in_dir, out_dir, batch_size, PqElement::file_extension(), file::frequency_header::file_extension,
-        [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+        [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
             for (const auto& p: paths) {
                 ifstreams.emplace_back(std::ifstream());
                 PqElement::deserialize_header(ifstreams.back(), p);
@@ -68,7 +68,7 @@ namespace genome::frequency {
         std::cout << t;
     }
 
-    inline void combine(const boost::filesystem::path& in_file, const boost::filesystem::path& out_file) {
+    inline void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file) {
         std::ifstream ifs;
         file::deserialize_header<file::frequency_header>(ifs, in_file);
         std::unordered_map<uint32_t, uint32_t> counts;

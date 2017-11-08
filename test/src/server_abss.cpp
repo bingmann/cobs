@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include <server/abss/mmap.hpp>
 #include <bit_sliced_signatures/abss.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
 
 namespace {
     using namespace genome;
@@ -68,10 +66,19 @@ namespace {
     class server_abss : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            boost::filesystem::remove_all(in_dir);
-            boost::filesystem::remove_all(tmp_dir);
-            boost::filesystem::create_directories(in_dir);
-            boost::filesystem::create_directories(tmp_dir);
+
+            std::error_code ec;
+            std::experimental::filesystem::remove_all(in_dir, ec);
+
+            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
+                throw std::system_error();
+            }
+            std::experimental::filesystem::remove_all(tmp_dir, ec);
+            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
+                throw std::system_error();
+            }
+            std::experimental::filesystem::create_directories(in_dir);
+            std::experimental::filesystem::create_directories(tmp_dir);
         }
     };
 
@@ -112,8 +119,7 @@ namespace {
         std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
-            boost::split(split, r.second, boost::is_any_of("_ "));
-            int index = std::stoi(split[1]);
+            int index = std::stoi(r.second.substr(r.second.size() - 2));
             ASSERT_GE(r.first, samples[index].data().size());
         }
     }

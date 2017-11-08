@@ -7,7 +7,7 @@
 namespace genome::server::bss {
     class base : public server::base<file::bss_header> {
     protected:
-        explicit base(const boost::filesystem::path& path);
+        explicit base(const std::experimental::filesystem::path& path);
         uint64_t num_hashes() const override;
         uint64_t block_size() const override;
         uint64_t max_hash_value() const override;

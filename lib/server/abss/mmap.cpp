@@ -1,8 +1,9 @@
 #include <server/util.hpp>
+#include <cstring>
 #include "mmap.hpp"
 
 namespace genome::server::abss {
-    mmap::mmap(const boost::filesystem::path& path) : abss::base(path) {
+    mmap::mmap(const std::experimental::filesystem::path& path) : abss::base(path) {
         m_data.reserve(m_header.parameters().size());
         m_data[0] = initialize_mmap(path, m_smd);
         for (size_t i = 1; i < m_header.parameters().size(); i++) {

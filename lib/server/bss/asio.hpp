@@ -60,7 +60,7 @@ namespace genome::server::bss {
 //        }
 //
 //    public:
-//        explicit asio(const boost::filesystem::path& path) : base(path), m_file(path.string(), stxxl::file::RDONLY) {
+//        explicit asio(const std::experimental::filesystem::path& path) : base(path), m_file(path.string(), stxxl::file::RDONLY) {
 //            std::ifstream ifs;
 //            m_bssh = file::deserialize_header<file::bss_header>(ifs, path);
 //            stream_metadata smd = get_stream_metadata(ifs);

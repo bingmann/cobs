@@ -1,4 +1,4 @@
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 #include <server/bss/base.hpp>
 #include <server/bss/mmap.hpp>
 #include <server/bss/ifs.hpp>
@@ -12,7 +12,7 @@
 #include <bit_sliced_signatures/abss.hpp>
 #include <server/bss/asio.hpp>
 
-void generate_test_bloom(boost::filesystem::path p) {
+void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;
     size_t block_size = 8000;
     size_t num_hashes = 3;
@@ -46,7 +46,7 @@ void server() {
     std::vector<std::pair<uint16_t, std::string>> result_1;
     std::vector<std::pair<uint16_t, std::string>> result_2;
     std::vector<std::pair<uint16_t, std::string>> result_3;
-    boost::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
     genome::server::bss::mmap s_mmap(p);
     genome::server::bss::ifs s_ifs(p);
 //    genome::server::bss::asio s_asio(p);
@@ -93,7 +93,7 @@ int main() {
 //    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
 //    genome::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
 //    genome::file::abss_header h;
-//    boost::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
+//    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;
 //    genome::file::serialize_header(ofs, p, h);
 }

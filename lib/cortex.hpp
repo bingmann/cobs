@@ -4,7 +4,7 @@
 #include <vector>
 #include "sample.hpp"
 #include "timer.hpp"
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 
 namespace genome::cortex {
     struct header {
@@ -30,13 +30,13 @@ namespace genome::cortex {
     void read_sample(ForwardIterator iter, ForwardIterator end, header h, sample<N>& sample);
 
     template<unsigned int N>
-    void deserialize(sample<N>& sample, const boost::filesystem::path& path);
+    void deserialize(sample<N>& sample, const std::experimental::filesystem::path& path);
 
     template<unsigned int N>
-    void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample<N>& s);
+    void process_file(const std::experimental::filesystem::path& in_path, const std::experimental::filesystem::path& out_path, sample<N>& s);
 
     template<unsigned int N>
-    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir);
+    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir);
 }
 
 #include "cortex.tpp"

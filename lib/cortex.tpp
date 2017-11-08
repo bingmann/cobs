@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <future>
 
-#include <boost/algorithm/string.hpp>
 #include <file/util.hpp>
 
 #include "sample.hpp"
@@ -74,7 +73,7 @@ namespace genome::cortex {
     }
 
     template<unsigned int N>
-    void process_file(const boost::filesystem::path& in_path, const boost::filesystem::path& out_path, sample <N>& s) {
+    void process_file(const std::experimental::filesystem::path& in_path, const std::experimental::filesystem::path& out_path, sample <N>& s) {
         t.active("read");
         read_file(in_path, v);
         if (!v.empty()) {
@@ -91,15 +90,15 @@ namespace genome::cortex {
     }
 
     template<unsigned int N>
-    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir) {
+    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir) {
         sample<N> sample;
         t.reset();
         size_t i = 0;
-        for (boost::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
-            if (boost::filesystem::is_regular_file(*it)
+        for (std::experimental::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
+            if (std::experimental::filesystem::is_regular_file(*it)
                 && it->path().extension() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
-                && !boost::filesystem::exists(out_dir / it->path().stem().concat(file::sample_header::file_extension))) {
+                && !std::experimental::filesystem::exists(out_dir / it->path().stem().concat(file::sample_header::file_extension))) {
                 try {
                     process_file(it->path(), out_dir / it->path().stem().concat(file::sample_header::file_extension), sample);
                     std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::endl;

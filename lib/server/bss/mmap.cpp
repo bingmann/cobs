@@ -1,10 +1,11 @@
 #include "mmap.hpp"
 #include <file/util.hpp>
 #include <server/util.hpp>
+#include <cstring>
 
 namespace genome::server::bss {
 
-    mmap::mmap(const boost::filesystem::path& path) : bss::base(path) {
+    mmap::mmap(const std::experimental::filesystem::path& path) : bss::base(path) {
         m_data = initialize_mmap(path, m_smd);
 //        assert(madvise(m_data, size, MADV_RANDOM) == 0);
     }

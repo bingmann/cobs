@@ -2,10 +2,14 @@
 
 #include <vector>
 #include <iostream>
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 #include <iomanip>
 #include <cassert>
 #include <cmath>
+#include <algorithm>
+#include <functional>
+#include <unistd.h>
+#include <fstream>
 
 
 namespace genome {
@@ -42,7 +46,7 @@ namespace genome {
     }
 
     template<typename T>
-    inline void read_file(const boost::filesystem::path& path, std::vector<T>& v) {
+    inline void read_file(const std::experimental::filesystem::path& path, std::vector<T>& v) {
         std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
         stream_metadata smd = get_stream_metadata(ifs);
         assert(smd.end_pos % sizeof(T) == 0);
@@ -71,26 +75,26 @@ namespace genome {
         deserialize(ifs, args...);
     }
 
-    inline void get_sorted_file_names(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, std::vector<boost::filesystem::path>& paths) {
-        boost::filesystem::create_directories(out_dir);
-        boost::filesystem::recursive_directory_iterator it(in_dir), end;
+    inline void get_sorted_file_names(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, std::vector<std::experimental::filesystem::path>& paths) {
+        std::experimental::filesystem::create_directories(out_dir);
+        std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy(it, end, std::back_inserter(paths));
         std::sort(paths.begin(), paths.end());
     }
 
-    inline bool bulk_process_files(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir, size_t bulk_size,
+    inline bool bulk_process_files(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t bulk_size,
                                    const std::string& file_extension_in, const std::string& file_extension_out,
-                                   const std::function<void(const std::vector<boost::filesystem::path>&, const boost::filesystem::path&)>& callback) {
-        std::vector<boost::filesystem::path> sorted_paths;
+                                   const std::function<void(const std::vector<std::experimental::filesystem::path>&, const std::experimental::filesystem::path&)>& callback) {
+        std::vector<std::experimental::filesystem::path> sorted_paths;
         get_sorted_file_names(in_dir, out_dir, sorted_paths);
 
         std::string first_filename;
         std::string last_filename;
 
         size_t j = 1;
-        std::vector<boost::filesystem::path> paths;
+        std::vector<std::experimental::filesystem::path> paths;
         for (size_t i = 0; i < sorted_paths.size(); i++) {
-            if (boost::filesystem::is_regular_file(sorted_paths[i]) && sorted_paths[i].extension() == file_extension_in) {
+            if (std::experimental::filesystem::is_regular_file(sorted_paths[i]) && sorted_paths[i].extension() == file_extension_in) {
                 std::string filename = sorted_paths[i].stem().string();
                 if (first_filename.empty()) {
                     first_filename = filename;
@@ -99,9 +103,9 @@ namespace genome {
                 paths.push_back(sorted_paths[i]);
             }
             if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
-                boost::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
+                std::experimental::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
                 std::cout << std::left << std::setw(6) << j << "BEG " << out_file << std::flush;
-                if (!boost::filesystem::exists(out_file)) {
+                if (!std::experimental::filesystem::exists(out_file)) {
                     callback(paths, out_file);
                     std::cout << "\r" << std::left << std::setw(6) << j << "END " << out_file << std::endl;
                 } else {

@@ -86,7 +86,7 @@ namespace genome::server {
             }
         }
 
-        explicit base(const boost::filesystem::path& path) {
+        explicit base(const std::experimental::filesystem::path& path) {
             std::ifstream ifs;
             m_header = file::deserialize_header<T>(ifs, path);
             m_smd = get_stream_metadata(ifs);

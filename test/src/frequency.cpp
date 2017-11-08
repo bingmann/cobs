@@ -1,12 +1,11 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include <boost/filesystem/operations.hpp>
+#include <experimental/filesystem>
 #include <fstream>
 #include <frequency.hpp>
 #include "util.hpp"
 
 namespace {
-    using namespace genome;
 
     std::string in_dir = "test/resources/frequency/input/";
     std::string out_dir = "test/out/frequency/";
@@ -20,7 +19,7 @@ namespace {
     std::string sample_4 = in_dir + "sample_4.g_freq";
     std::string sample_5 = in_dir + "sample_5.g_freq";
     void generate_result_bin() {
-        boost::filesystem::create_directories(out_dir);
+        std::experimental::filesystem::create_directories(out_dir);
         std::vector<uint64_t> v;
         sample<31> s;
         file::deserialize(sample_1, s);
@@ -64,7 +63,7 @@ namespace {
     }
 
     void generate_result_fre() {
-        boost::filesystem::create_directories(out_dir);
+        std::experimental::filesystem::create_directories(out_dir);
         std::vector<uint64_t> kmers;
         std::vector<uint32_t> counts;
         std::back_insert_iterator<std::vector<uint64_t>> iter_kmer(kmers);
@@ -106,7 +105,7 @@ namespace {
 
     size_t get_count_sample(const std::string& file) {
         std::ifstream ifs;
-        file::deserialize_header<file::sample_header>(ifs, file);
+        genome::file::deserialize_header<genome::file::sample_header>(ifs, file);
         size_t total_count = 0;
         uint64_t kmer;
         while (ifs && ifs.peek() != EOF) {
@@ -118,7 +117,7 @@ namespace {
 
     size_t get_count_frequency(const std::string& file) {
         std::ifstream ifs;
-        file::deserialize_header<file::frequency_header>(ifs, file);
+        genome::file::deserialize_header<genome::file::frequency_header>(ifs, file);
         size_t total_count = 0;
         uint64_t kmer;
         uint32_t count;
@@ -130,18 +129,29 @@ namespace {
         return total_count;
     }
 
-    TEST(frequency, bin) {
-        boost::filesystem::remove_all(out_dir);
-        frequency::process_all_in_directory<frequency::bin_pq_element>(in_dir, out_dir, 40);
+    class frequency : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+
+            std::error_code ec;
+            std::experimental::filesystem::remove_all(out_dir, ec);
+
+            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
+                throw std::system_error();
+            }
+        }
+    };
+
+    TEST_F(frequency, bin) {
+        genome::frequency::process_all_in_directory<genome::frequency::bin_pq_element>(in_dir, out_dir, 40);
         size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
-        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + file::frequency_header::file_extension), total_count);
-        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + file::frequency_header::file_extension);
+        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + genome::file::frequency_header::file_extension), total_count);
+        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + genome::file::frequency_header::file_extension);
     }
 
-    TEST(frequency, freq) {
-        boost::filesystem::remove_all(out_dir);
-        frequency::process_all_in_directory<frequency::fre_pq_element>(in_dir, out_dir, 40);
-        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + file::frequency_header::file_extension);
+    TEST_F(frequency, freq) {
+        genome::frequency::process_all_in_directory<genome::frequency::fre_pq_element>(in_dir, out_dir, 40);
+        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + genome::file::frequency_header::file_extension);
     }
 }
 

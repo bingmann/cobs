@@ -11,7 +11,7 @@ namespace genome::server::bss {
     protected:
         void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) override;
     public:
-        explicit ifs(const boost::filesystem::path& path);
+        explicit ifs(const std::experimental::filesystem::path& path);
     };
 }
 

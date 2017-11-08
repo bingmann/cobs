@@ -14,25 +14,25 @@ namespace genome::file {
     template<uint32_t N>
     void serialize(std::ofstream& ofs, const sample<N>& s);
     template<uint32_t N>
-    void serialize(const boost::filesystem::path& p, const sample<N>& s);
+    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s);
     template<uint32_t N>
     void deserialize(std::ifstream& ifs, sample<N>& s, sample_header& sh = dummy_sh);
     template<uint32_t N>
-    void deserialize(const boost::filesystem::path& p, sample<N>& s, sample_header& sh = dummy_sh);
+    void deserialize(const std::experimental::filesystem::path& p, sample<N>& s, sample_header& sh = dummy_sh);
 
     void serialize(std::ofstream& ofs, const bss& bf, const std::vector<std::string>& file_names);
-    void serialize(const boost::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names);
+    void serialize(const std::experimental::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names);
     void deserialize(std::ifstream& ifs, bss& bf, bss_header& bssh = dummy_bssh);
-    void deserialize(const boost::filesystem::path& p, bss& bf, bss_header& bssh = dummy_bssh);
+    void deserialize(const std::experimental::filesystem::path& p, bss& bf, bss_header& bssh = dummy_bssh);
 
     void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, abss_header& abssh = dummy_abssh);
-    void deserialize(const boost::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& abssh = dummy_abssh);
+    void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& abssh = dummy_abssh);
 
 
     template<class T>
-    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p, const T& h);
+    void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p, const T& h);
     template<class T>
-    T deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p);
+    T deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p);
 }
 
 #include "util.tpp"

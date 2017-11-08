@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 #include <xxhash.h>
 #include <iostream>
 #include <fstream>
@@ -18,7 +18,7 @@ namespace genome {
         }
     }
 
-    void bss::process(const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file, timer& t) {
+    void bss::process(const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file, timer& t) {
         sample<31> s;
         for (size_t i = 0; i < paths.size(); i++) {
             t.active("read");
@@ -39,19 +39,19 @@ namespace genome {
         t.stop();
     }
 
-    void bss::create_from_samples(const boost::filesystem::path &in_dir, const boost::filesystem::path &out_dir,
+    void bss::create_from_samples(const std::experimental::filesystem::path &in_dir, const std::experimental::filesystem::path &out_dir,
                                                 size_t signature_size, size_t block_size, size_t num_hashes) {
         timer t;
         bss bf(signature_size, block_size, num_hashes);
         bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::bss_header::file_extension,
-                           [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+                           [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                bf.process(paths, out_file, t);
                            });
         std::cout << t;
     }
 
 
-    void bss::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const boost::filesystem::path& out_file,
+    void bss::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path& out_file,
                                size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names) {
         std::ofstream ofs;
         file::bss_header bssh(signature_size, block_size, num_hash, file_names);
@@ -71,13 +71,13 @@ namespace genome {
         t.stop();
     }
 
-    bool bss::combine_bss(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir,
+    bool bss::combine_bss(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
                                              size_t signature_size, size_t num_hashes, size_t batch_size) {
         timer t;
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
         bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::bss_header::file_extension, file::bss_header::file_extension,
-                           [&](const std::vector<boost::filesystem::path>& paths, const boost::filesystem::path& out_file) {
+                           [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                size_t new_block_size = 0;
                                for (size_t i = 0; i < paths.size(); i++) {
                                    ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));

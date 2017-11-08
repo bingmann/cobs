@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <cortex.hpp>
 #include <iostream>
-#include <boost/filesystem/operations.hpp>
+#include <experimental/filesystem>
 #include <util.hpp>
 #include <file/util.hpp>
 
@@ -35,7 +35,7 @@ namespace {
     }
 
     TEST(cortex, file_serialization) {
-        boost::filesystem::remove_all(out_dir);
+        std::experimental::filesystem::remove_all(out_dir);
         sample<31> sample1;
         sample<31> sample2;
         cortex::process_file(in_path, out_path, sample1);
@@ -45,7 +45,7 @@ namespace {
     }
 
     TEST(cortex, process_all_in_directory) {
-        boost::filesystem::remove_all(out_dir);
+        std::experimental::filesystem::remove_all(out_dir);
         cortex::process_all_in_directory<31>(in_dir, out_dir);
         sample<31> sample;
         genome::file::deserialize(out_path_rec, sample);

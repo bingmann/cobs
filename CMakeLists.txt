@@ -13,13 +13,6 @@ MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
 MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-set(Boost_USE_STATIC_LIBS OFF)
-
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
 include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)

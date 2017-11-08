@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <file/header.hpp>
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 #include <file/util.hpp>
 #include <bit_sliced_signatures/bss.hpp>
 
@@ -16,8 +16,13 @@ namespace {
     class file : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            boost::filesystem::remove_all(out_dir);
-            boost::filesystem::create_directories(out_dir);
+            std::error_code ec;
+            std::experimental::filesystem::remove_all(out_dir, ec);
+
+            if(ec && ec != std::make_error_condition(std::errc::no_such_file_or_directory)) {
+                throw std::system_error();
+            }
+            std::experimental::filesystem::create_directories(out_dir);
         }
     };
 

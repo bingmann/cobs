@@ -1,13 +1,13 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include <experimental/filesystem>
 #include "file/sample_header.hpp"
 #include "file/frequency_header.hpp"
 #include "file/util.hpp"
 
 namespace genome::frequency {
-    void process_all_in_directory(const boost::filesystem::path& in_dir, const boost::filesystem::path& out_dir);
-    void combine(const boost::filesystem::path& in_file, const boost::filesystem::path& out_file);
+    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir);
+    void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file);
 
     template<typename H>
     class pq_element {
@@ -25,11 +25,11 @@ namespace genome::frequency {
             return H::file_extension;
         }
 
-        static void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p) {
+        static void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p) {
             file::serialize_header<H>(ofs, p);
         }
 
-        static void deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p) {
+        static void deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p) {
             file::deserialize_header<H>(ifs, p);
         }
 

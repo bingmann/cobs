@@ -13,8 +13,8 @@ namespace genome::file {
     }
 
     template<uint32_t N>
-    void serialize(const boost::filesystem::path& p, const sample<N>& s) {
-        boost::filesystem::create_directories(p.parent_path());
+    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s) {
+        std::experimental::filesystem::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
         serialize(ofs, s);
     }
@@ -25,8 +25,8 @@ namespace genome::file {
         ofs.write(reinterpret_cast<const char*>(bf.data().data()), bf.data().size());
     }
 
-    inline void serialize(const boost::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names) {
-        boost::filesystem::create_directories(p.parent_path());
+    inline void serialize(const std::experimental::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names) {
+        std::experimental::filesystem::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
         serialize(ofs, bf, file_names);
     }
@@ -43,7 +43,7 @@ namespace genome::file {
     }
 
     template<uint32_t N>
-    void deserialize(const boost::filesystem::path& p, sample<N>& s, sample_header& h) {
+    void deserialize(const std::experimental::filesystem::path& p, sample<N>& s, sample_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, s, h);
     }
@@ -60,12 +60,12 @@ namespace genome::file {
         ifs.read(reinterpret_cast<char*>(bf.data().data()), size);
     }
 
-    inline void deserialize(const boost::filesystem::path& p, bss& bf, bss_header& h) {
+    inline void deserialize(const std::experimental::filesystem::path& p, bss& bf, bss_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, bf, h);
     }
 
-    inline void deserialize(const boost::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& h) {
+    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, data, h);
     }
@@ -83,13 +83,13 @@ namespace genome::file {
     }
 
     template<class T>
-    void serialize_header(std::ofstream& ofs, const boost::filesystem::path& p, const T& h) {
+    void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p, const T& h) {
         ofs.open(p.string(), std::ios::out | std::ios::binary);
         header<T>::serialize(ofs, h);
     }
 
     template<class T>
-    T deserialize_header(std::ifstream& ifs, const boost::filesystem::path& p) {
+    T deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p) {
         ifs.open(p.string(), std::ios::in | std::ios::binary);
         T h;
         header<T>::deserialize(ifs, h);
