@@ -21,7 +21,7 @@ if(libstdc++fs)
     add_library(stdc++fs UNKNOWN IMPORTED)
     set_property(TARGET stdc++fs PROPERTY IMPORTED_LOCATION ${libstdc++fs})
 else()
-    message(WARNING "libstdc++fs was not specified use: -D libstdc++fs='\"<path_to_libstdc++fs.a>\"'")
+    message(WARNING "libstdc++fs was not specified use: -D libstdc++fs=\"<path_to_libstdc++fs.a>\"")
 endif()
 
 add_library(thesis_lib ${SOURCE_FILES})
