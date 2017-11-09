@@ -24,8 +24,9 @@ namespace genome {
             t.active("read");
             file::deserialize(paths[i], s);
             t.active("process");
-            for (const auto& kmer: s.data()) {
-                create_hashes(&kmer, kmer.size, m_signature_size, m_num_hashes, [&](size_t hash) {
+            #pragma omp parallel for
+            for (size_t j = 0; j < s.data().size(); j++) {
+                create_hashes(s.data().data() + j, 8, m_signature_size, m_num_hashes, [&](size_t hash) {
                     bss::set_bit(hash, i);
                 });
             }

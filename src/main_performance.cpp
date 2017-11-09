@@ -10,7 +10,7 @@ void bss() {
 }
 
 void bss_2() {
-//    genome::bss::combine_bsss("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 15000000, 3, 7);
+//    genome::bss::combine_bss("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
 }
 
 const uint64_t m_count_expansions[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -24,6 +24,7 @@ void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const std
         auto counts_64 = reinterpret_cast<uint64_t*>(counts.data());
         auto rows_8 = rows.data() + i * block_size;
         for (size_t k = 0; k < block_size; k++) {
+//            uint128_t a = 0;
             counts_64[2 * k] += m_count_expansions[rows_8[k] & 0xF];
             counts_64[2 * k + 1] += m_count_expansions[rows_8[k] >> 4];
         }
@@ -33,20 +34,20 @@ void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const std
 
 
 int main() {
-    size_t block_size = 50000;
-    size_t hashes_size = 1000;
-    std::vector<uint16_t> counts(8 * block_size, 0);
-    std::vector<char> rows(hashes_size * block_size, 1);
+//    size_t block_size = 50000;
+//    size_t hashes_size = 1000;
+//    std::vector<uint16_t> counts(8 * block_size, 0);
+//    std::vector<char> rows(hashes_size * block_size, 1);
 //    std::iota(rows.begin(), rows.end(), 0);
-    genome::timer t;
-    t.active("counts");
-    compute_counts(hashes_size, counts, rows, block_size);
-    t.stop();
-    std::cout << t << std::endl;
-    for (size_t i = 0; i < 24; i++) {
-        std::cout << counts[i] << ", ";
-    }
+//    genome::timer t;
+//    t.active("counts");
+//    compute_counts(hashes_size, counts, rows, block_size);
+//    t.stop();
+//    std::cout << t << std::endl;
+//    for (size_t i = 0; i < 24; i++) {
+//        std::cout << counts[i] << ", ";
+//    }
 //    sample();
-//    bss();
-//    bss_2();
+    bss();
+    bss_2();
 }
