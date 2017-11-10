@@ -6,10 +6,10 @@
 #include <iomanip>
 #include <cassert>
 #include <cmath>
-#include <algorithm>
 #include <functional>
 #include <unistd.h>
 #include <fstream>
+#include <algorithm>
 
 
 namespace genome {

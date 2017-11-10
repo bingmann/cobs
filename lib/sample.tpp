@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sample.hpp"
-#include <algorithm>
 
 namespace genome {
     template<unsigned int N>

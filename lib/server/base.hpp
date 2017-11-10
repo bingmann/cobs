@@ -6,6 +6,8 @@
 #include <file/util.hpp>
 #include <numeric>
 #include <immintrin.h>
+#include <xxhash.h>
+#include <algorithm>
 
 namespace genome::server {
     template<class T>
@@ -18,15 +20,21 @@ namespace genome::server {
         timer m_timer;
 
         void create_hashes(std::vector<size_t>& hashes, const std::string& query, uint32_t kmer_size, uint64_t signature_size, uint64_t num_hashes) const {
-            hashes.reserve(num_hashes * (query.size() - kmer_size + 1));
-            hashes.clear();
-            std::vector<char> kmer_data(kmer<31>::data_size(kmer_size));
-            for (size_t i = 0; i <= query.size() - kmer_size; i++) {
-                kmer<31>::init(query.data() + i, kmer_data.data(), kmer_size);
-                genome::bss::create_hashes(kmer_data.data(), kmer<31>::data_size(kmer_size), signature_size, num_hashes,
-                                           [&](size_t hash) {
-                                               hashes.push_back(hash);
-                                           });
+            size_t kmer_data_size = kmer<31>::data_size(kmer_size);
+            size_t num_kmers = query.size() - kmer_size + 1;
+            hashes.resize(num_hashes * num_kmers);
+            #pragma omp parallel
+            {
+                std::vector<char> kmer_data(kmer_data_size);
+                char* kmer_data_8 = kmer_data.data();
+                #pragma omp for
+                for (size_t i = 0; i < num_kmers; i++) {
+                    kmer<31>::init(query.data() + i, kmer_data_8, kmer_size);
+                    for (unsigned int j = 0; j < num_hashes; j++) {
+                        size_t hash = XXH32(kmer_data_8, kmer_data_size, j);
+                        hashes[i * num_hashes + j] = hash % signature_size;
+                    }
+                }
             }
         }
 
@@ -39,10 +47,13 @@ namespace genome::server {
                 return counts[v1] > counts[v2];
             });
 
-            result.reserve(num_results);
-            result.clear();
+            result.resize(num_results);
+//            result.reserve(num_results);
+//            result.clear();
+            #pragma omp parallel for
             for (size_t i = 0; i < num_results; i++) {
-                result.emplace_back(std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]));
+                result[i] = std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]);
+//                result.emplace_back(std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]));
             }
         }
 

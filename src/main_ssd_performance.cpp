@@ -8,6 +8,7 @@
 #include <stxxl/bits/io/syscall_file.h>
 #include <stxxl/request>
 #include <experimental/filesystem>
+#include <cstring>
 
 void clear_caches() {
     sync();

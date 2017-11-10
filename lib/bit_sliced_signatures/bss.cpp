@@ -33,6 +33,9 @@ namespace genome {
         }
         t.active("write");
         std::vector<std::string> file_names(paths.size());
+//        for (size_t i = 0; i < paths.size(); i++) {
+//            file_names[i] = paths[i].stem().string();
+//        }
         std::transform(paths.begin(), paths.end(), file_names.begin(), [](const auto& p) {
             return p.stem().string();
         });
@@ -155,5 +158,20 @@ namespace genome {
 
     std::vector<byte>& bss::data() {
         return m_data;
+    }
+
+    void bss::generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes) {
+        std::vector<std::string> file_names;
+        for(size_t i = 0; i < 8 * block_size; i++) {
+            file_names.push_back("file_" + std::to_string(i));
+        }
+        genome::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
+        std::ofstream ofs;
+        genome::file::serialize_header(ofs, p, bssh);
+
+        for (size_t i = 0; i < signature_size * block_size; i += 4) {
+            int rnd = std::rand();
+            ofs.write(reinterpret_cast<char*>(&rnd), 4);
+        }
     }
 };

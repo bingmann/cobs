@@ -27,6 +27,7 @@ namespace genome {
                                                      size_t batch_size, size_t signature_size, size_t num_hashes);
         static void create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                   const std::function<void(size_t)>& callback);
+        static void generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes);
         bool contains(const kmer<31>& kmer, size_t bit_in_block);
         uint64_t signature_size() const;
         void signature_size(uint64_t m_signature_size);

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(thesis)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp -std=c++17 -lstdc++fs -mavx2 -D_GLIBCXX_PARALLEL -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
 
 file(GLOB_RECURSE HEADER_FILES "${PROJECT_SOURCE_DIR}/lib/*.hpp" "${PROJECT_SOURCE_DIR}/lib/*.tpp")
 file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/lib/*.cpp")
@@ -25,7 +25,7 @@ else()
 endif()
 
 add_library(thesis_lib ${SOURCE_FILES})
-set(LIBRARIES thesis_lib stdc++fs ${Boost_LIBRARIES} ${STXXL_LIBRARIES} xxhash)
+set(LIBRARIES thesis_lib stdc++fs ${STXXL_LIBRARIES} xxhash docopt)
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)
