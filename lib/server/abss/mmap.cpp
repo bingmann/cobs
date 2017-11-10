@@ -9,7 +9,6 @@ namespace genome::server::abss {
         for (size_t i = 1; i < m_header.parameters().size(); i++) {
             m_data[i] = m_data[i - 1] + m_header.page_size() * m_header.parameters()[i - 1].signature_size;
         }
-        assert(madvise(m_data[0], m_smd.end_pos - m_smd.curr_pos, MADV_RANDOM) == 0);
     }
 
     void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
