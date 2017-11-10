@@ -25,6 +25,6 @@ int main(int argc, char** argv) {
         size_t num_hashes = std::strtoul(argv[4], &pEnd, 10);
         generate_dummy_bloom(path, signature_size, ((num_items + 7) / 8), num_hashes);
     } else {
-        std::cout << "wrong number of args: path signature_size block_size num_hashes" << std::endl;
+        std::cout << "wrong number of args: path signature_size num_items num_hashes" << std::endl;
     }
 }

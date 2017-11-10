@@ -7,7 +7,7 @@ namespace genome::server::bss {
 
     mmap::mmap(const std::experimental::filesystem::path& path) : bss::base(path) {
         m_data = initialize_mmap(path, m_smd);
-//        assert(madvise(m_data, size, MADV_RANDOM) == 0);
+        assert(madvise(m_data, m_smd.end_pos - m_smd.curr_pos, MADV_RANDOM) == 0);
     }
 
     void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
