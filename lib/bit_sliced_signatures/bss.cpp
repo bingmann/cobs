@@ -8,7 +8,7 @@
 #include "bss.hpp"
 #include "kmer.hpp"
 
-namespace genome {
+namespace isi {
 
     void bss::create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                      const std::function<void(size_t)>& callback) {
@@ -165,9 +165,9 @@ namespace genome {
         for(size_t i = 0; i < 8 * block_size; i++) {
             file_names.push_back("file_" + std::to_string(i));
         }
-        genome::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
+        isi::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
         std::ofstream ofs;
-        genome::file::serialize_header(ofs, p, bssh);
+        isi::file::serialize_header(ofs, p, bssh);
 
         for (size_t i = 0; i < signature_size * block_size; i += 4) {
             int rnd = std::rand();

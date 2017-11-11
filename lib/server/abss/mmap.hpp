@@ -3,7 +3,7 @@
 
 #include <server/abss/base.hpp>
 
-namespace genome::server::abss {
+namespace isi::server::abss {
     class mmap : public base {
     private:
         std::vector<byte*> m_data;

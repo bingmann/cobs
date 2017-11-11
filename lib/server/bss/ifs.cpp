@@ -1,11 +1,11 @@
 #include <file/util.hpp>
 #include "ifs.hpp"
 
-namespace genome::server::bss {
+namespace isi::server::bss {
     ifs::ifs(const std::experimental::filesystem::path& path) : bss::base(path) {}
 
     void ifs::calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) {
-        genome::bss bss(hashes.size(), m_header.block_size(), m_header.num_hashes());
+        isi::bss bss(hashes.size(), m_header.block_size(), m_header.num_hashes());
         auto data_ptr = reinterpret_cast<char*>(bss.data().data());
         m_timer.active("ifs_access");
         for (size_t i = 0; i < hashes.size(); i++) {

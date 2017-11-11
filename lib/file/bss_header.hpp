@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace genome::file {
+namespace isi::file {
     class bss_header : public header<bss_header> {
     private:
         uint64_t m_signature_size;

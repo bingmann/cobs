@@ -5,7 +5,7 @@
 #include <queue>
 #include <file/util.hpp>
 
-namespace genome::frequency {
+namespace isi::frequency {
 
 
     template<typename PqElement>

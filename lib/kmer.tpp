@@ -2,7 +2,7 @@
 
 #include "kmer.hpp"
 
-namespace genome {
+namespace isi {
 
     template<unsigned int N>
     kmer<N>::kmer(std::array<byte, size> data) : m_data(std::move(data)) {}

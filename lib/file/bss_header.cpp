@@ -1,12 +1,12 @@
 #include "bss_header.hpp"
 #include <util.hpp>
 
-namespace genome::file {
+namespace isi::file {
     const std::string bss_header::magic_word = "BSS";
     const std::string bss_header::file_extension = ".g_bss";
 
     void bss_header::serialize(std::ofstream& ofs) const {
-        genome::serialize(ofs, (uint32_t) m_file_names.size(), m_signature_size, m_block_size, m_num_hashes);
+        isi::serialize(ofs, (uint32_t) m_file_names.size(), m_signature_size, m_block_size, m_num_hashes);
         for (const auto& file_name: m_file_names) {
             ofs << file_name << std::endl;
         }
@@ -14,7 +14,7 @@ namespace genome::file {
 
     void bss_header::deserialize(std::ifstream& ifs) {
         uint32_t file_names_size;
-        genome::deserialize(ifs, file_names_size, m_signature_size, m_block_size, m_num_hashes);
+        isi::deserialize(ifs, file_names_size, m_signature_size, m_block_size, m_num_hashes);
         m_file_names.resize(file_names_size);
         for (auto& file_name: m_file_names) {
             std::getline(ifs, file_name);

@@ -6,7 +6,7 @@
 #include "timer.hpp"
 #include <experimental/filesystem>
 
-namespace genome::cortex {
+namespace isi::cortex {
     struct header {
         uint32_t version;
         uint32_t kmer_size;

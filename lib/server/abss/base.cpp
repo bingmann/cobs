@@ -1,7 +1,7 @@
 #include <assert.h>
 #include "base.hpp"
 
-namespace genome::server::abss {
+namespace isi::server::abss {
     base::base(const std::experimental::filesystem::path& path) : server::base<file::abss_header>(path) {
         //todo assertions that all the data in the header is correct
         m_block_size = m_header.page_size() * m_header.parameters().size();

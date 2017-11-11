@@ -3,7 +3,7 @@
 #include <ostream>
 #include "kmer.hpp"
 
-namespace genome {
+namespace isi {
     template<unsigned int N>
     class sample {
     private:

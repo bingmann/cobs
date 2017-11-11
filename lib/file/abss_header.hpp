@@ -3,7 +3,7 @@
 
 #include "header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     class abss_header : public header<abss_header> {
     public:
         struct parameter {

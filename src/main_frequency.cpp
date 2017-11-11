@@ -8,9 +8,9 @@ int main(int argc, char** argv) {
         std::string out_dir = argv[3];
         size_t batch_size = std::strtoul(argv[4], &pEnd, 10);
         if (type == "bin") {
-            genome::frequency::process_all_in_directory<genome::frequency::bin_pq_element>(in_dir, out_dir, batch_size);
+            isi::frequency::process_all_in_directory<isi::frequency::bin_pq_element>(in_dir, out_dir, batch_size);
         } else if (type == "fre") {
-            genome::frequency::process_all_in_directory<genome::frequency::fre_pq_element>(in_dir, out_dir, batch_size);
+            isi::frequency::process_all_in_directory<isi::frequency::fre_pq_element>(in_dir, out_dir, batch_size);
         } else {
             std::cout << "wrong type: use 'bin' or 'fre'" << std::endl;
         }
@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         std::string in_file = argv[2];
         std::string out_file = argv[3];
         if (type == "com") {
-            genome::frequency::combine(in_file, out_file);
+            isi::frequency::combine(in_file, out_file);
         } else {
             std::cout << "wrong type: use 'com'" << std::endl;
         }

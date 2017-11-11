@@ -105,7 +105,7 @@ namespace {
 
     size_t get_count_sample(const std::string& file) {
         std::ifstream ifs;
-        genome::file::deserialize_header<genome::file::sample_header>(ifs, file);
+        isi::file::deserialize_header<isi::file::sample_header>(ifs, file);
         size_t total_count = 0;
         uint64_t kmer;
         while (ifs && ifs.peek() != EOF) {
@@ -117,7 +117,7 @@ namespace {
 
     size_t get_count_frequency(const std::string& file) {
         std::ifstream ifs;
-        genome::file::deserialize_header<genome::file::frequency_header>(ifs, file);
+        isi::file::deserialize_header<isi::file::frequency_header>(ifs, file);
         size_t total_count = 0;
         uint64_t kmer;
         uint32_t count;
@@ -139,15 +139,15 @@ namespace {
     };
 
     TEST_F(frequency, bin) {
-        genome::frequency::process_all_in_directory<genome::frequency::bin_pq_element>(in_dir, out_dir, 40);
+        isi::frequency::process_all_in_directory<isi::frequency::bin_pq_element>(in_dir, out_dir, 40);
         size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
-        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + genome::file::frequency_header::file_extension), total_count);
-        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + genome::file::frequency_header::file_extension);
+        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension), total_count);
+        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension);
     }
 
     TEST_F(frequency, freq) {
-        genome::frequency::process_all_in_directory<genome::frequency::fre_pq_element>(in_dir, out_dir, 40);
-        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + genome::file::frequency_header::file_extension);
+        isi::frequency::process_all_in_directory<isi::frequency::fre_pq_element>(in_dir, out_dir, 40);
+        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + isi::file::frequency_header::file_extension);
     }
 }
 

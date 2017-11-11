@@ -1,6 +1,6 @@
 #include "abss_header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     const std::string abss_header::magic_word = "ABSS";
     const std::string abss_header::file_extension = ".g_abss";
 
@@ -9,10 +9,10 @@ namespace genome::file {
     }
 
     void abss_header::serialize(std::ofstream& ofs) const {
-        genome::serialize(ofs, (uint32_t) m_parameters.size(), (uint32_t) m_file_names.size(), m_page_size);
+        isi::serialize(ofs, (uint32_t) m_parameters.size(), (uint32_t) m_file_names.size(), m_page_size);
         ofs.flush();
         for (const auto& p: m_parameters) {
-            genome::serialize(ofs, p.signature_size, p.num_hashes);
+            isi::serialize(ofs, p.signature_size, p.num_hashes);
         }
         for (const auto& file_name: m_file_names) {
             ofs << file_name << std::endl;
@@ -25,10 +25,10 @@ namespace genome::file {
     void abss_header::deserialize(std::ifstream& ifs) {
         uint32_t parameters_size;
         uint32_t file_names_size;
-        genome::deserialize(ifs, parameters_size, file_names_size, m_page_size);
+        isi::deserialize(ifs, parameters_size, file_names_size, m_page_size);
         m_parameters.resize(parameters_size);
         for (auto& p: m_parameters) {
-            genome::deserialize(ifs, p.signature_size, p.num_hashes);
+            isi::deserialize(ifs, p.signature_size, p.num_hashes);
         }
 
         m_file_names.resize(file_names_size);

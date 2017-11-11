@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <util.hpp>
 
-namespace genome {
+namespace isi {
     class timer {
     private:
         std::unordered_map<std::string, std::chrono::duration<double>> timers;

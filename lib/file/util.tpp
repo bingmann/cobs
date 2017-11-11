@@ -4,7 +4,7 @@
 #include "bss_header.hpp"
 #include "sample_header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     template<uint32_t N>
     void serialize(std::ofstream& ofs, const sample<N>& s) {
         sample_header sh(31);

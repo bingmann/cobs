@@ -2,7 +2,7 @@
 
 #include "header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     class sample_header : public header<sample_header> {
     private:
         uint32_t m_kmer_size;

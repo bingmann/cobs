@@ -5,15 +5,15 @@
 #include <cstddef>
 
 void sample() {
-    genome::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
+    isi::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
 }
 
 void bss() {
-    genome::bss::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
+    isi::bss::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
 }
 
 void bss_2() {
-//    genome::bss::combine_bss("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
+//    isi::bss::combine_bss("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
 }
 
 const uint64_t m_count_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
@@ -277,7 +277,7 @@ const uint16_t expansion[] alignas(16) = {0, 0, 0, 0, 0, 0, 0, 0,
                                           1, 1, 1, 1, 1, 1, 1, 1};
 const auto expansion_128 = reinterpret_cast<const __m128i_u*>(expansion);
 
-void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const genome::byte* rows, size_t block_size) {
+void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const isi::byte* rows, size_t block_size) {
     #pragma omp declare reduction (merge : std::vector<uint16_t> : \
                             std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<uint16_t>())) \
                             initializer(omp_priv = omp_orig)
@@ -304,11 +304,11 @@ int main() {
     size_t hashes_size = 1000;
     std::vector<uint16_t> counts(8 * block_size, 0);
     std::vector<char> rows(hashes_size * block_size, 63);
-    genome::timer t;
+    isi::timer t;
     for (size_t i = 0; i < 1; i++) {
 //        std::iota(rows.begin(), rows.end(), i);
         t.active("counts");
-        compute_counts(hashes_size, counts, reinterpret_cast<genome::byte*>(rows.data()), block_size);
+        compute_counts(hashes_size, counts, reinterpret_cast<isi::byte*>(rows.data()), block_size);
         t.stop();
     }
     std::cout << t << std::endl;

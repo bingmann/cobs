@@ -3,7 +3,7 @@
 
 namespace {
     size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
-        uint64_t signature_size = genome::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+        uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_probability);
 
         std::vector<bool> signature(signature_size);
         std::srand(1);

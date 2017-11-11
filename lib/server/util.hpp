@@ -6,7 +6,7 @@
 #include <util.hpp>
 #include <cstring>
 
-namespace genome::server {
+namespace isi::server {
 
     inline byte* initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
         int fd = open(path.string().data(), O_RDONLY, 0);

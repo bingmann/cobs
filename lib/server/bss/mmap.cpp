@@ -3,7 +3,7 @@
 #include <server/util.hpp>
 #include <cstring>
 
-namespace genome::server::bss {
+namespace isi::server::bss {
 
     mmap::mmap(const std::experimental::filesystem::path& path) : bss::base(path) {
         m_data = initialize_mmap(path, m_smd);

@@ -12,7 +12,7 @@
 #include <algorithm>
 
 
-namespace genome {
+namespace isi {
     typedef unsigned char byte;
 
     struct stream_metadata {

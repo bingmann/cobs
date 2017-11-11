@@ -7,12 +7,12 @@
 #include <file/abss_header.hpp>
 #include <bit_sliced_signatures/bss.hpp>
 
-namespace genome::abss {
+namespace isi::abss {
     void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size = get_page_size()) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == genome::file::sample_header::file_extension;
+            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == isi::file::sample_header::file_extension;
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
             return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
@@ -45,7 +45,7 @@ namespace genome::abss {
             size_t num_files = 0;
             size_t max_file_size = 0;
             for (std::experimental::filesystem::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
-                if (sub_it->path().extension() == genome::file::sample_header::file_extension) {
+                if (sub_it->path().extension() == isi::file::sample_header::file_extension) {
                     max_file_size = std::max(max_file_size, std::experimental::filesystem::file_size(sub_it->path()));
                     num_files++;
                 }
@@ -56,8 +56,8 @@ namespace genome::abss {
             if (num_files != 8 * page_size) {
                 assert(num_files < 8 * page_size);
                 assert(p == paths.back());
-                genome::bss bss(signature_size, (8 * page_size - num_files) / 8, num_hashes);
-                genome::file::serialize(out_dir / p.filename() / ("padding" + file::bss_header::file_extension), bss, std::vector<std::string>());
+                isi::bss bss(signature_size, (8 * page_size - num_files) / 8, num_hashes);
+                isi::file::serialize(out_dir / p.filename() / ("padding" + file::bss_header::file_extension), bss, std::vector<std::string>());
             }
         }
     }
@@ -69,7 +69,7 @@ namespace genome::abss {
                 size_t signature_size = 0;
                 size_t num_hashes = 0;
                 for (std::experimental::filesystem::directory_iterator bloom_it(it->path()); bloom_it != end; bloom_it++) {
-                    if (bloom_it->path().extension() == genome::file::bss_header::file_extension) {
+                    if (bloom_it->path().extension() == isi::file::bss_header::file_extension) {
                         std::ifstream ifs;
                         auto bssh = file::deserialize_header<file::bss_header>(ifs, bloom_it->path());
                         signature_size = bssh.signature_size();
@@ -78,7 +78,7 @@ namespace genome::abss {
                     }
                 }
                 if (signature_size != 0) {
-                    all_combined = genome::bss::combine_bss(in_dir / it->path().filename(), out_dir / it->path().filename(),
+                    all_combined = isi::bss::combine_bss(in_dir / it->path().filename(), out_dir / it->path().filename(),
                                                             signature_size, num_hashes,
                                                             batch_size);
                 } else {
@@ -93,29 +93,29 @@ namespace genome::abss {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == genome::file::bss_header::file_extension;
+            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == isi::file::bss_header::file_extension;
         });
         std::sort(paths.begin(), paths.end());
 
-        std::vector<genome::file::abss_header::parameter> parameters;
+        std::vector<isi::file::abss_header::parameter> parameters;
         std::vector<std::string> file_names;
         for (const auto& p: paths) {
             std::ifstream ifs;
-            auto bssh = genome::file::deserialize_header<genome::file::bss_header>(ifs, p);
+            auto bssh = isi::file::deserialize_header<isi::file::bss_header>(ifs, p);
             parameters.push_back({bssh.signature_size(), bssh.num_hashes()});
             file_names.insert(file_names.end(), bssh.file_names().begin(), bssh.file_names().end());
             assert(bssh.block_size() == page_size);
         }
 
-        genome::file::abss_header abssh(parameters, file_names, page_size);
+        isi::file::abss_header abssh(parameters, file_names, page_size);
         std::ofstream ofs;
-        genome::file::serialize_header(ofs, out_file, abssh);
+        isi::file::serialize_header(ofs, out_file, abssh);
 
         std::vector<char> buffer(32 * page_size);
         for (const auto& p: paths) {
             std::ifstream ifs;
-            genome::file::deserialize_header<genome::file::bss_header>(ifs, p);
-            genome::stream_metadata smd = get_stream_metadata(ifs);
+            isi::file::deserialize_header<isi::file::bss_header>(ifs, p);
+            isi::stream_metadata smd = get_stream_metadata(ifs);
             size_t data_size = smd.end_pos - smd.curr_pos;
             while(data_size > 0) {
                 size_t num_bytes = std::min(buffer.size(), data_size);
@@ -135,6 +135,6 @@ namespace genome::abss {
         while(!combine_bss(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
             iteration++;
         }
-        create_abss(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + genome::file::abss_header::file_extension), page_size);
+        create_abss(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + isi::file::abss_header::file_extension), page_size);
     }
 }

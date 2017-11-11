@@ -4,7 +4,7 @@
 #include <timer.hpp>
 #include <server/base.hpp>
 
-namespace genome::server::bss {
+namespace isi::server::bss {
     class base : public server::base<file::bss_header> {
     protected:
         explicit base(const std::experimental::filesystem::path& path);

@@ -3,7 +3,7 @@
 #include "base.hpp"
 
 
-namespace genome::server::bss {
+namespace isi::server::bss {
     class ifs : public base {
     private:
         std::ifstream m_ifs;

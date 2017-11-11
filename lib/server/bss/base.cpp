@@ -3,7 +3,7 @@
 #include <bit_sliced_signatures/bss.hpp>
 #include <file/util.hpp>
 
-namespace genome::server::bss {
+namespace isi::server::bss {
     base::base(const std::experimental::filesystem::path& path) : server::base<file::bss_header>(path) { }
 
     uint64_t base::num_hashes() const {

@@ -6,7 +6,7 @@
 #include "sample_header.hpp"
 #include "abss_header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     static sample_header dummy_sh;
     static bss_header dummy_bssh;
     static abss_header dummy_abssh;

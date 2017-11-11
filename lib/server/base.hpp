@@ -9,7 +9,7 @@
 #include <xxhash.h>
 #include <algorithm>
 
-namespace genome::server {
+namespace isi::server {
     template<class T>
     class base {
     protected:
@@ -59,7 +59,7 @@ namespace genome::server {
 
         void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const char* rows) {
             auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
-            auto rows_b = reinterpret_cast<const genome::byte*>(rows);
+            auto rows_b = reinterpret_cast<const isi::byte*>(rows);
             uint64_t nh = num_hashes();
             uint64_t bs = block_size();
 

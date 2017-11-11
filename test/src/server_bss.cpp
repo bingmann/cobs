@@ -13,8 +13,8 @@ namespace {
     TEST(server, block_size_4) {
         std::vector<std::pair<uint16_t, std::string>> result_map;
         std::vector<std::pair<uint16_t, std::string>> result_ifs;
-        genome::server::bss::mmap s_mmap(sample_1);
-        genome::server::bss::mmap s_ifs(sample_1);
+        isi::server::bss::mmap s_mmap(sample_1);
+        isi::server::bss::mmap s_ifs(sample_1);
 
         std::ifstream ifs(sample_result);
         std::string line;
@@ -37,8 +37,8 @@ namespace {
     TEST(server, block_size_15) {
         std::vector<std::pair<uint16_t, std::string>> result_map;
         std::vector<std::pair<uint16_t, std::string>> result_ifs;
-        genome::server::bss::mmap s_mmap(sample_2);
-        genome::server::bss::mmap s_ifs(sample_2);
+        isi::server::bss::mmap s_mmap(sample_2);
+        isi::server::bss::mmap s_ifs(sample_2);
 
         std::ifstream ifs(sample_result);
         std::string line;

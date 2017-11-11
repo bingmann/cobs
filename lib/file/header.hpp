@@ -3,7 +3,7 @@
 #include <string>
 #include <ostream>
 
-namespace genome::file {
+namespace isi::file {
     template<class T>
     class header {
     private:

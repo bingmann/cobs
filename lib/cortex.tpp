@@ -12,7 +12,7 @@
 #include "sample.hpp"
 #include "file/sample_header.hpp"
 
-namespace genome::cortex {
+namespace isi::cortex {
 
     template<typename size_type, typename ForwardIterator>
     size_type cast(ForwardIterator iter) {

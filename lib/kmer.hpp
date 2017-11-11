@@ -6,7 +6,7 @@
 #include <ostream>
 #include <util.hpp>
 
-namespace genome {
+namespace isi {
     template<unsigned int N>
     class kmer {
     public:

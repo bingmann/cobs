@@ -4,7 +4,7 @@
 #include <server/base.hpp>
 #include <file/abss_header.hpp>
 
-namespace genome::server::abss {
+namespace isi::server::abss {
     class base : public server::base<file::abss_header> {
     protected:
         size_t m_num_hashes;

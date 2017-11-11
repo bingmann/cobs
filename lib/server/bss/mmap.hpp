@@ -3,7 +3,7 @@
 #include "server/bss/base.hpp"
 
 
-namespace genome::server::bss {
+namespace isi::server::bss {
     class mmap : public base {
     private:
         byte* m_data;

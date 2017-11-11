@@ -75,7 +75,7 @@ uint64_t get_unsigned_integer(cli_map& map, const std::string& name) {
 void cortex(cli_map& map) {
     auto in_dir = get_path(map, "<in_dir>", true);
     auto out_dir = get_path(map, "<out_dir>", false);
-    genome::cortex::process_all_in_directory<31>(in_dir, out_dir);
+    isi::cortex::process_all_in_directory<31>(in_dir, out_dir);
 }
 
 void bss(cli_map& map) {
@@ -84,7 +84,7 @@ void bss(cli_map& map) {
     uint64_t signature_size = get_unsigned_integer(map, "<signature_size>");
     uint64_t block_size = get_unsigned_integer(map, "<block_size>");
     uint64_t num_hashes = get_unsigned_integer(map, "<num_hashes");
-    genome::bss::create_from_samples(in_dir, out_dir, signature_size, block_size, num_hashes);
+    isi::bss::create_from_samples(in_dir, out_dir, signature_size, block_size, num_hashes);
 }
 
 void dummy(cli_map& map) {
@@ -92,7 +92,7 @@ void dummy(cli_map& map) {
     uint64_t signature_size = get_unsigned_integer(map, "<signature_size>");
     uint64_t block_size = get_unsigned_integer(map, "<block_size>");
     uint64_t num_hashes = get_unsigned_integer(map, "<num_hashes");
-    genome::bss::generate_dummy(path, signature_size, block_size, num_hashes);
+    isi::bss::generate_dummy(path, signature_size, block_size, num_hashes);
 }
 
 int main(int argc, const char** argv) {

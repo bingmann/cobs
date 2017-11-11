@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace genome {
+namespace isi {
     void timer::active(const std::string& timer) {
         assert(!timer.empty());
         stop();

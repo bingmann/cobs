@@ -3,8 +3,6 @@
 #include <bit_sliced_signatures/abss.hpp>
 
 namespace {
-    using namespace genome;
-
     std::string in_dir = "test/out/server_abss/input_1/";
     std::string abss_path = in_dir + "filter.g_abss";
     std::string tmp_dir = "test/out/server_abss/tmp";
@@ -29,9 +27,9 @@ namespace {
             "GGCTGCTCTGTAATAGGGACTAAAAAAGTGATGATTATCATGAGTGCCCCGTTATGGTCGTGTTCGATCAGAGCGCTCTTACGAGCAGTCGTATGCTTTCTCGAATT"
             "CCGTGCGGTTAAGCGTGACAGTCCCAGTGAACCCACAA";
 
-    std::vector<sample<31>> generate_samples_all() {
-        std::vector<sample<31>> samples(33);
-        kmer<31> k;
+    std::vector<isi::sample<31>> generate_samples_all() {
+        std::vector<isi::sample<31>> samples(33);
+        isi::kmer<31> k;
         for (size_t i = 0; i < query.size() - 31; i++) {
             k.init(query.data() + i);
             for (size_t j = 0; j < samples.size(); j++) {
@@ -43,9 +41,9 @@ namespace {
         return samples;
     }
 
-    std::vector<sample<31>> generate_samples_one() {
-        std::vector<sample<31>> samples(33);
-        kmer<31> k;
+    std::vector<isi::sample<31>> generate_samples_one() {
+        std::vector<isi::sample<31>> samples(33);
+        isi::kmer<31> k;
         k.init(query.data());
         for (size_t i = 0; i < samples.size(); i++) {
             for (size_t j = 0; j < i * 10 + 1; j++) {
@@ -55,10 +53,10 @@ namespace {
         return samples;
     }
 
-    void generate_test_case(std::vector<sample<31>> samples) {
+    void generate_test_case(std::vector<isi::sample<31>> samples) {
         for (size_t i = 0; i < samples.size(); i++) {
             std::string index = (i < 10 ? "0" : "") + std::to_string(i);
-            genome::file::serialize(tmp_dir + "/sample_" + index + genome::file::sample_header::file_extension, samples[i]);
+            isi::file::serialize(tmp_dir + "/sample_" + index + isi::file::sample_header::file_extension, samples[i]);
         }
 
     }
@@ -78,23 +76,23 @@ namespace {
     TEST_F(server_abss, padding) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
-        size_t page_size = get_page_size();
-        genome::abss::create_folders(tmp_dir, in_dir, page_size);
-        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, page_size);
+        size_t page_size = isi::get_page_size();
+        isi::abss::create_folders(tmp_dir, in_dir, page_size);
+        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, page_size);
         std::ifstream ifs;
-        auto abssh = genome::file::deserialize_header<genome::file::abss_header>(ifs, abss_path);
-        genome::stream_metadata smd = genome::get_stream_metadata(ifs);
+        auto abssh = isi::file::deserialize_header<isi::file::abss_header>(ifs, abss_path);
+        isi::stream_metadata smd = isi::get_stream_metadata(ifs);
         ASSERT_EQ(smd.curr_pos % page_size, 0U);
     }
 
     TEST_F(server_abss, deserialization) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
-        genome::abss::create_folders(tmp_dir, in_dir, 2);
-        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
-        std::vector<std::vector<byte>> data;
-        genome::file::abss_header abssh;
-        genome::file::deserialize(abss_path, data, abssh);
+        isi::abss::create_folders(tmp_dir, in_dir, 2);
+        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
+        std::vector<std::vector<isi::byte>> data;
+        isi::file::abss_header abssh;
+        isi::file::deserialize(abss_path, data, abssh);
         ASSERT_EQ(abssh.file_names().size(), 33U);
         ASSERT_EQ(abssh.parameters().size(), 3U);
         ASSERT_EQ(data.size(), 3U);
@@ -103,9 +101,9 @@ namespace {
     TEST_F(server_abss, all_included) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
-        genome::abss::create_folders(tmp_dir, in_dir, 2);
-        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
-        genome::server::abss::mmap s_mmap(abss_path);
+        isi::abss::create_folders(tmp_dir, in_dir, 2);
+        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::server::abss::mmap s_mmap(abss_path);
         std::vector<std::pair<uint16_t, std::string>> result;
 
         s_mmap.search(query, 31, result);
@@ -120,9 +118,9 @@ namespace {
     TEST_F(server_abss, one_included) {
         auto samples = generate_samples_one();
         generate_test_case(samples);
-        genome::abss::create_folders(tmp_dir, in_dir, 2);
-        genome::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
-        genome::server::abss::mmap s_mmap(abss_path);
+        isi::abss::create_folders(tmp_dir, in_dir, 2);
+        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::server::abss::mmap s_mmap(abss_path);
         std::vector<std::pair<uint16_t, std::string>> result;
 
         s_mmap.search(query, 31, result);

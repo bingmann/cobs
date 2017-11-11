@@ -16,7 +16,7 @@ void clear_caches() {
     ofs << "3" << std::endl;
 }
 
-char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, genome::timer& t) {
+char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
     auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 //    std::vector<char> data(num_access * page_size);
     std::srand(std::time(nullptr));
@@ -44,7 +44,7 @@ char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size
     return sum;
 }
 
-char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, genome::timer& t) {
+char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
     auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 //    std::vector<char> data(num_access * page_size);
     std::srand(std::time(nullptr));
@@ -73,7 +73,7 @@ char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, g
 }
 
 void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
-    genome::timer t;
+    isi::timer t;
     char sum;
     size_t max = std::pow(2, 14);
     for (size_t i = 1; i <= max; i*=2) {

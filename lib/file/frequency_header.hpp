@@ -2,7 +2,7 @@
 
 #include "header.hpp"
 
-namespace genome::file {
+namespace isi::file {
     class frequency_header : public header<frequency_header> {
     protected:
         void serialize(std::ofstream& ost) const override;

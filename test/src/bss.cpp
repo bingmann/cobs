@@ -40,34 +40,34 @@ namespace {
     };
 
     TEST_F(bss, contains) {
-        genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_1, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_1, bss);
 
-        genome::sample<31> s;
-        genome::file::deserialize(sample_1, s);
+        isi::sample<31> s;
+        isi::file::deserialize(sample_1, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 0));
         }
 
-        genome::file::deserialize(sample_2, s);
+        isi::file::deserialize(sample_2, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 1));
         }
 
-        genome::file::deserialize(sample_3, s);
+        isi::file::deserialize(sample_3, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 2));
         }
     }
 
     TEST_F(bss, file_names) {
-        genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::bss_header bssh;
-        genome::file::deserialize(out_file_1, bss, bssh);
+        isi::bss bss;
+        isi::file::bss_header bssh;
+        isi::file::deserialize(out_file_1, bss, bssh);
 
         ASSERT_EQ(bssh.file_names()[0], "sample_1");
         ASSERT_EQ(bssh.file_names()[1], "sample_2");
@@ -76,17 +76,17 @@ namespace {
 
 
     TEST_F(bss, false_positive) {
-        genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_2, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_2, bss);
 
         size_t num_tests = 100000;
         size_t num_positive = 0;
         for (size_t i = 0; i < num_tests; i++) {
-            std::array<genome::byte, 8> a = {(genome::byte) (i >> 0), (genome::byte) (i >> 8), (genome::byte) (i >> 16), (genome::byte) (i >> 24),
-                                     (genome::byte) (i >> 32), (genome::byte) (i >> 40), (genome::byte) (i >> 48), (genome::byte) (i >> 56)};
-            genome::kmer<31> k(a);
+            std::array<isi::byte, 8> a = {(isi::byte) (i >> 0), (isi::byte) (i >> 8), (isi::byte) (i >> 16), (isi::byte) (i >> 24),
+                                     (isi::byte) (i >> 32), (isi::byte) (i >> 40), (isi::byte) (i >> 48), (isi::byte) (i >> 56)};
+            isi::kmer<31> k(a);
             if (bss.contains(k, 0)) {
                 num_positive++;
             }
@@ -95,10 +95,10 @@ namespace {
     }
 
     TEST_F(bss, equal_ones_and_zeros) {
-        genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_2, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_2, bss);
 
         size_t ones = 0;
         for (auto b: bss.data()) {
@@ -111,55 +111,55 @@ namespace {
     }
 
     TEST_F(bss, others_zero) {
-        genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_2, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_2, bss);
 
         for (size_t i = 0; i < 100000; i++) {
-            std::array<genome::byte, 8> a = {(genome::byte) (i >> 0), (genome::byte) (i >> 8), (genome::byte) (i >> 16), (genome::byte) (i >> 24),
-                                     (genome::byte) (i >> 32), (genome::byte) (i >> 40), (genome::byte) (i >> 48), (genome::byte) (i >> 56)};
-            genome::kmer<31> k(a);
+            std::array<isi::byte, 8> a = {(isi::byte) (i >> 0), (isi::byte) (i >> 8), (isi::byte) (i >> 16), (isi::byte) (i >> 24),
+                                     (isi::byte) (i >> 32), (isi::byte) (i >> 40), (isi::byte) (i >> 48), (isi::byte) (i >> 56)};
+            isi::kmer<31> k(a);
             ASSERT_FALSE(bss.contains(k, i % 5 + 3));
         }
     }
 
     TEST_F(bss, contains_big_bss) {
-        genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, 2, num_hashes);
+        isi::bss::create_from_samples(in_dir_3, out_dir, signature_size, 2, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_3, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_3, bss);
 
-        genome::sample<31> s;
-        genome::file::deserialize(sample_9, s);
+        isi::sample<31> s;
+        isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 8));
         }
     }
 
     TEST_F(bss, two_outputs) {
-        genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_4, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_4, bss);
 
-        genome::sample<31> s;
-        genome::file::deserialize(sample_9, s);
+        isi::sample<31> s;
+        isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 0));
         }
     }
 
     TEST_F(bss, multi_level_1) {
-        genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
-        genome::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 2);
+        isi::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 2);
 
-        genome::bss bss_1;
-        genome::file::deserialize(out_file_5, bss_1);
-        genome::bss bss_2;
-        genome::file::deserialize(out_file_4, bss_2);
-        genome::bss bss_3;
-        genome::file::deserialize(out_file_6, bss_3);
+        isi::bss bss_1;
+        isi::file::deserialize(out_file_5, bss_1);
+        isi::bss bss_2;
+        isi::file::deserialize(out_file_4, bss_2);
+        isi::bss bss_3;
+        isi::file::deserialize(out_file_6, bss_3);
 
         for (size_t i = 0; i < signature_size; i++) {
             ASSERT_EQ(*(bss_1.data().data() + i), *(bss_3.data().data() + 2 * i));
@@ -168,32 +168,32 @@ namespace {
     }
 
     TEST_F(bss, multi_level_2) {
-        genome::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
-        genome::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
-        genome::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
-        genome::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 3);
-        genome::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 2);
+        isi::bss::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
+        isi::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 3);
+        isi::bss::combine_bss(out_dir, out_dir, signature_size, num_hashes, 2);
 
-        genome::bss bss;
-        genome::file::deserialize(out_file_7, bss);
+        isi::bss bss;
+        isi::file::deserialize(out_file_7, bss);
 
-        genome::sample<31> s;
-        genome::file::deserialize(sample_3, s);
+        isi::sample<31> s;
+        isi::file::deserialize(sample_3, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 2));
         }
 
-        genome::file::deserialize(sample_4, s);
+        isi::file::deserialize(sample_4, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 16));
         }
 
-        genome::file::deserialize(sample_8, s);
+        isi::file::deserialize(sample_8, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 15));
         }
 
-        genome::file::deserialize(sample_9, s);
+        isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
             ASSERT_TRUE(bss.contains(kmer, 24));
         }

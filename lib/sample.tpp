@@ -2,7 +2,7 @@
 
 #include "sample.hpp"
 
-namespace genome {
+namespace isi {
     template<unsigned int N>
     void sample<N>::print(std::ostream& ostream) const {
         for (size_t i = 0; i < m_data.size(); i++) {

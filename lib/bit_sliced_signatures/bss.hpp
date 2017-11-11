@@ -5,7 +5,7 @@
 #include <kmer.hpp>
 #include <timer.hpp>
 
-namespace genome {
+namespace isi {
     class bss {
     private:
         uint64_t m_signature_size;

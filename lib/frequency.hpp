@@ -5,7 +5,7 @@
 #include "file/frequency_header.hpp"
 #include "file/util.hpp"
 
-namespace genome::frequency {
+namespace isi::frequency {
     void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir);
     void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file);
 

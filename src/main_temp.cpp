@@ -20,9 +20,9 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     for(size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
-    genome::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
+    isi::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
     std::ofstream ofs;
-    genome::file::serialize_header(ofs, p, bssh);
+    isi::file::serialize_header(ofs, p, bssh);
 
     for (size_t i = 0; i < signature_size * block_size; i++) {
         char rnd = std::rand();
@@ -30,12 +30,12 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     }
 }
 
-void run(genome::server::bss::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
+void run(isi::server::bss::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
     sync();
-    genome::timer t;
+    isi::timer t;
     t.active("total");
 //    for (size_t i = 0; i < 100; i++) {
-        s.search(genome::random_sequence(query_len), 31, result, 10);
+        s.search(isi::random_sequence(query_len), 31, result, 10);
 //    }
     t.stop();
     std::cout << s.get_timer() << std::endl;
@@ -48,9 +48,9 @@ void server() {
     std::vector<std::pair<uint16_t, std::string>> result_3;
     std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
 
-    genome::server::bss::mmap s_mmap(p);
-    genome::server::bss::ifs s_ifs(p);
-//    genome::server::bss::asio s_asio(p);
+    isi::server::bss::mmap s_mmap(p);
+    isi::server::bss::ifs s_ifs(p);
+//    isi::server::bss::asio s_asio(p);
     size_t query_len = 1000;
 //    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);
@@ -86,15 +86,15 @@ int main() {
 //        };
 //    }
 //
-//    uint64_t size = genome::abss::calc_signature_size(1000, 2, 0.1);
+//    uint64_t size = isi::abss::calc_signature_size(1000, 2, 0.1);
 //    int a = 0;
-//    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_out", "/users/flo/projects/thesis/data/abss_out_2", 64);
-//    genome::abss::create_bsss_from_samples("/users/flo/projects/thesis/data/abss_out_2", "/users/flo/projects/thesis/data/abss_out_3", 32, 1, 0.3);
-//    genome::abss::combine_bsss("/users/flo/projects/thesis/data/abss_out_3", "/users/flo/projects/thesis/data/abss_out_4", 32);
-//    genome::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
-//    genome::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
-//    genome::file::abss_header h;
+//    isi::abss::create_folders("/users/flo/projects/thesis/data/abss_out", "/users/flo/projects/thesis/data/abss_out_2", 64);
+//    isi::abss::create_bsss_from_samples("/users/flo/projects/thesis/data/abss_out_2", "/users/flo/projects/thesis/data/abss_out_3", 32, 1, 0.3);
+//    isi::abss::combine_bsss("/users/flo/projects/thesis/data/abss_out_3", "/users/flo/projects/thesis/data/abss_out_4", 32);
+//    isi::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
+//    isi::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
+//    isi::file::abss_header h;
 //    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;
-//    genome::file::serialize_header(ofs, p, h);
+//    isi::file::serialize_header(ofs, p, h);
 }

@@ -6,7 +6,7 @@
 #include <server/util.hpp>
 #include "server/bss/base.hpp"
 
-namespace genome::server::bss {
+namespace isi::server::bss {
 //    class asio : public base {
 //    private:
 //        stxxl::syscall_file m_file;

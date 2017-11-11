@@ -2,7 +2,7 @@
 #include "bss_header.hpp"
 #include <util.hpp>
 
-namespace genome::file {
+namespace isi::file {
     template<class T>
     const std::string header<T>::magic_word = "HEADER";
     template<class T>
@@ -11,7 +11,7 @@ namespace genome::file {
     template<class T>
     void header<T>::serialize(std::ofstream& ofs, const header& h) {
         ofs << magic_word;
-        genome::serialize(ofs, m_version);
+        isi::serialize(ofs, m_version);
         h.serialize(ofs);
         ofs << T::magic_word;
     }
@@ -20,7 +20,7 @@ namespace genome::file {
     void header<T>::deserialize(std::ifstream& ifs, header& h) {
         check_magic_word(ifs, magic_word);
         uint32_t v;
-        genome::deserialize(ifs, v);
+        isi::deserialize(ifs, v);
         assert(v == m_version);
         h.deserialize(ifs);
         check_magic_word(ifs, T::magic_word);
