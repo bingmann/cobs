@@ -1,16 +1,16 @@
 #include <experimental/filesystem>
-#include <server/bss/base.hpp>
-#include <server/bss/mmap.hpp>
-#include <server/bss/ifs.hpp>
+#include <server/classic_index/base.hpp>
+#include <server/classic_index/mmap.hpp>
+#include <server/classic_index/ifs.hpp>
 #include <frequency.hpp>
 #include <util.hpp>
-#include <file/abss_header.hpp>
+#include <file/compact_index_header.hpp>
 #include <omp.h>
 #include <stxxl/bits/io/request.h>
 #include <stxxl/bits/io/file.h>
 #include <stxxl/bits/io/syscall_file.h>
-#include <bit_sliced_signatures/abss.hpp>
-#include <server/bss/asio.hpp>
+#include <isi/compact_index.hpp>
+#include <server/classic_index/asio.hpp>
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;
@@ -20,9 +20,9 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     for(size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
-    isi::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
+    isi::file::classic_index_header h(signature_size, block_size, num_hashes, file_names);
     std::ofstream ofs;
-    isi::file::serialize_header(ofs, p, bssh);
+    isi::file::serialize_header(ofs, p, h);
 
     for (size_t i = 0; i < signature_size * block_size; i++) {
         char rnd = std::rand();
@@ -30,7 +30,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     }
 }
 
-void run(isi::server::bss::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
+void run(isi::server::classic_index::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
     sync();
     isi::timer t;
     t.active("total");
@@ -46,11 +46,11 @@ void server() {
     std::vector<std::pair<uint16_t, std::string>> result_1;
     std::vector<std::pair<uint16_t, std::string>> result_2;
     std::vector<std::pair<uint16_t, std::string>> result_3;
-    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
 
-    isi::server::bss::mmap s_mmap(p);
-    isi::server::bss::ifs s_ifs(p);
-//    isi::server::bss::asio s_asio(p);
+    isi::server::classic_index::mmap s_mmap(p);
+    isi::server::classic_index::ifs s_ifs(p);
+//    isi::server::classic_index::asio s_asio(p);
     size_t query_len = 1000;
 //    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);
@@ -58,7 +58,7 @@ void server() {
 }
 
 int main() {
-//    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.g_bss");
+//    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
 //    std::ifstream ifs("/Users/flo/freq.txt");
 //    std::ofstream ofs("/Users/flo/freq_sum_2.txt");
 //    std::string line;
@@ -86,14 +86,14 @@ int main() {
 //        };
 //    }
 //
-//    uint64_t size = isi::abss::calc_signature_size(1000, 2, 0.1);
+//    uint64_t size = isi::compact_index::calc_signature_size(1000, 2, 0.1);
 //    int a = 0;
-//    isi::abss::create_folders("/users/flo/projects/thesis/data/abss_out", "/users/flo/projects/thesis/data/abss_out_2", 64);
-//    isi::abss::create_bsss_from_samples("/users/flo/projects/thesis/data/abss_out_2", "/users/flo/projects/thesis/data/abss_out_3", 32, 1, 0.3);
-//    isi::abss::combine_bsss("/users/flo/projects/thesis/data/abss_out_3", "/users/flo/projects/thesis/data/abss_out_4", 32);
-//    isi::abss::create_folders("/users/flo/projects/thesis/data/abss_in", "/users/flo/projects/thesis/data/abss", 16);
-//    isi::abss::create_abss_from_samples("/users/flo/projects/thesis/data/abss", 8, 1, 0.3);
-//    isi::file::abss_header h;
+//    isi::compact_index::create_folders("/users/flo/projects/thesis/data/compact_index_out", "/users/flo/projects/thesis/data/compact_index_out_2", 64);
+//    isi::compact_index::create_classic_indexs_from_samples("/users/flo/projects/thesis/data/compact_index_out_2", "/users/flo/projects/thesis/data/compact_index_out_3", 32, 1, 0.3);
+//    isi::compact_index::combine_classic_indexs("/users/flo/projects/thesis/data/compact_index_out_3", "/users/flo/projects/thesis/data/compact_index_out_4", 32);
+//    isi::compact_index::create_folders("/users/flo/projects/thesis/data/compact_index_in", "/users/flo/projects/thesis/data/compact_index", 16);
+//    isi::compact_index::create_compact_index_from_samples("/users/flo/projects/thesis/data/compact_index", 8, 1, 0.3);
+//    isi::file::compact_index_header h;
 //    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;
 //    isi::file::serialize_header(ofs, p, h);

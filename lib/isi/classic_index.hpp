@@ -6,7 +6,7 @@
 #include <timer.hpp>
 
 namespace isi {
-    class bss {
+    class classic_index {
     private:
         uint64_t m_signature_size;
         uint64_t m_block_size;
@@ -19,11 +19,11 @@ namespace isi {
         static void combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path &out_file,
                             size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names);
     public:
-        bss() = default;
-        bss(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
+        classic_index() = default;
+        classic_index(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
         static void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
                                                      size_t signature_size, size_t block_size, size_t num_hashes);
-        static bool combine_bss(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
+        static bool combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
                                                      size_t batch_size, size_t signature_size, size_t num_hashes);
         static void create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                   const std::function<void(size_t)>& callback);

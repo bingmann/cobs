@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace isi::file {
-    class bss_header : public header<bss_header> {
+    class classic_index_header : public header<classic_index_header> {
     private:
         uint64_t m_signature_size;
         uint64_t m_block_size;
@@ -18,8 +18,8 @@ namespace isi::file {
     public:
         static const std::string magic_word;
         static const std::string file_extension;
-        bss_header();
-        bss_header(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, const std::vector<std::string>& file_names);
+        classic_index_header();
+        classic_index_header(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, const std::vector<std::string>& file_names);
         uint64_t signature_size() const;
         uint64_t block_size() const;
         uint64_t num_hashes() const;

@@ -1,8 +1,8 @@
 #include <assert.h>
 #include "base.hpp"
 
-namespace isi::server::abss {
-    base::base(const std::experimental::filesystem::path& path) : server::base<file::abss_header>(path) {
+namespace isi::server::compact_index {
+    base::base(const std::experimental::filesystem::path& path) : server::base<file::compact_index_header>(path) {
         //todo assertions that all the data in the header is correct
         m_block_size = m_header.page_size() * m_header.parameters().size();
         m_num_hashes = m_header.parameters()[0].num_hashes;

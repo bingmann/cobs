@@ -1,20 +1,20 @@
 #include <gtest/gtest.h>
-#include <server/bss/mmap.hpp>
+#include <server/classic_index/mmap.hpp>
 #include <iostream>
 
 
 namespace {
     std::string in_dir = "test/resources/server/input/";
-    std::string sample_1 = in_dir + "sample_1.g_bss";
-    std::string sample_2 = in_dir + "sample_2.g_bss";
+    std::string sample_1 = in_dir + "sample_1.g_isi";
+    std::string sample_2 = in_dir + "sample_2.g_isi";
     std::string sample_result = "test/resources/server/result/sample_sorted.txt";
     std::string file_name = "ERR102554";
 
     TEST(server, block_size_4) {
         std::vector<std::pair<uint16_t, std::string>> result_map;
         std::vector<std::pair<uint16_t, std::string>> result_ifs;
-        isi::server::bss::mmap s_mmap(sample_1);
-        isi::server::bss::mmap s_ifs(sample_1);
+        isi::server::classic_index::mmap s_mmap(sample_1);
+        isi::server::classic_index::mmap s_ifs(sample_1);
 
         std::ifstream ifs(sample_result);
         std::string line;
@@ -37,8 +37,8 @@ namespace {
     TEST(server, block_size_15) {
         std::vector<std::pair<uint16_t, std::string>> result_map;
         std::vector<std::pair<uint16_t, std::string>> result_ifs;
-        isi::server::bss::mmap s_mmap(sample_2);
-        isi::server::bss::mmap s_ifs(sample_2);
+        isi::server::classic_index::mmap s_mmap(sample_2);
+        isi::server::classic_index::mmap s_ifs(sample_2);
 
         std::ifstream ifs(sample_result);
         std::string line;

@@ -15,7 +15,7 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
-include_directories(lib/ ${Boost_INCLUDE_DIRS} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src/)
+include_directories(lib/ ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/docopt/src)
 
 if(libstdc++fs)
     add_library(stdc++fs UNKNOWN IMPORTED)

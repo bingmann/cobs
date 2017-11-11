@@ -3,7 +3,7 @@
 #include "base.hpp"
 
 
-namespace isi::server::bss {
+namespace isi::server::classic_index {
     class ifs : public base {
     private:
         std::ifstream m_ifs;

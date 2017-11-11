@@ -3,9 +3,9 @@
 #include <server/util.hpp>
 #include <cstring>
 
-namespace isi::server::bss {
+namespace isi::server::classic_index {
 
-    mmap::mmap(const std::experimental::filesystem::path& path) : bss::base(path) {
+    mmap::mmap(const std::experimental::filesystem::path& path) : classic_index::base(path) {
         m_data = initialize_mmap(path, m_smd);
     }
 

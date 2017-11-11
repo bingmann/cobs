@@ -1,7 +1,7 @@
 #include "sample.hpp"
 #include "util.hpp"
 #include "frequency_header.hpp"
-#include "bss_header.hpp"
+#include "classic_index_header.hpp"
 #include "sample_header.hpp"
 
 namespace isi::file {
@@ -19,13 +19,13 @@ namespace isi::file {
         serialize(ofs, s);
     }
 
-    inline void serialize(std::ofstream& ofs, const bss& bf, const std::vector<std::string>& file_names) {
-        bss_header bssh(bf.signature_size(), bf.block_size(), bf.num_hashes(), file_names);
-        header<bss_header>::serialize(ofs, bssh);
+    inline void serialize(std::ofstream& ofs, const classic_index& bf, const std::vector<std::string>& file_names) {
+        classic_index_header h(bf.signature_size(), bf.block_size(), bf.num_hashes(), file_names);
+        header<classic_index_header>::serialize(ofs, h);
         ofs.write(reinterpret_cast<const char*>(bf.data().data()), bf.data().size());
     }
 
-    inline void serialize(const std::experimental::filesystem::path& p, const bss& bf, const std::vector<std::string>& file_names) {
+    inline void serialize(const std::experimental::filesystem::path& p, const classic_index& bf, const std::vector<std::string>& file_names) {
         std::experimental::filesystem::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
         serialize(ofs, bf, file_names);
@@ -48,8 +48,8 @@ namespace isi::file {
         deserialize(ifs, s, h);
     }
 
-    inline void deserialize(std::ifstream& ifs, bss& bf, bss_header& h) {
-        header<bss_header>::deserialize(ifs, h);
+    inline void deserialize(std::ifstream& ifs, classic_index& bf, classic_index_header& h) {
+        header<classic_index_header>::deserialize(ifs, h);
         bf.signature_size(h.signature_size());
         bf.block_size(h.block_size());
         bf.num_hashes(h.num_hashes());
@@ -60,18 +60,18 @@ namespace isi::file {
         ifs.read(reinterpret_cast<char*>(bf.data().data()), size);
     }
 
-    inline void deserialize(const std::experimental::filesystem::path& p, bss& bf, bss_header& h) {
+    inline void deserialize(const std::experimental::filesystem::path& p, classic_index& bf, classic_index_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, bf, h);
     }
 
-    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, abss_header& h) {
+    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, compact_index_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, data, h);
     }
 
-    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, abss_header& h) {
-        header<abss_header>::deserialize(ifs, h);
+    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, compact_index_header& h) {
+        header<compact_index_header>::deserialize(ifs, h);
         data.clear();
         data.resize(h.parameters().size());
         for (size_t i = 0; i < h.parameters().size(); i++) {

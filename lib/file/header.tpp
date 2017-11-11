@@ -1,5 +1,5 @@
 #include "header.hpp"
-#include "bss_header.hpp"
+#include "classic_index_header.hpp"
 #include <util.hpp>
 
 namespace isi::file {

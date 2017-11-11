@@ -1,9 +1,9 @@
 #pragma once
 
-#include "server/bss/base.hpp"
+#include "server/classic_index/base.hpp"
 
 
-namespace isi::server::bss {
+namespace isi::server::classic_index {
     class mmap : public base {
     private:
         byte* m_data;

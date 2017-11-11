@@ -1,11 +1,11 @@
 #pragma once
 
-#include <file/bss_header.hpp>
+#include <file/classic_index_header.hpp>
 #include <timer.hpp>
 #include <server/base.hpp>
 
-namespace isi::server::bss {
-    class base : public server::base<file::bss_header> {
+namespace isi::server::classic_index {
+    class base : public server::base<file::classic_index_header> {
     protected:
         explicit base(const std::experimental::filesystem::path& path);
         uint64_t num_hashes() const override;

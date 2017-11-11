@@ -1,14 +1,14 @@
-#include "abss_header.hpp"
+#include "compact_index_header.hpp"
 
 namespace isi::file {
-    const std::string abss_header::magic_word = "ABSS";
-    const std::string abss_header::file_extension = ".g_abss";
+    const std::string compact_index_header::magic_word = "CISI";
+    const std::string compact_index_header::file_extension = ".g_cisi";
 
-    size_t abss_header::padding_size(uint64_t curr_stream_pos) const {
-        return (m_page_size - ((curr_stream_pos + abss_header::magic_word.size()) % m_page_size)) % m_page_size;
+    size_t compact_index_header::padding_size(uint64_t curr_stream_pos) const {
+        return (m_page_size - ((curr_stream_pos + compact_index_header::magic_word.size()) % m_page_size)) % m_page_size;
     }
 
-    void abss_header::serialize(std::ofstream& ofs) const {
+    void compact_index_header::serialize(std::ofstream& ofs) const {
         isi::serialize(ofs, (uint32_t) m_parameters.size(), (uint32_t) m_file_names.size(), m_page_size);
         ofs.flush();
         for (const auto& p: m_parameters) {
@@ -22,7 +22,7 @@ namespace isi::file {
         ofs.write(padding.data(), padding.size());
     }
 
-    void abss_header::deserialize(std::ifstream& ifs) {
+    void compact_index_header::deserialize(std::ifstream& ifs) {
         uint32_t parameters_size;
         uint32_t file_names_size;
         isi::deserialize(ifs, parameters_size, file_names_size, m_page_size);
@@ -40,20 +40,20 @@ namespace isi::file {
         ifs.seekg(smd.curr_pos + padding_size(smd.curr_pos), std::ios::beg);
     }
 
-    abss_header::abss_header(uint64_t page_size) : m_page_size(page_size) {}
+    compact_index_header::compact_index_header(uint64_t page_size) : m_page_size(page_size) {}
 
-    abss_header::abss_header(const std::vector<abss_header::parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size)
+    compact_index_header::compact_index_header(const std::vector<compact_index_header::parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size)
             : m_parameters(parameters), m_file_names(file_names), m_page_size(page_size) { }
 
-    const std::vector<abss_header::parameter>& abss_header::parameters() const {
+    const std::vector<compact_index_header::parameter>& compact_index_header::parameters() const {
         return m_parameters;
     }
 
-    const std::vector<std::string>& abss_header::file_names() const {
+    const std::vector<std::string>& compact_index_header::file_names() const {
         return m_file_names;
     }
 
-    uint64_t abss_header::page_size() const {
+    uint64_t compact_index_header::page_size() const {
         return m_page_size;
     }
 }

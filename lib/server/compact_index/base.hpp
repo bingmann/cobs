@@ -2,10 +2,10 @@
 
 
 #include <server/base.hpp>
-#include <file/abss_header.hpp>
+#include <file/compact_index_header.hpp>
 
-namespace isi::server::abss {
-    class base : public server::base<file::abss_header> {
+namespace isi::server::compact_index {
+    class base : public server::base<file::compact_index_header> {
     protected:
         size_t m_num_hashes;
         size_t m_block_size;

@@ -139,6 +139,7 @@ namespace isi {
     inline uint64_t calc_signature_size(size_t num_elements, double num_hashes, double false_positive_probability) {
         double signature_size_ratio = calc_signature_size_ratio(num_hashes, false_positive_probability);
         double result = std::ceil(num_elements * signature_size_ratio);
+        assert(result >= 0);
         assert(result <= UINT64_MAX);
         return result;
     }

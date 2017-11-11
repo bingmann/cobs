@@ -1,9 +1,10 @@
 #include <server/util.hpp>
 #include <cstring>
 #include "mmap.hpp"
+#include "base.hpp"
 
-namespace isi::server::abss {
-    mmap::mmap(const std::experimental::filesystem::path& path) : abss::base(path) {
+namespace isi::server::compact_index {
+    mmap::mmap(const std::experimental::filesystem::path& path) : compact_index::base(path) {
         m_data.reserve(m_header.parameters().size());
         m_data[0] = initialize_mmap(path, m_smd);
         for (size_t i = 1; i < m_header.parameters().size(); i++) {

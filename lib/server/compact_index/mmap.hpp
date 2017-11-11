@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include <server/abss/base.hpp>
+#include <server/compact_index/base.hpp>
 
-namespace isi::server::abss {
+namespace isi::server::compact_index {
     class mmap : public base {
     private:
         std::vector<byte*> m_data;

@@ -27,7 +27,7 @@ namespace {
         ASSERT_LE(num, max);
     }
 
-    TEST(bss_parameter, false_positive) {
+    TEST(classic_index_parameter, false_positive) {
         size_t num_positives = get_num_positives(100000, 1, 0.3, 100000);
         assert_between(num_positives, 29000, 31000);
         num_positives = get_num_positives(100000, 2, 0.3, 100000);

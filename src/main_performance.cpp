@@ -8,12 +8,12 @@ void sample() {
     isi::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
 }
 
-void bss() {
-    isi::bss::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
+void classic_index() {
+    isi::classic_index::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
 }
 
-void bss_2() {
-//    isi::bss::combine_bss("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
+void classic_index_2() {
+//    isi::classic_index::combine("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
 }
 
 const uint64_t m_count_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
@@ -316,6 +316,6 @@ int main() {
         std::cout << counts[i] << ", ";
     }
 //    sample();
-//    bss();
-//    bss_2();
+//    classic_index();
+//    classic_index_2();
 }

@@ -5,12 +5,12 @@
 #include <util.hpp>
 #include <file/util.hpp>
 #include "timer.hpp"
-#include "bss.hpp"
+#include "classic_index.hpp"
 #include "kmer.hpp"
 
 namespace isi {
 
-    void bss::create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
+    void classic_index::create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                      const std::function<void(size_t)>& callback) {
         for (unsigned int i = 0; i < num_hashes; i++) {
             size_t hash = XXH32(input, len, i);
@@ -18,7 +18,7 @@ namespace isi {
         }
     }
 
-    void bss::process(const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file, timer& t) {
+    void classic_index::process(const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file, timer& t) {
         sample<31> s;
         for (size_t i = 0; i < paths.size(); i++) {
             t.active("read");
@@ -27,7 +27,7 @@ namespace isi {
             #pragma omp parallel for
             for (size_t j = 0; j < s.data().size(); j++) {
                 create_hashes(s.data().data() + j, 8, m_signature_size, m_num_hashes, [&](size_t hash) {
-                    bss::set_bit(hash, i);
+                    classic_index::set_bit(hash, i);
                 });
             }
         }
@@ -43,11 +43,11 @@ namespace isi {
         t.stop();
     }
 
-    void bss::create_from_samples(const std::experimental::filesystem::path &in_dir, const std::experimental::filesystem::path &out_dir,
+    void classic_index::create_from_samples(const std::experimental::filesystem::path &in_dir, const std::experimental::filesystem::path &out_dir,
                                                 size_t signature_size, size_t block_size, size_t num_hashes) {
         timer t;
-        bss bf(signature_size, block_size, num_hashes);
-        bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::bss_header::file_extension,
+        classic_index bf(signature_size, block_size, num_hashes);
+        bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::classic_index_header::file_extension,
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                bf.process(paths, out_file, t);
                            });
@@ -55,11 +55,11 @@ namespace isi {
     }
 
 
-    void bss::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path& out_file,
+    void classic_index::combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path& out_file,
                                size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names) {
         std::ofstream ofs;
-        file::bss_header bssh(signature_size, block_size, num_hash, file_names);
-        file::serialize_header(ofs, out_file, bssh);
+        file::classic_index_header h(signature_size, block_size, num_hash, file_names);
+        file::serialize_header(ofs, out_file, h);
 
         std::vector<char> block(block_size);
         for (size_t i = 0; i < signature_size; i++) {
@@ -75,27 +75,27 @@ namespace isi {
         t.stop();
     }
 
-    bool bss::combine_bss(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
+    bool classic_index::combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
                                              size_t signature_size, size_t num_hashes, size_t batch_size) {
         timer t;
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
-        bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::bss_header::file_extension, file::bss_header::file_extension,
+        bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::classic_index_header::file_extension, file::classic_index_header::file_extension,
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                size_t new_block_size = 0;
                                for (size_t i = 0; i < paths.size(); i++) {
                                    ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                                   auto bssh = file::deserialize_header<file::bss_header>(ifstreams.back().first, paths[i]);
-                                   assert(bssh.signature_size() == signature_size);
-                                   assert(bssh.num_hashes() == num_hashes);
+                                   auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
+                                   assert(h.signature_size() == signature_size);
+                                   assert(h.num_hashes() == num_hashes);
                                    if (i < paths.size() - 2) {
-                                       //todo doesnt work because of padding for abss, which means there could be two files with less file_names
+                                       //todo doesnt work because of padding for compact, which means there could be two files with less file_names
                                        //todo quickfix with -2 to allow for paddding
-//                                       assert(bssh.file_names().size() == 8 * bssh.block_size());
+//                                       assert(h.file_names().size() == 8 * h.block_size());
                                    }
-                                   ifstreams.back().second = bssh.block_size();
-                                   new_block_size += bssh.block_size();
-                                   std::copy(bssh.file_names().begin(), bssh.file_names().end(), std::back_inserter(file_names));
+                                   ifstreams.back().second = h.block_size();
+                                   new_block_size += h.block_size();
+                                   std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
                                }
                                combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
                                ifstreams.clear();
@@ -105,19 +105,19 @@ namespace isi {
         return all_combined;
     }
 
-    bss::bss(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes)
+    classic_index::classic_index(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes)
             : m_signature_size(signature_size), m_block_size(block_size), m_num_hashes(num_hashes),
               m_data(signature_size * block_size) {}
 
-    void bss::set_bit(size_t pos, size_t bit_in_block) {
+    void classic_index::set_bit(size_t pos, size_t bit_in_block) {
         m_data[m_block_size * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
     }
 
-    bool bss::is_set(size_t pos, size_t bit_in_block) {
+    bool classic_index::is_set(size_t pos, size_t bit_in_block) {
         byte b = m_data[m_block_size * pos + bit_in_block / 8];
         return (b & (1 << (bit_in_block % 8))) != 0;
     };
-    bool bss::contains(const kmer<31>& kmer, size_t bit_in_block) {
+    bool classic_index::contains(const kmer<31>& kmer, size_t bit_in_block) {
         assert(bit_in_block < 8 * m_block_size);
         for (unsigned int k = 0; k < m_num_hashes; k++) {
             size_t hash = XXH32(&kmer.data(), 8, k);
@@ -128,46 +128,46 @@ namespace isi {
         return true;
     }
 
-    uint64_t bss::signature_size() const {
+    uint64_t classic_index::signature_size() const {
         return m_signature_size;
     }
 
-    void bss::signature_size(uint64_t signature_size) {
+    void classic_index::signature_size(uint64_t signature_size) {
         m_signature_size = signature_size;
     }
 
-    uint64_t bss::block_size() const {
+    uint64_t classic_index::block_size() const {
         return m_block_size;
     }
 
-    void bss::block_size(uint64_t block_size) {
+    void classic_index::block_size(uint64_t block_size) {
         m_block_size = block_size;
     }
 
-    uint64_t bss::num_hashes() const {
+    uint64_t classic_index::num_hashes() const {
         return m_num_hashes;
     }
 
-    void bss::num_hashes(uint64_t num_hashes) {
+    void classic_index::num_hashes(uint64_t num_hashes) {
         m_num_hashes = num_hashes;
     }
 
-    const std::vector<byte>& bss::data() const {
+    const std::vector<byte>& classic_index::data() const {
         return m_data;
     }
 
-    std::vector<byte>& bss::data() {
+    std::vector<byte>& classic_index::data() {
         return m_data;
     }
 
-    void bss::generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes) {
+    void classic_index::generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes) {
         std::vector<std::string> file_names;
         for(size_t i = 0; i < 8 * block_size; i++) {
             file_names.push_back("file_" + std::to_string(i));
         }
-        isi::file::bss_header bssh(signature_size, block_size, num_hashes, file_names);
+        isi::file::classic_index_header h(signature_size, block_size, num_hashes, file_names);
         std::ofstream ofs;
-        isi::file::serialize_header(ofs, p, bssh);
+        isi::file::serialize_header(ofs, p, h);
 
         for (size_t i = 0; i < signature_size * block_size; i += 4) {
             int rnd = std::rand();

@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include <server/abss/mmap.hpp>
-#include <bit_sliced_signatures/abss.hpp>
+#include <server/compact_index/mmap.hpp>
+#include <isi/compact_index.hpp>
 
 namespace {
-    std::string in_dir = "test/out/server_abss/input_1/";
-    std::string abss_path = in_dir + "filter.g_abss";
-    std::string tmp_dir = "test/out/server_abss/tmp";
+    std::string in_dir = "test/out/server_compact_index/input_1/";
+    std::string compact_index_path = in_dir + "filter.g_cisi";
+    std::string tmp_dir = "test/out/server_compact_index/tmp";
     std::string query = "CAATCGAGCAAGTCCATTATCAACGAGTGTGTTGCAGTTTTATTCTCTCGCCAGCATTGTAATAGGCACTAAAAGAGTGATGATAGTCATGAGTGCTGAGCTAAGA"
             "CGGCGTCGGTGCATAGCGGACTTTCGGTCAGTCGCAATTCCTCACGAGACCCGTCCTGTTGAGCGTATCACTCTCAATGTACAAGCAACCCGAGAAGGCTGTGCCT"
             "GGACTCAACCGGATGCAGGATGGACTCCAGACACGGGGCCACCACTCTTCACACGTAAAGCAAGAACGTCGAGCAGTCATGAAAGTCTTAGTACCGCACGTGCCAT"
@@ -61,7 +61,7 @@ namespace {
 
     }
 
-    class server_abss : public ::testing::Test {
+    class server_compact_index : public ::testing::Test {
     protected:
         virtual void SetUp() {
 
@@ -73,37 +73,37 @@ namespace {
         }
     };
 
-    TEST_F(server_abss, padding) {
+    TEST_F(server_compact_index, padding) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
         size_t page_size = isi::get_page_size();
-        isi::abss::create_folders(tmp_dir, in_dir, page_size);
-        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, page_size);
+        isi::compact_index::create_folders(tmp_dir, in_dir, page_size);
+        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, page_size);
         std::ifstream ifs;
-        auto abssh = isi::file::deserialize_header<isi::file::abss_header>(ifs, abss_path);
+        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(ifs, compact_index_path);
         isi::stream_metadata smd = isi::get_stream_metadata(ifs);
         ASSERT_EQ(smd.curr_pos % page_size, 0U);
     }
 
-    TEST_F(server_abss, deserialization) {
+    TEST_F(server_compact_index, deserialization) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
-        isi::abss::create_folders(tmp_dir, in_dir, 2);
-        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<isi::byte>> data;
-        isi::file::abss_header abssh;
-        isi::file::deserialize(abss_path, data, abssh);
-        ASSERT_EQ(abssh.file_names().size(), 33U);
-        ASSERT_EQ(abssh.parameters().size(), 3U);
+        isi::file::compact_index_header h;
+        isi::file::deserialize(compact_index_path, data, h);
+        ASSERT_EQ(h.file_names().size(), 33U);
+        ASSERT_EQ(h.parameters().size(), 3U);
         ASSERT_EQ(data.size(), 3U);
     }
 
-    TEST_F(server_abss, all_included) {
+    TEST_F(server_compact_index, all_included) {
         auto samples = generate_samples_all();
         generate_test_case(samples);
-        isi::abss::create_folders(tmp_dir, in_dir, 2);
-        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
-        isi::server::abss::mmap s_mmap(abss_path);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::server::compact_index::mmap s_mmap(compact_index_path);
         std::vector<std::pair<uint16_t, std::string>> result;
 
         s_mmap.search(query, 31, result);
@@ -115,12 +115,12 @@ namespace {
         }
     }
 
-    TEST_F(server_abss, one_included) {
+    TEST_F(server_compact_index, one_included) {
         auto samples = generate_samples_one();
         generate_test_case(samples);
-        isi::abss::create_folders(tmp_dir, in_dir, 2);
-        isi::abss::create_abss_from_samples(in_dir, 8, 3, 0.1, 2);
-        isi::server::abss::mmap s_mmap(abss_path);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::server::compact_index::mmap s_mmap(compact_index_path);
         std::vector<std::pair<uint16_t, std::string>> result;
 
         s_mmap.search(query, 31, result);

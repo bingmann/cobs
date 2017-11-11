@@ -1,10 +1,10 @@
 #include "base.hpp"
 #include <kmer.hpp>
-#include <bit_sliced_signatures/bss.hpp>
+#include <isi/classic_index.hpp>
 #include <file/util.hpp>
 
-namespace isi::server::bss {
-    base::base(const std::experimental::filesystem::path& path) : server::base<file::bss_header>(path) { }
+namespace isi::server::classic_index {
+    base::base(const std::experimental::filesystem::path& path) : server::base<file::classic_index_header>(path) { }
 
     uint64_t base::num_hashes() const {
             return m_header.num_hashes();
