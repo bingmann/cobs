@@ -135,7 +135,6 @@ namespace genome::server {
             counts_to_result(m_header.file_names(), counts, result, num_results == 0 ? m_header.file_names().size() : num_results);
             m_timer.stop();
         }
-
     };
 
     template<class T>
