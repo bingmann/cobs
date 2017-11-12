@@ -8,7 +8,7 @@
 #include <isi/classic_index.hpp>
 
 namespace isi::compact_index {
-    void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size = get_page_size()) {
+    inline void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size = get_page_size()) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -32,7 +32,7 @@ namespace isi::compact_index {
         }
     }
 
-    void create_classic_index_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
+    inline void create_classic_index_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
                                  size_t num_hashes, double false_positive_probability, uint64_t page_size) {
         assert(batch_size % 8 == 0);
         std::vector<std::experimental::filesystem::path> paths;
@@ -62,7 +62,7 @@ namespace isi::compact_index {
         }
     }
 
-    bool combine_classic_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
+    inline bool combine_classic_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
         bool all_combined = false;
         for (std::experimental::filesystem::directory_iterator it(in_dir), end; it != end; it++) {
             if (std::experimental::filesystem::is_directory(it->path())) {
@@ -89,7 +89,7 @@ namespace isi::compact_index {
         return all_combined;
     }
 
-    void create_compact_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size) {
+    inline void create_compact_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -126,7 +126,7 @@ namespace isi::compact_index {
         }
     }
 
-    void create_compact_index_from_samples(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
+    inline void create_compact_index_from_samples(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
                                   double false_positive_probability, uint64_t page_size = get_page_size()) {
         std::experimental::filesystem::path samples_dir = in_dir / std::experimental::filesystem::path("samples/");
         std::string bloom_dir = in_dir.string() +  "/bloom_";

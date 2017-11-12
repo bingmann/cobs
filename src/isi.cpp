@@ -155,7 +155,7 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
 }
 
 int main(int argc, char **argv) {
-    CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n");
+    CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
     add_parameters(app, p);
