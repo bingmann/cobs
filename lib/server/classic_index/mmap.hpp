@@ -6,7 +6,7 @@
 namespace isi::server::classic_index {
     class mmap : public base {
     private:
-        byte* m_data;
+        uint8_t* m_data;
         virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows);
     protected:
         void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) override;

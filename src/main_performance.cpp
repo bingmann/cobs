@@ -277,7 +277,7 @@ const uint16_t expansion[] alignas(16) = {0, 0, 0, 0, 0, 0, 0, 0,
                                           1, 1, 1, 1, 1, 1, 1, 1};
 const auto expansion_128 = reinterpret_cast<const __m128i_u*>(expansion);
 
-void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const isi::byte* rows, size_t block_size) {
+void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uint8_t* rows, size_t block_size) {
     #pragma omp declare reduction (merge : std::vector<uint16_t> : \
                             std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<uint16_t>())) \
                             initializer(omp_priv = omp_orig)
@@ -308,7 +308,7 @@ int main() {
     for (size_t i = 0; i < 1; i++) {
 //        std::iota(rows.begin(), rows.end(), i);
         t.active("counts");
-        compute_counts(hashes_size, counts, reinterpret_cast<isi::byte*>(rows.data()), block_size);
+        compute_counts(hashes_size, counts, reinterpret_cast<uint8_t*>(rows.data()), block_size);
         t.stop();
     }
     std::cout << t << std::endl;

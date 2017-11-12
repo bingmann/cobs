@@ -15,7 +15,7 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
-include_directories(lib/ ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/docopt/src)
+include_directories(lib/ ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
 
 if(libstdc++fs)
     add_library(stdc++fs UNKNOWN IMPORTED)
@@ -25,7 +25,7 @@ else()
 endif()
 
 add_library(thesis_lib ${SOURCE_FILES})
-set(LIBRARIES thesis_lib stdc++fs ${STXXL_LIBRARIES} xxhash docopt)
+set(LIBRARIES thesis_lib stdc++fs ${STXXL_LIBRARIES} xxhash)
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)

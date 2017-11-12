@@ -114,7 +114,7 @@ namespace isi {
     }
 
     bool classic_index::is_set(size_t pos, size_t bit_in_block) {
-        byte b = m_data[m_block_size * pos + bit_in_block / 8];
+        uint8_t b = m_data[m_block_size * pos + bit_in_block / 8];
         return (b & (1 << (bit_in_block % 8))) != 0;
     };
     bool classic_index::contains(const kmer<31>& kmer, size_t bit_in_block) {
@@ -152,11 +152,11 @@ namespace isi {
         m_num_hashes = num_hashes;
     }
 
-    const std::vector<byte>& classic_index::data() const {
+    const std::vector<uint8_t>& classic_index::data() const {
         return m_data;
     }
 
-    std::vector<byte>& classic_index::data() {
+    std::vector<uint8_t>& classic_index::data() {
         return m_data;
     }
 

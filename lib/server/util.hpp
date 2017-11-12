@@ -8,7 +8,7 @@
 
 namespace isi::server {
 
-    inline byte* initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
+    inline uint8_t* initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
         int fd = open(path.string().data(), O_RDONLY, 0);
         assert(fd != -1);
 
@@ -16,7 +16,7 @@ namespace isi::server {
         if(madvise(mmap_ptr, smd.end_pos, MADV_RANDOM) != 0) {
             std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
         }
-        return smd.curr_pos + reinterpret_cast<byte*>(mmap_ptr);
+        return smd.curr_pos + reinterpret_cast<uint8_t*>(mmap_ptr);
     }
 }
 

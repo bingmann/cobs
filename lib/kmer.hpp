@@ -12,17 +12,17 @@ namespace isi {
     public:
         static const size_t size = (N + 3) / 4;
     private:
-        static const std::map<unsigned int, byte> m_bps_to_byte;
-        static const std::map<byte, std::string> m_byte_to_bps;
-        std::array<byte, size> m_data;
+        static const std::map<unsigned int, uint8_t> m_bps_to_uint8_t;
+        static const std::map<uint8_t, std::string> m_uint8_t_to_bps;
+        std::array<uint8_t, size> m_data;
 
         static unsigned int chars_to_int(char c1, char c2, char c3, char c4);
 
     public:
         kmer();
-        explicit kmer(std::array<byte, size> m_data);
+        explicit kmer(std::array<uint8_t, size> m_data);
         void init(const char* chars);
-        const std::array<byte, size>& data() const;
+        const std::array<uint8_t, size>& data() const;
         std::string string() const;
         void print(std::ostream& ostream) const;
 

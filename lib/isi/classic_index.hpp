@@ -11,7 +11,7 @@ namespace isi {
         uint64_t m_signature_size;
         uint64_t m_block_size;
         uint64_t m_num_hashes;
-        std::vector<byte> m_data;  // replace by std::vector<uint8_t> ???
+        std::vector<uint8_t> m_data;  // replace by std::vector<uint8_t> ???
 
         void set_bit(size_t pos, size_t bit_in_block);
         bool is_set(size_t pos, size_t bit_in_block);
@@ -35,7 +35,7 @@ namespace isi {
         void block_size(uint64_t m_block_size);
         uint64_t num_hashes() const;
         void num_hashes(uint64_t m_num_hashes);
-        const std::vector<byte>& data() const;
-        std::vector<byte>& data();
+        const std::vector<uint8_t>& data() const;
+        std::vector<uint8_t>& data();
     };
 }

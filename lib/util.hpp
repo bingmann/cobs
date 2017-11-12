@@ -13,7 +13,7 @@
 
 
 namespace isi {
-    typedef unsigned char byte;
+    typedef unsigned char uint8_t;
 
     struct stream_metadata {
         uint64_t curr_pos;
@@ -148,14 +148,14 @@ namespace isi {
     inline void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;
-//    for (byte i = 0; i < 4; i++) {
-//        for (byte j = 0; j < 4; j++) {
-//            for (byte k = 0; k < 4; k++) {
-//                for (byte o = 0; o < 4; o++) {
+//    for (uint8_t i = 0; i < 4; i++) {
+//        for (uint8_t j = 0; j < 4; j++) {
+//            for (uint8_t k = 0; k < 4; k++) {
+//                for (uint8_t o = 0; o < 4; o++) {
 //                    char c[4] = {chars[i], chars[j], chars[k], chars[o]};
 //                    std::cout << "{" << *((unsigned int*) c) << ", " << b++ << "}, " << std::endl << std::flush;
 //                    std::cout << "{" << (unsigned int) b++ << ", \"" << chars[i] << chars[j] << chars[k] << chars[o] << "\"}, " << std::endl << std::flush;
-//                    m_bps_to_byte[chars_to_int(chars[i], chars[j], chars[k], chars[o])] = b++;
+//                    m_bps_to_uint8_t[chars_to_int(chars[i], chars[j], chars[k], chars[o])] = b++;
 //                }
 //            }
 //        }

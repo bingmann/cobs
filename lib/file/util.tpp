@@ -65,18 +65,18 @@ namespace isi::file {
         deserialize(ifs, bf, h);
     }
 
-    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, compact_index_header& h) {
+    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, data, h);
     }
 
-    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, compact_index_header& h) {
+    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t>>& data, compact_index_header& h) {
         header<compact_index_header>::deserialize(ifs, h);
         data.clear();
         data.resize(h.parameters().size());
         for (size_t i = 0; i < h.parameters().size(); i++) {
             size_t data_size = h.page_size() * h.parameters()[i].signature_size;
-            std::vector<byte> d(data_size);
+            std::vector<uint8_t> d(data_size);
             ifs.read(reinterpret_cast<char*>(d.data()), data_size);
             data[i] = std::move(d);
         }

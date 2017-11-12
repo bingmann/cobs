@@ -14,7 +14,7 @@ namespace isi::server::classic_index {
         }
 
         m_timer.active("compute_counts");
-        std::vector<byte> count(classic_index.block_size(), 0xFF);
+        std::vector<uint8_t> count(classic_index.block_size(), 0xFF);
         for (size_t i = 0; i < hashes.size(); i++) {
             for (size_t j = 0; j < classic_index.block_size(); j++) {
                 count[j] &= classic_index.data()[i * classic_index.block_size() + j];

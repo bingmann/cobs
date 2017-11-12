@@ -1,149 +1,166 @@
-#include <iostream>
-#include <map>
-#include <cortex.hpp>
+#include <CLI/CLI.hpp>
+#include <cmath>
+#include <util.hpp>
 #include <isi/classic_index.hpp>
-#include <type_traits>
-#include <docopt.h>
-
-static const char USAGE[] =
-        R"(================================================
-(I)nverted (S)ignature (I)ndex for Genome Search
-================================================
-
-    usage:
-        isi cortex <in_dir> <out_dir>
-        isi classic_index <in_dir> <out_dir> <signature_size> <block_size> <num_hashes>
-        isi dummy <path> <signature_size> <block_size> <num_hashes>
-        isi parameters <num_hashes> <false_positive_rate> [<num_elements>]
-
-    options:
-        -h --help     Show this screen.
-        -v --version  Show version.
-
-    description:
-        isi cortex        # converts the cortex files in <in_dir> to the isi sample format
-        isi dummy         # creates a dummy classic isi with random content
-        isi parameters    # calculates bloom filter parameters
-)";
-
-typedef std::map<std::string, docopt::value> cli_map;
+#include <cortex.hpp>
 
 template<typename T>
-std::function<T(docopt::value const&)> get_accessor_func();
-
-template<>
-std::function<std::string(docopt::value const&)> get_accessor_func() {
-    return &docopt::value::asString;
-}
-
-template<>
-std::function<bool(docopt::value const&)> get_accessor_func() {
-    return &docopt::value::asBool;
-}
-
-template<>
-std::function<long(docopt::value const&)> get_accessor_func() {
-    return &docopt::value::asLong;
-}
-
-template<typename T>
-T get_value(cli_map& map, const std::string& name) {
-    static_assert(std::is_same<T, std::string>::value || std::is_same<T, bool>::value || std::is_same<T, long>::value);
-    std::function<T(docopt::value const&)> accessor_func = get_accessor_func<T>();
-
-    try {
-        return accessor_func(map[name]);
-    } catch (...) {
-        throw std::invalid_argument(name + " is not a " + typeid(T).name());
-    }
-}
-
-template<typename T>
-void check_between(std::string name, T num, double min, double max, bool min_inclusive, bool max_inclusive) {
+void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
     if ((min_inclusive && num < min) || (!min_inclusive && num <= min) || (max_inclusive && num > max) || (!max_inclusive && num >= max)) {
         std::string interval = (min_inclusive ? "[" : "(") + std::to_string(min) + ", " + std::to_string(max) + (max_inclusive ? "]" : ")");
         throw std::invalid_argument(name + " (" + std::to_string(num) + ") must be in the interval " + interval);
     }
 }
 
-std::experimental::filesystem::path get_path(cli_map& map, const std::string& name, bool needs_to_exist) {
-    std::string s = get_value<std::string>(map, name);
-    std::experimental::filesystem::path p(s);
+uint64_t get_unsigned_integer(const std::string& value, const std::string& name, uint64_t min = 0, uint64_t max = UINT64_MAX, bool min_inclusive = true, bool max_inclusive = true) {
+    uint64_t ui;
+    double d;
+    try {
+        d = std::stod(value);
+        ui = std::stoull(value);
+    } catch (...) {
+        throw std::invalid_argument(name + " (" + value + ") is not an unsigned integer");
+    }
+
+    if (d < 0) {
+        throw std::invalid_argument(name + " (" + value + ") is negative");
+    } else if (std::floor(d) != d) {
+        throw std::invalid_argument(name + " (" + value + ") is not an integer");
+    }
+
+    check_between<uint64_t>(name, ui, min, max, min_inclusive, max_inclusive);
+    return ui;
+}
+
+double get_double(const std::string& value, const std::string& name, double min = 0, double max = UINT64_MAX, bool min_inclusive = true, bool max_inclusive = true) {
+    double d;
+    try {
+        d = std::stod(value);
+    } catch (...) {
+        throw std::invalid_argument(name + " (" + value + ") is not a double");
+    }
+    check_between<double>(name, d, min, max, min_inclusive, max_inclusive);
+    return d;
+}
+
+std::experimental::filesystem::path get_path(const std::string& value, const std::string& name, bool needs_to_exist = false) {
+    std::experimental::filesystem::path p(value);
     if(needs_to_exist && !std::experimental::filesystem::exists(p)) {
         throw std::invalid_argument("path " + name + " (" + p.string() + ") does not exist");
     }
     return p;
 }
 
-uint64_t get_unsigned_integer(cli_map& map, const std::string& name, uint64_t min = 0, uint64_t max = UINT64_MAX, bool min_inclusive = true, bool max_inclusive = true) {
-    long l = get_value<long>(map, name);
-    check_between(name, l, min, max, min_inclusive, max_inclusive);
-    return (uint64_t) l;
-}
+struct parameters {
+    uint64_t num_hashes;
+    uint64_t signature_size;
+    uint64_t block_size;
+    double false_positive_rate;
+    uint64_t num_elements;
+    std::experimental::filesystem::path out_file;
+    std::experimental::filesystem::path in_dir;
+    std::experimental::filesystem::path out_dir;
 
-double get_double(cli_map& map, const std::string& name) {
-    std::string d = get_value<std::string>(map, name);
-    try {
-        return std::stod(d);
-    } catch (...) {
-        throw std::invalid_argument("double " + name + " (" + d + ") is not a double");
+    CLI::Option* add_num_hashes(CLI::App* app) {
+        return app->add_option("<num_hashes>", [&](std::vector<std::string> val) {
+            this->num_hashes = get_unsigned_integer(val[0], "<num_hashes>", 1);
+            return true;
+        }, "number of hash functions");
     }
-}
 
-void cortex(cli_map& map) {
-    auto in_dir = get_path(map, "<in_dir>", true);
-    auto out_dir = get_path(map, "<out_dir>", false);
-    isi::cortex::process_all_in_directory<31>(in_dir, out_dir);
-}
-
-void classic_index(cli_map& map) {
-    auto in_dir = get_path(map, "<in_dir>", true);
-    auto out_dir = get_path(map, "<out_dir>", false);
-    uint64_t signature_size = get_unsigned_integer(map, "<signature_size>", 1);
-    uint64_t block_size = get_unsigned_integer(map, "<block_size>", 1);
-    uint64_t num_hashes = get_unsigned_integer(map, "<num_hashes", 1);
-    isi::classic_index::create_from_samples(in_dir, out_dir, signature_size, block_size, num_hashes);
-}
-
-void parameters(cli_map& map) {
-    size_t num_hashes = get_unsigned_integer(map, "<num_hashes>", 1);
-    double false_positive_rate = get_double(map, "<false_positive_rate>");
-    check_between("<false_positive_rate>", false_positive_rate, 0, 1, false, false);
-
-    double signature_size_ratio = isi::calc_signature_size_ratio(num_hashes, false_positive_rate);
-    std::cout << "signature size rate (m / n): " + std::to_string(signature_size_ratio);
-    if (map["<num_elements>"]) {
-        size_t num_elements = get_unsigned_integer(map, "<num_elements>", 1);
-        uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_rate);
-        std::cout << std::endl << "signature size (m): " + std::to_string(signature_size);
+    CLI::Option* add_signature_size(CLI::App* app) {
+        return app->add_option("<signature_size>", [&](std::vector<std::string> val) {
+            this->signature_size = get_unsigned_integer(val[0], "<signature_size>", 1);
+            return true;
+        }, "number of bits of the signatures (vertical size)");
     }
-}
 
-void dummy(cli_map& map) {
-    auto path = get_path(map, "<path>", false);
-    uint64_t signature_size = get_unsigned_integer(map, "<signature_size>", 1);
-    uint64_t block_size = get_unsigned_integer(map, "<block_size>", 1);
-    uint64_t num_hashes = get_unsigned_integer(map, "<num_hashes", 1);
-    isi::classic_index::generate_dummy(path, signature_size, block_size, num_hashes);
-}
+    CLI::Option* add_block_size(CLI::App* app) {
+        return app->add_option("<block_size>", [&](std::vector<std::string> val) {
+            this->block_size = get_unsigned_integer(val[0], "<block_size>", 1);
+            return true;
+        }, "horizontal size of the inverted signature index in bytes");
+    }
 
-int main(int argc, const char** argv) {
-    cli_map map = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "1.0.0");
+    CLI::Option* add_false_positive_rate(CLI::App* app) {
+        return app->add_option("<false_positive_rate>", [&](std::vector<std::string> val) {
+            this->false_positive_rate = get_double(val[0], "<false_positive_rate>", 0, 1, false, false);
+            return true;
+        }, "false positive rate");
+    }
 
-    std::unordered_map<std::string, std::function<void(cli_map&)>> callbacks = {
-            {"cortex", cortex},
-            {"classic_index", classic_index},
-            {"parameters", parameters},
-            {"dummy", dummy},
-    };
+    CLI::Option* add_num_elements(CLI::App* app) {
+        return app->add_option("<num_elements>", [&](std::vector<std::string> val) {
+            this->num_elements = get_unsigned_integer(val[0], "<num_elements>", 1);
+            return true;
+        }, "number of elements to be inserted into the bloom filter");
+    }
 
-    try {
-        for (const auto& cb: callbacks) {
-            if (map[cb.first].asBool()) {
-                cb.second(map);
-            }
+    CLI::Option* add_out_file(CLI::App* app) {
+        return app->add_option("<out_file>", [&](std::vector<std::string> val) {
+            this->out_file = get_path(val[0], "<out_file>");
+            return true;
+        }, "path to the output file");
+    }
+
+    CLI::Option* add_in_dir(CLI::App* app) {
+        return app->add_option("<in_dir>", [&](std::vector<std::string> val) {
+            this->in_dir = get_path(val[0], "<in_dir>", true);
+            return true;
+        }, "path to the input directory");
+    }
+
+    CLI::Option* add_out_dir(CLI::App* app) {
+        return app->add_option("<out_dir>", [&](std::vector<std::string> val) {
+            this->out_dir = get_path(val[0], "<out_dir>");
+            return true;
+        }, "path to the output directory");
+    }
+};
+
+
+void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("parameters", "calculates bloom filter parameters", false);
+    p->add_num_hashes(sub)->required();
+    p->add_false_positive_rate(sub)->required();
+    p->add_num_elements(sub);
+    sub->set_callback([p]() {
+        double signature_size_ratio = isi::calc_signature_size_ratio(p->num_hashes, p->false_positive_rate);
+        std::cout << "signature size rate (m / n): " + std::to_string(signature_size_ratio);
+        if (p->num_elements != 0) {
+            uint64_t signature_size = isi::calc_signature_size(p->num_elements, p->num_hashes, p->false_positive_rate);
+            std::cout << std::endl << "signature size (m): " + std::to_string(signature_size);
         }
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-    }
+    });
+}
+
+void add_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("dummy", "creates a dummy classic isi with random content", false);
+    p->add_out_file(sub)->required();
+    p->add_signature_size(sub)->required();
+    p->add_block_size(sub)->required();
+    p->add_num_hashes(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::generate_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
+    });
+}
+
+void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("cortex", "converts the cortex files in <in_dir> to the isi sample format", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    sub->set_callback([p]() {
+        isi::cortex::process_all_in_directory<31>(p->in_dir, p->out_dir);
+    });
+}
+
+int main(int argc, char **argv) {
+    CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n");
+    app.require_subcommand(1);
+    auto p = std::make_shared<parameters>();
+    add_parameters(app, p);
+    add_dummy(app, p);
+    add_cortex(app, p);
+    CLI11_PARSE(app, argc, argv);
+    return 0;
 }

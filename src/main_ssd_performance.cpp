@@ -91,7 +91,6 @@ int main() {
     uint64_t end_pos;
     {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
-        std::streamoff curr_pos = ifs.tellg();
         ifs.seekg(0, std::ios::end);
         end_pos = (uint64_t) ifs.tellg();
     }

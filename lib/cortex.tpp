@@ -58,13 +58,13 @@ namespace isi::cortex {
 
     template<typename ForwardIterator, unsigned int N>
     void read_sample(ForwardIterator iter, ForwardIterator end, header h, sample <N>& sample) {
-        auto sample_data = reinterpret_cast<byte*>(sample.data().data());
-        size_t num_bytes_per_kmer = 8 * h.num_words_per_kmer;
+        auto sample_data = reinterpret_cast<uint8_t*>(sample.data().data());
+        size_t num_uint8_ts_per_kmer = 8 * h.num_words_per_kmer;
 
         while (iter != end) {
-            std::copy(iter, std::next(iter, num_bytes_per_kmer), sample_data);
-            std::advance(iter, num_bytes_per_kmer + 5 * h.num_colors);
-            std::advance(sample_data, num_bytes_per_kmer);
+            std::copy(iter, std::next(iter, num_uint8_ts_per_kmer), sample_data);
+            std::advance(iter, num_uint8_ts_per_kmer + 5 * h.num_colors);
+            std::advance(sample_data, num_uint8_ts_per_kmer);
         }
 
         t.active("sort");

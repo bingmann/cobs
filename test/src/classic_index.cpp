@@ -84,8 +84,8 @@ namespace {
         size_t num_tests = 100000;
         size_t num_positive = 0;
         for (size_t i = 0; i < num_tests; i++) {
-            std::array<isi::byte, 8> a = {(isi::byte) (i >> 0), (isi::byte) (i >> 8), (isi::byte) (i >> 16), (isi::byte) (i >> 24),
-                                     (isi::byte) (i >> 32), (isi::byte) (i >> 40), (isi::byte) (i >> 48), (isi::byte) (i >> 56)};
+            std::array<uint8_t, 8> a = {(uint8_t) (i >> 0), (uint8_t) (i >> 8), (uint8_t) (i >> 16), (uint8_t) (i >> 24),
+                                     (uint8_t) (i >> 32), (uint8_t) (i >> 40), (uint8_t) (i >> 48), (uint8_t) (i >> 56)};
             isi::kmer<31> k(a);
             if (classic_index.contains(k, 0)) {
                 num_positive++;
@@ -117,8 +117,8 @@ namespace {
         isi::file::deserialize(out_file_2, classic_index);
 
         for (size_t i = 0; i < 100000; i++) {
-            std::array<isi::byte, 8> a = {(isi::byte) (i >> 0), (isi::byte) (i >> 8), (isi::byte) (i >> 16), (isi::byte) (i >> 24),
-                                     (isi::byte) (i >> 32), (isi::byte) (i >> 40), (isi::byte) (i >> 48), (isi::byte) (i >> 56)};
+            std::array<uint8_t, 8> a = {(uint8_t) (i >> 0), (uint8_t) (i >> 8), (uint8_t) (i >> 16), (uint8_t) (i >> 24),
+                                     (uint8_t) (i >> 32), (uint8_t) (i >> 40), (uint8_t) (i >> 48), (uint8_t) (i >> 56)};
             isi::kmer<31> k(a);
             ASSERT_FALSE(classic_index.contains(k, i % 5 + 3));
         }

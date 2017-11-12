@@ -25,8 +25,8 @@ namespace isi::file {
     void deserialize(std::ifstream& ifs, classic_index& bf, classic_index_header& h = dummy_clah);
     void deserialize(const std::experimental::filesystem::path& p, classic_index& bf, classic_index_header& h = dummy_clah);
 
-    void deserialize(std::ifstream& ifs, std::vector<std::vector<byte>>& data, compact_index_header& h = dummy_comh);
-    void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<byte>>& data, compact_index_header& h = dummy_comh);
+    void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_comh);
+    void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_comh);
 
 
     template<class T>

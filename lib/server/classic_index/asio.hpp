@@ -25,7 +25,7 @@ namespace isi::server::classic_index {
 //        }
 //    protected:
 //        void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) override {
-//            std::vector<byte> count(m_h.block_size(), 0xFF);
+//            std::vector<uint8_t> count(m_h.block_size(), 0xFF);
 //            auto* count_64 = reinterpret_cast<uint64_t*>(count.data());
 //            auto* counts_64 = reinterpret_cast<uint64_t*>(counts.data());
 //

@@ -5,17 +5,17 @@
 namespace isi {
 
     template<unsigned int N>
-    kmer<N>::kmer(std::array<byte, size> data) : m_data(std::move(data)) {}
+    kmer<N>::kmer(std::array<uint8_t, size> data) : m_data(std::move(data)) {}
 
     template<unsigned int N>
     void kmer<N>::init(const char* chars) {
         for (int i = N - 4; i >= -3; i -= 4) {
             if (i >= 0) {
-                m_data[(N - (i + 4)) / 4] = m_bps_to_byte.at(*((uint32_t *) (chars + i)));
+                m_data[(N - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
             } else {
                 char c2 = i < -1 ? 'A' : chars[i + 1];
                 char c3 = i < -2 ? 'A' : chars[i + 2];
-                m_data[m_data.size() - 1] = m_bps_to_byte.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
+                m_data[m_data.size() - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
             }
         }
     }
@@ -25,11 +25,11 @@ namespace isi {
         int kmer_size_int = kmer_size;
         for (int i = kmer_size_int - 4; i >= -3; i -= 4) {
             if (i >= 0) {
-                kmer_data[(kmer_size_int - (i + 4)) / 4] = m_bps_to_byte.at(*((uint32_t *) (chars + i)));
+                kmer_data[(kmer_size_int - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
             } else {
                 char c2 = i < -1 ? 'A' : chars[i + 1];
                 char c3 = i < -2 ? 'A' : chars[i + 2];
-                kmer_data[data_size(kmer_size) - 1] = m_bps_to_byte.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
+                kmer_data[data_size(kmer_size) - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
             }
         }
     }
@@ -46,7 +46,7 @@ namespace isi {
     }
 
     template<unsigned int N>
-    const std::array<byte, kmer<N>::size> &kmer<N>::data() const {
+    const std::array<uint8_t, kmer<N>::size> &kmer<N>::data() const {
         return m_data;
     }
 
@@ -54,18 +54,18 @@ namespace isi {
     std::string kmer<N>::string() const {
         std::string result;
 //    for(size_t i = 0; i < m_data.size(); i++) {
-//        std::string byte_string = m_byte_to_bps.at(m_data[i]);
+//        std::string uint8_t_string = m_uint8_t_to_bps.at(m_data[i]);
 //        if (i == 0 && N % 4 != 0) {
-//            byte_string = byte_string.substr(4 - N % 4, std::string::npos);
+//            uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
 //        }
-//        result += byte_string;
+//        result += uint8_t_string;
 //    }
         for (size_t i = 0; i < m_data.size(); i++) {
-            std::string byte_string = m_byte_to_bps.at(m_data[m_data.size() - i - 1]);
+            std::string uint8_t_string = m_uint8_t_to_bps.at(m_data[m_data.size() - i - 1]);
             if (i == 0 && N % 4 != 0) {
-                byte_string = byte_string.substr(4 - N % 4, std::string::npos);
+                uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
             }
-            result += byte_string;
+            result += uint8_t_string;
         }
         return result;
     }
@@ -76,7 +76,7 @@ namespace isi {
     }
 
     template<unsigned int N>
-    const std::map<unsigned int, byte> kmer<N>::m_bps_to_byte = {
+    const std::map<unsigned int, uint8_t> kmer<N>::m_bps_to_uint8_t = {
             {1094795585, 0}, {1128350017, 1}, {1195458881, 2}, {1413562689, 3}, {1094926657, 4},
             {1128481089, 5}, {1195589953, 6}, {1413693761, 7}, {1095188801, 8}, {1128743233, 9},
             {1195852097, 10}, {1413955905, 11}, {1096040769, 12}, {1129595201, 13}, {1196704065, 14},
@@ -131,7 +131,7 @@ namespace isi {
             {1414812756, 255} };
 
     template<unsigned int N>
-    const std::map<byte, std::string> kmer<N>::m_byte_to_bps = {
+    const std::map<uint8_t, std::string> kmer<N>::m_uint8_t_to_bps = {
             {0, "AAAA"}, {1, "AAAC"}, {2, "AAAG"}, {3, "AAAT"}, {4, "AACA"}, {5, "AACC"}, {6, "AACG"}, {7, "AACT"},
             {8, "AAGA"}, {9, "AAGC"}, {10, "AAGG"}, {11, "AAGT"}, {12, "AATA"}, {13, "AATC"}, {14, "AATG"}, {15, "AATT"},
             {16, "ACAA"}, {17, "ACAC"}, {18, "ACAG"}, {19, "ACAT"}, {20, "ACCA"}, {21, "ACCC"}, {22, "ACCG"}, {23, "ACCT"},

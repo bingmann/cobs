@@ -90,7 +90,7 @@ namespace {
         generate_test_case(samples);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
-        std::vector<std::vector<isi::byte>> data;
+        std::vector<std::vector<uint8_t>> data;
         isi::file::compact_index_header h;
         isi::file::deserialize(compact_index_path, data, h);
         ASSERT_EQ(h.file_names().size(), 33U);
