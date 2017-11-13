@@ -119,10 +119,10 @@ namespace isi {
         return j < 3;
     }
 
-    inline std::string random_sequence(size_t len) {
+    inline std::string random_sequence(size_t len, size_t seed = std::time(0)) {
         std::array<char, 4> basepairs = {'A', 'C', 'G', 'T'};
         std::string result;
-        std::srand(std::time(0));
+        std::srand(seed);
         for (size_t i = 0; i < len; i++) {
             result += basepairs[std::rand() % 4];
         }
@@ -136,11 +136,19 @@ namespace isi {
         return result;
     }
 
-    inline uint64_t calc_signature_size(size_t num_elements, double num_hashes, double false_positive_probability) {
+    inline uint64_t calc_signature_size(uint64_t num_elements, double num_hashes, double false_positive_probability) {
         double signature_size_ratio = calc_signature_size_ratio(num_hashes, false_positive_probability);
         double result = std::ceil(num_elements * signature_size_ratio);
         assert(result >= 0);
         assert(result <= UINT64_MAX);
+        return (uint64_t) result;
+    }
+
+    inline double calc_average_set_bit_ratio(uint64_t signature_size, double num_hashes, double false_positive_probability) {
+        double num_elements = signature_size / calc_signature_size_ratio(num_hashes, false_positive_probability);
+        double result = 1 - std::pow(1 - 1 / (double) signature_size, num_hashes * num_elements);
+        assert(result >= 0);
+        assert(result <= 1);
         return result;
     }
 

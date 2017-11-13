@@ -24,6 +24,7 @@ namespace isi {
             t.active("read");
             file::deserialize(paths[i], s);
             t.active("process");
+
             #pragma omp parallel for
             for (size_t j = 0; j < s.data().size(); j++) {
                 create_hashes(s.data().data() + j, 8, m_signature_size, m_num_hashes, [&](size_t hash) {
@@ -33,9 +34,6 @@ namespace isi {
         }
         t.active("write");
         std::vector<std::string> file_names(paths.size());
-//        for (size_t i = 0; i < paths.size(); i++) {
-//            file_names[i] = paths[i].stem().string();
-//        }
         std::transform(paths.begin(), paths.end(), file_names.begin(), [](const auto& p) {
             return p.stem().string();
         });
@@ -50,6 +48,7 @@ namespace isi {
         bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::classic_index_header::file_extension,
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                bf.process(paths, out_file, t);
+                               std::fill(bf.data().begin(), bf.data().end(), 0);
                            });
         std::cout << t;
     }

@@ -10,23 +10,23 @@
 #include <file/util.hpp>
 
 namespace {
-    std::string in_dir_1 = "test/resources/classic_index/input_1/";
-    std::string in_dir_2 = "test/resources/classic_index/input_2/";
-    std::string in_dir_3 = "test/resources/classic_index/input_3/";
-    std::string out_dir = "test/out/classic_index/";
-    std::string out_file_1 = out_dir + "[sample_1-sample_3].g_isi";
-    std::string out_file_2 = out_dir + "[sample_4-sample_4].g_isi";
-    std::string out_file_3 = out_dir + "[sample_1-sample_9].g_isi";
-    std::string out_file_4 = out_dir + "[sample_9-sample_9].g_isi";
-    std::string out_file_5 = out_dir + "[sample_1-sample_8].g_isi";
-    std::string out_file_6 = out_dir + "[[sample_1-sample_8]-[sample_9-sample_9]].g_isi";
-    std::string out_file_7 = out_dir + "[[[sample_1-sample_3]-[sample_4-sample_4]]-[[sample_9-sample_9]-[sample_9-sample_9]]].g_isi";
-    std::string sample_1 = in_dir_1 + "sample_1.g_sam";
-    std::string sample_2 = in_dir_1 + "sample_2.g_sam";
-    std::string sample_3 = in_dir_1 + "sample_3.g_sam";
-    std::string sample_4 = in_dir_2 + "sample_4.g_sam";
-    std::string sample_8 = in_dir_3 + "sample_8.g_sam";
-    std::string sample_9 = in_dir_3 + "sample_9.g_sam";
+    std::experimental::filesystem::path in_dir_1("test/resources/classic_index/input_1/");
+    std::experimental::filesystem::path in_dir_2("test/resources/classic_index/input_2/");
+    std::experimental::filesystem::path in_dir_3("test/resources/classic_index/input_3/");
+    std::experimental::filesystem::path out_dir("test/out/classic_index/");
+    std::experimental::filesystem::path out_file_1(out_dir.string() + "[sample_1-sample_3].g_isi");
+    std::experimental::filesystem::path out_file_2(out_dir.string() + "[sample_4-sample_4].g_isi");
+    std::experimental::filesystem::path out_file_3(out_dir.string() + "[sample_1-sample_9].g_isi");
+    std::experimental::filesystem::path out_file_4(out_dir.string() + "[sample_9-sample_9].g_isi");
+    std::experimental::filesystem::path out_file_5(out_dir.string() + "[sample_1-sample_8].g_isi");
+    std::experimental::filesystem::path out_file_6(out_dir.string() + "[[sample_1-sample_8]-[sample_9-sample_9]].g_isi");
+    std::experimental::filesystem::path out_file_7(out_dir.string() + "[[[sample_1-sample_3]-[sample_4-sample_4]]-[[sample_9-sample_9]-[sample_9-sample_9]]].g_isi");
+    std::experimental::filesystem::path sample_1(in_dir_1.string() + "sample_1.g_sam");
+    std::experimental::filesystem::path sample_2(in_dir_1.string() + "sample_2.g_sam");
+    std::experimental::filesystem::path sample_3(in_dir_1.string() + "sample_3.g_sam");
+    std::experimental::filesystem::path sample_4(in_dir_2.string() + "sample_4.g_sam");
+    std::experimental::filesystem::path sample_8(in_dir_3.string() + "sample_8.g_sam");
+    std::experimental::filesystem::path sample_9(in_dir_3.string() + "sample_9.g_sam");
     size_t signature_size = 200000;
     size_t block_size = 1;
     size_t num_hashes = 7;

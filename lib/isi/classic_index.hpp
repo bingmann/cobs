@@ -14,7 +14,6 @@ namespace isi {
         std::vector<uint8_t> m_data;  // replace by std::vector<uint8_t> ???
 
         void set_bit(size_t pos, size_t bit_in_block);
-        bool is_set(size_t pos, size_t bit_in_block);
         void process(const std::vector<std::experimental::filesystem::path> &paths, const std::experimental::filesystem::path &out_file, timer &t);
         static void combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path &out_file,
                             size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names);
@@ -28,6 +27,7 @@ namespace isi {
         static void create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                   const std::function<void(size_t)>& callback);
         static void generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes);
+        bool is_set(size_t pos, size_t bit_in_block);
         bool contains(const kmer<31>& kmer, size_t bit_in_block);
         uint64_t signature_size() const;
         void signature_size(uint64_t m_signature_size);

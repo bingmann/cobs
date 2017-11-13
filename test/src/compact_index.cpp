@@ -8,21 +8,11 @@ namespace {
     std::experimental::filesystem::path compact_index_path(in_dir.string() + "filter.g_cisi");
     std::experimental::filesystem::path tmp_dir("test/out/compact_index/tmp/");
 
-    std::string query = "CAATCGAGCAAGTCCATTATCAACGAGTGTGTTGCAGTTTTATTCTCTCGCCAGCATTGTAATAGGCACTAAAAGAGTGATGATAGTCATGAGTGCTGAGCTAAGA"
-            "CGGCGTCGGTGCATAGCGGACTTTCGGTCAGTCGCAATTCCTCACGAGACCCGTCCTGTTGAGCGTATCACTCTCAATGTACAAGCAACCCGAGAAGGCTGTGCCT"
-            "GGACTCAACCGGATGCAGGATGGACTCCAGACACGGGGCCACCACTCTTCACACGTAAAGCAAGAACGTCGAGCAGTCATGAAAGTCTTAGTACCGCACGTGCCAT"
-            "CTTACTGCGAATATTGCCTGAAGCTGTACCGTTATTGGGGGGCAAAGATGAAGTTCTCCTCTTTTCATAATTGTACTGACGACAGCCGTGTTCCCGGTTTCTTCAG"
-            "AGGTTAAAGAATAAGGGCTTATTGTAGGCAGAGGGACGCCCTTTTAGTGGCTGGCGTTAAGTATCTTCGGACCCCCTTGTCTATCCAGATTAATCGAATTCTCTCA"
-            "TTTAGGACCCTAGTAAGTCATCATTGGTATTTGAATGCGACCCCGAAGAAACCGCCTAAAAATGTCAATGGTTGGTCCACTAAACTTCATTTAATCAACTCCTAAA"
-            "TCGGCGCGATAGGCCATTAGAGGTTTAATTTTGTATGGCAAGGTACTTCCGATCTTAATGAATGGCCGGAAGAGGTACGGACGCGATATGCGGGGGTGAGAGGGCA"
-            "AATAGGCAGGTTCGCCTTCGTCACGCTAGGAGGCAATTCTATAAGAATGCACATTGCATCGATACATAAAATGTCTCGACCGCATGCGCAACTTGTGAAGTGTCTA"
-            "CTATCCCTAAGCCCATTTCCCGCATAATAACCCCTGATTGTGTCCGCATCTGATGCTACCCGGGTTGAGTTAGCGTCGAGCTCGCGGAACTTATTGCATGAGTAGA"
-            "GTTGAGTAAGAGCTGTTAGATGGCTCGCTGAGCTAATAGTTGCCCA";
+    std::string query = isi::random_sequence(10000, 1);
 
     class compact_index : public ::testing::Test {
     protected:
         virtual void SetUp() {
-
             std::error_code ec;
             std::experimental::filesystem::remove_all(in_dir, ec);
             std::experimental::filesystem::remove_all(tmp_dir, ec);
@@ -95,14 +85,47 @@ namespace {
         ASSERT_EQ(s.data().size(), file_size / 8 - 2);
     }
 
+    TEST_F(compact_index, false_positive) {
+        auto samples = generate_samples_all(query);
+        generate_test_case(samples, tmp_dir);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        std::vector<std::vector<uint8_t>> data;
+        isi::file::compact_index_header h;
+        isi::file::deserialize(compact_index_path, data, h);
+
+        std::vector<std::map<std::string, size_t>> num_ones(h.parameters().size());
+        for (size_t i = 0; i < h.parameters().size(); i++) {
+            for (size_t j = 0; j < h.parameters()[i].signature_size; j++) {
+                for (size_t k = 0; k < h.page_size(); k++) {
+                    uint8_t d = data[i][j * h.page_size() + k];
+                    for (size_t o = 0; o < 8; o++) {
+                        size_t file_names_index = i * h.page_size() * 8 + k * 8 + o;
+                        if (file_names_index < h.file_names().size()) {
+                            std::string file_name = h.file_names()[file_names_index];
+                            num_ones[i][file_name] += (d & (1 << o)) >> o;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (size_t i = 0; i < h.parameters().size(); i++) {
+            double set_bit_ratio = isi::calc_average_set_bit_ratio(h.parameters()[i].signature_size, 3, 0.1);
+            double num_ones_average = set_bit_ratio * h.parameters()[i].signature_size;
+            for (auto& no: num_ones[i]) {
+                ASSERT_LE(no.second, num_ones_average * 1.01);
+            }
+        }
+    }
+
     TEST_F(compact_index, content) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> cisi_data;
-        isi::file::compact_index_header h;
-        isi::file::deserialize(compact_index_path, cisi_data, h);
+        isi::file::deserialize(compact_index_path, cisi_data);
 
         std::vector<isi::classic_index> indices;
         for(auto& p: std::experimental::filesystem::directory_iterator(bloom_2_dir)) {
@@ -110,8 +133,7 @@ namespace {
                 for(const std::experimental::filesystem::path& isi_p: std::experimental::filesystem::directory_iterator(p)) {
                     if(isi_p.extension() == isi::file::classic_index_header::file_extension) {
                         isi::classic_index isi;
-                        isi::file::classic_index_header h;
-                        isi::file::deserialize(isi_p, isi, h);
+                        isi::file::deserialize(isi_p, isi);
                         indices.push_back(isi);
                     }
                 }
