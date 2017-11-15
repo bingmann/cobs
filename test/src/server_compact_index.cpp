@@ -12,14 +12,19 @@ namespace {
         virtual void SetUp() {
             std::error_code ec;
             std::experimental::filesystem::remove_all(in_dir, ec);
+            if (ec) {
+                std::cout << ec.message() << std::endl;
+            }
             std::experimental::filesystem::remove_all(tmp_dir, ec);
+            if (ec) {
+                std::cout << ec.message() << std::endl;
+            }
             std::experimental::filesystem::create_directories(in_dir);
             std::experimental::filesystem::create_directories(tmp_dir);
         }
     };
 
     TEST_F(server_compact_index, all_included) {
-
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
