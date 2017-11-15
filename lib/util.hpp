@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 
 
 namespace isi {
@@ -180,6 +181,19 @@ namespace isi {
             std::cout << result << ", ";
         };
         std::cout << "}" << std::endl;
+    }
+
+    inline void print_errno(const std::string& msg) {
+        std::cerr << msg + ": " << std::strerror(errno) << std::endl;
+    }
+
+    inline void exit_error(const std::string& msg) {
+        std::cerr << msg << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    inline void exit_error_errno(const std::string& msg) {
+        exit_error(msg + ": " + std::strerror(errno));
     }
 };
 

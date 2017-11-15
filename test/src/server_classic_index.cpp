@@ -4,10 +4,10 @@
 
 
 namespace {
-    std::string in_dir = "test/resources/server/input/";
+    std::string in_dir = "test/resources/server_classic_index/input/";
     std::string sample_1 = in_dir + "sample_1.g_isi";
     std::string sample_2 = in_dir + "sample_2.g_isi";
-    std::string sample_result = "test/resources/server/result/sample_sorted.txt";
+    std::string sample_result = "test/resources/server_classic_index/result/sample_sorted.txt";
     std::string file_name = "ERR102554";
 
     TEST(server_classic_index, block_size_4) {

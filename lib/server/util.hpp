@@ -7,25 +7,28 @@
 #include <cstring>
 
 namespace isi::server {
-
     inline std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
         int fd = open(path.string().data(), O_RDONLY, 0);
-        assert(fd != -1);
+        if(fd == -1) {
+            exit_error_errno("could not open index file " + path.string());
+        }
 
         void* mmap_ptr = mmap(NULL, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0);
-        assert(mmap_ptr != MAP_FAILED);
-        if(madvise(mmap_ptr, smd.end_pos, MADV_RANDOM) != 0) {
-            std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
+        if(mmap_ptr == MAP_FAILED) {
+            exit_error_errno("mmap failed");
+        }
+        if(madvise(mmap_ptr, smd.end_pos, MADV_RANDOM)) {
+            print_errno("madvise failed");
         }
         return {fd, smd.curr_pos + reinterpret_cast<uint8_t*>(mmap_ptr)};
     }
 
     inline void destroy_mmap(int fd, uint8_t* mmap_ptr, const stream_metadata& smd) {
-        if (munmap(mmap_ptr - smd.curr_pos, smd.end_pos) != 0) {
-            std::cerr << "could not unmap file: " << std::strerror(errno) << std::endl;
+        if (munmap(mmap_ptr - smd.curr_pos, smd.end_pos)) {
+            print_errno("could not unmap index file");
         }
-        if (close(fd) != 0) {
-            std::cerr << "could not close file: " << std::strerror(errno) << std::endl;
+        if (close(fd)) {
+            print_errno("could not close index file");
         }
     }
 }
