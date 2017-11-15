@@ -72,7 +72,7 @@ namespace {
         }
 
         for (auto& np: num_positive) {
-            ASSERT_LE(np.second, 1030U);
+            ASSERT_LE(np.second, 1070U);
         }
     }
 }
