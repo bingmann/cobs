@@ -23,7 +23,7 @@ namespace isi::compact_index {
         std::experimental::filesystem::path sub_out_dir;
         for(const auto& p: paths) {
             if (i % (8 * page_size) == 0) {
-                sub_out_dir = out_dir.string() + "/samples/" + std::to_string(batch);
+                sub_out_dir = out_dir / std::experimental::filesystem::path("/samples/" + std::to_string(batch));
                 std::experimental::filesystem::create_directories(sub_out_dir);
                 batch++;
             }

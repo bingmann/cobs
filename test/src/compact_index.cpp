@@ -2,11 +2,11 @@
 #include "test_util.hpp"
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/compact_index/input_1/");
-    std::experimental::filesystem::path samples_dir(in_dir.string() + "samples/");
-    std::experimental::filesystem::path bloom_2_dir(in_dir.string() + "bloom_2/");
-    std::experimental::filesystem::path compact_index_path(in_dir.string() + "filter.g_cisi");
-    std::experimental::filesystem::path tmp_dir("test/out/compact_index/tmp/");
+    std::experimental::filesystem::path in_dir("test/out/compact_index/input_1");
+    std::experimental::filesystem::path samples_dir(in_dir.string() + "/samples");
+    std::experimental::filesystem::path bloom_2_dir(in_dir.string() + "/bloom_2");
+    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/filter.g_cisi");
+    std::experimental::filesystem::path tmp_dir("test/out/compact_index/tmp");
 
     std::string query = isi::random_sequence(10000, 1);
 
@@ -77,7 +77,7 @@ namespace {
     TEST_F(compact_index, num_kmers_calculation) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        std::experimental::filesystem::path path_sample(tmp_dir.string() + "sample_00.g_sam");
+        std::experimental::filesystem::path path_sample(tmp_dir.string() + "/sample_00.g_sam");
         isi::sample<31> s;
         isi::file::deserialize(path_sample, s);
 
@@ -85,7 +85,7 @@ namespace {
         ASSERT_EQ(s.data().size(), file_size / 8 - 2);
     }
 
-    TEST_F(compact_index, false_positive) {
+    TEST_F(compact_index, num_ones) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);

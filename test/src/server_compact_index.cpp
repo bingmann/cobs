@@ -2,8 +2,8 @@
 #include "test_util.hpp"
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/server_compact_index/input_1/");
-    std::experimental::filesystem::path compact_index_path(in_dir.string() + "filter.g_cisi");
+    std::experimental::filesystem::path in_dir("test/out/server_compact_index/input_1");
+    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/filter.g_cisi");
     std::experimental::filesystem::path tmp_dir("test/out/server_compact_index/tmp");
     std::string query = isi::random_sequence(50000, 1);
 
