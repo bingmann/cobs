@@ -6,7 +6,13 @@
 namespace isi::server::classic_index {
 
     mmap::mmap(const std::experimental::filesystem::path& path) : classic_index::base(path) {
-        m_data = initialize_mmap(path, m_smd);
+        std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
+        m_fd = handles.first;
+        m_data = handles.second;
+    }
+
+    mmap::~mmap() {
+        destroy_mmap(m_fd, m_data, m_smd);
     }
 
     void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
