@@ -2,8 +2,8 @@
 #include "test_util.hpp"
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/server_compact_index/input_1");
-    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/filter.g_cisi");
+    std::experimental::filesystem::path in_dir("test/out/server_compact_index/input");
+    std::experimental::filesystem::path index_path(in_dir.string() + "/index.g_cisi");
     std::experimental::filesystem::path tmp_dir("test/out/server_compact_index/tmp");
     std::string query = isi::random_sequence(50000, 1);
 
@@ -29,7 +29,7 @@ namespace {
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
-        isi::server::compact_index::mmap s_mmap(compact_index_path);
+        isi::server::compact_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
@@ -46,7 +46,7 @@ namespace {
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
-        isi::server::compact_index::mmap s_mmap(compact_index_path);
+        isi::server::compact_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
@@ -61,7 +61,7 @@ namespace {
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
-        isi::server::compact_index::mmap s_mmap(compact_index_path);
+        isi::server::compact_index::mmap s_mmap(index_path);
 
         size_t num_tests = 10000;
         std::map<std::string, uint64_t> num_positive;

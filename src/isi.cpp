@@ -93,7 +93,7 @@ struct parameters {
         return app->add_option("<num_elements>", [&](std::vector<std::string> val) {
             this->num_elements = get_unsigned_integer(val[0], "<num_elements>", 1);
             return true;
-        }, "number of elements to be inserted into the bloom filter");
+        }, "number of elements to be inserted into the index");
     }
 
     CLI::Option* add_out_file(CLI::App* app) {
@@ -120,7 +120,7 @@ struct parameters {
 
 
 void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("parameters", "calculates bloom filter parameters", false);
+    auto sub = app.add_subcommand("parameters", "calculates index parameters", false);
     p->add_num_hashes(sub)->required();
     p->add_false_positive_rate(sub)->required();
     p->add_num_elements(sub);

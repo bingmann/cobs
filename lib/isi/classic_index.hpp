@@ -20,6 +20,8 @@ namespace isi {
     public:
         classic_index() = default;
         classic_index(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
+        static void create(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
+                            size_t signature_size, size_t block_size, size_t num_hashes, size_t batch_size);
         static void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
                                                      size_t signature_size, size_t block_size, size_t num_hashes);
         static bool combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,

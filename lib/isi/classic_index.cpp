@@ -107,6 +107,27 @@ namespace isi {
         return all_combined;
     }
 
+    void classic_index::create(const std::experimental::filesystem::path& in_dir,
+                               const std::experimental::filesystem::path& out_dir,
+                               size_t signature_size, size_t block_size, size_t num_hashes, size_t batch_size) {
+        create_from_samples(in_dir, out_dir / std::experimental::filesystem::path("1"), signature_size, block_size, num_hashes);
+        size_t i = 1;
+        while(!combine(out_dir / std::experimental::filesystem::path(std::to_string(i)),
+                       out_dir / std::experimental::filesystem::path(std::to_string(i + 1)),
+        signature_size, num_hashes, batch_size)) {
+            i++;
+        }
+
+        std::experimental::filesystem::path index;
+        for (std::experimental::filesystem::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
+            if (sub_it->path().extension() == isi::file::classic_index_header::file_extension) {
+                index = sub_it->path();
+            }
+        }
+        std::experimental::filesystem::rename(index, out_dir.string() + "/index" + isi::file::classic_index_header::file_extension);
+    }
+
+
     classic_index::classic_index(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes)
             : m_signature_size(signature_size), m_block_size(block_size), m_num_hashes(num_hashes),
               m_data(signature_size * block_size) {}

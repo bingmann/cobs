@@ -5,7 +5,7 @@ namespace {
     std::experimental::filesystem::path in_dir("test/out/compact_index/input_1");
     std::experimental::filesystem::path samples_dir(in_dir.string() + "/samples");
     std::experimental::filesystem::path bloom_2_dir(in_dir.string() + "/bloom_2");
-    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/filter.g_cisi");
+    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/index.g_cisi");
     std::experimental::filesystem::path tmp_dir("test/out/compact_index/tmp");
 
     std::string query = isi::random_sequence(10000, 1);

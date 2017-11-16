@@ -135,6 +135,12 @@ namespace isi::compact_index {
         while(!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
             iteration++;
         }
-        create_compact_index(bloom_dir + std::to_string(iteration + 1), in_dir / ("filter" + isi::file::compact_index_header::file_extension), page_size);
+        create_compact_index(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + isi::file::compact_index_header::file_extension), page_size);
+    }
+
+    inline void create(const std::experimental::filesystem::path& in_dir, std::experimental::filesystem::path out_dir,
+                       size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size = get_page_size()) {
+        create_folders(in_dir, out_dir / std::experimental::filesystem::path("/samples"), page_size);
+        create_compact_index_from_samples(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
     }
 }
