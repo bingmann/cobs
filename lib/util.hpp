@@ -192,6 +192,12 @@ namespace isi {
         std::exit(EXIT_FAILURE);
     }
 
+    inline void assert_exit(bool cond, const std::string& msg) {
+        if (!cond) {
+            exit_error(msg);
+        }
+    }
+
     inline void exit_error_errno(const std::string& msg) {
         exit_error(msg + ": " + std::strerror(errno));
     }

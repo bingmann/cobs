@@ -79,27 +79,30 @@ namespace isi {
         timer t;
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
-        bool all_combined = bulk_process_files(in_dir, out_dir, batch_size, file::classic_index_header::file_extension, file::classic_index_header::file_extension,
-                           [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
-                               size_t new_block_size = 0;
-                               for (size_t i = 0; i < paths.size(); i++) {
-                                   ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                                   auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
-                                   assert(h.signature_size() == signature_size);
-                                   assert(h.num_hashes() == num_hashes);
-                                   if (i < paths.size() - 2) {
-                                       //todo doesnt work because of padding for compact, which means there could be two files with less file_names
-                                       //todo quickfix with -2 to allow for paddding
-//                                       assert(h.file_names().size() == 8 * h.block_size());
-                                   }
-                                   ifstreams.back().second = h.block_size();
-                                   new_block_size += h.block_size();
-                                   std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
-                               }
-                               combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
-                               ifstreams.clear();
-                               file_names.clear();
-                           });
+        bool all_combined =
+                bulk_process_files(in_dir, out_dir, batch_size, file::classic_index_header::file_extension, file::classic_index_header::file_extension,
+                                   [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
+                                       size_t new_block_size = 0;
+                                       for (size_t i = 0; i < paths.size(); i++) {
+                                           ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
+                                           auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
+                                           assert(h.signature_size() == signature_size);
+                                           assert(h.num_hashes() == num_hashes);
+                                           #ifndef isi_test
+                                           if (i < paths.size() - 2) {
+                                               //todo doesnt work because of padding for compact, which means there could be two files with less file_names
+                                               //todo quickfix with -2 to allow for paddding
+                                               assert(h.file_names().size() == 8 * h.block_size());
+                                           }
+                                           #endif
+                                           ifstreams.back().second = h.block_size();
+                                           new_block_size += h.block_size();
+                                           std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
+                                       }
+                                       combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
+                                       ifstreams.clear();
+                                       file_names.clear();
+                                   });
         std::cout << t;
         return all_combined;
     }

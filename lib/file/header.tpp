@@ -4,7 +4,7 @@
 
 namespace isi::file {
     template<class T>
-    const std::string header<T>::magic_word = "HEADER";
+    const std::string header<T>::magic_word = "INSIIN";
     template<class T>
     const uint32_t header<T>::m_version = 1;
 
@@ -21,7 +21,7 @@ namespace isi::file {
         check_magic_word(ifs, magic_word);
         uint32_t v;
         isi::deserialize(ifs, v);
-        assert(v == m_version);
+        assert_exit(v == m_version, "invalid file version");
         h.deserialize(ifs);
         check_magic_word(ifs, T::magic_word);
     }
@@ -32,6 +32,6 @@ namespace isi::file {
         ifs.read(mw_v.data(), magic_word.size());
         std::string mw(mw_v.data(), mw_v.size());
         assert(ifs.good());
-        assert(mw == magic_word);
+        assert_exit(mw == magic_word, "invalid file type");
     }
 }

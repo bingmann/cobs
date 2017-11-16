@@ -40,7 +40,7 @@ namespace isi::server {
 
         void counts_to_result(const std::vector<std::string>& file_names, const std::vector<uint16_t>& counts,
                               std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) const {
-            std::vector<uint32_t> sorted_indices(counts.size()); //todo ??? size here
+            std::vector<uint32_t> sorted_indices(file_names.size()); //todo ??? size here
 
             std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
             std::partial_sort(sorted_indices.begin(), sorted_indices.begin() + num_results, sorted_indices.end(), [&](auto v1, auto v2){
@@ -124,8 +124,10 @@ namespace isi::server {
         }
 
         void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results = 0) {
-            assert(query.size() >= kmer_size);
-            assert(query.size() - kmer_size + 1 <= UINT16_MAX);
+            assert_exit(query.size() >= kmer_size,
+                        "search query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
+            assert_exit(query.size() - kmer_size < UINT16_MAX,
+                        "search query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
             m_timer.active("hashes");
             std::vector<size_t> hashes;
             create_hashes(hashes, query, kmer_size, max_hash_value(), num_hashes());
