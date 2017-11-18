@@ -9,7 +9,6 @@
 #include "kmer.hpp"
 
 namespace isi::classic_index {
-
     void create_hashes(const void* input, size_t len, size_t signature_size, size_t num_hashes,
                                      const std::function<void(size_t)>& callback) {
         for (unsigned int i = 0; i < num_hashes; i++) {
@@ -19,11 +18,6 @@ namespace isi::classic_index {
     }
 
     namespace {
-        bool is_set(const std::vector<uint8_t>& data, uint64_t block_size, size_t pos, size_t bit_in_block) {
-            uint8_t b = data[block_size * pos + bit_in_block / 8];
-            return (b & (1 << (bit_in_block % 8))) != 0;
-        };
-
         void set_bit(std::vector<uint8_t>& data, const isi::file::classic_index_header& h, size_t pos, size_t bit_in_block) {
             data[h.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
         }
@@ -52,6 +46,26 @@ namespace isi::classic_index {
             file::serialize(out_file, data, h);
             t.stop();
         }
+
+        void combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path& out_file,
+                     size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names) {
+            std::ofstream ofs;
+            file::classic_index_header h(signature_size, block_size, num_hash, file_names);
+            file::serialize_header(ofs, out_file, h);
+
+            std::vector<char> block(block_size);
+            for (size_t i = 0; i < signature_size; i++) {
+                size_t pos = 0;
+                t.active("read");
+                for (auto& ifs: ifstreams) {
+                    ifs.first.read(&(*(block.begin() + pos)), ifs.second);
+                    pos += ifs.second;
+                }
+                t.active("write");
+                ofs.write(&(*block.begin()), block_size);
+            }
+            t.stop();
+        }
     }
 
     void create_from_samples(const std::experimental::filesystem::path &in_dir, const std::experimental::filesystem::path &out_dir,
@@ -66,27 +80,6 @@ namespace isi::classic_index {
                                h.file_names().clear();
                            });
         std::cout << t;
-    }
-
-
-    void combine(std::vector<std::pair<std::ifstream, size_t>>& ifstreams, const std::experimental::filesystem::path& out_file,
-                               size_t signature_size, size_t block_size, size_t num_hash, timer& t, const std::vector<std::string>& file_names) {
-        std::ofstream ofs;
-        file::classic_index_header h(signature_size, block_size, num_hash, file_names);
-        file::serialize_header(ofs, out_file, h);
-
-        std::vector<char> block(block_size);
-        for (size_t i = 0; i < signature_size; i++) {
-            size_t pos = 0;
-            t.active("read");
-            for (auto& ifs: ifstreams) {
-                ifs.first.read(&(*(block.begin() + pos)), ifs.second);
-                pos += ifs.second;
-            }
-            t.active("write");
-            ofs.write(&(*block.begin()), block_size);
-        }
-        t.stop();
     }
 
     bool combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
@@ -142,18 +135,7 @@ namespace isi::classic_index {
         std::experimental::filesystem::rename(index, out_dir.string() + "/index" + isi::file::classic_index_header::file_extension);
     }
 
-    bool contains(const std::vector<uint8_t>& data, const isi::file::classic_index_header& h, const kmer<31>& kmer, size_t bit_in_block) {
-        assert(bit_in_block < 8 * h.block_size());
-        for (unsigned int k = 0; k < h.num_hashes(); k++) {
-            size_t hash = XXH32(&kmer.data(), 8, k);
-            if (!is_set(data, h.block_size(), hash % h.signature_size(), bit_in_block)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    void generate_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes) {
+    void create_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes) {
         std::vector<std::string> file_names;
         for(size_t i = 0; i < 8 * block_size; i++) {
             file_names.push_back("file_" + std::to_string(i));

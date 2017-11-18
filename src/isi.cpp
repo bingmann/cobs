@@ -141,7 +141,7 @@ void add_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
     p->add_block_size(sub)->required();
     p->add_num_hashes(sub)->required();
     sub->set_callback([p]() {
-        isi::classic_index::generate_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
+        isi::classic_index::create_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
     });
 }
 

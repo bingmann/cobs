@@ -8,6 +8,7 @@
 #include <file/sample_header.hpp>
 #include <file/frequency_header.hpp>
 #include <file/util.hpp>
+#include <xxhash.h>
 
 namespace {
     std::experimental::filesystem::path in_dir_1("test/resources/classic_index/input_1/");
@@ -39,6 +40,22 @@ namespace {
         }
     };
 
+    bool is_set(const std::vector<uint8_t>& data, uint64_t block_size, size_t pos, size_t bit_in_block) {
+        uint8_t b = data[block_size * pos + bit_in_block / 8];
+        return (b & (1 << (bit_in_block % 8))) != 0;
+    };
+
+    bool contains(const std::vector<uint8_t>& data, const isi::file::classic_index_header& h, const isi::kmer<31>& kmer, size_t bit_in_block) {
+        assert(bit_in_block < 8 * h.block_size());
+        for (unsigned int k = 0; k < h.num_hashes(); k++) {
+            size_t hash = XXH32(&kmer.data(), 8, k);
+            if (!is_set(data, h.block_size(), hash % h.signature_size(), bit_in_block)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     TEST_F(classic_index, contains) {
         isi::classic_index::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
@@ -49,17 +66,17 @@ namespace {
         isi::sample<31> s;
         isi::file::deserialize(sample_1, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 0));
+            ASSERT_TRUE(contains(isi, h, kmer, 0));
         }
 
         isi::file::deserialize(sample_2, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 1));
+            ASSERT_TRUE(contains(isi, h, kmer, 1));
         }
 
         isi::file::deserialize(sample_3, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 2));
+            ASSERT_TRUE(contains(isi, h, kmer, 2));
         }
     }
 
@@ -94,7 +111,7 @@ namespace {
             std::array<uint8_t, 8> a = {(uint8_t) (i >> 0), (uint8_t) (i >> 8), (uint8_t) (i >> 16), (uint8_t) (i >> 24),
                                      (uint8_t) (i >> 32), (uint8_t) (i >> 40), (uint8_t) (i >> 48), (uint8_t) (i >> 56)};
             isi::kmer<31> k(a);
-            if (isi::classic_index::contains(isi, h, k, 0)) {
+            if (contains(isi, h, k, 0)) {
                 num_positive++;
             }
         }
@@ -128,7 +145,7 @@ namespace {
             std::array<uint8_t, 8> a = {(uint8_t) (i >> 0), (uint8_t) (i >> 8), (uint8_t) (i >> 16), (uint8_t) (i >> 24),
                                      (uint8_t) (i >> 32), (uint8_t) (i >> 40), (uint8_t) (i >> 48), (uint8_t) (i >> 56)};
             isi::kmer<31> k(a);
-            ASSERT_FALSE(isi::classic_index::contains(isi, h, k, i % 5 + 3));
+            ASSERT_FALSE(contains(isi, h, k, i % 5 + 3));
         }
     }
 
@@ -142,7 +159,7 @@ namespace {
         isi::sample<31> s;
         isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 8));
+            ASSERT_TRUE(contains(isi, h, kmer, 8));
         }
     }
 
@@ -156,7 +173,7 @@ namespace {
         isi::sample<31> s;
         isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 0));
+            ASSERT_TRUE(contains(isi, h, kmer, 0));
         }
     }
 
@@ -191,22 +208,22 @@ namespace {
         isi::sample<31> s;
         isi::file::deserialize(sample_3, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 2));
+            ASSERT_TRUE(contains(isi, h, kmer, 2));
         }
 
         isi::file::deserialize(sample_4, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 16));
+            ASSERT_TRUE(contains(isi, h, kmer, 16));
         }
 
         isi::file::deserialize(sample_8, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 15));
+            ASSERT_TRUE(contains(isi, h, kmer, 15));
         }
 
         isi::file::deserialize(sample_9, s);
         for (auto kmer: s.data()) {
-            ASSERT_TRUE(isi::classic_index::contains(isi, h, kmer, 24));
+            ASSERT_TRUE(contains(isi, h, kmer, 24));
         }
     }
 }
