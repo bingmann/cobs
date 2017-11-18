@@ -19,11 +19,13 @@ namespace isi::file {
         static const std::string magic_word;
         static const std::string file_extension;
         classic_index_header();
-        classic_index_header(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, const std::vector<std::string>& file_names);
+        classic_index_header(uint64_t signature_size, uint64_t block_size, uint64_t num_hashes,
+                             const std::vector<std::string>& file_names = std::vector<std::string>());
         uint64_t signature_size() const;
         uint64_t block_size() const;
         uint64_t num_hashes() const;
         const std::vector<std::string>& file_names() const;
+        std::vector<std::string>& file_names();
     };
 }
 

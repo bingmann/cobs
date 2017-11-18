@@ -53,8 +53,7 @@ namespace {
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_compact_index_from_samples(in_dir, 8, num_hashes, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
-        std::ifstream ifs;
-        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(ifs, compact_index_path);
+        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(compact_index_path);
 
         std::vector<uint64_t> sample_sizes;
         std::vector<isi::file::compact_index_header::parameter> parameters;
@@ -127,27 +126,27 @@ namespace {
         std::vector<std::vector<uint8_t>> cisi_data;
         isi::file::deserialize(compact_index_path, cisi_data);
 
-        std::vector<isi::classic_index> indices;
+        std::vector<std::vector<uint8_t>> indices;
         for(auto& p: std::experimental::filesystem::directory_iterator(bloom_2_dir)) {
             if (std::experimental::filesystem::is_directory(p)) {
                 for(const std::experimental::filesystem::path& isi_p: std::experimental::filesystem::directory_iterator(p)) {
                     if(isi_p.extension() == isi::file::classic_index_header::file_extension) {
-                        isi::classic_index isi;
-                        isi::file::deserialize(isi_p, isi);
-                        indices.push_back(isi);
+                        std::vector<uint8_t> data;
+                        isi::file::deserialize(isi_p, data);
+                        indices.push_back(data);
                     }
                 }
             }
         }
 
         std::sort(indices.begin(), indices.end(), [](auto& i1, auto& i2) {
-            return i1.data().size() < i2.data().size();
+            return i1.size() < i2.size();
         });
 
         ASSERT_EQ(indices.size(), cisi_data.size());
         for (size_t i = 0; i < indices.size(); i++) {
-            ASSERT_EQ(indices[i].data().size(), cisi_data[i].size());
-            for (size_t j = 0; j < indices[i].data().size(); j++ ) {
+            ASSERT_EQ(indices[i].size(), cisi_data[i].size());
+            for (size_t j = 0; j < indices[i].size(); j++ ) {
                 ASSERT_EQ(indices[i].data()[j], cisi_data[i][j]);
             }
         }

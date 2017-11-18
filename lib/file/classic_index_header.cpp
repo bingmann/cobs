@@ -41,4 +41,8 @@ namespace isi::file {
     const std::vector<std::string>& classic_index_header::file_names() const {
         return m_file_names;
     }
+
+    std::vector<std::string>& classic_index_header::file_names() {
+        return m_file_names;
+    }
 }

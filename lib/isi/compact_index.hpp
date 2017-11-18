@@ -56,8 +56,9 @@ namespace isi::compact_index {
             if (num_files != 8 * page_size) {
                 assert(num_files < 8 * page_size);
                 assert(p == paths.back());
-                isi::classic_index classic_index(signature_size, (8 * page_size - num_files) / 8, num_hashes);
-                isi::file::serialize(out_dir / p.filename() / ("padding" + file::classic_index_header::file_extension), classic_index, std::vector<std::string>());
+                isi::file::classic_index_header h(signature_size, (8 * page_size - num_files) / 8, num_hashes);
+                std::vector<uint8_t> data(h.signature_size() * h.block_size());
+                isi::file::serialize(out_dir / p.filename() / ("padding" + file::classic_index_header::file_extension), data, h);
             }
         }
     }
@@ -70,8 +71,7 @@ namespace isi::compact_index {
                 size_t num_hashes = 0;
                 for (std::experimental::filesystem::directory_iterator bloom_it(it->path()); bloom_it != end; bloom_it++) {
                     if (bloom_it->path().extension() == isi::file::classic_index_header::file_extension) {
-                        std::ifstream ifs;
-                        auto h = file::deserialize_header<file::classic_index_header>(ifs, bloom_it->path());
+                        auto h = file::deserialize_header<file::classic_index_header>(bloom_it->path());
                         signature_size = h.signature_size();
                         num_hashes = h.num_hashes();
                         break;
@@ -100,8 +100,7 @@ namespace isi::compact_index {
         std::vector<isi::file::compact_index_header::parameter> parameters;
         std::vector<std::string> file_names;
         for (const auto& p: paths) {
-            std::ifstream ifs;
-            auto h = isi::file::deserialize_header<isi::file::classic_index_header>(ifs, p);
+            auto h = isi::file::deserialize_header<isi::file::classic_index_header>(p);
             parameters.push_back({h.signature_size(), h.num_hashes()});
             file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
             assert(h.block_size() == page_size);

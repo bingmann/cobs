@@ -7,13 +7,13 @@
 
 namespace {
 
-    std::string in_dir = "test/resources/frequency/input/";
-    std::string out_dir = "test/out/frequency/";
-    std::string result_bin = "test/resources/frequency/result/bin.g_freq";
-    std::string result_freq = "test/resources/frequency/result/freq.g_freq";
-    std::string sample_1 = in_dir + "sample_1.g_sam";
-    std::string sample_2 = in_dir + "sample_2.g_sam";
-    std::string sample_3 = in_dir + "sample_3.g_sam";
+    std::experimental::filesystem::path in_dir("test/resources/frequency/input/");
+    std::experimental::filesystem::path out_dir("test/out/frequency/");
+    std::experimental::filesystem::path result_bin("test/resources/frequency/result/bin.g_freq");
+    std::experimental::filesystem::path result_freq("test/resources/frequency/result/freq.g_freq");
+    std::experimental::filesystem::path sample_1(in_dir.string() + "sample_1.g_sam");
+    std::experimental::filesystem::path sample_2(in_dir.string() + "sample_2.g_sam");
+    std::experimental::filesystem::path sample_3(in_dir.string() + "sample_3.g_sam");
 
     /*
     std::string sample_4 = in_dir + "sample_4.g_freq";
@@ -103,7 +103,7 @@ namespace {
     */
 
 
-    size_t get_count_sample(const std::string& file) {
+    size_t get_count_sample(const std::experimental::filesystem::path& file) {
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::sample_header>(ifs, file);
         size_t total_count = 0;
@@ -115,7 +115,7 @@ namespace {
         return total_count;
     }
 
-    size_t get_count_frequency(const std::string& file) {
+    size_t get_count_frequency(const std::experimental::filesystem::path& file) {
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::frequency_header>(ifs, file);
         size_t total_count = 0;
@@ -141,13 +141,15 @@ namespace {
     TEST_F(frequency, bin) {
         isi::frequency::process_all_in_directory<isi::frequency::bin_pq_element>(in_dir, out_dir, 40);
         size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
-        ASSERT_EQ(get_count_frequency(out_dir + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension), total_count);
-        assert_equals_files(result_bin, out_dir + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension);
+        std::experimental::filesystem::path p(out_dir.string() + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension);
+        ASSERT_EQ(get_count_frequency(p), total_count);
+        assert_equals_files(result_bin, p);
     }
 
     TEST_F(frequency, freq) {
         isi::frequency::process_all_in_directory<isi::frequency::fre_pq_element>(in_dir, out_dir, 40);
-        assert_equals_files(result_freq, out_dir + "[sample_4-sample_5]" + isi::file::frequency_header::file_extension);
+        std::experimental::filesystem::path p(out_dir.string() + "[sample_4-sample_5]" + isi::file::frequency_header::file_extension);
+        assert_equals_files(result_freq, p);
     }
 }
 

@@ -30,14 +30,30 @@ namespace {
     }
 
     TEST_F(file, classic_index) {
-        isi::classic_index bf_out(123, 12, 1234);
-        isi::file::serialize(out_path_isi, bf_out, std::vector<std::string>(12 * 8));
+        isi::file::classic_index_header h_out(123, 12, 1234);
+        std::vector<uint8_t> v_out(h_out.block_size() * h_out.signature_size(), 7);
+        isi::file::serialize(out_path_isi, v_out, h_out);
 
-        isi::classic_index bf_in;
-        isi::file::deserialize(out_path_isi, bf_in);
-        ASSERT_EQ(bf_out.signature_size(), bf_in.signature_size());
-        ASSERT_EQ(bf_out.block_size(), bf_in.block_size());
-        ASSERT_EQ(bf_out.num_hashes(), bf_in.num_hashes());
+        isi::file::classic_index_header h_in;
+        std::vector<uint8_t> v_in;
+        isi::file::deserialize(out_path_isi, v_in, h_in);
+        ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
+        ASSERT_EQ(h_out.block_size(), h_in.block_size());
+        ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
+        ASSERT_EQ(v_out.size(), v_in.size());
+        for (size_t i = 0; i < v_out.size(); i++) {
+            ASSERT_EQ(v_out[i], v_in[i]);
+        }
+    }
+
+    TEST_F(file, classic_index_header) {
+        isi::file::classic_index_header h_out(321, 21, 4321);
+        isi::file::serialize_header(out_path_isi, h_out);
+
+        auto h_in = isi::file::deserialize_header<isi::file::classic_index_header>(out_path_isi);
+        ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
+        ASSERT_EQ(h_out.block_size(), h_in.block_size());
+        ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
     }
 
     TEST_F(file, compact_index_header_values) {
@@ -48,13 +64,9 @@ namespace {
         };
         std::vector<std::string> file_names = {"file_1", "file_2", "file_3"};
         isi::file::compact_index_header h(parameters, file_names, 4096);
+        isi::file::serialize_header(out_path_cisi, h);
 
-        std::ofstream ofs;
-        isi::file::serialize_header(ofs, out_path_cisi, h);
-        ofs.close();
-
-        std::ifstream ifs;
-        auto h_2 = isi::file::deserialize_header<isi::file::compact_index_header>(ifs, out_path_cisi);
+        auto h_2 = isi::file::deserialize_header<isi::file::compact_index_header>(out_path_cisi);
 
         for (size_t i = 0; i < parameters.size(); i++) {
             ASSERT_EQ(parameters[i].num_hashes, h_2.parameters()[i].num_hashes);
@@ -70,10 +82,7 @@ namespace {
         std::vector<std::string> file_names = {};
         uint64_t page_size = 4096;
         isi::file::compact_index_header h(parameters, file_names, page_size);
-
-        std::ofstream ofs;
-        isi::file::serialize_header(ofs, out_path_cisi, h);
-        ofs.close();
+        isi::file::serialize_header(out_path_cisi, h);
 
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::compact_index_header>(ifs, out_path_cisi);
