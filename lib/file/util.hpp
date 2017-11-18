@@ -5,34 +5,103 @@
 #include "classic_index_header.hpp"
 #include "sample_header.hpp"
 #include "compact_index_header.hpp"
+#include "frequency_header.hpp"
+#include "util.hpp"
 
 namespace isi::file {
     static sample_header dummy_sh;
-    static classic_index_header dummy_clah;
-    static compact_index_header dummy_comh;
+    static classic_index_header dummy_isih;
+    static compact_index_header dummy_cisih;
 
     template<uint32_t N>
-    void serialize(std::ofstream& ofs, const sample<N>& s);
-    template<uint32_t N>
-    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s);
-    template<uint32_t N>
-    void deserialize(std::ifstream& ifs, sample<N>& s, sample_header& sh = dummy_sh);
-    template<uint32_t N>
-    void deserialize(const std::experimental::filesystem::path& p, sample<N>& s, sample_header& sh = dummy_sh);
+    void serialize(std::ofstream& ofs, const sample<N>& s) {
+        sample_header sh(31);
+        header<sample_header>::serialize(ofs, sh);
+        ofs.write(reinterpret_cast<const char*>(s.data().data()), kmer<N>::size * s.data().size());
+    }
 
-    void serialize(std::ofstream& ofs, const classic_index& bf, const std::vector<std::string>& file_names);
-    void serialize(const std::experimental::filesystem::path& p, const classic_index& bf, const std::vector<std::string>& file_names);
-    void deserialize(std::ifstream& ifs, classic_index& bf, classic_index_header& h = dummy_clah);
-    void deserialize(const std::experimental::filesystem::path& p, classic_index& bf, classic_index_header& h = dummy_clah);
+    template<uint32_t N>
+    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s) {
+        std::experimental::filesystem::create_directories(p.parent_path());
+        std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
+        serialize(ofs, s);
+    }
 
-    void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_comh);
-    void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_comh);
+    inline void serialize(std::ofstream& ofs, const classic_index& bf, const std::vector<std::string>& file_names) {
+        classic_index_header h(bf.signature_size(), bf.block_size(), bf.num_hashes(), file_names);
+        header<classic_index_header>::serialize(ofs, h);
+        ofs.write(reinterpret_cast<const char*>(bf.data().data()), bf.data().size());
+    }
 
+    inline void serialize(const std::experimental::filesystem::path& p, const classic_index& bf, const std::vector<std::string>& file_names) {
+        std::experimental::filesystem::create_directories(p.parent_path());
+        std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
+        serialize(ofs, bf, file_names);
+    }
+
+    template<uint32_t N>
+    void deserialize(std::ifstream& ifs, sample<N>& s, sample_header& h = dummy_sh) {
+        header<sample_header>::deserialize(ifs, h);
+        assert(N == h.kmer_size());
+
+        stream_metadata smd = get_stream_metadata(ifs);
+        size_t size = smd.end_pos - smd.curr_pos;
+        s.data().resize(size / kmer<N>::size);
+        ifs.read(reinterpret_cast<char*>(s.data().data()), size);
+    }
+
+    template<uint32_t N>
+    void deserialize(const std::experimental::filesystem::path& p, sample<N>& s, sample_header& h = dummy_sh) {
+        std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+        deserialize(ifs, s, h);
+    }
+
+    inline void deserialize(std::ifstream& ifs, classic_index& bf, classic_index_header& h = dummy_isih) {
+        header<classic_index_header>::deserialize(ifs, h);
+        bf.signature_size(h.signature_size());
+        bf.block_size(h.block_size());
+        bf.num_hashes(h.num_hashes());
+
+        stream_metadata smd = get_stream_metadata(ifs);
+        size_t size = smd.end_pos - smd.curr_pos;
+        bf.data().resize(size);
+        ifs.read(reinterpret_cast<char*>(bf.data().data()), size);
+    }
+
+    inline void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_cisih) {
+        header<compact_index_header>::deserialize(ifs, h);
+        data.clear();
+        data.resize(h.parameters().size());
+        for (size_t i = 0; i < h.parameters().size(); i++) {
+            size_t data_size = h.page_size() * h.parameters()[i].signature_size;
+            std::vector<uint8_t> d(data_size);
+            ifs.read(reinterpret_cast<char*>(d.data()), data_size);
+            data[i] = std::move(d);
+        }
+    }
+
+    inline void deserialize(const std::experimental::filesystem::path& p, classic_index& bf, classic_index_header& h = dummy_isih) {
+        std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+        deserialize(ifs, bf, h);
+    }
+
+    inline void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h = dummy_cisih) {
+        std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+        deserialize(ifs, data, h);
+    }
 
     template<class T>
-    void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p, const T& h);
+    void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p, const T& h) {
+        ofs.open(p.string(), std::ios::out | std::ios::binary);
+        header<T>::serialize(ofs, h);
+    }
+
     template<class T>
-    T deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p);
+    T deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p) {
+        ifs.open(p.string(), std::ios::in | std::ios::binary);
+        T h;
+        header<T>::deserialize(ifs, h);
+        return h;
+    }
 }
 
-#include "util.tpp"

@@ -2,15 +2,15 @@
 #include <iostream>
 #include <file/header.hpp>
 #include <experimental/filesystem>
-#include <file/util.hpp>
+#include "file/util.hpp"
 #include <isi/classic_index.hpp>
 
 
 namespace {
-    std::string out_dir = "test/out/file/";
-    std::string out_path_s = out_dir + "classic_index.g_sam";
-    std::string out_path_isi = out_dir + "classic_index.g_isi";
-    std::string out_path_cisi = out_dir + "compact_index.g_cisi";
+    std::experimental::filesystem::path out_dir("test/out/file");
+    std::experimental::filesystem::path out_path_s(out_dir.string() + "/classic_index.g_sam");
+    std::experimental::filesystem::path out_path_isi(out_dir.string() + "/classic_index.g_isi");
+    std::experimental::filesystem::path out_path_cisi(out_dir.string() + "/compact_index.g_cisi");
 
     class file : public ::testing::Test {
     protected:
