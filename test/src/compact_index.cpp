@@ -26,7 +26,7 @@ namespace {
         generate_test_case(samples, tmp_dir);
         size_t page_size = isi::get_page_size();
         isi::compact_index::create_folders(tmp_dir, in_dir, page_size);
-        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, page_size);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, page_size);
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::compact_index_header>(ifs, compact_index_path);
         isi::stream_metadata smd = isi::get_stream_metadata(ifs);
@@ -37,7 +37,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
         isi::file::compact_index_header h;
         isi::file::deserialize(compact_index_path, data, h);
@@ -51,7 +51,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_compact_index_from_samples(in_dir, 8, num_hashes, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, num_hashes, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
         auto h = isi::file::deserialize_header<isi::file::compact_index_header>(compact_index_path);
 
@@ -88,7 +88,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
         isi::file::compact_index_header h;
         isi::file::deserialize(compact_index_path, data, h);
@@ -122,7 +122,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_compact_index_from_samples(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> cisi_data;
         isi::file::deserialize(compact_index_path, cisi_data);
 

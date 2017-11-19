@@ -118,7 +118,7 @@ namespace isi::compact_index {
         }
     }
 
-    void create_compact_index_from_samples(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
+    void create_from_folders(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
                                                   double false_positive_probability, uint64_t page_size) {
         std::experimental::filesystem::path samples_dir = in_dir / std::experimental::filesystem::path("samples/");
         std::string bloom_dir = in_dir.string() +  "/bloom_";
@@ -133,6 +133,6 @@ namespace isi::compact_index {
     void create(const std::experimental::filesystem::path& in_dir, std::experimental::filesystem::path out_dir,
                        size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
         create_folders(in_dir, out_dir / std::experimental::filesystem::path("/samples"), page_size);
-        create_compact_index_from_samples(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
+        create_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
     }
 }
