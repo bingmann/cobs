@@ -97,7 +97,6 @@ namespace {
         ASSERT_EQ(h.file_names()[2], "sample_3");
     }
 
-
     TEST_F(classic_index, false_positive) {
         isi::classic_index::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 

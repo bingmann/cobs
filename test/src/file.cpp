@@ -3,7 +3,6 @@
 #include <file/header.hpp>
 #include <experimental/filesystem>
 #include "file/util.hpp"
-#include <isi/classic_index.hpp>
 
 
 namespace {

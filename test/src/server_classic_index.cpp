@@ -125,6 +125,7 @@ namespace {
             ASSERT_EQ(r.first, 1);
         }
     }
+
     TEST_F(server_classic_index, false_positive) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
