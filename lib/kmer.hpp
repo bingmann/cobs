@@ -12,76 +12,95 @@ namespace isi {
     public:
         static const size_t size = (N + 3) / 4;
     private:
-        static const std::map<unsigned int, uint8_t> m_bps_to_uint8_t;
-        static const std::map<uint8_t, std::string> m_uint8_t_to_bps;
+        static const std::unordered_map<unsigned int, uint8_t> m_bps_to_uint8_t;
+        static const std::array<std::string, 256> m_to_base_pairs;
         std::array<uint8_t, size> m_data;
+    public:
+        kmer();
+        explicit kmer(std::array<uint8_t, size> data);
+        void init(const char* chars);
+        const std::array<uint8_t, size>& data() const;
+        std::string string() const;
+        void print(std::ostream& ostream) const;
+        static void init(const char* chars, char* kmer_data, uint32_t kmer_size);
+        static uint32_t data_size(uint32_t kmer_size);
+    };
+}
 
-        static unsigned int chars_to_int(char c1, char c2, char c3, char c4){
+
+namespace isi{
+    namespace {
+        unsigned int chars_to_int(char c1, char c2, char c3, char c4) {
             unsigned int result = 0;
             return result + (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
         }
+    }
 
-    public:
-        kmer() {
-            static_assert(sizeof(kmer<N>) == kmer<N>::size);
-        }
+    template<unsigned int N>
+    kmer<N>::kmer() {
+        static_assert(sizeof(kmer<N>) == kmer<N>::size);
+    }
 
-        explicit kmer(std::array<uint8_t, size> data) : m_data(std::move(data)) {}
-        void init(const char* chars){
-            for (int i = N - 4; i >= -3; i -= 4) {
-                if (i >= 0) {
-                    m_data[(N - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
-                } else {
-                    char c2 = i < -1 ? 'A' : chars[i + 1];
-                    char c3 = i < -2 ? 'A' : chars[i + 2];
-                    m_data[m_data.size() - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
-                }
+    template<unsigned int N>
+    kmer<N>::kmer(std::array<uint8_t, size> data) : m_data(std::move(data)) {}
+
+    template<unsigned int N>
+    void kmer<N>::init(const char* chars){
+        for (int i = N - 4; i >= -3; i -= 4) {
+            if (i >= 0) {
+                m_data[(N - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
+            } else {
+                char c2 = i < -1 ? 'A' : chars[i + 1];
+                char c3 = i < -2 ? 'A' : chars[i + 2];
+                m_data[m_data.size() - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
             }
         }
-        const std::array<uint8_t, size>& data() const {
-            return m_data;
-        }
-        std::string string() const {
-            std::string result;
-//    for(size_t i = 0; i < m_data.size(); i++) {
-//        std::string uint8_t_string = m_uint8_t_to_bps.at(m_data[i]);
-//        if (i == 0 && N % 4 != 0) {
-//            uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
-//        }
-//        result += uint8_t_string;
-//    }
-            for (size_t i = 0; i < m_data.size(); i++) {
-                std::string uint8_t_string = m_uint8_t_to_bps.at(m_data[m_data.size() - i - 1]);
-                if (i == 0 && N % 4 != 0) {
-                    uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
-                }
-                result += uint8_t_string;
-            }
-            return result;
-        }
-        void print(std::ostream& ostream) const{
-            ostream << string();
-        }
+    }
 
-        static void init(const char* chars, char* kmer_data, uint32_t kmer_size) {
-            int kmer_size_int = kmer_size;
-            for (int i = kmer_size_int - 4; i >= -3; i -= 4) {
-                if (i >= 0) {
-                    kmer_data[(kmer_size_int - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
-                } else {
-                    char c2 = i < -1 ? 'A' : chars[i + 1];
-                    char c3 = i < -2 ? 'A' : chars[i + 2];
-                    kmer_data[data_size(kmer_size) - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
-                }
+    template<unsigned int N>
+    const std::array<uint8_t, kmer<N>::size>& kmer<N>::data() const {
+        return m_data;
+    }
+
+    template<unsigned int N>
+    std::string kmer<N>::string() const {
+        std::string result;
+        for (size_t i = 0; i < m_data.size(); i++) {
+            std::string uint8_t_string = m_to_base_pairs[m_data[m_data.size() - i - 1]];
+            if (i == 0 && N % 4 != 0) {
+                uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
+            }
+            result += uint8_t_string;
+        }
+        return result;
+    }
+
+    template<unsigned int N>
+    void kmer<N>::print(std::ostream& ostream) const{
+        ostream << string();
+    }
+
+    template<unsigned int N>
+    void kmer<N>::init(const char* chars, char* kmer_data, uint32_t kmer_size) {
+        int kmer_size_int = kmer_size;
+        for (int i = kmer_size_int - 4; i >= -3; i -= 4) {
+            if (i >= 0) {
+                kmer_data[(kmer_size_int - (i + 4)) / 4] = m_bps_to_uint8_t.at(*((uint32_t *) (chars + i)));
+            } else {
+                char c2 = i < -1 ? 'A' : chars[i + 1];
+                char c3 = i < -2 ? 'A' : chars[i + 2];
+                kmer_data[data_size(kmer_size) - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
             }
         }
-        static uint32_t data_size(uint32_t kmer_size) {
-            return (kmer_size + 3) / 4;
-        }
-    };
+    }
+
+    template<unsigned int N>
+    uint32_t kmer<N>::data_size(uint32_t kmer_size) {
+        return (kmer_size + 3) / 4;
+    }
 
 template<unsigned int N>
-const std::map<unsigned int, uint8_t> kmer<N>::m_bps_to_uint8_t = {
+const std::unordered_map<unsigned int, uint8_t> kmer<N>::m_bps_to_uint8_t = {
         {1094795585, 0}, {1128350017, 1}, {1195458881, 2}, {1413562689, 3}, {1094926657, 4},
         {1128481089, 5}, {1195589953, 6}, {1413693761, 7}, {1095188801, 8}, {1128743233, 9},
         {1195852097, 10}, {1413955905, 11}, {1096040769, 12}, {1129595201, 13}, {1196704065, 14},
@@ -136,37 +155,21 @@ const std::map<unsigned int, uint8_t> kmer<N>::m_bps_to_uint8_t = {
         {1414812756, 255} };
 
 template<unsigned int N>
-const std::map<uint8_t, std::string> kmer<N>::m_uint8_t_to_bps = {
-        {0, "AAAA"}, {1, "AAAC"}, {2, "AAAG"}, {3, "AAAT"}, {4, "AACA"}, {5, "AACC"}, {6, "AACG"}, {7, "AACT"},
-        {8, "AAGA"}, {9, "AAGC"}, {10, "AAGG"}, {11, "AAGT"}, {12, "AATA"}, {13, "AATC"}, {14, "AATG"}, {15, "AATT"},
-        {16, "ACAA"}, {17, "ACAC"}, {18, "ACAG"}, {19, "ACAT"}, {20, "ACCA"}, {21, "ACCC"}, {22, "ACCG"}, {23, "ACCT"},
-        {24, "ACGA"}, {25, "ACGC"}, {26, "ACGG"}, {27, "ACGT"}, {28, "ACTA"}, {29, "ACTC"}, {30, "ACTG"}, {31, "ACTT"},
-        {32, "AGAA"}, {33, "AGAC"}, {34, "AGAG"}, {35, "AGAT"}, {36, "AGCA"}, {37, "AGCC"}, {38, "AGCG"}, {39, "AGCT"},
-        {40, "AGGA"}, {41, "AGGC"}, {42, "AGGG"}, {43, "AGGT"}, {44, "AGTA"}, {45, "AGTC"}, {46, "AGTG"}, {47, "AGTT"},
-        {48, "ATAA"}, {49, "ATAC"}, {50, "ATAG"}, {51, "ATAT"}, {52, "ATCA"}, {53, "ATCC"}, {54, "ATCG"}, {55, "ATCT"},
-        {56, "ATGA"}, {57, "ATGC"}, {58, "ATGG"}, {59, "ATGT"}, {60, "ATTA"}, {61, "ATTC"}, {62, "ATTG"}, {63, "ATTT"},
-        {64, "CAAA"}, {65, "CAAC"}, {66, "CAAG"}, {67, "CAAT"}, {68, "CACA"}, {69, "CACC"}, {70, "CACG"}, {71, "CACT"},
-        {72, "CAGA"}, {73, "CAGC"}, {74, "CAGG"}, {75, "CAGT"}, {76, "CATA"}, {77, "CATC"}, {78, "CATG"}, {79, "CATT"},
-        {80, "CCAA"}, {81, "CCAC"}, {82, "CCAG"}, {83, "CCAT"}, {84, "CCCA"}, {85, "CCCC"}, {86, "CCCG"}, {87, "CCCT"},
-        {88, "CCGA"}, {89, "CCGC"}, {90, "CCGG"}, {91, "CCGT"}, {92, "CCTA"}, {93, "CCTC"}, {94, "CCTG"}, {95, "CCTT"},
-        {96, "CGAA"}, {97, "CGAC"}, {98, "CGAG"}, {99, "CGAT"}, {100, "CGCA"}, {101, "CGCC"}, {102, "CGCG"}, {103, "CGCT"},
-        {104, "CGGA"}, {105, "CGGC"}, {106, "CGGG"}, {107, "CGGT"}, {108, "CGTA"}, {109, "CGTC"}, {110, "CGTG"}, {111, "CGTT"},
-        {112, "CTAA"}, {113, "CTAC"}, {114, "CTAG"}, {115, "CTAT"}, {116, "CTCA"}, {117, "CTCC"}, {118, "CTCG"}, {119, "CTCT"},
-        {120, "CTGA"}, {121, "CTGC"}, {122, "CTGG"}, {123, "CTGT"}, {124, "CTTA"}, {125, "CTTC"}, {126, "CTTG"}, {127, "CTTT"},
-        {128, "GAAA"}, {129, "GAAC"}, {130, "GAAG"}, {131, "GAAT"}, {132, "GACA"}, {133, "GACC"}, {134, "GACG"}, {135, "GACT"},
-        {136, "GAGA"}, {137, "GAGC"}, {138, "GAGG"}, {139, "GAGT"}, {140, "GATA"}, {141, "GATC"}, {142, "GATG"}, {143, "GATT"},
-        {144, "GCAA"}, {145, "GCAC"}, {146, "GCAG"}, {147, "GCAT"}, {148, "GCCA"}, {149, "GCCC"}, {150, "GCCG"}, {151, "GCCT"},
-        {152, "GCGA"}, {153, "GCGC"}, {154, "GCGG"}, {155, "GCGT"}, {156, "GCTA"}, {157, "GCTC"}, {158, "GCTG"}, {159, "GCTT"},
-        {160, "GGAA"}, {161, "GGAC"}, {162, "GGAG"}, {163, "GGAT"}, {164, "GGCA"}, {165, "GGCC"}, {166, "GGCG"}, {167, "GGCT"},
-        {168, "GGGA"}, {169, "GGGC"}, {170, "GGGG"}, {171, "GGGT"}, {172, "GGTA"}, {173, "GGTC"}, {174, "GGTG"}, {175, "GGTT"},
-        {176, "GTAA"}, {177, "GTAC"}, {178, "GTAG"}, {179, "GTAT"}, {180, "GTCA"}, {181, "GTCC"}, {182, "GTCG"}, {183, "GTCT"},
-        {184, "GTGA"}, {185, "GTGC"}, {186, "GTGG"}, {187, "GTGT"}, {188, "GTTA"}, {189, "GTTC"}, {190, "GTTG"}, {191, "GTTT"},
-        {192, "TAAA"}, {193, "TAAC"}, {194, "TAAG"}, {195, "TAAT"}, {196, "TACA"}, {197, "TACC"}, {198, "TACG"}, {199, "TACT"},
-        {200, "TAGA"}, {201, "TAGC"}, {202, "TAGG"}, {203, "TAGT"}, {204, "TATA"}, {205, "TATC"}, {206, "TATG"}, {207, "TATT"},
-        {208, "TCAA"}, {209, "TCAC"}, {210, "TCAG"}, {211, "TCAT"}, {212, "TCCA"}, {213, "TCCC"}, {214, "TCCG"}, {215, "TCCT"},
-        {216, "TCGA"}, {217, "TCGC"}, {218, "TCGG"}, {219, "TCGT"}, {220, "TCTA"}, {221, "TCTC"}, {222, "TCTG"}, {223, "TCTT"},
-        {224, "TGAA"}, {225, "TGAC"}, {226, "TGAG"}, {227, "TGAT"}, {228, "TGCA"}, {229, "TGCC"}, {230, "TGCG"}, {231, "TGCT"},
-        {232, "TGGA"}, {233, "TGGC"}, {234, "TGGG"}, {235, "TGGT"}, {236, "TGTA"}, {237, "TGTC"}, {238, "TGTG"}, {239, "TGTT"},
-        {240, "TTAA"}, {241, "TTAC"}, {242, "TTAG"}, {243, "TTAT"}, {244, "TTCA"}, {245, "TTCC"}, {246, "TTCG"}, {247, "TTCT"},
-        {248, "TTGA"}, {249, "TTGC"}, {250, "TTGG"}, {251, "TTGT"}, {252, "TTTA"}, {253, "TTTC"}, {254, "TTTG"}, {255, "TTTT"}};
+const std::array<std::string, 256> kmer<N>::m_to_base_pairs = {
+        "AAAA", "AAAC", "AAAG", "AAAT", "AACA", "AACC", "AACG", "AACT", "AAGA", "AAGC", "AAGG", "AAGT", "AATA", "AATC", "AATG", "AATT",
+        "ACAA", "ACAC", "ACAG", "ACAT", "ACCA", "ACCC", "ACCG", "ACCT", "ACGA", "ACGC", "ACGG", "ACGT", "ACTA", "ACTC", "ACTG", "ACTT",
+        "AGAA", "AGAC", "AGAG", "AGAT", "AGCA", "AGCC", "AGCG", "AGCT", "AGGA", "AGGC", "AGGG", "AGGT", "AGTA", "AGTC", "AGTG", "AGTT",
+        "ATAA", "ATAC", "ATAG", "ATAT", "ATCA", "ATCC", "ATCG", "ATCT", "ATGA", "ATGC", "ATGG", "ATGT", "ATTA", "ATTC", "ATTG", "ATTT",
+        "CAAA", "CAAC", "CAAG", "CAAT", "CACA", "CACC", "CACG", "CACT", "CAGA", "CAGC", "CAGG", "CAGT", "CATA", "CATC", "CATG", "CATT",
+        "CCAA", "CCAC", "CCAG", "CCAT", "CCCA", "CCCC", "CCCG", "CCCT", "CCGA", "CCGC", "CCGG", "CCGT", "CCTA", "CCTC", "CCTG", "CCTT",
+        "CGAA", "CGAC", "CGAG", "CGAT", "CGCA", "CGCC", "CGCG", "CGCT", "CGGA", "CGGC", "CGGG", "CGGT", "CGTA", "CGTC", "CGTG", "CGTT",
+        "CTAA", "CTAC", "CTAG", "CTAT", "CTCA", "CTCC", "CTCG", "CTCT", "CTGA", "CTGC", "CTGG", "CTGT", "CTTA", "CTTC", "CTTG", "CTTT",
+        "GAAA", "GAAC", "GAAG", "GAAT", "GACA", "GACC", "GACG", "GACT", "GAGA", "GAGC", "GAGG", "GAGT", "GATA", "GATC", "GATG", "GATT",
+        "GCAA", "GCAC", "GCAG", "GCAT", "GCCA", "GCCC", "GCCG", "GCCT", "GCGA", "GCGC", "GCGG", "GCGT", "GCTA", "GCTC", "GCTG", "GCTT",
+        "GGAA", "GGAC", "GGAG", "GGAT", "GGCA", "GGCC", "GGCG", "GGCT", "GGGA", "GGGC", "GGGG", "GGGT", "GGTA", "GGTC", "GGTG", "GGTT",
+        "GTAA", "GTAC", "GTAG", "GTAT", "GTCA", "GTCC", "GTCG", "GTCT", "GTGA", "GTGC", "GTGG", "GTGT", "GTTA", "GTTC", "GTTG", "GTTT",
+        "TAAA", "TAAC", "TAAG", "TAAT", "TACA", "TACC", "TACG", "TACT", "TAGA", "TAGC", "TAGG", "TAGT", "TATA", "TATC", "TATG", "TATT",
+        "TCAA", "TCAC", "TCAG", "TCAT", "TCCA", "TCCC", "TCCG", "TCCT", "TCGA", "TCGC", "TCGG", "TCGT", "TCTA", "TCTC", "TCTG", "TCTT",
+        "TGAA", "TGAC", "TGAG", "TGAT", "TGCA", "TGCC", "TGCG", "TGCT", "TGGA", "TGGC", "TGGG", "TGGT", "TGTA", "TGTC", "TGTG", "TGTT",
+        "TTAA", "TTAC", "TTAG", "TTAT", "TTCA", "TTCC", "TTCG", "TTCT", "TTGA", "TTGC", "TTGG", "TTGT", "TTTA", "TTTC", "TTTG", "TTTT"};
 }

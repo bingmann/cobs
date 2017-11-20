@@ -3,7 +3,7 @@ cmake_policy(VERSION 3.9.6)
 
 project(thesis)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wno-unused-function -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
 
 file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/lib/*")
 file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
