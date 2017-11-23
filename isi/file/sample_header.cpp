@@ -1,10 +1,10 @@
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 #include <isi/file/sample_header.hpp>
 
 
 namespace isi::file {
     const std::string sample_header::magic_word = "SAMPLE";
-    const std::string sample_header::file_extension = ".g_sam";
+    const std::string sample_header::file_extension = ".sam.isi";
 
     void sample_header::serialize(std::ofstream& ofs) const {
         isi::serialize(ofs, m_kmer_size);

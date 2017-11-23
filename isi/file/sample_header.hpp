@@ -6,6 +6,7 @@ namespace isi::file {
     class sample_header : public header<sample_header> {
     private:
         uint32_t m_kmer_size;
+        std::string m_name;
     protected:
         void serialize(std::ofstream& ofs) const override;
         void deserialize(std::ifstream& ifs) override;

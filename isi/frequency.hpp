@@ -3,7 +3,7 @@
 #include <isi/timer.hpp>
 #include <isi/file/sample_header.hpp>
 #include <isi/file/frequency_header.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 #include <isi/util.hpp>
 
 #include <experimental/filesystem>
@@ -20,7 +20,6 @@ namespace isi::frequency {
 
     public:
         explicit pq_element(std::ifstream* ifs);
-        static std::string file_extension();
         static void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p);
         static void deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p);
         static bool comp(const pq_element& bs1, const pq_element& bs2);
@@ -49,11 +48,6 @@ namespace isi::frequency {
     template<typename H>
     pq_element<H>::pq_element(std::ifstream* ifs) : m_ifs(ifs) {
         ifs->read(reinterpret_cast<char*>(&m_kmer), 8);
-    }
-
-    template<typename H>
-    std::string pq_element<H>::file_extension() {
-        return H::file_extension;
     }
 
     template<typename H>
@@ -142,12 +136,12 @@ namespace isi::frequency {
         }
     }
 
-    template<typename PqElement>
+    template<typename H, typename PqElement>
     void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
         timer t;
         t.active("process");
         std::vector<std::ifstream> ifstreams;
-        bulk_process_files(in_dir, out_dir, batch_size, PqElement::file_extension(), file::frequency_header::file_extension,
+        bulk_process_files<H>(in_dir, out_dir, batch_size, isi::file::frequency_header::file_extension,
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                for (const auto& p: paths) {
                                    ifstreams.emplace_back(std::ifstream());

@@ -86,7 +86,7 @@ void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
 }
 
 int main() {
-    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 
     uint64_t end_pos;
     {

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <isi/timer.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 #include <numeric>
 #include <immintrin.h>
 #include <xxhash.h>

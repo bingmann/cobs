@@ -46,7 +46,7 @@ void server() {
     std::vector<std::pair<uint16_t, std::string>> result_1;
     std::vector<std::pair<uint16_t, std::string>> result_2;
     std::vector<std::pair<uint16_t, std::string>> result_3;
-    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 
     isi::query::classic_index::mmap s_mmap(p);
     isi::query::classic_index::ifs s_ifs(p);
@@ -58,7 +58,7 @@ void server() {
 }
 
 int main() {
-//    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
+//    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 //    std::ifstream ifs("/Users/flo/freq.txt");
 //    std::ofstream ofs("/Users/flo/freq_sum_2.txt");
 //    std::string line;

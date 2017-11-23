@@ -5,35 +5,32 @@
 
 #include <isi/sample.hpp>
 #include <isi/kmer.hpp>
-#include <isi/construction/classic_index.hpp>
-#include <isi/util.hpp>
+#include <isi/construction/classic_index_construction.hpp>
 #include <isi/file/sample_header.hpp>
-#include <isi/file/frequency_header.hpp>
-#include <isi/file/util.hpp>
 
 namespace {
-    std::experimental::filesystem::path in_dir_1("test/resources/classic_index/input_1/");
-    std::experimental::filesystem::path in_dir_2("test/resources/classic_index/input_2/");
-    std::experimental::filesystem::path in_dir_3("test/resources/classic_index/input_3/");
-    std::experimental::filesystem::path out_dir("test/out/classic_index/");
-    std::experimental::filesystem::path out_file_1(out_dir.string() + "[sample_1-sample_3].g_isi");
-    std::experimental::filesystem::path out_file_2(out_dir.string() + "[sample_4-sample_4].g_isi");
-    std::experimental::filesystem::path out_file_3(out_dir.string() + "[sample_1-sample_9].g_isi");
-    std::experimental::filesystem::path out_file_4(out_dir.string() + "[sample_9-sample_9].g_isi");
-    std::experimental::filesystem::path out_file_5(out_dir.string() + "[sample_1-sample_8].g_isi");
-    std::experimental::filesystem::path out_file_6(out_dir.string() + "[[sample_1-sample_8]-[sample_9-sample_9]].g_isi");
-    std::experimental::filesystem::path out_file_7(out_dir.string() + "[[[sample_1-sample_3]-[sample_4-sample_4]]-[[sample_9-sample_9]-[sample_9-sample_9]]].g_isi");
-    std::experimental::filesystem::path sample_1(in_dir_1.string() + "sample_1.g_sam");
-    std::experimental::filesystem::path sample_2(in_dir_1.string() + "sample_2.g_sam");
-    std::experimental::filesystem::path sample_3(in_dir_1.string() + "sample_3.g_sam");
-    std::experimental::filesystem::path sample_4(in_dir_2.string() + "sample_4.g_sam");
-    std::experimental::filesystem::path sample_8(in_dir_3.string() + "sample_8.g_sam");
-    std::experimental::filesystem::path sample_9(in_dir_3.string() + "sample_9.g_sam");
+    std::experimental::filesystem::path in_dir_1("test/resources/classic_index_construction/input_1/");
+    std::experimental::filesystem::path in_dir_2("test/resources/classic_index_construction/input_2/");
+    std::experimental::filesystem::path in_dir_3("test/resources/classic_index_construction/input_3/");
+    std::experimental::filesystem::path out_dir("test/out/classic_index_construction/");
+    std::experimental::filesystem::path out_file_1(out_dir.string() + "[sample_1-sample_3].cla_idx.isi");
+    std::experimental::filesystem::path out_file_2(out_dir.string() + "[sample_4-sample_4].cla_idx.isi");
+    std::experimental::filesystem::path out_file_3(out_dir.string() + "[sample_1-sample_9].cla_idx.isi");
+    std::experimental::filesystem::path out_file_4(out_dir.string() + "[sample_9-sample_9].cla_idx.isi");
+    std::experimental::filesystem::path out_file_5(out_dir.string() + "[sample_1-sample_8].cla_idx.isi");
+    std::experimental::filesystem::path out_file_6(out_dir.string() + "[[sample_1-sample_8]-[sample_9-sample_9]].cla_idx.isi");
+    std::experimental::filesystem::path out_file_7(out_dir.string() + "[[[sample_1-sample_3]-[sample_4-sample_4]]-[[sample_9-sample_9]-[sample_9-sample_9]]].cla_idx.isi");
+    std::experimental::filesystem::path sample_1(in_dir_1.string() + "sample_1.sam.isi");
+    std::experimental::filesystem::path sample_2(in_dir_1.string() + "sample_2.sam.isi");
+    std::experimental::filesystem::path sample_3(in_dir_1.string() + "sample_3.sam.isi");
+    std::experimental::filesystem::path sample_4(in_dir_2.string() + "sample_4.sam.isi");
+    std::experimental::filesystem::path sample_8(in_dir_3.string() + "sample_8.sam.isi");
+    std::experimental::filesystem::path sample_9(in_dir_3.string() + "sample_9.sam.isi");
     size_t signature_size = 200000;
     size_t block_size = 1;
     size_t num_hashes = 7;
 
-    class classic_index : public ::testing::Test {
+    class classic_index_construction : public ::testing::Test {
     protected:
         virtual void SetUp() {
             std::error_code ec;
@@ -57,7 +54,7 @@ namespace {
         return true;
     }
 
-    TEST_F(classic_index, contains) {
+    TEST_F(classic_index_construction, contains) {
         isi::classic_index::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -81,7 +78,7 @@ namespace {
         }
     }
 
-    TEST_F(classic_index, file_names) {
+    TEST_F(classic_index_construction, file_names) {
         isi::classic_index::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -98,7 +95,7 @@ namespace {
         ASSERT_EQ(h.file_names()[2], "sample_3");
     }
 
-    TEST_F(classic_index, false_positive) {
+    TEST_F(classic_index_construction, false_positive) {
         isi::classic_index::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -118,7 +115,7 @@ namespace {
         ASSERT_EQ(num_positive, 945U);
     }
 
-    TEST_F(classic_index, equal_ones_and_zeros) {
+    TEST_F(classic_index_construction, equal_ones_and_zeros) {
         isi::classic_index::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -134,7 +131,7 @@ namespace {
         ASSERT_EQ(ones, 102266U);
     }
 
-    TEST_F(classic_index, others_zero) {
+    TEST_F(classic_index_construction, others_zero) {
         isi::classic_index::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -149,7 +146,7 @@ namespace {
         }
     }
 
-    TEST_F(classic_index, contains_big_isi) {
+    TEST_F(classic_index_construction, contains_big_isi) {
         isi::classic_index::create_from_samples(in_dir_3, out_dir, signature_size, 2, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -163,7 +160,7 @@ namespace {
         }
     }
 
-    TEST_F(classic_index, two_outputs) {
+    TEST_F(classic_index_construction, two_outputs) {
         isi::classic_index::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
 
         std::vector<uint8_t> isi;
@@ -177,7 +174,7 @@ namespace {
         }
     }
 
-    TEST_F(classic_index, multi_level_1) {
+    TEST_F(classic_index_construction, multi_level_1) {
         isi::classic_index::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);
         isi::classic_index::combine(out_dir, out_dir, signature_size, num_hashes, 2);
 
@@ -194,7 +191,7 @@ namespace {
         }
     }
 
-    TEST_F(classic_index, multi_level_2) {
+    TEST_F(classic_index_construction, multi_level_2) {
         isi::classic_index::create_from_samples(in_dir_1, out_dir, signature_size, block_size, num_hashes);
         isi::classic_index::create_from_samples(in_dir_2, out_dir, signature_size, block_size, num_hashes);
         isi::classic_index::create_from_samples(in_dir_3, out_dir, signature_size, block_size, num_hashes);

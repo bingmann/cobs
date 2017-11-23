@@ -1,14 +1,14 @@
 #pragma once
 
+#include <experimental/filesystem>
+#include <algorithm>
+#include <iostream>
+
 #include <isi/sample.hpp>
-#include <isi/util.hpp>
 #include <isi/file/classic_index_header.hpp>
 #include <isi/file/sample_header.hpp>
 #include <isi/file/compact_index_header.hpp>
 #include <isi/file/frequency_header.hpp>
-#include <isi/file/util.hpp>
-
-#include <experimental/filesystem>
 
 namespace isi::file {
     static sample_header dummy_sh;
@@ -111,6 +111,26 @@ namespace isi::file {
     T deserialize_header(const std::experimental::filesystem::path& p) {
         std::ifstream ifs;
         return deserialize_header<T>(ifs, p);
+    }
+
+    template<class T>
+    bool file_is(const std::experimental::filesystem::path& p) {
+        try {
+            deserialize_header<T>(p);
+            return true;
+        } catch (file_io_exception& /*e*/) {
+            return false;
+        }
+    }
+
+    inline std::string file_name(const std::experimental::filesystem::path& p) {
+        std::string result = p.filename();
+        auto comp = [](char c){
+            return c == '.';
+        };
+        auto iter = std::find_if(result.rbegin(), result.rend(), comp) + 1;
+        iter = std::find_if(iter, result.rend(), comp) + 1;
+        return result.substr(0, std::distance(iter, result.rend()));
     }
 }
 

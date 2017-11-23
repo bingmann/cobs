@@ -1,9 +1,9 @@
 #include <isi/file/classic_index_header.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 
 namespace isi::file {
-    const std::string classic_index_header::magic_word = "ISI";
-    const std::string classic_index_header::file_extension = ".g_isi";
+    const std::string classic_index_header::magic_word = "CLASSIC_INDEX";
+    const std::string classic_index_header::file_extension = ".cla_idx.isi";
 
     void classic_index_header::serialize(std::ofstream& ofs) const {
         isi::serialize(ofs, (uint32_t) m_file_names.size(), m_signature_size, m_block_size, m_num_hashes);

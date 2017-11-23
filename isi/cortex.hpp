@@ -6,7 +6,7 @@
 
 #include <isi/sample.hpp>
 #include <isi/timer.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 
 namespace isi::cortex {
     struct header {
@@ -14,6 +14,7 @@ namespace isi::cortex {
         uint32_t kmer_size;
         uint32_t num_words_per_kmer;
         uint32_t num_colors;
+        std::string name;
     };
 
     std::vector<char> v;
@@ -46,9 +47,11 @@ namespace isi::cortex {
         h.num_words_per_kmer = cast<uint32_t>(iter);
         std::advance(iter, 4);
         h.num_colors = cast<uint32_t>(iter);
+        assert(h.num_colors == 1);
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
             auto sample_name_length = cast<uint32_t>(iter);
+            std::copy(iter, iter + sample_name_length, std::back_inserter(h.name));
             std::advance(iter, 4 + sample_name_length);
         }
         std::advance(iter, 16 * h.num_colors);
@@ -88,6 +91,7 @@ namespace isi::cortex {
             s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
             read_sample(iter, v.end(), h, s);
+            //todo assign name to sample
             t.active("write");
             file::serialize(out_path, s);
         }

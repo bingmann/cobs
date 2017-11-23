@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include <isi/util.hpp>
-#include <isi/construction/classic_index.hpp>
+#include <isi/construction/classic_index_construction.hpp>
 #include <xxhash.h>
+#include <isi/util/parameters.hpp>
 
 namespace {
     size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {

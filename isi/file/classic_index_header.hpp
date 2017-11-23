@@ -1,9 +1,6 @@
 #pragma once
 
-#include <fstream>
 #include <isi/file/header.hpp>
-#include <string>
-#include <vector>
 
 namespace isi::file {
     class classic_index_header : public header<classic_index_header> {

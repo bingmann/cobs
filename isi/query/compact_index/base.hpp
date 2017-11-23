@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <isi/query/base.hpp>
 #include <isi/file/compact_index_header.hpp>
 

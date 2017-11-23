@@ -1,5 +1,5 @@
 #include <isi/query/classic_index/mmap.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 #include <isi/query/util.hpp>
 #include <cstring>
 

@@ -2,8 +2,11 @@
 
 #include <string>
 #include <ostream>
-#include <isi/util.hpp>
 #include <vector>
+
+#include <isi/util/serialization.hpp>
+#include <isi/util/error_handling.hpp>
+#include <isi/file/file_io_exception.hpp>
 
 namespace isi::file {
     template<class T>
@@ -32,8 +35,8 @@ namespace isi::file {
             std::vector<char> mw_v(magic_word.size(), ' ');
             ifs.read(mw_v.data(), magic_word.size());
             std::string mw(mw_v.data(), mw_v.size());
-            assert(ifs.good());
-            assert_exit(mw == magic_word, "invalid file type");
+            assert_throw<file_io_exception>(mw == magic_word, "invalid file type");
+            assert_throw<file_io_exception>(ifs.good(), "input filestream broken");
         }
     }
 
@@ -50,7 +53,7 @@ namespace isi::file {
         check_magic_word(ifs, magic_word);
         uint32_t v;
         isi::deserialize(ifs, v);
-        assert_exit(v == m_version, "invalid file version");
+        assert_throw<file_io_exception>(v == m_version, "invalid file version");
         h.deserialize(ifs);
         check_magic_word(ifs, T::magic_word);
     }

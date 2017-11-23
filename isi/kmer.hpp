@@ -2,9 +2,10 @@
 
 #include <array>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <ostream>
-#include <isi/util.hpp>
+
+#include <isi/util/misc.hpp>
 
 namespace isi {
     template<unsigned int N>

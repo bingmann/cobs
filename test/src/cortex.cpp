@@ -3,15 +3,15 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <isi/util.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 
 
 namespace {
     std::string in_dir = "test/resources/cortex/input/";
     std::string out_dir = "test/out/cortex/";
     std::string in_path = in_dir + "sample.ctx";
-    std::string out_path = out_dir + "sample.g_sam";
-    std::string out_path_rec = out_dir + "sample_rec.g_sam";
+    std::string out_path = out_dir + "sample.sam.isi";
+    std::string out_path_rec = out_dir + "sample_rec.sam.isi";
     std::string sample_path = "test/resources/cortex/result/sample_sorted.txt";
 
     template<unsigned int N>

@@ -2,12 +2,13 @@
 #include <isi/query/classic_index/mmap.hpp>
 #include <iostream>
 #include "test_util.hpp"
+#include <isi/util/parameters.hpp>
 
 
 namespace {
     std::experimental::filesystem::path in_dir("test/out/classic_index_query/input");
     std::experimental::filesystem::path tmp_dir("test/out/classic_index_query/tmp");
-    std::experimental::filesystem::path index_path(in_dir.string() + "/index.g_isi");
+    std::experimental::filesystem::path index_path(in_dir.string() + "/index.cla_idx.isi");
     std::string query = isi::random_sequence(50000, 2);
 
     class classic_index_query : public ::testing::Test {

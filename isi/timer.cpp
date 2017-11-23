@@ -1,5 +1,6 @@
 #include <isi/timer.hpp>
 
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 

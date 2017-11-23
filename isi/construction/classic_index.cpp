@@ -4,9 +4,9 @@
 #include <fstream>
 
 #include <isi/util.hpp>
-#include <isi/file/util.hpp>
+#include <isi/util/file.hpp>
 #include <isi/timer.hpp>
-#include <isi/construction/classic_index.hpp>
+#include <isi/construction/classic_index_construction.hpp>
 #include <isi/kmer.hpp>
 
 namespace isi::classic_index {
@@ -41,9 +41,7 @@ namespace isi::classic_index {
             }
             t.active("write");
             h.file_names().resize(paths.size());
-            std::transform(paths.begin(), paths.end(), h.file_names().begin(), [](const auto& p) {
-                return p.stem().string();
-            });
+            std::transform(paths.begin(), paths.end(), h.file_names().begin(), isi::file::file_name);
             file::serialize(out_file, data, h);
             t.stop();
         }
@@ -74,7 +72,7 @@ namespace isi::classic_index {
         timer t;
         isi::file::classic_index_header h(signature_size, block_size, num_hashes);
         std::vector<uint8_t> data(signature_size * block_size);
-        bulk_process_files(in_dir, out_dir, 8 * block_size, file::sample_header::file_extension, file::classic_index_header::file_extension,
+        bulk_process_files<file::sample_header>(in_dir, out_dir, 8 * block_size, file::classic_index_header::file_extension,
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                process(paths, out_file, data, h, t);
                                std::fill(data.begin(), data.end(), 0);
@@ -89,7 +87,7 @@ namespace isi::classic_index {
         std::vector<std::pair<std::ifstream, size_t>> ifstreams;
         std::vector<std::string> file_names;
         bool all_combined =
-                bulk_process_files(in_dir, out_dir, batch_size, file::classic_index_header::file_extension, file::classic_index_header::file_extension,
+                bulk_process_files<file::classic_index_header>(in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
                                    [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                        size_t new_block_size = 0;
                                        for (size_t i = 0; i < paths.size(); i++) {
@@ -129,7 +127,7 @@ namespace isi::classic_index {
 
         std::experimental::filesystem::path index;
         for (std::experimental::filesystem::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
-            if (sub_it->path().extension() == isi::file::classic_index_header::file_extension) {
+            if (isi::file::file_is<isi::file::classic_index_header>(sub_it->path())) {
                 index = sub_it->path();
             }
         }

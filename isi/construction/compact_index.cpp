@@ -1,11 +1,12 @@
-#include <isi/construction/compact_index.hpp>
+#include <isi/construction/compact_index_construction.hpp>
+#include <isi/util/parameters.hpp>
 
 namespace isi::compact_index {
     void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == isi::file::sample_header::file_extension;
+            return std::experimental::filesystem::is_regular_file(p) && isi::file::file_is<isi::file::sample_header>(p);
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
             return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
@@ -38,7 +39,7 @@ namespace isi::compact_index {
             size_t num_files = 0;
             size_t max_file_size = 0;
             for (std::experimental::filesystem::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
-                if (sub_it->path().extension() == isi::file::sample_header::file_extension) {
+                if (isi::file::file_is<isi::file::sample_header>(sub_it->path())) {
                     max_file_size = std::max(max_file_size, std::experimental::filesystem::file_size(sub_it->path()));
                     num_files++;
                 }
@@ -63,7 +64,7 @@ namespace isi::compact_index {
                 size_t signature_size = 0;
                 size_t num_hashes = 0;
                 for (std::experimental::filesystem::directory_iterator bloom_it(it->path()); bloom_it != end; bloom_it++) {
-                    if (bloom_it->path().extension() == isi::file::classic_index_header::file_extension) {
+                    if (isi::file::file_is<isi::file::classic_index_header>(bloom_it->path())) {
                         auto h = file::deserialize_header<file::classic_index_header>(bloom_it->path());
                         signature_size = h.signature_size();
                         num_hashes = h.num_hashes();
@@ -86,7 +87,7 @@ namespace isi::compact_index {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && p.path().extension() == isi::file::classic_index_header::file_extension;
+            return std::experimental::filesystem::is_regular_file(p) && isi::file::file_is<isi::file::classic_index_header>(p);
         });
         std::sort(paths.begin(), paths.end());
 

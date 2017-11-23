@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <isi/file/header.hpp>
 
 namespace isi::file {

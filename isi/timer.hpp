@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 #include <unordered_map>
-#include <isi/util.hpp>
+#include <isi/util/misc.hpp>
 
 namespace isi {
     class timer {

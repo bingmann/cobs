@@ -1,8 +1,8 @@
 #include <isi/file/compact_index_header.hpp>
 
 namespace isi::file {
-    const std::string compact_index_header::magic_word = "CISI";
-    const std::string compact_index_header::file_extension = ".g_cisi";
+    const std::string compact_index_header::magic_word = "COMPACT_INDEX";
+    const std::string compact_index_header::file_extension = ".com_idx.isi";
 
     size_t compact_index_header::padding_size(uint64_t curr_stream_pos) const {
         return (m_page_size - ((curr_stream_pos + compact_index_header::magic_word.size()) % m_page_size)) % m_page_size;
