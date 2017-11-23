@@ -1,0 +1,61 @@
+# Travis-CI build script for isi
+
+language: cpp
+
+sudo: false
+dist: trusty
+
+matrix:
+  include:
+    # gcc 7.x, Debug with -O1
+    - env: CMAKE_CC="gcc-7" CMAKE_CXX="g++-7" BUILD_TYPE="Debug" COMPILER_FLAGS="-O1"
+      os: linux
+      addons: &gcc7
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - libbz2-dev
+
+    - env: CMAKE_CC="gcc-7" CMAKE_CXX="g++-7" BUILD_TYPE="Release" COMPILER_FLAGS=""
+      os: linux
+      addons: *gcc7
+
+    # clang 3.7 without AddressSanitizer, Debug & Release
+    - env: CMAKE_CC="clang-3.7" CMAKE_CXX="clang++-3.7" BUILD_TYPE="Debug" COMPILER_FLAGS=""
+      os: linux
+      addons: &clang37
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+            - george-edison55-precise-backports # doxygen 1.8.3
+          packages:
+            - clang-3.7
+            - libbz2-dev
+
+    # clang 3.7 without AddressSanitizer (there are some system-dependent LeakSanitizer errors)
+    - env: CMAKE_CC="clang-3.7" CMAKE_CXX="clang++-3.7" BUILD_TYPE="Release" COMPILER_FLAGS=""
+      os: linux
+      addons: *clang37
+
+before_script:
+
+  # print out some version numbers
+  - $CMAKE_CXX --version
+  - cmake --version
+
+  # configure
+  - mkdir build; cd build
+  - cmake
+      -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+      -DCMAKE_C_COMPILER="$CMAKE_CC" -DCMAKE_CXX_COMPILER="$CMAKE_CXX"
+      -DCMAKE_C_FLAGS="$COMPILER_FLAGS" -DCMAKE_CXX_FLAGS="$COMPILER_FLAGS"
+      $CMAKE_ARGS ..
+
+script:
+  - ctest
+      -DCTEST_SITE:STRING="travis-$TRAVIS_REPO_SLUG"
+      -DCTEST_BUILD_NAME:STRING="$TRAVIS_OS_NAME-$CMAKE_CC-$BUILD_TYPE"
+      -VV
