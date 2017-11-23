@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <cortex.hpp>
+#include <isi/cortex.hpp>
 #include <iostream>
 #include <experimental/filesystem>
-#include <util.hpp>
-#include <file/util.hpp>
+#include <isi/util.hpp>
+#include <isi/file/util.hpp>
 
 
 namespace {

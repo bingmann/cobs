@@ -4,8 +4,8 @@
 #include <fstream>
 #include <vector>
 #include <gtest/gtest.h>
-#include <server/compact_index/mmap.hpp>
-#include <isi/compact_index.hpp>
+#include <isi/query/compact_index/mmap.hpp>
+#include <isi/construction/compact_index.hpp>
 
 inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     std::ifstream ifs1(f1, std::ios::in | std::ios::binary);

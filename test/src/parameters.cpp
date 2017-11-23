@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <util.hpp>
-#include <isi/classic_index.hpp>
+#include <isi/util.hpp>
+#include <isi/construction/classic_index.hpp>
 #include <xxhash.h>
 
 namespace {

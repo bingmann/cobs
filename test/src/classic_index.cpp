@@ -1,14 +1,15 @@
 #include <gtest/gtest.h>
-#include <sample.hpp>
-#include <kmer.hpp>
-#include <isi/classic_index.hpp>
+#include <xxhash.h>
 #include <iostream>
 #include <experimental/filesystem>
-#include <util.hpp>
-#include <file/sample_header.hpp>
-#include <file/frequency_header.hpp>
-#include <file/util.hpp>
-#include <xxhash.h>
+
+#include <isi/sample.hpp>
+#include <isi/kmer.hpp>
+#include <isi/construction/classic_index.hpp>
+#include <isi/util.hpp>
+#include <isi/file/sample_header.hpp>
+#include <isi/file/frequency_header.hpp>
+#include <isi/file/util.hpp>
 
 namespace {
     std::experimental::filesystem::path in_dir_1("test/resources/classic_index/input_1/");

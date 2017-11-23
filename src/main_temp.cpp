@@ -30,7 +30,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     }
 }
 
-void run(isi::server::classic_index::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
+void run(isi::query::classic_index::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string>>& result) {
     sync();
     isi::timer t;
     t.active("total");
@@ -48,9 +48,9 @@ void server() {
     std::vector<std::pair<uint16_t, std::string>> result_3;
     std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.g_isi");
 
-    isi::server::classic_index::mmap s_mmap(p);
-    isi::server::classic_index::ifs s_ifs(p);
-//    isi::server::classic_index::asio s_asio(p);
+    isi::query::classic_index::mmap s_mmap(p);
+    isi::query::classic_index::ifs s_ifs(p);
+//    isi::query::classic_index::asio s_asio(p);
     size_t query_len = 1000;
 //    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);

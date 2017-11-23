@@ -2,8 +2,9 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <fstream>
-#include <frequency.hpp>
 #include "test_util.hpp"
+
+#include <isi/frequency.hpp>
 
 namespace {
 

@@ -5,7 +5,7 @@ project(thesis)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wno-unused-function -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
 
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/lib/*")
+file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/isi/*")
 file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
 file(GLOB_RECURSE EXECUTABLE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
@@ -15,7 +15,7 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
-include_directories(lib/ ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
+include_directories(${PROJECT_SOURCE_DIR} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
 
 if(libstdc++fs)
     add_library(stdc++fs UNKNOWN IMPORTED)
