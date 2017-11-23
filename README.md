@@ -1,1 +1,1 @@
-# An Inverted Signature Index for Approximate Search on Genomic Data
+# An (I)nverted (S)ignature (I)ndex (isi, pronounced easy) for Approximate Search on Genomic Data
