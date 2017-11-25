@@ -5,7 +5,7 @@
 
 #include <isi/sample.hpp>
 #include <isi/kmer.hpp>
-#include <isi/construction/classic_index_construction.hpp>
+#include <isi/construction/classic_index.hpp>
 #include <isi/file/sample_header.hpp>
 
 namespace {

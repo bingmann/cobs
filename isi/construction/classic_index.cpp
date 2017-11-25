@@ -6,7 +6,7 @@
 #include <isi/util/processing.hpp>
 #include <isi/util/file.hpp>
 #include <isi/timer.hpp>
-#include <isi/construction/classic_index_construction.hpp>
+#include <isi/construction/classic_index.hpp>
 #include <isi/kmer.hpp>
 
 namespace isi::classic_index {

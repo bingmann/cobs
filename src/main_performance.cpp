@@ -1,8 +1,8 @@
-#include <cortex.hpp>
+#include <isi/cortex.hpp>
 #include <immintrin.h>
 #include <numeric>
-#include <stxxl/aligned_alloc>
 #include <cstddef>
+#include <isi/construction/classic_index.hpp>
 
 void sample() {
     isi::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");

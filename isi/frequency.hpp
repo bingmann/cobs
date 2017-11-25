@@ -38,7 +38,7 @@ namespace isi::frequency {
         explicit fre_pq_element(std::ifstream* ifs);
     };
 
-    template<typename PqElement>
+    template<typename H, typename PQE = typename std::conditional<std::is_same<H, file::sample_header>::value, bin_pq_element, fre_pq_element>::type>
     void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size);
     inline void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file);
 }
@@ -136,7 +136,7 @@ namespace isi::frequency {
         }
     }
 
-    template<typename H, typename PqElement>
+    template<typename H, typename PQE>
     void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
         timer t;
         t.active("process");
@@ -145,9 +145,9 @@ namespace isi::frequency {
                            [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
                                for (const auto& p: paths) {
                                    ifstreams.emplace_back(std::ifstream());
-                                   PqElement::deserialize_header(ifstreams.back(), p);
+                                   PQE::deserialize_header(ifstreams.back(), p);
                                }
-                               process<PqElement>(ifstreams, out_file);
+                               process<PQE>(ifstreams, out_file);
                                ifstreams.clear();
                            });
         t.stop();

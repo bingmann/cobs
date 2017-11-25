@@ -1,4 +1,4 @@
-#include <isi/construction/compact_index_construction.hpp>
+#include <isi/construction/compact_index.hpp>
 #include <isi/util/parameters.hpp>
 
 namespace isi::compact_index {

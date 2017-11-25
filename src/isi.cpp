@@ -1,8 +1,8 @@
 #include <CLI/CLI.hpp>
 #include <cmath>
-#include <util.hpp>
-#include <isi/classic_index.hpp>
-#include <cortex.hpp>
+#include <isi/construction/classic_index.hpp>
+#include <isi/cortex.hpp>
+#include <isi/util/parameters.hpp>
 
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {

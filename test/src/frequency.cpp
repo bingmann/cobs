@@ -140,7 +140,7 @@ namespace {
     };
 
     TEST_F(frequency, bin) {
-        isi::frequency::process_all_in_directory<isi::file::sample_header, isi::frequency::bin_pq_element>(in_dir, out_dir, 40);
+        isi::frequency::process_all_in_directory<isi::file::sample_header>(in_dir, out_dir, 40);
         size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
         std::experimental::filesystem::path p(out_dir.string() + "[sample_1-sample_3]" + isi::file::frequency_header::file_extension);
         ASSERT_EQ(get_count_frequency(p), total_count);
@@ -148,7 +148,7 @@ namespace {
     }
 
     TEST_F(frequency, freq) {
-        isi::frequency::process_all_in_directory<isi::file::frequency_header, isi::frequency::fre_pq_element>(in_dir, out_dir, 40);
+        isi::frequency::process_all_in_directory<isi::file::frequency_header>(in_dir, out_dir, 40);
         std::experimental::filesystem::path p(out_dir.string() + "[sample_4-sample_5]" + isi::file::frequency_header::file_extension);
         assert_equals_files(result_freq, p);
     }

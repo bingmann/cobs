@@ -1,4 +1,4 @@
-#include <frequency.hpp>
+#include <isi/frequency.hpp>
 
 int main(int argc, char** argv) {
     if (argc == 5) {
@@ -8,9 +8,9 @@ int main(int argc, char** argv) {
         std::string out_dir = argv[3];
         size_t batch_size = std::strtoul(argv[4], &pEnd, 10);
         if (type == "bin") {
-            isi::frequency::process_all_in_directory<isi::frequency::bin_pq_element>(in_dir, out_dir, batch_size);
+            isi::frequency::process_all_in_directory<isi::file::sample_header>(in_dir, out_dir, batch_size);
         } else if (type == "fre") {
-            isi::frequency::process_all_in_directory<isi::frequency::fre_pq_element>(in_dir, out_dir, batch_size);
+            isi::frequency::process_all_in_directory<isi::file::frequency_header>(in_dir, out_dir, batch_size);
         } else {
             std::cout << "wrong type: use 'bin' or 'fre'" << std::endl;
         }

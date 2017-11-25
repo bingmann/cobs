@@ -1,6 +1,6 @@
-#include <server/classic_index/base.hpp>
-#include <server/classic_index/ifs.hpp>
-#include <server/classic_index/mmap.hpp>
+#include <isi/query/classic_index/base.hpp>
+#include <isi/query/classic_index/ifs.hpp>
+#include <isi/query/classic_index/mmap.hpp>
 
 
 int main(int argc, char** argv) {

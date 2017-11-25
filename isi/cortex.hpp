@@ -7,6 +7,7 @@
 #include <isi/sample.hpp>
 #include <isi/timer.hpp>
 #include <isi/util/file.hpp>
+#include <iomanip>
 
 namespace isi::cortex {
     struct header {

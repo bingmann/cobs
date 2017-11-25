@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <isi/util/processing.hpp>
-#include <isi/construction/classic_index_construction.hpp>
+#include <isi/construction/classic_index.hpp>
 #include <xxhash.h>
 #include <isi/util/parameters.hpp>
 

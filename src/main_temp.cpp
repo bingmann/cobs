@@ -1,16 +1,9 @@
 #include <experimental/filesystem>
-#include <server/classic_index/base.hpp>
-#include <server/classic_index/mmap.hpp>
-#include <server/classic_index/ifs.hpp>
-#include <frequency.hpp>
-#include <util.hpp>
-#include <file/compact_index_header.hpp>
+#include <isi/query/classic_index/base.hpp>
+#include <isi/query/classic_index/mmap.hpp>
+#include <isi/query/classic_index/ifs.hpp>
+#include <isi/frequency.hpp>
 #include <omp.h>
-#include <stxxl/bits/io/request.h>
-#include <stxxl/bits/io/file.h>
-#include <stxxl/bits/io/syscall_file.h>
-#include <isi/compact_index.hpp>
-#include <server/classic_index/asio.hpp>
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;

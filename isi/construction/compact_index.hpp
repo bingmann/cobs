@@ -5,7 +5,7 @@
 #include <isi/file/sample_header.hpp>
 #include <isi/util/file.hpp>
 #include <isi/file/compact_index_header.hpp>
-#include <isi/construction/classic_index_construction.hpp>
+#include <isi/construction/classic_index.hpp>
 
 /** The compact Inverted Signature Index with the space-saving improvements.
  *  This namespace provides methods for creation of this index. It can either be created from existing samples or
