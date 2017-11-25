@@ -1,7 +1,7 @@
 #pragma once
 
 #include <experimental/filesystem>
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 #include <isi/kmer.hpp>
 #include <isi/timer.hpp>
 #include <isi/file/classic_index_header.hpp>

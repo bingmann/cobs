@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 #include <isi/util/file.hpp>
 #include <isi/timer.hpp>
 #include <isi/construction/classic_index_construction.hpp>

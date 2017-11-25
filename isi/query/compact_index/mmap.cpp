@@ -1,4 +1,4 @@
-#include <isi/query/util.hpp>
+#include <isi/util/query.hpp>
 #include <isi/query/compact_index/mmap.hpp>
 
 namespace isi::query::compact_index {

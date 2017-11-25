@@ -4,7 +4,7 @@
 #include <isi/file/sample_header.hpp>
 #include <isi/file/frequency_header.hpp>
 #include <isi/util/file.hpp>
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 
 #include <experimental/filesystem>
 #include <iostream>

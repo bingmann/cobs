@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 #include <isi/construction/classic_index_construction.hpp>
 #include <xxhash.h>
 #include <isi/util/parameters.hpp>

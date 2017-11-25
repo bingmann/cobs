@@ -2,7 +2,7 @@
 #include <isi/cortex.hpp>
 #include <iostream>
 #include <experimental/filesystem>
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 #include <isi/util/file.hpp>
 
 

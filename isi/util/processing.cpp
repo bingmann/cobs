@@ -1,4 +1,4 @@
-#include <isi/util.hpp>
+#include <isi/util/processing.hpp>
 
 namespace isi {
     void get_sorted_file_names(const std::experimental::filesystem::path& in_dir,

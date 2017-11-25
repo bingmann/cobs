@@ -20,6 +20,14 @@ namespace isi {
                                std::vector<std::experimental::filesystem::path>& paths);
 
     template<class T, typename Functor>
+    bool bulk_process_files(const std::experimental::filesystem::path& in_dir,
+                            const std::experimental::filesystem::path& out_dir, size_t bulk_size,
+                            const std::string& file_extension_out, const Functor& callback);
+};
+
+
+namespace isi {
+    template<class T, typename Functor>
     bool bulk_process_files(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t bulk_size,
                             const std::string& file_extension_out, const Functor& callback) {
         std::vector<std::experimental::filesystem::path> sorted_paths;
@@ -55,11 +63,4 @@ namespace isi {
         }
         return j < 3;
     }
-};
-
-
-
-
-
-
-
+}

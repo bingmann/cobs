@@ -1,6 +1,6 @@
 #include <isi/query/classic_index/mmap.hpp>
 #include <isi/util/file.hpp>
-#include <isi/query/util.hpp>
+#include <isi/util/query.hpp>
 #include <cstring>
 
 namespace isi::query::classic_index {
