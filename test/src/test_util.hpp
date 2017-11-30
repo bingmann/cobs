@@ -48,11 +48,16 @@ inline std::vector<isi::sample<31>> generate_samples_one(const std::string& quer
     return samples;
 }
 
+inline std::string get_file_stem(size_t index) {
+    assert(index < 100);
+    std::string num = (index < 10 ? "0" : "") + std::to_string(index);
+    return "sample_" + num;
+}
+
 inline void generate_test_case(std::vector<isi::sample<31>> samples, const std::string& out_dir) {
     for (size_t i = 0; i < samples.size(); i++) {
-        std::string index = (i < 10 ? "0" : "") + std::to_string(i);
-        isi::file::serialize(out_dir + "/sample_" + index + isi::file::sample_header::file_extension, samples[i]);
+        std::string file_name = get_file_stem(i);
+        isi::file::serialize(out_dir + "/" + file_name + isi::file::sample_header::file_extension, samples[i], file_name);
     }
-
 }
 

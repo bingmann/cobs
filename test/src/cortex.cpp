@@ -13,6 +13,7 @@ namespace {
     std::string out_path = out_dir + "sample.sam.isi";
     std::string out_path_rec = out_dir + "sample_rec.sam.isi";
     std::string sample_path = "test/resources/cortex/result/sample_sorted.txt";
+    std::string sample_name = "DRR030535";
 
     template<unsigned int N>
     void assert_equals_sample(isi::sample<N> sample) {
@@ -26,7 +27,17 @@ namespace {
         ASSERT_EQ(sample.data().size(), i);
     }
 
+    TEST(cortex, file_name) {
+        isi::sample<31> sample1;
+        isi::sample<31> sample2;
+        isi::cortex::process_file(in_path, out_path, sample1);
+        isi::file::sample_header h;
+        isi::file::deserialize(out_path, sample2, h);
+        ASSERT_EQ(h.name(), sample_name);
+    }
+
     TEST(cortex, process_file) {
+        std::experimental::filesystem::remove_all(out_dir);
         isi::sample<31> sample;
         isi::cortex::process_file(in_path, out_path, sample);
         assert_equals_sample(sample);

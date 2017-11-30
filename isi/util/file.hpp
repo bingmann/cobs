@@ -16,10 +16,10 @@ namespace isi::file {
     static compact_index_header dummy_cisih;
 
     template<uint32_t N>
-    void serialize(std::ofstream& ofs, const sample<N>& s);
+    void serialize(std::ofstream& ofs, const sample<N>& s, const std::string& name);
 
     template<uint32_t N>
-    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s);
+    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s, const std::string& name);
 
     void serialize(std::ofstream& ofs, const std::vector<uint8_t>& data, const classic_index_header& h);
     void serialize(const std::experimental::filesystem::path& p, const std::vector<uint8_t>& data, const classic_index_header& h);
@@ -56,17 +56,17 @@ namespace isi::file {
 
 namespace isi::file {
     template<uint32_t N>
-    void serialize(std::ofstream& ofs, const sample<N>& s) {
-        sample_header sh(N);
+    void serialize(std::ofstream& ofs, const sample<N>& s, const std::string& name) {
+        sample_header sh(name, N);
         header<sample_header>::serialize(ofs, sh);
         ofs.write(reinterpret_cast<const char*>(s.data().data()), kmer<N>::size * s.data().size());
     }
 
     template<uint32_t N>
-    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s) {
+    void serialize(const std::experimental::filesystem::path& p, const sample<N>& s, const std::string& name) {
         std::experimental::filesystem::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
-        serialize(ofs, s);
+        serialize(ofs, s, name);
     }
 
 
@@ -115,11 +115,14 @@ namespace isi::file {
 
     template<class T>
     bool file_is(const std::experimental::filesystem::path& p) {
-        try {
-            deserialize_header<T>(p);
-            return true;
-        } catch (file_io_exception& /*e*/) {
-            return false;
+        if (std::experimental::filesystem::is_regular_file(p)) {
+            try {
+                deserialize_header<T>(p);
+                return true;
+            } catch (file_io_exception& /*e*/) {
+                std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
+                return false;
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 //#include <fcntl.h>
 //#include <sys/mman.h>
 //#include <fstream>
-//#include <isi/timer.hpp>
+//#include <isi/util/timer.hpp>
 //#include <iostream>
 //#include <omp.h>
 //#include <stxxl/aligned_alloc>

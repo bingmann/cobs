@@ -5,7 +5,7 @@
 namespace {
     std::experimental::filesystem::path in_dir("test/out/compact_index_construction/input_1");
     std::experimental::filesystem::path samples_dir(in_dir.string() + "/samples");
-    std::experimental::filesystem::path bloom_2_dir(in_dir.string() + "/bloom_2");
+    std::experimental::filesystem::path isi_2_dir(in_dir.string() + "/isi_2");
     std::experimental::filesystem::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
     std::experimental::filesystem::path tmp_dir("test/out/compact_index_construction/tmp");
 
@@ -37,6 +37,7 @@ namespace {
     TEST_F(compact_index_construction, deserialization) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
+
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
         isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
@@ -45,6 +46,33 @@ namespace {
         ASSERT_EQ(h.file_names().size(), 33U);
         ASSERT_EQ(h.parameters().size(), 3U);
         ASSERT_EQ(data.size(), 3U);
+    }
+
+    TEST_F(compact_index_construction, file_names) {
+        auto samples = generate_samples_all(query);
+        generate_test_case(samples, tmp_dir);
+
+        std::vector<std::experimental::filesystem::path> paths;
+        std::experimental::filesystem::recursive_directory_iterator it(tmp_dir), end;
+        std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
+            return isi::file::file_is<isi::file::sample_header>(p);
+        });
+        std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
+            return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
+        });
+        for(size_t i = 0; i < samples.size(); i += 2 * 8) {
+            size_t middle_index = std::min(i + 16, paths.size());
+            std::sort(paths.begin() + i, paths.begin() + middle_index);
+        }
+
+        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        std::vector<std::vector<uint8_t>> data;
+        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(compact_index_path);
+        isi::file::deserialize(compact_index_path, data, h);
+        for (size_t i = 0; i < h.file_names().size(); i++) {
+            ASSERT_EQ(h.file_names()[i], isi::file::file_name(paths[i]));
+        }
     }
 
     TEST_F(compact_index_construction, parameters) {
@@ -82,7 +110,7 @@ namespace {
         isi::file::deserialize(path_sample, s);
 
         size_t file_size = std::experimental::filesystem::file_size(path_sample);
-        ASSERT_EQ(s.data().size(), file_size / 8 - 2);
+        ASSERT_EQ(s.data().size(), file_size / 8 - 3);
     }
 
     TEST_F(compact_index_construction, num_ones) {
@@ -128,7 +156,7 @@ namespace {
         isi::file::deserialize(compact_index_path, cisi_data);
 
         std::vector<std::vector<uint8_t>> indices;
-        for(auto& p: std::experimental::filesystem::directory_iterator(bloom_2_dir)) {
+        for(auto& p: std::experimental::filesystem::directory_iterator(isi_2_dir)) {
             if (std::experimental::filesystem::is_directory(p)) {
                 for(const std::experimental::filesystem::path& isi_p: std::experimental::filesystem::directory_iterator(p)) {
                     if(isi::file::file_is<isi::file::classic_index_header>(isi_p)) {
@@ -145,7 +173,7 @@ namespace {
         });
 
         ASSERT_EQ(indices.size(), cisi_data.size());
-        for (size_t i = 0; i < indices.size(); i++) {
+        for (size_t i = 0; i < indices.size() - 1; i++) {
             ASSERT_EQ(indices[i].size(), cisi_data[i].size());
             for (size_t j = 0; j < indices[i].size(); j++ ) {
                 ASSERT_EQ(indices[i].data()[j], cisi_data[i][j]);

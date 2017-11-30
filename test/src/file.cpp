@@ -23,14 +23,15 @@ namespace {
 
     TEST_F(file, sample) {
         isi::sample<31> s_out;
-        isi::file::serialize(out_path_s, s_out);
+        isi::file::serialize(out_path_s, s_out, "sample");
 
         isi::sample<31> s_in;
         isi::file::deserialize(out_path_s, s_in);
     }
 
     TEST_F(file, classic_index) {
-        isi::file::classic_index_header h_out(123, 12, 1234);
+        std::vector<std::string> file_names = {"n1", "n2", "n3", "n4"};
+        isi::file::classic_index_header h_out(123, 12, file_names);
         std::vector<uint8_t> v_out(h_out.block_size() * h_out.signature_size(), 7);
         isi::file::serialize(out_path_isi, v_out, h_out);
 
@@ -44,16 +45,25 @@ namespace {
         for (size_t i = 0; i < v_out.size(); i++) {
             ASSERT_EQ(v_out[i], v_in[i]);
         }
+        ASSERT_EQ(file_names.size(), h_in.file_names().size());
+        for(size_t i = 0; i < file_names.size(); i++) {
+            ASSERT_EQ(file_names[i], h_in.file_names()[i]);
+        }
     }
 
     TEST_F(file, classic_index_header) {
-        isi::file::classic_index_header h_out(321, 21, 4321);
+        std::vector<std::string> file_names = {"n1", "n2", "n3", "n4"};
+        isi::file::classic_index_header h_out(321, 21, file_names);
         isi::file::serialize_header(out_path_isi, h_out);
 
         auto h_in = isi::file::deserialize_header<isi::file::classic_index_header>(out_path_isi);
         ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
         ASSERT_EQ(h_out.block_size(), h_in.block_size());
         ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
+        ASSERT_EQ(file_names.size(), h_in.file_names().size());
+        for(size_t i = 0; i < file_names.size(); i++) {
+            ASSERT_EQ(file_names[i], h_in.file_names()[i]);
+        }
     }
 
     TEST_F(file, compact_index_header_values) {

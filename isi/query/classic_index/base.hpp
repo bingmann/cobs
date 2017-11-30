@@ -1,7 +1,7 @@
 #pragma once
 
 #include <isi/file/classic_index_header.hpp>
-#include <isi/timer.hpp>
+#include <isi/util/timer.hpp>
 #include <isi/query/base.hpp>
 
 namespace isi::query::classic_index {

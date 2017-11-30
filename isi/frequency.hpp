@@ -1,6 +1,6 @@
 #pragma once
 
-#include <isi/timer.hpp>
+#include <isi/util/timer.hpp>
 #include <isi/file/sample_header.hpp>
 #include <isi/file/frequency_header.hpp>
 #include <isi/util/file.hpp>

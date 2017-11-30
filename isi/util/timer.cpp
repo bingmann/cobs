@@ -1,4 +1,4 @@
-#include <isi/timer.hpp>
+#include <isi/util/timer.hpp>
 
 #include <cassert>
 #include <iostream>

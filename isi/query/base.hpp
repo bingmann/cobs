@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <isi/timer.hpp>
+#include <isi/util/timer.hpp>
 #include <isi/util/file.hpp>
 #include <numeric>
 #include <immintrin.h>

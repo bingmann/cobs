@@ -31,13 +31,11 @@ namespace {
     TEST_F(classic_index_query, all_included_small_batch) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 1, 3, 4);
+        isi::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -48,13 +46,11 @@ namespace {
     TEST_F(classic_index_query, all_included_large_batch) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 2, 3, 2);
+        isi::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -65,13 +61,11 @@ namespace {
     TEST_F(classic_index_query, all_included_max_batch) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 5, 3, 2);
+        isi::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -82,8 +76,7 @@ namespace {
     TEST_F(classic_index_query, one_included_small_batch) {
         auto samples = generate_samples_one(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 1, 3, 4);
+        isi::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
@@ -98,13 +91,11 @@ namespace {
     TEST_F(classic_index_query, one_included_large_batch) {
         auto samples = generate_samples_one(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 2, 3, 2);
+        isi::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             ASSERT_EQ(r.first, 1);
@@ -114,13 +105,11 @@ namespace {
     TEST_F(classic_index_query, one_included_max_batch) {
         auto samples = generate_samples_one(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 5, 3, 2);
+        isi::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             ASSERT_EQ(r.first, 1);
@@ -130,8 +119,7 @@ namespace {
     TEST_F(classic_index_query, false_positive) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        size_t signature_size = isi::calc_signature_size(query.size(), 3, 0.1);
-        isi::classic_index::create(tmp_dir, in_dir, signature_size, 1, 3, 10);
+        isi::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         isi::query::classic_index::mmap s_mmap(index_path);
 
         size_t num_tests = 10000;

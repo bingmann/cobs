@@ -5,7 +5,7 @@
 #include <experimental/filesystem>
 
 #include <isi/sample.hpp>
-#include <isi/timer.hpp>
+#include <isi/util/timer.hpp>
 #include <isi/util/file.hpp>
 #include <iomanip>
 
@@ -44,6 +44,7 @@ namespace isi::cortex {
         h.version = cast<uint32_t>(iter);
         std::advance(iter, 4);
         h.kmer_size = cast<uint32_t>(iter);
+        assert(h.kmer_size == 31);
         std::advance(iter, 4);
         h.num_words_per_kmer = cast<uint32_t>(iter);
         std::advance(iter, 4);
@@ -52,8 +53,9 @@ namespace isi::cortex {
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
             auto sample_name_length = cast<uint32_t>(iter);
-            std::copy(iter, iter + sample_name_length, std::back_inserter(h.name));
-            std::advance(iter, 4 + sample_name_length);
+            std::advance(iter, 4);
+            h.name.assign(iter, iter + sample_name_length);
+            std::advance(iter, sample_name_length);
         }
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
@@ -94,7 +96,8 @@ namespace isi::cortex {
             read_sample(iter, v.end(), h, s);
             //todo assign name to sample
             t.active("write");
-            file::serialize(out_path, s);
+
+            file::serialize<31>(out_path, s, h.name);
         }
         t.stop();
     }
@@ -105,12 +108,13 @@ namespace isi::cortex {
         t.reset();
         size_t i = 0;
         for (std::experimental::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
+            std::experimental::filesystem::path out_path = out_dir / it->path().stem().concat(file::sample_header::file_extension);
             if (std::experimental::filesystem::is_regular_file(*it)
-                && it->path().extension() == ".ctx"
+                && it->path().extension().string() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
-                && !std::experimental::filesystem::exists(out_dir / it->path().stem().concat(file::sample_header::file_extension))) {
+                && !std::experimental::filesystem::exists(out_path)) {
                 try {
-                    process_file(it->path(), out_dir / it->path().stem().concat(file::sample_header::file_extension), sample);
+                    process_file(it->path(), out_path, sample);
                     std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::endl;
                     i++;
                 } catch (const std::exception& e) {

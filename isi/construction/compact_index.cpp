@@ -45,14 +45,11 @@ namespace isi::compact_index {
                 }
             }
             size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-            classic_index::create_from_samples(p, out_dir / p.filename(), signature_size, batch_size / 8, num_hashes);
+            classic_index::create_from_samples(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
 
             if (num_files != 8 * page_size) {
                 assert(num_files < 8 * page_size);
                 assert(p == paths.back());
-                isi::file::classic_index_header h(signature_size, (8 * page_size - num_files) / 8, num_hashes);
-                std::vector<uint8_t> data(h.signature_size() * h.block_size());
-                isi::file::serialize(out_dir / p.filename() / ("padding" + file::classic_index_header::file_extension), data, h);
             }
         }
     }
@@ -61,23 +58,7 @@ namespace isi::compact_index {
         bool all_combined = false;
         for (std::experimental::filesystem::directory_iterator it(in_dir), end; it != end; it++) {
             if (std::experimental::filesystem::is_directory(it->path())) {
-                size_t signature_size = 0;
-                size_t num_hashes = 0;
-                for (std::experimental::filesystem::directory_iterator bloom_it(it->path()); bloom_it != end; bloom_it++) {
-                    if (isi::file::file_is<isi::file::classic_index_header>(bloom_it->path())) {
-                        auto h = file::deserialize_header<file::classic_index_header>(bloom_it->path());
-                        signature_size = h.signature_size();
-                        num_hashes = h.num_hashes();
-                        break;
-                    }
-                }
-                if (signature_size != 0) {
-                    all_combined = isi::classic_index::combine(in_dir / it->path().filename(), out_dir / it->path().filename(),
-                                                               signature_size, num_hashes,
-                                                               batch_size);
-                } else {
-                    std::cerr << "empty directory" << std::endl;
-                }
+                all_combined = isi::classic_index::combine(in_dir / it->path().filename(), out_dir / it->path().filename(), batch_size);
             }
         }
         return all_combined;
@@ -93,11 +74,15 @@ namespace isi::compact_index {
 
         std::vector<isi::file::compact_index_header::parameter> parameters;
         std::vector<std::string> file_names;
-        for (const auto& p: paths) {
-            auto h = isi::file::deserialize_header<isi::file::classic_index_header>(p);
+        for (size_t i = 0; i < paths.size(); i++) {
+            auto h = isi::file::deserialize_header<isi::file::classic_index_header>(paths[i]);
             parameters.push_back({h.signature_size(), h.num_hashes()});
             file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
-            assert(h.block_size() == page_size);
+            if (i < paths.size() - 1) {
+                assert(h.block_size() == page_size);
+            } else {
+                assert(h.block_size() <= page_size);
+            }
         }
 
         isi::file::compact_index_header h(parameters, file_names, page_size);
@@ -107,14 +92,22 @@ namespace isi::compact_index {
         std::vector<char> buffer(32 * page_size);
         for (const auto& p: paths) {
             std::ifstream ifs;
-            isi::file::deserialize_header<isi::file::classic_index_header>(ifs, p);
+            uint64_t block_size = isi::file::deserialize_header<isi::file::classic_index_header>(ifs, p).block_size();
             isi::stream_metadata smd = get_stream_metadata(ifs);
-            size_t data_size = smd.end_pos - smd.curr_pos;
+            uint64_t data_size = smd.end_pos - smd.curr_pos;
             while(data_size > 0) {
-                size_t num_uint8_ts = std::min(buffer.size(), data_size);
+                size_t num_uint8_ts = std::min(32 * block_size, data_size);
                 ifs.read(buffer.data(), num_uint8_ts);
                 data_size -= num_uint8_ts;
-                ofs.write(buffer.data(), num_uint8_ts);
+                if (block_size == page_size) {
+                    ofs.write(buffer.data(), num_uint8_ts);
+                } else {
+                    std::vector<char> padding(page_size - block_size, 0);
+                    for(size_t i = 0; i < num_uint8_ts; i += block_size) {
+                        ofs.write(buffer.data() + i, block_size);
+                        ofs.write(padding.data(), padding.size());
+                    }
+                }
             }
         }
     }
@@ -122,7 +115,7 @@ namespace isi::compact_index {
     void create_from_folders(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
                                                   double false_positive_probability, uint64_t page_size) {
         std::experimental::filesystem::path samples_dir = in_dir / std::experimental::filesystem::path("samples/");
-        std::string bloom_dir = in_dir.string() +  "/bloom_";
+        std::string bloom_dir = in_dir.string() +  "/isi_";
         size_t iteration = 1;
         create_classic_index_from_samples(samples_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
         while(!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {

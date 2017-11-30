@@ -33,7 +33,6 @@ namespace {
 
         std::vector<std::pair<uint16_t, std::string>> result;
         s_mmap.search(query, 31, result);
-        std::vector<std::string> split;
         ASSERT_EQ(samples.size(), result.size());
         for(auto& r: result) {
             int index = std::stoi(r.second.substr(r.second.size() - 2));
