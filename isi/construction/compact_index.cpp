@@ -6,7 +6,7 @@ namespace isi::compact_index {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && isi::file::file_is<isi::file::sample_header>(p);
+            return isi::file::file_is<isi::file::sample_header>(p);
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
             return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
@@ -68,7 +68,7 @@ namespace isi::compact_index {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_regular_file(p) && isi::file::file_is<isi::file::classic_index_header>(p);
+            return isi::file::file_is<isi::file::classic_index_header>(p);
         });
         std::sort(paths.begin(), paths.end());
 

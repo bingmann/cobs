@@ -122,8 +122,10 @@ namespace isi::file {
                 std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
                 return false;
             }
+            return true;
+        } else {
+            return false;
         }
-        return true;
     }
 }
 

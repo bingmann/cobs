@@ -39,7 +39,7 @@ namespace isi {
         size_t j = 1;
         std::vector<std::experimental::filesystem::path> paths;
         for (size_t i = 0; i < sorted_paths.size(); i++) {
-            if (std::experimental::filesystem::is_regular_file(sorted_paths[i]) && isi::file::file_is<T>(sorted_paths[i])) {
+            if (isi::file::file_is<T>(sorted_paths[i])) {
                 std::string filename = isi::file::file_name(sorted_paths[i]);
                 if (first_filename.empty()) {
                     first_filename = filename;
