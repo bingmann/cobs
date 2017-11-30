@@ -118,12 +118,12 @@ namespace isi::file {
         if (std::experimental::filesystem::is_regular_file(p)) {
             try {
                 deserialize_header<T>(p);
-                return true;
             } catch (file_io_exception& /*e*/) {
                 std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
                 return false;
             }
         }
+        return true;
     }
 }
 

@@ -88,8 +88,8 @@ namespace isi::classic_index {
         timer t;
         std::vector<std::pair<std::ifstream, uint64_t>> ifstreams;
         std::vector<std::string> file_names;
-        int64_t signature_size = 0;
-        int64_t num_hashes = 0;
+        uint64_t signature_size = 0;
+        uint64_t num_hashes = 0;
         bool all_combined =
                 bulk_process_files<file::classic_index_header>(in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
                                    [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
@@ -126,7 +126,7 @@ namespace isi::classic_index {
                  uint64_t num_hashes, double false_positive_probability) {
         uint64_t signature_size;
         bulk_process_files<file::sample_header>(in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
-                               [&](std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
+                               [&](std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& /*out_file*/) {
                                    std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
                                        return std::experimental::filesystem::file_size(p1) > std::experimental::filesystem::file_size(p2);
                                    });
