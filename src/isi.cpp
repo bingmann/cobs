@@ -57,6 +57,7 @@ struct parameters {
     uint64_t block_size;
     double false_positive_rate;
     uint64_t num_elements;
+    uint64_t batch_size;
     std::experimental::filesystem::path out_file;
     std::experimental::filesystem::path in_dir;
     std::experimental::filesystem::path out_dir;
@@ -94,6 +95,16 @@ struct parameters {
             this->num_elements = get_unsigned_integer(val[0], "<num_elements>", 1);
             return true;
         }, "number of elements to be inserted into the index");
+    }
+
+    CLI::Option* add_batch_size(CLI::App* app) {
+        return app->add_option("<batch_size>", [&](std::vector<std::string> val) {
+            this->batch_size = get_unsigned_integer(val[0], "<batch_size>", 1);
+            if(this->batch_size % 8 != 0) {
+                throw std::invalid_argument("batch_size (" + std::to_string(this->batch_size) + ") must be a multiple of 8");
+            }
+            return true;
+        }, "number of input files to be read at once");
     }
 
     CLI::Option* add_out_file(CLI::App* app) {
@@ -134,17 +145,6 @@ void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
-void add_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("dummy", "creates a dummy classic isi with random content", false);
-    p->add_out_file(sub)->required();
-    p->add_signature_size(sub)->required();
-    p->add_block_size(sub)->required();
-    p->add_num_hashes(sub)->required();
-    sub->set_callback([p]() {
-        isi::classic_index::create_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
-    });
-}
-
 void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("cortex", "converts the cortex files in <in_dir> to the isi sample format", false);
     p->add_in_dir(sub)->required();
@@ -154,12 +154,66 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
+void add_classic_create(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct", "constructs an index from the samples in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_batch_size(sub)->required();
+    p->add_num_hashes(sub)->required();
+    p->add_false_positive_rate(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::create(p->in_dir, p->out_dir, p->batch_size, p->num_hashes, p->false_positive_rate);
+    });
+}
+
+void add_classic_create_from_samples(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_step1", "constructs multiple small indices form the samples in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_signature_size(sub)->required();
+    p->add_num_hashes(sub)->required();
+    p->add_batch_size(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::create_from_samples(p->in_dir, p->out_dir, p->signature_size, p->num_hashes, p->batch_size);
+    });
+}
+
+void add_classic_combine(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_step2", "combines the indices in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_batch_size(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::combine(p->in_dir, p->out_dir, p->batch_size);
+    });
+}
+
+void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
+    p->add_out_file(sub)->required();
+    p->add_signature_size(sub)->required();
+    p->add_block_size(sub)->required();
+    p->add_num_hashes(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::create_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
+    });
+}
+
+void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("classic", "commands for the classic index", false);
+    sub->require_subcommand(1);
+    add_classic_create(*sub, p);
+    add_classic_create_from_samples(*sub, p);
+    add_classic_combine(*sub, p);
+    add_classic_dummy(*sub, p);
+}
+
 int main(int argc, char **argv) {
     CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
+    add_classic(app, p);
     add_parameters(app, p);
-    add_dummy(app, p);
     add_cortex(app, p);
     CLI11_PARSE(app, argc, argv);
     return 0;
