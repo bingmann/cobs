@@ -3,6 +3,7 @@
 #include <isi/construction/classic_index.hpp>
 #include <isi/cortex.hpp>
 #include <isi/util/parameters.hpp>
+#include <isi/query/classic_index/mmap.hpp>
 
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
@@ -43,6 +44,14 @@ double get_double(const std::string& value, const std::string& name, double min 
     return d;
 }
 
+std::string get_query(std::string& value, const std::string& name) {
+    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+    if (value.find_first_not_of("ACGT") != std::string::npos) {
+        throw std::invalid_argument(name + " (" + value + ") does contain characters other than A, C, G and T");
+    }
+    return value;
+}
+
 std::experimental::filesystem::path get_path(const std::string& value, const std::string& name, bool needs_to_exist = false) {
     std::experimental::filesystem::path p(value);
     if(needs_to_exist && !std::experimental::filesystem::exists(p)) {
@@ -58,6 +67,9 @@ struct parameters {
     double false_positive_rate;
     uint64_t num_elements;
     uint64_t batch_size;
+    uint64_t num_result;
+    std::string query;
+    std::experimental::filesystem::path in_file;
     std::experimental::filesystem::path out_file;
     std::experimental::filesystem::path in_dir;
     std::experimental::filesystem::path out_dir;
@@ -105,6 +117,27 @@ struct parameters {
             }
             return true;
         }, "number of input files to be read at once");
+    }
+
+    CLI::Option* add_num_result(CLI::App* app) {
+        return app->add_option("<num_result>", [&](std::vector<std::string> val) {
+            this->num_result = get_unsigned_integer(val[0], "<num_result>", 1);
+            return true;
+        }, "number of results to return");
+    }
+
+    CLI::Option* add_query(CLI::App* app) {
+        return app->add_option("<query>", [&](std::vector<std::string> val) {
+            this->query = get_query(val[0], "<query>");
+            return true;
+        }, "the dna sequence to search for");
+    }
+
+    CLI::Option* add_in_file(CLI::App* app) {
+        return app->add_option("<in_file>", [&](std::vector<std::string> val) {
+            this->in_file = get_path(val[0], "<in_file>", true);
+            return true;
+        }, "path to the input file");
     }
 
     CLI::Option* add_out_file(CLI::App* app) {
@@ -188,6 +221,21 @@ void add_classic_combine(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
+void add_classic_query(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("query", "queries the index", false);
+    p->add_in_file(sub)->required();
+    p->add_query(sub)->required();
+    p->add_num_result(sub);
+    sub->set_callback([p]() {
+        isi::query::classic_index::mmap mmap(p->in_file);
+        std::vector<std::pair<uint16_t, std::string>> result;
+        mmap.search(p->query, 31, result, p->num_result);
+        for (const auto& res: result) {
+            std::cout << res.second << " - " << res.first << "\n";
+        }
+    });
+}
+
 void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
     p->add_out_file(sub)->required();
@@ -205,6 +253,7 @@ void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
     add_classic_create(*sub, p);
     add_classic_create_from_samples(*sub, p);
     add_classic_combine(*sub, p);
+    add_classic_query(*sub, p);
     add_classic_dummy(*sub, p);
 }
 
