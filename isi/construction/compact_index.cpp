@@ -2,6 +2,12 @@
 #include <isi/util/parameters.hpp>
 
 namespace isi::compact_index {
+    std::string pad_directory_number(size_t index) {
+        std::stringstream ss;
+        ss << std::setw(6) << std::setfill('0') << index;
+        return ss.str();
+    }
+
     void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
@@ -17,7 +23,7 @@ namespace isi::compact_index {
         std::experimental::filesystem::path sub_out_dir;
         for(const auto& p: paths) {
             if (i % (8 * page_size) == 0) {
-                sub_out_dir = out_dir / std::experimental::filesystem::path("/samples/" + std::to_string(batch));
+                sub_out_dir = out_dir / std::experimental::filesystem::path("/samples/" + pad_directory_number(batch));
                 std::experimental::filesystem::create_directories(sub_out_dir);
                 batch++;
             }
@@ -25,6 +31,25 @@ namespace isi::compact_index {
             i++;
         }
     }
+//
+//    void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
+//                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
+//        size_t num_files = 0;
+//        size_t max_file_size = 0;
+//        for (std::experimental::filesystem::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
+//            if (isi::file::file_is<isi::file::sample_header>(sub_it->path())) {
+//                max_file_size = std::max(max_file_size, std::experimental::filesystem::file_size(sub_it->path()));
+//                num_files++;
+//            }
+//        }
+//        size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
+//        classic_index::create_from_samples(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
+//
+//        if (num_files != 8 * page_size) {
+//            assert(num_files < 8 * page_size);
+//            assert(in_dir == paths.back());
+//        }
+//    }
 
     void create_classic_index_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
                                                   size_t num_hashes, double false_positive_probability, uint64_t page_size) {
