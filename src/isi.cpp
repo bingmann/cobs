@@ -4,6 +4,8 @@
 #include <isi/cortex.hpp>
 #include <isi/util/parameters.hpp>
 #include <isi/query/classic_index/mmap.hpp>
+#include <isi/query/compact_index/mmap.hpp>
+#include <isi/construction/compact_index.hpp>
 
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
@@ -68,6 +70,7 @@ struct parameters {
     uint64_t num_elements;
     uint64_t batch_size;
     uint64_t num_result;
+    uint64_t page_size;
     std::string query;
     std::experimental::filesystem::path in_file;
     std::experimental::filesystem::path out_file;
@@ -124,6 +127,13 @@ struct parameters {
             this->num_result = get_unsigned_integer(val[0], "<num_result>", 1);
             return true;
         }, "number of results to return");
+    }
+
+    CLI::Option* add_page_size(CLI::App* app) {
+        return app->add_option("<page_size>", [&](std::vector<std::string> val) {
+            this->page_size = get_unsigned_integer(val[0], "<page_size>", 1);
+            return true;
+        }, "the page size of the ssd the index is constructed for");
     }
 
     CLI::Option* add_query(CLI::App* app) {
@@ -257,11 +267,75 @@ void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
     add_classic_dummy(*sub, p);
 }
 
+void add_compact_create(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct", "constructs an index from the samples in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_batch_size(sub)->required();
+    p->add_num_hashes(sub)->required();
+    p->add_false_positive_rate(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::create(p->in_dir, p->out_dir, p->batch_size, p->num_hashes, p->false_positive_rate);
+    });
+}
+
+void add_compact_create_folders(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_step1", "constructs multiple small indices form the samples in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_page_size(sub)->required();
+    sub->set_callback([p]() {
+        isi::compact_index::create_folders(p->in_dir, p->out_dir, p->page_size);
+    });
+}
+
+void add_compact_combine(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_step2", "combines the indices in <in_dir>", false);
+    p->add_in_dir(sub)->required();
+    p->add_out_dir(sub)->required();
+    p->add_batch_size(sub)->required();
+    sub->set_callback([p]() {
+        isi::classic_index::combine(p->in_dir, p->out_dir, p->batch_size);
+    });
+}
+
+void add_compact_query(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("query", "queries the index", false);
+    p->add_in_file(sub)->required();
+    p->add_query(sub)->required();
+    p->add_num_result(sub);
+    sub->set_callback([p]() {
+        isi::query::compact_index::mmap mmap(p->in_file);
+        std::vector<std::pair<uint16_t, std::string>> result;
+        mmap.search(p->query, 31, result, p->num_result);
+        for (const auto& res: result) {
+            std::cout << res.second << " - " << res.first << "\n";
+        }
+    });
+}
+
+void add_compact_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
+    throw new std::invalid_argument("not supported yet");
+}
+
+void add_compact(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("compact", "commands for the compact index", false);
+    sub->require_subcommand(1);
+    add_compact_create_folders(*sub, p);
+//    add_compact_create(*sub, p);
+//    add_compact_create_from_samples(*sub, p);
+//    add_compact_combine(*sub, p);
+    add_compact_query(*sub, p);
+    add_compact_dummy(*sub, p);
+}
+
 int main(int argc, char **argv) {
     CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
     add_classic(app, p);
+    add_compact(app, p);
     add_parameters(app, p);
     add_cortex(app, p);
     CLI11_PARSE(app, argc, argv);
