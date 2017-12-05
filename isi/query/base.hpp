@@ -4,6 +4,7 @@
 #include <vector>
 #include <isi/util/timer.hpp>
 #include <isi/util/file.hpp>
+#include <isi/util/query.hpp>
 #include <numeric>
 #include <immintrin.h>
 #include <xxhash.h>
@@ -43,13 +44,18 @@ namespace isi::query {
             size_t kmer_data_size = kmer<31>::data_size(kmer_size);
             size_t num_kmers = query.size() - kmer_size + 1;
             hashes.resize(num_hashes * num_kmers);
+
+            const char* query_8 = query.data();
             #pragma omp parallel
             {
                 std::vector<char> kmer_data(kmer_data_size);
+                std::vector<char> kmer_raw(kmer_size);
                 char* kmer_data_8 = kmer_data.data();
+                char* kmer_raw_8 = kmer_raw.data();
                 #pragma omp for
                 for (size_t i = 0; i < num_kmers; i++) {
-                    kmer<31>::init(query.data() + i, kmer_data_8, kmer_size);
+                    const char* normalized_kmer = normalize_kmer(query_8 + i, kmer_raw_8, kmer_size);
+                    kmer<31>::init(normalized_kmer, kmer_data_8, kmer_size);
                     for (unsigned int j = 0; j < num_hashes; j++) {
                         size_t hash = XXH32(kmer_data_8, kmer_data_size, j);
                         hashes[i * num_hashes + j] = hash % signature_size;

@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <isi/query/compact_index/mmap.hpp>
 #include <isi/construction/compact_index.hpp>
+#include <isi/util/query.hpp>
 
 inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     std::ifstream ifs1(f1, std::ios::in | std::ios::binary);
@@ -25,8 +26,10 @@ inline void assert_equals_files(const std::string& f1, const std::string& f2) {
 inline std::vector<isi::sample<31>> generate_samples_all(const std::string& query) {
     std::vector<isi::sample<31>> samples(33);
     isi::kmer<31> k;
+    std::vector<char> kmer_raw(31);
     for (size_t i = 0; i < query.size() - 31; i++) {
-        k.init(query.data() + i);
+        const char* normalized_kmer = isi::query::normalize_kmer(query.data() + i, kmer_raw.data(), 31);
+        k.init(normalized_kmer);
         for (size_t j = 0; j < samples.size(); j++) {
             if (j % (i % (samples.size() - 1) + 1) == 0) {
                 samples[j].data().push_back(k);
@@ -39,7 +42,9 @@ inline std::vector<isi::sample<31>> generate_samples_all(const std::string& quer
 inline std::vector<isi::sample<31>> generate_samples_one(const std::string& query) {
     std::vector<isi::sample<31>> samples(33);
     isi::kmer<31> k;
-    k.init(query.data());
+    std::vector<char> kmer_raw(31);
+    const char* normalized_kmer = isi::query::normalize_kmer(query.data(), kmer_raw.data(), 31);
+    k.init(normalized_kmer);
     for (size_t i = 0; i < samples.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
             samples[i].data().push_back(k);

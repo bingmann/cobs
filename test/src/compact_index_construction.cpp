@@ -142,7 +142,7 @@ namespace {
             double set_bit_ratio = isi::calc_average_set_bit_ratio(h.parameters()[i].signature_size, 3, 0.1);
             double num_ones_average = set_bit_ratio * h.parameters()[i].signature_size;
             for (auto& no: num_ones[i]) {
-                ASSERT_LE(no.second, num_ones_average * 1.01);
+                ASSERT_LE(no.second, num_ones_average * 1.02);
             }
         }
     }

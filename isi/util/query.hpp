@@ -11,5 +11,6 @@
 namespace isi::query {
     std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd);
     void destroy_mmap(int fd, uint8_t* mmap_ptr, const stream_metadata& smd);
+    const char* normalize_kmer(const char* query_8, char* kmer_raw_8, uint32_t kmer_size);
 }
 
