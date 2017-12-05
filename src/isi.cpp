@@ -280,7 +280,7 @@ void add_compact_create(CLI::App& app, std::shared_ptr<parameters> p) {
 }
 
 void add_compact_create_folders(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_step1", "constructs multiple small indices form the samples in <in_dir>", false);
+    auto sub = app.add_subcommand("construct_step1", "creates the folders used for further construction", false);
     p->add_in_dir(sub)->required();
     p->add_out_dir(sub)->required();
     p->add_page_size(sub)->required();
@@ -316,7 +316,9 @@ void add_compact_query(CLI::App& app, std::shared_ptr<parameters> p) {
 
 void add_compact_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
-    throw new std::invalid_argument("not supported yet");
+    sub->set_callback([p]() {
+        throw new std::invalid_argument("not supported yet");
+    });
 }
 
 void add_compact(CLI::App& app, std::shared_ptr<parameters> p) {
