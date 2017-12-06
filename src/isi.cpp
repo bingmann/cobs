@@ -179,11 +179,12 @@ void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
     p->add_false_positive_rate(sub)->required();
     p->add_num_elements(sub);
     sub->set_callback([p]() {
-        double signature_size_ratio = isi::calc_signature_size_ratio(p->num_hashes, p->false_positive_rate);
-        std::cout << "signature size rate (m / n): " + std::to_string(signature_size_ratio);
-        if (p->num_elements != 0) {
+        if (p->num_elements == 0) {
+            double signature_size_ratio = isi::calc_signature_size_ratio(p->num_hashes, p->false_positive_rate);
+            std::cout << signature_size_ratio;
+        } else {
             uint64_t signature_size = isi::calc_signature_size(p->num_elements, p->num_hashes, p->false_positive_rate);
-            std::cout << std::endl << "signature size (m): " + std::to_string(signature_size);
+            std::cout << signature_size;
         }
     });
 }
