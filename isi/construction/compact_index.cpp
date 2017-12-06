@@ -89,7 +89,7 @@ namespace isi::compact_index {
         return all_combined;
     }
 
-    void create_compact_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size) {
+    void combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size) {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -146,7 +146,7 @@ namespace isi::compact_index {
         while(!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
             iteration++;
         }
-        create_compact_index(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + isi::file::compact_index_header::file_extension), page_size);
+        combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + isi::file::compact_index_header::file_extension), page_size);
     }
 
     void create(const std::experimental::filesystem::path& in_dir, std::experimental::filesystem::path out_dir,

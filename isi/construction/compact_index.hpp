@@ -34,6 +34,9 @@ namespace isi::compact_index {
     void create_from_folders(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
                                            double false_positive_probability, uint64_t page_size = get_page_size());
 
+
+    void combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size = get_page_size());
+
     /** Creates a dummy index filled with random data.
      */
     void create_dummy(const std::experimental::filesystem::path& p, size_t signature_size, size_t block_size, size_t num_hashes);
