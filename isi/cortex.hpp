@@ -94,9 +94,7 @@ namespace isi::cortex {
             s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
             read_sample(iter, v.end(), h, s);
-            //todo assign name to sample
             t.active("write");
-
             file::serialize<31>(out_path, s, h.name);
         }
         t.stop();

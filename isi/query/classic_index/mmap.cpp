@@ -18,7 +18,7 @@ namespace isi::query::classic_index {
     void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
         #pragma omp parallel for
         for (size_t i = 0; i < hashes.size(); i++) {
-            auto data_8 = m_data + hashes[i] * m_header.block_size();
+            auto data_8 = m_data + hashes[i] % m_header.signature_size() * m_header.block_size();
             auto rows_8 = rows + i * m_header.block_size();
             std::memcpy(rows_8, data_8, m_header.block_size());
         }

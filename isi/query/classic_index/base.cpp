@@ -11,10 +11,6 @@ namespace isi::query::classic_index {
         return m_header.block_size();
     }
 
-    uint64_t base::max_hash_value() const {
-            return m_header.signature_size();
-    }
-
     uint64_t base::counts_size() const {
             return 8 * m_header.block_size();
     }

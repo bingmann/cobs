@@ -10,7 +10,6 @@ namespace isi::query::classic_index {
         explicit base(const std::experimental::filesystem::path& path);
         uint64_t num_hashes() const override;
         uint64_t block_size() const override;
-        uint64_t max_hash_value() const override;
         uint64_t counts_size() const override;
     public:
         virtual ~base() = default;

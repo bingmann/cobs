@@ -18,11 +18,7 @@ namespace isi::query::compact_index {
     uint64_t base::block_size() const {
         return m_block_size;
     }
-
-    uint64_t base::max_hash_value() const {
-        return UINT64_MAX;
-    }
-
+    
     uint64_t base::counts_size() const {
         return 8 * m_header.parameters().size() * m_header.page_size();
     }

@@ -27,7 +27,6 @@ namespace isi::query {
         virtual void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
         virtual uint64_t block_size() const = 0;
         virtual uint64_t num_hashes() const = 0;
-        virtual uint64_t max_hash_value() const = 0;
         virtual uint64_t counts_size() const = 0;
 
     public:
@@ -40,7 +39,7 @@ namespace isi::query {
 
 namespace isi::query {
     namespace {
-        void create_hashes(std::vector<size_t>& hashes, const std::string& query, uint32_t kmer_size, uint64_t signature_size, uint64_t num_hashes) {
+        void create_hashes(std::vector<size_t>& hashes, const std::string& query, uint32_t kmer_size, uint64_t num_hashes) {
             size_t kmer_data_size = kmer<31>::data_size(kmer_size);
             size_t num_kmers = query.size() - kmer_size + 1;
             hashes.resize(num_hashes * num_kmers);
@@ -57,8 +56,7 @@ namespace isi::query {
                     const char* normalized_kmer = canonicalize_kmer(query_8 + i, kmer_raw_8, kmer_size);
                     kmer<31>::init(normalized_kmer, kmer_data_8, kmer_size);
                     for (unsigned int j = 0; j < num_hashes; j++) {
-                        size_t hash = XXH32(kmer_data_8, kmer_data_size, j);
-                        hashes[i * num_hashes + j] = hash % signature_size;
+                        hashes[i * num_hashes + j] = XXH32(kmer_data_8, kmer_data_size, j);
                     }
                 }
             }
@@ -151,7 +149,7 @@ namespace isi::query {
                     "search query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
         m_timer.active("hashes");
         std::vector<size_t> hashes;
-        create_hashes(hashes, query, kmer_size, max_hash_value(), num_hashes());
+        create_hashes(hashes, query, kmer_size, num_hashes());
         std::vector<uint16_t> counts(counts_size());
         calculate_counts(hashes, counts);
         m_timer.active("counts_to_result");
