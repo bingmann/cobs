@@ -71,6 +71,7 @@ struct parameters {
     uint64_t batch_size;
     uint64_t num_result;
     uint64_t page_size;
+    uint64_t kmer_size;
     std::string query;
     std::experimental::filesystem::path in_file;
     std::experimental::filesystem::path out_file;
@@ -136,6 +137,13 @@ struct parameters {
         }, "the page size of the ssd the index is constructed for");
     }
 
+    CLI::Option* add_kmer_size(CLI::App* app) {
+        return app->add_option("<kmer_size>", [&](std::vector<std::string> val) {
+            this->kmer_size = get_unsigned_integer(val[0], "<kmer_size>", 1);
+            return true;
+        }, "the size of one kmer");
+    }
+
     CLI::Option* add_query(CLI::App* app) {
         return app->add_option("<query>", [&](std::vector<std::string> val) {
             this->query = get_query(val[0], "<query>");
@@ -197,6 +205,20 @@ void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
         isi::file::sample_header h;
         isi::file::deserialize(p->in_file, s, h);
         std::cout << s;
+    });
+}
+
+void add_create_kmers(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("create_kmers", "creates all canonical kmers from <query>", false);
+    p->add_query(sub)->required();
+    p->add_kmer_size(sub);
+    sub->set_callback([p]() {
+        uint64_t kmer_size = p->kmer_size == 0 ? 31U : p->kmer_size;
+        std::vector<char> kmer_raw(kmer_size);
+        for (size_t i = 0; i < p->query.size() - kmer_size; i++) {
+            auto kmer = isi::query::canonicalize_kmer(p->query.data() + i, kmer_raw.data(), kmer_size);
+            std::cout << std::string(kmer, kmer_size) << std::endl;
+        }
     });
 }
 
@@ -338,6 +360,7 @@ int main(int argc, char **argv) {
     add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);
+    add_create_kmers(app, p);
     add_cortex(app, p);
     CLI11_PARSE(app, argc, argv);
     return 0;
