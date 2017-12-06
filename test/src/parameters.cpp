@@ -7,7 +7,7 @@
 
 namespace {
     std::string query = isi::random_sequence(10000, 1);
-    std::unordered_map<char, char> basepairs = {{'A', 'G'}, {'C', 'T'}, {'G', 'A'}, {'T', 'C'}};
+    std::unordered_map<char, char> basepairs = {{'A', 'T'}, {'C', 'G'}, {'G', 'C'}, {'T', 'A'}};
 
     size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
         uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_probability);

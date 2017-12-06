@@ -30,7 +30,7 @@ namespace isi::query {
         }
     }
 
-    std::unordered_map<char, char> basepairs = {{'A', 'G'}, {'C', 'T'}, {'G', 'A'}, {'T', 'C'}};
+    std::unordered_map<char, char> basepairs = {{'A', 'T'}, {'C', 'G'}, {'G', 'C'}, {'T', 'A'}};
     const char* canonicalize_kmer(const char* query_8, char* kmer_raw_8, uint32_t kmer_size) {
         const char* query_8_reverse = query_8 + kmer_size - 1;
         size_t i = 0;

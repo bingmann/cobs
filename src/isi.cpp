@@ -217,7 +217,7 @@ void add_create_kmers(CLI::App& app, std::shared_ptr<parameters> p) {
         std::vector<char> kmer_raw(kmer_size);
         for (size_t i = 0; i < p->query.size() - kmer_size; i++) {
             auto kmer = isi::query::canonicalize_kmer(p->query.data() + i, kmer_raw.data(), kmer_size);
-            std::cout << std::string(kmer, kmer_size) << std::endl;
+            std::cout << std::string(kmer, kmer_size) << "\n";
         }
     });
 }
