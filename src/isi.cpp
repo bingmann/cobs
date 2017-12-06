@@ -189,6 +189,17 @@ void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
+void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("print_sample", "prints the sample at <in_file>", false);
+    p->add_in_file(sub)->required();
+    sub->set_callback([p]() {
+        isi::sample<31> s;
+        isi::file::sample_header h;
+        isi::file::deserialize(p->in_file, s, h);
+        std::cout << s;
+    });
+}
+
 void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("cortex", "converts the cortex files in <in_dir> to the isi sample format", false);
     p->add_in_dir(sub)->required();
@@ -326,6 +337,7 @@ int main(int argc, char **argv) {
     add_classic(app, p);
     add_compact(app, p);
     add_parameters(app, p);
+    add_print_sample(app, p);
     add_cortex(app, p);
     CLI11_PARSE(app, argc, argv);
     return 0;

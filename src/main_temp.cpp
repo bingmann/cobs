@@ -13,7 +13,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     for(size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
-    isi::file::classic_index_header h(signature_size, block_size, num_hashes, file_names);
+    isi::file::classic_index_header h(signature_size, num_hashes, file_names);
     std::ofstream ofs;
     isi::file::serialize_header(ofs, p, h);
 

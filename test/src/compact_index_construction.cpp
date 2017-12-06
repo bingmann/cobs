@@ -3,7 +3,7 @@
 #include <isi/util/parameters.hpp>
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/compact_index_construction/input_1");
+    std::experimental::filesystem::path in_dir("test/out/compact_index_construction/input");
     std::experimental::filesystem::path samples_dir(in_dir.string() + "/samples");
     std::experimental::filesystem::path isi_2_dir(in_dir.string() + "/isi_2");
     std::experimental::filesystem::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
