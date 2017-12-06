@@ -54,7 +54,7 @@ namespace isi::query {
                 char* kmer_raw_8 = kmer_raw.data();
                 #pragma omp for
                 for (size_t i = 0; i < num_kmers; i++) {
-                    const char* normalized_kmer = normalize_kmer(query_8 + i, kmer_raw_8, kmer_size);
+                    const char* normalized_kmer = canonicalize_kmer(query_8 + i, kmer_raw_8, kmer_size);
                     kmer<31>::init(normalized_kmer, kmer_data_8, kmer_size);
                     for (unsigned int j = 0; j < num_hashes; j++) {
                         size_t hash = XXH32(kmer_data_8, kmer_data_size, j);

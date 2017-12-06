@@ -2,6 +2,7 @@
 #include <isi/util/error_handling.hpp>
 #include <zconf.h>
 #include <algorithm>
+#include <iostream>
 
 namespace isi::query {
     std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
@@ -29,20 +30,20 @@ namespace isi::query {
         }
     }
 
-    const char* normalize_kmer(const char* query_8, char* kmer_raw_8, uint32_t kmer_size) {
-        //todo use std::mismatch with std::reverse_iterator
-        const char* query_8_reverse = query_8 + kmer_size;
-        size_t counter = 0;
-        while(*query_8 == *query_8_reverse && counter < kmer_size / 2) {
-            query_8++;
-            query_8_reverse--;
-            counter++;
+    std::unordered_map<char, char> basepairs = {{'A', 'G'}, {'C', 'T'}, {'G', 'A'}, {'T', 'C'}};
+    const char* canonicalize_kmer(const char* query_8, char* kmer_raw_8, uint32_t kmer_size) {
+        const char* query_8_reverse = query_8 + kmer_size - 1;
+        size_t i = 0;
+        while(query_8[i] == basepairs[*(query_8_reverse - i)] && i < kmer_size / 2) {
+            i++;
         }
 
-        if(*query_8 <= *query_8_reverse) {
-            return query_8 - counter;
+        if(query_8[i] <= basepairs[*(query_8_reverse - i)]) {
+            return query_8;
         } else {
-            std::reverse_copy(query_8 - counter, query_8_reverse + counter, kmer_raw_8);
+            for (size_t j = 0; j < kmer_size; j++) {
+                kmer_raw_8[kmer_size - j - 1] = basepairs.at(query_8[j]);
+            }
             return kmer_raw_8;
         }
     }

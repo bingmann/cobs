@@ -28,7 +28,7 @@ inline std::vector<isi::sample<31>> generate_samples_all(const std::string& quer
     isi::kmer<31> k;
     std::vector<char> kmer_raw(31);
     for (size_t i = 0; i < query.size() - 31; i++) {
-        const char* normalized_kmer = isi::query::normalize_kmer(query.data() + i, kmer_raw.data(), 31);
+        const char* normalized_kmer = isi::query::canonicalize_kmer(query.data() + i, kmer_raw.data(), 31);
         k.init(normalized_kmer);
         for (size_t j = 0; j < samples.size(); j++) {
             if (j % (i % (samples.size() - 1) + 1) == 0) {
@@ -43,7 +43,7 @@ inline std::vector<isi::sample<31>> generate_samples_one(const std::string& quer
     std::vector<isi::sample<31>> samples(33);
     isi::kmer<31> k;
     std::vector<char> kmer_raw(31);
-    const char* normalized_kmer = isi::query::normalize_kmer(query.data(), kmer_raw.data(), 31);
+    const char* normalized_kmer = isi::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
     k.init(normalized_kmer);
     for (size_t i = 0; i < samples.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {

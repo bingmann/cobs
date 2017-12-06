@@ -3,8 +3,12 @@
 #include <isi/construction/classic_index.hpp>
 #include <xxhash.h>
 #include <isi/util/parameters.hpp>
+#include <isi/util/query.hpp>
 
 namespace {
+    std::string query = isi::random_sequence(10000, 1);
+    std::unordered_map<char, char> basepairs = {{'A', 'G'}, {'C', 'T'}, {'G', 'A'}, {'T', 'C'}};
+
     size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
         uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_probability);
 
@@ -83,5 +87,21 @@ namespace {
         assert_between(num_positives, 9800, 10200);
         num_positives = get_num_positives_hash(3, 0.1, 100000);
         assert_between(num_positives, 9800, 10200);
+    }
+
+    TEST(parameters, canonical) {
+        std::array<char, 31> kmer_raw;
+        for (size_t i = 0; i < query.size() - 31; i++) {
+            char* kmer_8 = query.data() + i;
+            const char* canonic_kmer = isi::query::canonicalize_kmer(kmer_8, kmer_raw.data(), 31);
+
+            std::string kmer_result(canonic_kmer, 31);
+            std::string kmer_original(kmer_8, 31);
+            std::string kmer_complement(31, 'X');
+            for (size_t j = 0; j < 31; j++) {
+                kmer_complement[j] = basepairs[kmer_original[30 - j]];
+            }
+            ASSERT_EQ(kmer_result, std::min(kmer_original, kmer_complement));
+        }
     }
 }
