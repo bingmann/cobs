@@ -352,6 +352,15 @@ void add_compact(CLI::App& app, std::shared_ptr<parameters> p) {
     add_compact_dummy(*sub, p);
 }
 
+int parse(CLI::App& app, int argc, char **argv) {
+    try {
+        CLI11_PARSE(app, argc, argv);
+    } catch (std::ios::failure e) {
+        std::cout << e.what() << " - " << e.code().message() << std::endl;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
     CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n", false);
     app.require_subcommand(1);
@@ -362,6 +371,5 @@ int main(int argc, char **argv) {
     add_print_sample(app, p);
     add_create_kmers(app, p);
     add_cortex(app, p);
-    CLI11_PARSE(app, argc, argv);
-    return 0;
+    return parse(app, argc, argv);
 }

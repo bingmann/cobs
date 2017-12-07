@@ -57,7 +57,7 @@ namespace isi::file {
 namespace isi::file {
     template<uint32_t N>
     void serialize(std::ofstream& ofs, const sample<N>& s, const std::string& name) {
-        ofs.exceptions(std::ios::badbit);
+        ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         sample_header sh(name, N);
         header<sample_header>::serialize(ofs, sh);
         ofs.write(reinterpret_cast<const char*>(s.data().data()), kmer<N>::size * s.data().size());
@@ -73,7 +73,7 @@ namespace isi::file {
 
     template<uint32_t N>
     void deserialize(std::ifstream& ifs, sample<N>& s, sample_header& h) {
-        ifs.exceptions(std::ios::badbit);
+        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         header<sample_header>::deserialize(ifs, h);
         assert(N == h.kmer_size());
 
@@ -91,7 +91,7 @@ namespace isi::file {
 
     template<class T>
     void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p, const T& h) {
-        ofs.exceptions(std::ios::badbit);
+        ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         ofs.open(p.string(), std::ios::out | std::ios::binary);
         header<T>::serialize(ofs, h);
     }
@@ -104,7 +104,7 @@ namespace isi::file {
 
     template<class T>
     T deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p) {
-        ifs.exceptions(std::ios::badbit);
+        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         ifs.open(p.string(), std::ios::in | std::ios::binary);
         T h;
         header<T>::deserialize(ifs, h);
@@ -119,17 +119,19 @@ namespace isi::file {
 
     template<class T>
     bool file_is(const std::experimental::filesystem::path& p) {
-        if (std::experimental::filesystem::is_regular_file(p)) {
+        bool result = std::experimental::filesystem::is_regular_file(p);
+        if (result) {
             try {
                 deserialize_header<T>(p);
-            } catch (file_io_exception& /*e*/) {
-                std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
-                return false;
+            } catch (...) {
+                result = false;
             }
-            return true;
-        } else {
-            return false;
         }
+
+        if(!result) {
+            std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
+        }
+        return result;
     }
 }
 

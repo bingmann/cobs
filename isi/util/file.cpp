@@ -2,7 +2,7 @@
 
 namespace isi::file {
     void serialize(std::ofstream& ofs, const std::vector<uint8_t>& data, const classic_index_header& h) {
-        ofs.exceptions(std::ios::badbit);
+        ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         header<classic_index_header>::serialize(ofs, h);
         ofs.write(reinterpret_cast<const char*>(data.data()), data.size());
     }
@@ -14,7 +14,7 @@ namespace isi::file {
     }
 
     void deserialize(std::ifstream& ifs, std::vector<uint8_t>& data, classic_index_header& h) {
-        ifs.exceptions(std::ios::badbit);
+        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         header<classic_index_header>::deserialize(ifs, h);
         stream_metadata smd = get_stream_metadata(ifs);
         size_t size = smd.end_pos - smd.curr_pos;
@@ -23,7 +23,7 @@ namespace isi::file {
     }
 
     void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t>>& data, compact_index_header& h) {
-        ifs.exceptions(std::ios::badbit);
+        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         header<compact_index_header>::deserialize(ifs, h);
         data.clear();
         data.resize(h.parameters().size());
