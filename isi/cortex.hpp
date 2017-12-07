@@ -115,10 +115,8 @@ namespace isi::cortex {
                     process_file(it->path(), out_path, sample);
                     std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::endl;
                     i++;
-                } catch (const std::ios::failure e) {
-                    std::cerr << it->path().string() << " - " << e.what() << " - " << e.code().message() << std::endl;
                 } catch (const std::exception& e) {
-                    std::cerr << it->path().string() << " - " << e.what() << std::endl;
+                    std::cerr << it->path().string() << " - " << e.what() << " - " << std::strerror(errno) << std::endl;
                     t.stop();
                 }
             }
