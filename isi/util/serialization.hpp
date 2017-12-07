@@ -30,6 +30,7 @@ namespace isi {
     template<typename T>
     void read_file(const std::experimental::filesystem::path& path, std::vector<T>& v) {
         std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
+        ifs.exceptions(std::ios::badbit);
         stream_metadata smd = get_stream_metadata(ifs);
         assert(smd.end_pos % sizeof(T) == 0);
         v.resize(smd.end_pos / sizeof(T));
