@@ -49,13 +49,12 @@ namespace isi {
             }
             if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
                 std::experimental::filesystem::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
-                std::cout << std::left << std::setw(6) << j << "BEG " << out_file << std::flush;
-                if (!std::experimental::filesystem::exists(out_file)) {
+                std::cout << "BE - " << std::setfill('0') << std::setw(7) << j << " - " << out_file << std::flush;
+                bool exists = std::experimental::filesystem::exists(out_file);
+                if (!exists) {
                     callback(paths, out_file);
-                    std::cout << "\r" << std::left << std::setw(6) << j << "END " << out_file << std::endl;
-                } else {
-                    std::cout << "\r" << std::left << std::setw(6) << j << "EXI " << out_file << std::endl;
                 }
+                std::cout << "\r" << (exists ? "EX" : "OK") << " - " << std::setfill('0') << std::setw(7) << j << " - " << out_file << std::endl;
                 paths.clear();
                 first_filename.clear();
                 j++;

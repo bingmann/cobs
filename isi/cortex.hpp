@@ -117,7 +117,7 @@ namespace isi::cortex {
                 && it->path().extension().string() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
                 && !std::experimental::filesystem::exists(out_path)) {
-                std::cout << "BE - " << std::setfill('0') << std::setw(6) << i << " - " << it->path().string() << std::flush;
+                std::cout << "BE - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::flush;
                 bool success = true;
                 try {
                     process_file(it->path(), out_path, sample);
@@ -126,7 +126,7 @@ namespace isi::cortex {
                     success = false;
                     t.stop();
                 }
-                std::cout << "\r" << (success ? "OK" : "ER") << " - " << std::setfill('0') << std::setw(6) << i << " - " << it->path().string() << std::endl;
+                std::cout << "\r" << (success ? "OK" : "ER") << " - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::endl;
                 i++;
             }
         }
