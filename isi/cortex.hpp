@@ -119,6 +119,7 @@ namespace isi::cortex {
                 //todo remove and add proper handling for corrupted .ctx files
                 && it->path().string().find("ERR1458685") == std::string::npos
                 && it->path().string().find("ERR1103853") == std::string::npos
+                && it->path().string().find("ERR1453315") == std::string::npos
                 && !std::experimental::filesystem::exists(out_path)) {
                 std::cout << "BE - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::flush;
                 bool success = true;
