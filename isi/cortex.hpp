@@ -79,6 +79,9 @@ namespace isi::cortex {
         size_t num_uint8_ts_per_kmer = 8 * h.num_words_per_kmer;
 
         while (iter != end) {
+            if (std::distance(iter, end) < num_uint8_ts_per_kmer + 5 * h.num_colors) {
+                throw std::invalid_argument("corrupted .ctx file");
+            }
             std::copy(iter, std::next(iter, num_uint8_ts_per_kmer), sample_data);
             std::advance(iter, num_uint8_ts_per_kmer + 5 * h.num_colors);
             std::advance(sample_data, num_uint8_ts_per_kmer);
@@ -116,11 +119,6 @@ namespace isi::cortex {
             if (std::experimental::filesystem::is_regular_file(*it)
                 && it->path().extension().string() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
-                //todo remove and add proper handling for corrupted .ctx files
-                && it->path().string().find("ERR1103853") == std::string::npos
-                && it->path().string().find("ERR1453315") == std::string::npos
-                && it->path().string().find("ERR1458685") == std::string::npos
-                && it->path().string().find("ERR1453685") == std::string::npos
                 && !std::experimental::filesystem::exists(out_path)) {
                 std::cout << "BE - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::flush;
                 bool success = true;
