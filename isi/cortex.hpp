@@ -8,6 +8,7 @@
 #include <isi/util/timer.hpp>
 #include <isi/util/file.hpp>
 #include <iomanip>
+#include <cstring>
 
 namespace isi::cortex {
     struct header {
@@ -42,6 +43,9 @@ namespace isi::cortex {
         header h{};
         check_magic_number(iter);
         h.version = cast<uint32_t>(iter);
+        if (h.version != 6) {
+            throw std::invalid_argument("invalid .ctx file version (" + std::to_string(h.version));
+        }
         std::advance(iter, 4);
         h.kmer_size = cast<uint32_t>(iter);
         assert(h.kmer_size == 31);
@@ -49,7 +53,9 @@ namespace isi::cortex {
         h.num_words_per_kmer = cast<uint32_t>(iter);
         std::advance(iter, 4);
         h.num_colors = cast<uint32_t>(iter);
-        assert(h.num_colors == 1);
+        if (h.num_colors != 1) {
+            throw std::invalid_argument("invalid number of colors (" + std::to_string(h.num_colors) + "), should be 1");
+        }
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
             auto sample_name_length = cast<uint32_t>(iter);
@@ -111,16 +117,17 @@ namespace isi::cortex {
                 && it->path().extension().string() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
                 && !std::experimental::filesystem::exists(out_path)) {
-                std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::flush;
+                std::cout << "BE - " << std::setfill('0') << std::setw(6) << i << " - " << it->path().string() << std::flush;
+                bool success = true;
                 try {
                     process_file(it->path(), out_path, sample);
-                    std::cout << " OK" << std::endl;
-                    i++;
                 } catch (const std::exception& e) {
-                    std::cout << " ERROR" << std::endl;
                     std::cerr << it->path().string() << " - " << e.what() << " - " << std::strerror(errno) << std::endl;
+                    success = false;
                     t.stop();
                 }
+                std::cout << "\r" << (success ? "OK" : "ER") << " - " << std::setfill('0') << std::setw(6) << i << " - " << it->path().string() << std::endl;
+                i++;
             }
         }
         std::cout << t;
