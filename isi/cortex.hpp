@@ -113,8 +113,8 @@ namespace isi::cortex {
                 && !std::experimental::filesystem::exists(out_path)) {
                 std::cout << std::left << std::setw(6) << i << " - " << it->path().string() << std::flush;
                 try {
-                    std::cout << " OK" << std::endl;
                     process_file(it->path(), out_path, sample);
+                    std::cout << " OK" << std::endl;
                     i++;
                 } catch (const std::exception& e) {
                     std::cout << " ERROR" << std::endl;
