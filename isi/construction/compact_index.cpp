@@ -118,17 +118,17 @@ namespace isi::compact_index {
         for (const auto& p: paths) {
             std::ifstream ifs;
             uint64_t block_size = isi::file::deserialize_header<isi::file::classic_index_header>(ifs, p).block_size();
-            isi::stream_metadata smd = get_stream_metadata(ifs);
-            uint64_t data_size = smd.end_pos - smd.curr_pos;
-            while(data_size > 0) {
-                size_t num_uint8_ts = std::min(32 * block_size, data_size);
-                ifs.read(buffer.data(), num_uint8_ts);
-                data_size -= num_uint8_ts;
-                if (block_size == page_size) {
-                    ofs.write(buffer.data(), num_uint8_ts);
-                } else {
-                    std::vector<char> padding(page_size - block_size, 0);
-                    for(size_t i = 0; i < num_uint8_ts; i += block_size) {
+            if (block_size == page_size) {
+                ofs << ifs.rdbuf();
+            } else {
+                isi::stream_metadata smd = get_stream_metadata(ifs);
+                uint64_t data_size = smd.end_pos - smd.curr_pos;
+                std::vector<char> padding(page_size - block_size, 0);
+                while (data_size > 0) {
+                    size_t num_uint8_ts = std::min(32 * block_size, data_size);
+                    ifs.read(buffer.data(), num_uint8_ts);
+                    data_size -= num_uint8_ts;
+                    for (size_t i = 0; i < num_uint8_ts; i += block_size) {
                         ofs.write(buffer.data() + i, block_size);
                         ofs.write(padding.data(), padding.size());
                     }

@@ -32,7 +32,7 @@ namespace isi {
     }
 
     void timer::print(std::ostream& ostream, size_t max_name_length, const std::string& name, const std::chrono::duration<double>& duration) const {
-        ostream << std::left << std::setw(max_name_length) << name << " - " << duration.count() << std::right << std::endl;
+        ostream << std::setfill(' ') << std::left << std::setw(max_name_length) << name << " - " << duration.count() << std::right << std::endl;
     }
 
     void timer::print(std::ostream& ostream) const {
