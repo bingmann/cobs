@@ -125,7 +125,7 @@ namespace isi::compact_index {
                 uint64_t data_size = smd.end_pos - smd.curr_pos;
                 std::vector<char> padding(page_size - block_size, 0);
                 while (data_size > 0) {
-                    size_t num_uint8_ts = std::min(32 * block_size, data_size);
+                    size_t num_uint8_ts = std::min(1024 * block_size, data_size);
                     ifs.read(buffer.data(), num_uint8_ts);
                     data_size -= num_uint8_ts;
                     for (size_t i = 0; i < num_uint8_ts; i += block_size) {
