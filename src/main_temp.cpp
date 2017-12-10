@@ -43,10 +43,8 @@ void server() {
     std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 
     isi::query::classic_index::mmap s_mmap(p);
-    isi::query::classic_index::ifs s_ifs(p);
 //    isi::query::classic_index::asio s_asio(p);
     size_t query_len = 1000;
-//    run(s_ifs, query_len, p, result_1);
     run(s_mmap, query_len, result_1);
 //    run(s_stxxl, query_len, result_3);
 }
@@ -73,7 +71,7 @@ int main() {
 //        sum += std::stoi(strs[1]);
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
-//    server();
+    server();
 
 //    std::cout << getpagesize() << std::endl;
 
