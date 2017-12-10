@@ -51,10 +51,16 @@ void server() {
 //    run(s_stxxl, query_len, result_3);
 }
 
+
+template<class T>
+int a() {
+    return 5;
+}
+
 int main() {
-    std::string in = "test/a";
-    std::string out = "test/b";
-    isi::cortex::process_all_in_directory<31>(in, out);
+//    std::string in = "test/a";
+//    std::string out = "test/b";
+//    isi::cortex::process_all_in_directory<31>(in, out);
 //    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 //    std::ifstream ifs("/Users/flo/freq.txt");
 //    std::ofstream ofs("/Users/flo/freq_sum_2.txt");

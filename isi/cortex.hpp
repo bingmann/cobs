@@ -79,7 +79,7 @@ namespace isi::cortex {
         size_t num_uint8_ts_per_kmer = 8 * h.num_words_per_kmer;
 
         while (iter != end) {
-            if (std::distance(iter, end) < num_uint8_ts_per_kmer + 5 * h.num_colors) {
+            if (std::distance(iter, end) < (int64_t) num_uint8_ts_per_kmer + 5 * h.num_colors) {
                 throw std::invalid_argument("corrupted .ctx file");
             }
             std::copy(iter, std::next(iter, num_uint8_ts_per_kmer), sample_data);

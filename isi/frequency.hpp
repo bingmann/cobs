@@ -93,7 +93,6 @@ namespace isi::frequency {
         void add_pq_element(std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&,
                                                                                                       const PqElement&)>>& pq,
                             std::ifstream* ifs) {
-            //todo throws exception
             if (ifs && ifs->peek() != EOF) {
                 pq.push(PqElement(ifs));
             }
@@ -144,6 +143,7 @@ namespace isi::frequency {
                                for (const auto& p: paths) {
                                    ifstreams.emplace_back(std::ifstream());
                                    PQE::deserialize_header(ifstreams.back(), p);
+                                   ifstreams.back().exceptions(std::ios::failbit | std::ios::badbit);
                                }
                                process<PQE>(ifstreams, out_file);
                                ifstreams.clear();

@@ -107,6 +107,7 @@ namespace {
     size_t get_count_sample(const std::experimental::filesystem::path& file) {
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::sample_header>(ifs, file);
+        ifs.exceptions(std::ios::failbit | std::ios::badbit);
         size_t total_count = 0;
         uint64_t kmer;
         while (ifs && ifs.peek() != EOF) {
@@ -119,6 +120,7 @@ namespace {
     size_t get_count_frequency(const std::experimental::filesystem::path& file) {
         std::ifstream ifs;
         isi::file::deserialize_header<isi::file::frequency_header>(ifs, file);
+        ifs.exceptions(std::ios::failbit | std::ios::badbit);
         size_t total_count = 0;
         uint64_t kmer;
         uint32_t count;

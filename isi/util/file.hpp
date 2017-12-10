@@ -124,13 +124,11 @@ namespace isi::file {
             try {
                 deserialize_header<T>(p);
             } catch (...) {
+                std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
                 result = false;
             }
         }
 
-        if(!result) {
-            std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
-        }
         return result;
     }
 }
