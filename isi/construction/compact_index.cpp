@@ -114,7 +114,7 @@ namespace isi::compact_index {
         std::ofstream ofs;
         isi::file::serialize_header(ofs, out_file, h);
 
-        std::vector<char> buffer(32 * page_size);
+        std::vector<char> buffer(1024 * page_size);
         for (const auto& p: paths) {
             std::ifstream ifs;
             uint64_t block_size = isi::file::deserialize_header<isi::file::classic_index_header>(ifs, p).block_size();
