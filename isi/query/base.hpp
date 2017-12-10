@@ -144,9 +144,10 @@ namespace isi::query {
     template<class T>
     void base<T>::search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) {
         assert_exit(query.size() >= kmer_size,
-                    "search query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
+                    "query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
         assert_exit(query.size() - kmer_size < UINT16_MAX,
-                    "search query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
+                    "query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
+        m_timer.reset();
         m_timer.active("hashes");
         std::vector<size_t> hashes;
         create_hashes(hashes, query, kmer_size, num_hashes());
@@ -164,7 +165,7 @@ namespace isi::query {
 
 
     template<class T>
-    const uint16_t base<T>::m_expansion[] alignas(16) = {
+    const uint16_t base<T>::m_expansion[] alignas(__m128i_u) = {
         0, 0, 0, 0, 0, 0, 0, 0,
         1, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0,

@@ -31,7 +31,7 @@ namespace isi::compact_index {
             i++;
         }
     }
-//
+
 //    void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
 //                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
 //        size_t num_files = 0;
