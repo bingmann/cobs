@@ -277,6 +277,7 @@ void add_classic_query(CLI::App& app, std::shared_ptr<parameters> p) {
         for (const auto& res: result) {
             std::cout << res.second << " - " << res.first << "\n";
         }
+        std::cout << mmap.get_timer() << std::endl;
     });
 }
 
@@ -333,6 +334,7 @@ void add_compact_query(CLI::App& app, std::shared_ptr<parameters> p) {
         for (const auto& res: result) {
             std::cout << res.second << " - " << res.first << "\n";
         }
+        std::cout << mmap.get_timer() << std::endl;
     });
 }
 
