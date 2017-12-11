@@ -1,17 +1,17 @@
 #include <experimental/filesystem>
 #include <isi/query/classic_index/base.hpp>
 #include <isi/query/classic_index/mmap.hpp>
-#include <isi/query/classic_index/ifs.hpp>
 #include <isi/frequency.hpp>
 #include <omp.h>
 #include <isi/cortex.hpp>
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;
-    size_t block_size = 8000;
+//    size_t block_size = 8000;
+    size_t block_size = 1;
     size_t num_hashes = 3;
     std::vector<std::string> file_names;
-    for(size_t i = 0; i < 8 * block_size; i++) {
+    for(size_t i = 0; i < 8 * block_size - 7; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
     isi::file::classic_index_header h(signature_size, num_hashes, file_names);
@@ -59,7 +59,7 @@ int main() {
 //    std::string in = "test/a";
 //    std::string out = "test/b";
 //    isi::cortex::process_all_in_directory<31>(in, out);
-//    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
+    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
 //    std::ifstream ifs("/Users/flo/freq.txt");
 //    std::ofstream ofs("/Users/flo/freq_sum_2.txt");
 //    std::string line;

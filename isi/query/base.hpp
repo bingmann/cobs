@@ -17,7 +17,7 @@ namespace isi::query {
         T m_header;
         stream_metadata m_smd;
         static const uint64_t m_count_expansions[16];
-        static const uint16_t m_expansion[2048];
+        alignas(__m128i_u) static const uint16_t m_expansion[2048];
         timer m_timer;
 
         void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const char* rows);
@@ -65,7 +65,6 @@ namespace isi::query {
         void counts_to_result(const std::vector<std::string>& file_names, const std::vector<uint16_t>& counts,
                               std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) {
             std::vector<uint32_t> sorted_indices(file_names.size());
-
             std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
             std::partial_sort(sorted_indices.begin(), sorted_indices.begin() + num_results, sorted_indices.end(),
                               [&](auto v1, auto v2) {
@@ -147,6 +146,7 @@ namespace isi::query {
                     "query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
         assert_exit(query.size() - kmer_size < UINT16_MAX,
                     "query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
+        num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
         m_timer.reset();
         m_timer.active("hashes");
         std::vector<size_t> hashes;
@@ -154,7 +154,7 @@ namespace isi::query {
         std::vector<uint16_t> counts(counts_size());
         calculate_counts(hashes, counts);
         m_timer.active("counts_to_result");
-        counts_to_result(m_header.file_names(), counts, result, num_results == 0 ? m_header.file_names().size() : num_results);
+        counts_to_result(m_header.file_names(), counts, result, num_results);
         m_timer.stop();
     }
 
@@ -165,7 +165,7 @@ namespace isi::query {
 
 
     template<class T>
-    const uint16_t base<T>::m_expansion[] alignas(__m128i_u) = {
+    alignas(__m128i_u) const uint16_t base<T>::m_expansion[] = {
         0, 0, 0, 0, 0, 0, 0, 0,
         1, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0,
