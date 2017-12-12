@@ -7,9 +7,8 @@ namespace isi::query::classic_index {
     private:
         int m_fd;
         uint8_t* m_data;
-        virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows);
     protected:
-        void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) override;
+        void read_from_disk(const std::vector<size_t>& hashes, char* rows) override;
     public:
         explicit mmap(const std::experimental::filesystem::path& path);
         ~mmap();

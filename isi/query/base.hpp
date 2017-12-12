@@ -14,18 +14,20 @@
 namespace isi::query {
     template<class T>
     class base {
+    private:
+//        static const uint64_t m_count_expansions[16];
+        alignas(__m128i_u) static const uint16_t m_expansion[2048];
+        void compute_counts(size_t hashes_size, uint16_t* counts, const char* rows);
+        void aggregate_rows(size_t hashes_size, char* rows);
+        void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts);
     protected:
         T m_header;
         stream_metadata m_smd;
-        static const uint64_t m_count_expansions[16];
-        alignas(__m128i_u) static const uint16_t m_expansion[2048];
         timer m_timer;
 
-        void compute_counts(size_t hashes_size, uint16_t* counts, const char* rows);
-        void aggregate_rows(size_t hashes_size, char* rows);
         explicit base(const std::experimental::filesystem::path& path);
 
-        virtual void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) = 0;
+        virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows) = 0;
         virtual uint64_t block_size() const = 0;
         virtual uint64_t num_hashes() const = 0;
         virtual uint64_t counts_size() const = 0;
@@ -140,6 +142,18 @@ namespace isi::query {
     }
 
     template<class T>
+    void base<T>::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
+        std::vector<char> rows(block_size() * hashes.size());
+        m_timer.active("mmap_access");
+        read_from_disk(hashes, rows.data());
+        m_timer.active("aggregate_rows");
+        aggregate_rows(hashes.size(), rows.data());
+        m_timer.active("compute_counts");
+        compute_counts(hashes.size(), counts, rows.data());
+        //todo test if it is faster to combine these functions for better cache locality
+    }
+
+    template<class T>
     void base<T>::search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) {
         assert_exit(query.size() >= kmer_size,
                     "query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
@@ -159,10 +173,10 @@ namespace isi::query {
         m_timer.stop();
     }
 
-    template<class T>
-    const uint64_t base<T>::m_count_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
-                                                    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
-                                                    281479271743488, 281479271743489};
+//    template<class T>
+//    const uint64_t base<T>::m_count_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
+//                                                    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
+//                                                    281479271743488, 281479271743489};
 
 
     template<class T>

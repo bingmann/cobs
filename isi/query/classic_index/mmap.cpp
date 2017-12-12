@@ -23,15 +23,4 @@ namespace isi::query::classic_index {
             std::memcpy(rows_8, data_8, m_header.block_size());
         }
     }
-
-    void mmap::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
-        std::vector<char> rows(m_header.block_size() * hashes.size());
-        m_timer.active("mmap_access");
-        read_from_disk(hashes, rows.data());
-        m_timer.active("aggregate_rows");
-        aggregate_rows(hashes.size(), rows.data());
-        m_timer.active("compute_counts");
-        compute_counts(hashes.size(), counts, rows.data());
-        //todo test if it is faster to combine these functions for better cache locality
-    }
 }

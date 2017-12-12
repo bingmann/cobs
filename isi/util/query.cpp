@@ -5,12 +5,23 @@
 #include <iostream>
 
 namespace isi::query {
-    std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
+
+    int open_file(const std::experimental::filesystem::path& path) {
         int fd = open(path.string().data(), O_RDONLY, 0);
         if(fd == -1) {
             exit_error_errno("could not open index file " + path.string());
         }
+        return fd;
+    }
 
+    void close_file(int fd) {
+        if (close(fd)) {
+            print_errno("could not close index file");
+        }
+    }
+
+    std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
+        int fd = open_file(path);
         void* mmap_ptr = mmap(NULL, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0);
         if(mmap_ptr == MAP_FAILED) {
             exit_error_errno("mmap failed");
@@ -25,9 +36,7 @@ namespace isi::query {
         if (munmap(mmap_ptr - smd.curr_pos, smd.end_pos)) {
             print_errno("could not unmap index file");
         }
-        if (close(fd)) {
-            print_errno("could not close index file");
-        }
+        close_file(fd);
     }
 
     std::unordered_map<char, char> basepairs = {{'A', 'T'}, {'C', 'G'}, {'G', 'C'}, {'T', 'A'}};

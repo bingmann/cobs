@@ -5,7 +5,61 @@ project(thesis)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
 
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/isi/*")
+set(SOURCE_FILES
+        isi/construction/classic_index.cpp
+        isi/construction/classic_index.hpp
+        isi/construction/compact_index.cpp
+        isi/construction/compact_index.hpp
+        isi/cortex.hpp
+        isi/file/classic_index_header.cpp
+        isi/file/classic_index_header.hpp
+        isi/file/compact_index_header.cpp
+        isi/file/compact_index_header.hpp
+        isi/file/file_io_exception.hpp
+        isi/file/frequency_header.cpp
+        isi/file/frequency_header.hpp
+        isi/file/header.hpp
+        isi/file/sample_header.cpp
+        isi/file/sample_header.hpp
+        isi/frequency.hpp
+        isi/kmer.hpp
+        isi/query/base.hpp
+        isi/query/classic_index/base.cpp
+        isi/query/classic_index/base.hpp
+        isi/query/classic_index/mmap.cpp
+        isi/query/classic_index/mmap.hpp
+        isi/query/compact_index/base.cpp
+        isi/query/compact_index/base.hpp
+        isi/query/compact_index/mmap.cpp
+        isi/query/compact_index/mmap.hpp
+        isi/sample.hpp
+        isi/util/error_handling.cpp
+        isi/util/error_handling.hpp
+        isi/util/file.cpp
+        isi/util/file.hpp
+        isi/util/misc.cpp
+        isi/util/misc.hpp
+        isi/util/parameters.cpp
+        isi/util/parameters.hpp
+        isi/util/processing.cpp
+        isi/util/processing.hpp
+        isi/util/query.cpp
+        isi/util/query.hpp
+        isi/util/serialization.cpp
+        isi/util/serialization.hpp
+        isi/util/timer.cpp
+        isi/util/timer.hpp
+)
+
+if(UNIX AND NOT APPLE)
+    set(SOURCE_FILES ${SOURCE_FILES}
+            isi/query/classic_index/aio.hpp
+            isi/query/classic_index/aio.cpp
+            isi/util/aio.hpp
+            isi/util/aio.cpp
+    )
+endif()
+
 file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
 file(GLOB_RECURSE EXECUTABLE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
