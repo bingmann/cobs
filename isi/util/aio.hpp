@@ -1,5 +1,8 @@
 #pragma once
 
+#include <linux/aio_abi.h>
+#include <time.h>
+
 namespace isi::query {
     int io_setup(unsigned nr, aio_context_t* ctxp);
     int io_destroy(aio_context_t ctx);

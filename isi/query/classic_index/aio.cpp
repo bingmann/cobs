@@ -1,6 +1,8 @@
 #include <isi/query/classic_index/aio.hpp>
 #include <isi/util/file.hpp>
 #include <isi/util/query.hpp>
+#include <isi/util/aio.hpp>
+#include <isi/util/error_handling.hpp>
 
 #include <cstring>
 
@@ -16,23 +18,22 @@ namespace isi::query::classic_index {
 
     void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
         aio_context_t ctx;
-        io_event events[num_ios];
+        io_event events[hashes.size()];
         int ret;
 
         ctx = 0;
         ret = io_setup(65536, &ctx);
         if (ret < 0) {
-            perror("io_setup error");
-            return 3;
+            exit_error_errno("io_setup error");
         }
 
-        std::vector<iocb> iocbs(hashes.size(), {0});
+        std::vector<iocb> iocbs(hashes.size(), iocb());
         std::vector<iocb*> iocbpp;
 
         for (size_t i = 0; i < hashes.size(); i++) {
-            iocbs[i].aio_fildes = fd;
+            iocbs[i].aio_fildes = m_fd;
             iocbs[i].aio_lio_opcode = IOCB_CMD_PREAD;
-            iocbs[i].aio_buf = rows + i * m_header.block_size();
+            iocbs[i].aio_buf = (uint64_t) rows + i * m_header.block_size();
             iocbs[i].aio_offset = hashes[i] % m_header.signature_size() * m_header.block_size();
             iocbs[i].aio_nbytes = m_header.block_size();
             iocbpp.push_back(iocbs.data() + i);
@@ -42,12 +43,12 @@ namespace isi::query::classic_index {
         std::cout << "aio_nbytes: " << iocbpp[1][0].aio_buf << std::endl;
 
         ret = io_submit(ctx, iocbpp.size(), iocbpp.data());
-        if (ret != iocbpp.size()) {
+        if (ret != static_cast<int64_t>(iocbpp.size())) {
             if (ret < 0)
                 perror("io_submit error");
             else
                 fprintf(stderr, "could not sumbit IOs");
-            return 4;
+            exit_error_errno("io_submit error");
         }
         std::cout << "after submit" << std::endl;
 
@@ -57,12 +58,7 @@ namespace isi::query::classic_index {
 
         ret = io_destroy(ctx);
         if (ret < 0) {
-            perror("io_destroy error");
-            return 5;
-        }
-
-        for (auto s : data) {
-            std::cout << s;
+            exit_error_errno("io_destroy error");
         }
     }
 }
