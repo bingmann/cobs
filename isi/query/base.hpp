@@ -5,6 +5,7 @@
 #include <isi/util/timer.hpp>
 #include <isi/util/file.hpp>
 #include <isi/util/query.hpp>
+#include <isi/util/misc.hpp>
 #include <numeric>
 #include <immintrin.h>
 #include <xxhash.h>
@@ -20,11 +21,11 @@ namespace isi::query {
         alignas(__m128i_u) static const uint16_t m_expansion[2048];
         timer m_timer;
 
-        void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const char* rows);
+        void compute_counts(size_t hashes_size, uint16_t* counts, const char* rows);
         void aggregate_rows(size_t hashes_size, char* rows);
         explicit base(const std::experimental::filesystem::path& path);
 
-        virtual void calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) = 0;
+        virtual void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) = 0;
         virtual uint64_t block_size() const = 0;
         virtual uint64_t num_hashes() const = 0;
         virtual uint64_t counts_size() const = 0;
@@ -62,7 +63,7 @@ namespace isi::query {
             }
         }
 
-        void counts_to_result(const std::vector<std::string>& file_names, const std::vector<uint16_t>& counts,
+        void counts_to_result(const std::vector<std::string>& file_names, const uint16_t* counts,
                               std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results) {
             std::vector<uint32_t> sorted_indices(file_names.size());
             std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
@@ -77,22 +78,20 @@ namespace isi::query {
                 result[i] = std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]);
             }
         }
+
     }
 
     template <class T>
-    void base<T>::compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const char* rows) {
+    void base<T>::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows) {
         auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
         auto rows_b = reinterpret_cast<const uint8_t*>(rows);
         uint64_t nh = num_hashes();
         uint64_t bs = block_size();
+        uint64_t cs = counts_size();
 
-        #pragma omp declare reduction (merge : std::vector<uint16_t> : \
-                        std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<uint16_t>())) \
-                        initializer(omp_priv = omp_orig)
-        #pragma omp parallel reduction(merge: counts)
+        #pragma omp parallel reduction(+:counts[:cs])
         {
-//        auto counts_64 = reinterpret_cast<uint64_t*>(counts.data());
-            auto counts_128 = reinterpret_cast<__m128i_u*>(counts.data());
+            auto counts_128 = reinterpret_cast<__m128i_u*>(counts);
             #pragma omp for
             for (uint64_t i = 0; i < hashes_size; i += nh) {
                 auto rows_8 = rows_b + i * bs;
@@ -149,12 +148,14 @@ namespace isi::query {
         num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
         m_timer.reset();
         m_timer.active("hashes");
+
+        uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
         std::vector<size_t> hashes;
         create_hashes(hashes, query, kmer_size, num_hashes());
-        std::vector<uint16_t> counts(counts_size());
         calculate_counts(hashes, counts);
         m_timer.active("counts_to_result");
         counts_to_result(m_header.file_names(), counts, result, num_results);
+        deallocate_aligned(counts);
         m_timer.stop();
     }
 

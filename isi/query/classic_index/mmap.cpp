@@ -24,7 +24,7 @@ namespace isi::query::classic_index {
         }
     }
 
-    void mmap::calculate_counts(const std::vector<size_t>& hashes, std::vector<uint16_t>& counts) {
+    void mmap::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
         std::vector<char> rows(m_header.block_size() * hashes.size());
         m_timer.active("mmap_access");
         read_from_disk(hashes, rows.data());

@@ -51,4 +51,8 @@ namespace isi {
         };
         std::cout << "}" << std::endl;
     }
+
+    void deallocate_aligned(void* counts) {
+        free(counts);
+    }
 }
