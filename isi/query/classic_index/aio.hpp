@@ -1,11 +1,13 @@
 #pragma once
 
 #include <isi/query/classic_index/base.hpp>
+#include <linux/aio_abi.h>
 
 namespace isi::query::classic_index {
     class aio : public base {
     private:
         int m_fd;
+        aio_context_t m_ctx;
         std::vector<iocb> m_iocbs;
         std::vector<iocb*> m_iocbpp;
     protected:
@@ -15,6 +17,3 @@ namespace isi::query::classic_index {
         ~aio();
     };
 }
-
-
-
