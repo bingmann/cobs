@@ -6,6 +6,9 @@
 #include <isi/query/classic_index/mmap.hpp>
 #include <isi/query/compact_index/mmap.hpp>
 #include <isi/construction/compact_index.hpp>
+#ifdef __linux__
+    #include <isi/query/classic_index/aio.hpp>
+#endif
 
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
@@ -281,6 +284,24 @@ void add_classic_query(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
+#ifdef __linux__
+void add_classic_query_aio(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("query_aio", "queries the index", false);
+    p->add_in_file(sub)->required();
+    p->add_query(sub)->required();
+    p->add_num_result(sub);
+    sub->set_callback([p]() {
+        isi::query::classic_index::aio aio(p->in_file);
+        std::vector<std::pair<uint16_t, std::string>> result;
+        aio.search(p->query, 31, result, p->num_result);
+        for (const auto& res: result) {
+            std::cout << res.second << " - " << res.first << "\n";
+        }
+        std::cout << aio.get_timer() << std::endl;
+    });
+}
+#endif
+
 void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
     p->add_out_file(sub)->required();
@@ -299,6 +320,9 @@ void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
     add_classic_create_from_samples(*sub, p);
     add_classic_combine(*sub, p);
     add_classic_query(*sub, p);
+#ifdef __linux__
+    add_classic_query_aio(*sub, p);
+#endif
     add_classic_dummy(*sub, p);
 }
 
