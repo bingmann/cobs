@@ -166,7 +166,7 @@ namespace isi::query {
 
 
     template<class T>
-    alignas(__m128i_u) const uint16_t base<T>::m_expansion[] = {
+    const uint16_t base<T>::m_expansion[] = {
         0, 0, 0, 0, 0, 0, 0, 0,
         1, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0,
