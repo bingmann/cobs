@@ -56,7 +56,7 @@ namespace isi::query::compact_index {
             }
         }
 
-        uint64_t num_requests = m_header.parameters().size() * hashes.size();
+        int64_t num_requests = m_header.parameters().size() * hashes.size();
 
         t.active("io_submit");
         ret = io_submit(m_ctx, num_requests, m_iocbpp.data());

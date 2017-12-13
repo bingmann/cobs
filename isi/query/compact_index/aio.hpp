@@ -8,7 +8,7 @@ namespace isi::query::compact_index {
     private:
         int m_fd;
         aio_context_t m_ctx;
-        std::vector<uint8_t*> m_offsets;
+        std::vector<uint64_t> m_offsets;
         std::array<iocb, 65536> m_iocbs;
         std::array<iocb*, 65536> m_iocbpp;
     protected:
