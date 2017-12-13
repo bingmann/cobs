@@ -1,15 +1,16 @@
 #pragma once
 
-#include <isi/query/classic_index/base.hpp>
+#include <isi/query/compact_index/base.hpp>
 #include <linux/aio_abi.h>
 
-namespace isi::query::classic_index {
+namespace isi::query::compact_index {
     class aio : public base {
     private:
         int m_fd;
         aio_context_t m_ctx;
-        std::vector<iocb> m_iocbs;
-        std::vector<iocb*> m_iocbpp;
+        std::vector<uint8_t*> m_offsets;
+        std::array<iocb, 65536> m_iocbs;
+        std::array<iocb*, 65536> m_iocbpp;
     protected:
         virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows);
     public:
@@ -17,3 +18,4 @@ namespace isi::query::classic_index {
         ~aio();
     };
 }
+

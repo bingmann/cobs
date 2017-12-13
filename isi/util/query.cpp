@@ -6,8 +6,8 @@
 
 namespace isi::query {
 
-    int open_file(const std::experimental::filesystem::path& path) {
-        int fd = open(path.string().data(), O_RDONLY, 0);
+    int open_file(const std::experimental::filesystem::path& path, int flags) {
+        int fd = open(path.string().data(), flags, 0);
         if(fd == -1) {
             exit_error_errno("could not open index file " + path.string());
         }
@@ -21,7 +21,7 @@ namespace isi::query {
     }
 
     std::pair<int, uint8_t*> initialize_mmap(const std::experimental::filesystem::path& path, const stream_metadata& smd) {
-        int fd = open_file(path);
+        int fd = open_file(path, O_RDONLY);
         void* mmap_ptr = mmap(NULL, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0);
         if(mmap_ptr == MAP_FAILED) {
             exit_error_errno("mmap failed");

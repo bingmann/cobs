@@ -3,7 +3,7 @@
 
 namespace isi::query::compact_index {
     mmap::mmap(const std::experimental::filesystem::path& path) : compact_index::base(path) {
-        m_data.reserve(m_header.parameters().size());
+        m_data.resize(m_header.parameters().size());
         std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
         m_fd = handles.first;
         m_data[0] = handles.second;

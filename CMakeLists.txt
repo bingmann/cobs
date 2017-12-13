@@ -53,8 +53,8 @@ set(SOURCE_FILES
 
 if(UNIX AND NOT APPLE)
     set(SOURCE_FILES ${SOURCE_FILES}
-            isi/query/classic_index/aio.hpp
-            isi/query/classic_index/aio.cpp
+            isi/query/compact_index/aio.hpp
+            isi/query/compact_index/aio.cpp
             isi/util/aio.hpp
             isi/util/aio.cpp
     )
