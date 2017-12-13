@@ -103,6 +103,7 @@ namespace isi::compact_index {
             auto h = isi::file::deserialize_header<isi::file::classic_index_header>(paths[i]);
             parameters.push_back({h.signature_size(), h.num_hashes()});
             file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
+            std::cout << i << ": " << h.block_size() << " " << paths[i].string() << std::endl;
             if (i < paths.size() - 1) {
                 assert(h.block_size() == page_size);
             } else {
