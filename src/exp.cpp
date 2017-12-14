@@ -97,6 +97,7 @@ void run(const std::experimental::filesystem::path p, size_t query_len, size_t n
         s.search(query, 31, result);
     }
     isi::timer t = s.get_timer();
+    std::cout << p.string() << "," << query_len << "," << num_iterations << "," << num_warmup_iterations << ",";
     std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
 }
 
