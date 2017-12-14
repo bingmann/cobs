@@ -155,7 +155,7 @@ namespace isi::query {
     template<class T>
     void base<T>::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
         char* rows = allocate_aligned<char>(block_size() * hashes.size(), isi::get_page_size());
-        m_timer.active("mmap_access");
+        m_timer.active("io");
         read_from_disk(hashes, rows);
         m_timer.active("aggregate_rows");
         aggregate_rows(hashes.size(), rows);
