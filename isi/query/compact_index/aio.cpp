@@ -38,10 +38,8 @@ namespace isi::query::compact_index {
     }
 
     void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
-        timer t;
         int64_t num_requests = m_header.parameters().size() * hashes.size();
 
-        t.active("setup");
         #pragma omp parallel for collapse(2)
         for (size_t i = 0; i < m_header.parameters().size(); i++) {
             for (size_t j = 0; j < hashes.size(); j++) {
@@ -53,7 +51,6 @@ namespace isi::query::compact_index {
             }
         }
 
-        t.active("io_submit");
         int ret = io_submit(m_ctx, num_requests, m_iocbpp.data());
         if (ret != num_requests) {
             if (ret < 0) {
@@ -64,7 +61,6 @@ namespace isi::query::compact_index {
             exit_error_errno("io_submit error");
         }
 
-        t.active("io_getevents");
         io_event events[num_requests];
         if (io_getevents(m_ctx, num_requests, num_requests, events, nullptr) < num_requests) {
             exit_error_errno("io_getevents error");
@@ -75,8 +71,5 @@ namespace isi::query::compact_index {
                 std::cout << i << " " << std::strerror(-events[i].res) << std::endl;
             }
         }
-
-        t.stop();
-        std::cout << t << std::endl;
     }
 }
