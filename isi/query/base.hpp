@@ -15,8 +15,11 @@ namespace isi::query {
     template<class T>
     class base {
     private:
-//        static const uint64_t m_count_expansions[16];
+#ifdef NO_SIMD
+        static const uint64_t m_expansions[16];
+#else
         alignas(__m128i_u) static const uint16_t m_expansion[2048];
+#endif
         void compute_counts(size_t hashes_size, uint16_t* counts, const char* rows);
         void aggregate_rows(size_t hashes_size, char* rows);
         void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts);
@@ -85,22 +88,30 @@ namespace isi::query {
 
     template <class T>
     void base<T>::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows) {
+#ifndef NO_SIMD
         auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
+#endif
         auto rows_b = reinterpret_cast<const uint8_t*>(rows);
         uint64_t nh = num_hashes();
         uint64_t bs = block_size();
-        uint64_t cs = counts_size();
 
-        #pragma omp parallel reduction(+:counts[:cs])
+        #pragma omp parallel reduction(+:counts[:counts_size()])
         {
+#ifdef NO_SIMD
+            auto counts_64 = reinterpret_cast<uint64_t*>(counts);
+#else
             auto counts_128 = reinterpret_cast<__m128i_u*>(counts);
+#endif
             #pragma omp for
             for (uint64_t i = 0; i < hashes_size; i += nh) {
                 auto rows_8 = rows_b + i * bs;
                 for (size_t k = 0; k < bs; k++) {
-//                counts_64[2 * k] += m_count_expansions[rows_8[k] & 0xF];
-//                counts_64[2 * k + 1] += m_count_expansions[rows_8[k] >> 4];
+#ifdef NO_SIMD
+                    counts_64[2 * k] += m_expansions[rows_8[k] & 0xF];
+                    counts_64[2 * k + 1] += m_expansions[rows_8[k] >> 4];
+#else
                     counts_128[k] = _mm_add_epi16(counts_128[k], m_expansion_128[rows_8[k]]);
+#endif
                 }
             }
         }
@@ -160,7 +171,6 @@ namespace isi::query {
         assert_exit(query.size() - kmer_size < UINT16_MAX,
                     "query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
         num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
-        m_timer.reset();
         m_timer.active("hashes");
 
         uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
@@ -173,12 +183,12 @@ namespace isi::query {
         m_timer.stop();
     }
 
-//    template<class T>
-//    const uint64_t base<T>::m_count_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
-//                                                    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
-//                                                    281479271743488, 281479271743489};
-
-
+#ifdef NO_SIMD
+    template<class T>
+    const uint64_t base<T>::m_expansions[] = {0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
+                                                    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
+                                                    281479271743488, 281479271743489};
+#else
     template<class T>
     const uint16_t base<T>::m_expansion[] = {
         0, 0, 0, 0, 0, 0, 0, 0,
@@ -437,4 +447,5 @@ namespace isi::query {
         1, 0, 1, 1, 1, 1, 1, 1,
         0, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1};
+#endif
 }

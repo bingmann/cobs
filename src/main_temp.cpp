@@ -7,8 +7,7 @@
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;
-//    size_t block_size = 8000;
-    size_t block_size = 1;
+    size_t block_size = 8000;
     size_t num_hashes = 3;
     std::vector<std::string> file_names;
     for(size_t i = 0; i < 8 * block_size - 7; i++) {
@@ -71,7 +70,7 @@ int main() {
 //        sum += std::stoi(strs[1]);
 //        ofs << a / (double) 19000 << "," << sum << "\n";
 //    }
-    server();
+//    server();
 
 //    std::cout << getpagesize() << std::endl;
 

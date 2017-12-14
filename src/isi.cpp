@@ -211,6 +211,14 @@ void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
     });
 }
 
+void add_print_header(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("print_header", "prints the header at <in_file>", false);
+    p->add_in_file(sub)->required();
+    sub->set_callback([p]() {
+        throw new std::invalid_argument("not supported yet");
+    });
+}
+
 void add_create_kmers(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("create_kmers", "creates all canonical kmers from <query>", false);
     p->add_query(sub)->required();
@@ -395,6 +403,7 @@ int main(int argc, char **argv) {
     add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);
+    add_print_header(app, p);
     add_create_kmers(app, p);
     add_cortex(app, p);
     return parse(app, argc, argv);
