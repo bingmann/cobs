@@ -37,7 +37,7 @@ namespace isi::query {
 
     public:
         virtual ~base() = default;
-        timer& get_timer() const;
+        timer& get_timer();
         void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string>>& result, size_t num_results = 0);
     };
 }
@@ -148,7 +148,7 @@ namespace isi::query {
     }
 
     template<class T>
-    timer& base<T>::get_timer() const {
+    timer& base<T>::get_timer() {
         return m_timer;
     }
 
