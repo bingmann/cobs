@@ -33,13 +33,21 @@ int main(int argc, char **argv) {
     num_iterations = 100;
     p = "/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi";
 #ifdef NO_SIMD
-    std::cout << "SIMD is disabled" << std::endl;
+    std::cout << "SIMD disabled" << std::endl;
 #endif
 
-#ifdef __linux__
-    isi::query::compact_index::aio server(p);
-#else
+#ifdef NO_OPENMP
+    std::cout << "OpenMP disabled" << std::endl;
+#endif
+
+#ifdef NO_AIO
+    std::cout << "AIO disabled" << std::endl;
+#endif
+
+#ifdef NO_AIO
     isi::query::classic_index::mmap server(p);
+#else
+    isi::query::compact_index::aio server(p);
 #endif
 
     run(server, query_len, num_iterations, num_warmup_iterations);

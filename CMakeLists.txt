@@ -3,29 +3,9 @@ cmake_policy(VERSION 3.9.6)
 
 project(thesis)
 
-if(NOT DEFINED SIMD)
-    message(WARNING "SIMD was not specified use: -DSIMD=<ON/OFF>\nSIMD default value ON is used")
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
 endif()
-if(NOT DEFINED OPENMP)
-    message(WARNING "OPENMP was not specified use: -DOPENMP=<ON/OFF>\nOPENMP default value ON is used")
-endif()
-
-option(SIMD "use simd" ON)
-if(SIMD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-else()
-    add_definitions(-DNO_SIMD)
-endif()
-
-option(OPENMP "use openmp" ON)
-if(OPENMP)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgomp")
-endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -std=c++17 -lstdc++fs -march=native")
-MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 set(SOURCE_FILES
         isi/construction/classic_index.cpp
@@ -71,16 +51,44 @@ set(SOURCE_FILES
         isi/util/serialization.hpp
         isi/util/timer.cpp
         isi/util/timer.hpp
-)
+        )
 
-if(UNIX AND NOT APPLE)
-    set(SOURCE_FILES ${SOURCE_FILES}
-            isi/query/compact_index/aio.hpp
-            isi/query/compact_index/aio.cpp
-            isi/util/aio.hpp
-            isi/util/aio.cpp
-    )
+if(NOT DEFINED SIMD)
+    message(WARNING "SIMD was not specified use: -DSIMD=<ON/OFF>\nSIMD default value ON is used")
 endif()
+option(SIMD "use simd instructions" ON)
+if(SIMD)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+else()
+    add_definitions(-DNO_SIMD)
+endif()
+
+if(NOT DEFINED OPENMP)
+    message(WARNING "OPENMP was not specified use: -DOPENMP=<ON/OFF>\nOPENMP default value ON is used")
+endif()
+option(OPENMP "use openmp" ON)
+if(OPENMP)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgomp")
+endif()
+
+if(LINUX)
+    if(NOT DEFINED AIO)
+        message(WARNING "AIO was not specified use: -DAIO=<ON/OFF>\nAIO default value ON is used")
+    endif()
+    option(AIO "use linux aio to access index" ON)
+    if(AIO)
+        set(SOURCE_FILES ${SOURCE_FILES} isi/query/compact_index/aio.hpp isi/query/compact_index/aio.cpp isi/util/aio.hpp isi/util/aio.cpp)
+    else()
+        add_definitions(-DNO_AIO)
+    endif()
+else()
+    add_definitions(-DNO_AIO)
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -std=c++17 -lstdc++fs -march=native")
+MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
 file(GLOB_RECURSE EXECUTABLE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
