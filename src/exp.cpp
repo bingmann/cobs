@@ -1,9 +1,11 @@
 #include <CLI/CLI.hpp>
-#include <isi/query/classic_index/base.hpp>
-#include <isi/query/classic_index/mmap.hpp>
 #include <zconf.h>
-#include <isi/query/compact_index/mmap.hpp>
 #include <cmath>
+#ifdef NO_AIO
+#include <isi/query/compact_index/mmap.hpp>
+#else
+#include <isi/query/compact_index/aio.hpp>
+#endif
 
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
