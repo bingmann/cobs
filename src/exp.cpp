@@ -96,23 +96,26 @@ void run(const std::experimental::filesystem::path p, size_t query_len, size_t n
         std::string query = isi::random_sequence(query_len, std::time(nullptr));
         s.search(query, 31, result);
     }
-    isi::timer t = s.get_timer();
-    std::cout << p.string() << "," << query_len << "," << num_iterations << "," << num_warmup_iterations << ",";
-    std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
-}
+    std::string simd = "on";
+    std::string openmp = "on";
+    std::string aio = "on";
 
-void status_messages() {
 #ifdef NO_SIMD
-    std::cout << "SIMD disabled" << std::endl;
+    simd = "off";
 #endif
 
 #ifdef NO_OPENMP
-    std::cout << "OpenMP disabled" << std::endl;
+    openmp = "off";
 #endif
 
 #ifdef NO_AIO
-    std::cout << "AIO disabled" << std::endl;
+    aio = "off";
 #endif
+
+    isi::timer t = s.get_timer();
+    std::cout << p.string() << "," << query_len << "," << num_iterations << "," << num_warmup_iterations << ",";
+    std::cout << simd << "," << openmp << "," << aio << ",";
+    std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
 }
 
 void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
@@ -125,8 +128,9 @@ void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
 //    });
 }
 
+#define STR(x) #x << '=' << x
+
 int main(int argc, char **argv) {
-    status_messages();
     CLI::App app("Experiments", false);
     auto p = std::make_shared<parameters>();
     p->add_query_len(&app)->required();
