@@ -157,9 +157,9 @@ namespace isi::query {
         char* rows = allocate_aligned<char>(block_size() * hashes.size(), isi::get_page_size());
         m_timer.active("io");
         read_from_disk(hashes, rows);
-        m_timer.active("aggregate_rows");
+        m_timer.active("and rows");
         aggregate_rows(hashes.size(), rows);
-        m_timer.active("compute_counts");
+        m_timer.active("add rows");
         compute_counts(hashes.size(), counts, rows);
         //todo test if it is faster to combine these functions for better cache locality
     }
@@ -170,14 +170,14 @@ namespace isi::query {
                     "query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
         assert_exit(query.size() - kmer_size < UINT16_MAX,
                     "query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
-        num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
-        m_timer.active("hashes");
 
+        m_timer.active("hashes");
+        num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
         uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
         std::vector<size_t> hashes;
         create_hashes(hashes, query, kmer_size, num_hashes());
         calculate_counts(hashes, counts);
-        m_timer.active("counts_to_result");
+        m_timer.active("sort results");
         counts_to_result(m_header.file_names(), counts, result, num_results);
         deallocate_aligned(counts);
         m_timer.stop();

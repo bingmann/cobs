@@ -1,6 +1,7 @@
 #include <CLI/CLI.hpp>
 #include <zconf.h>
 #include <cmath>
+#include <ctime>
 #ifdef NO_AIO
 #include <isi/query/compact_index/mmap.hpp>
 #else
@@ -86,20 +87,17 @@ void run(const std::experimental::filesystem::path p, size_t query_len, size_t n
     std::vector<std::pair<uint16_t, std::string>> result;
     sync();
     for (size_t i = 0; i < num_warmup_iterations; i++) {
-        std::string query = isi::random_sequence(query_len, std::rand());
+        std::string query = isi::random_sequence(query_len, std::time(nullptr));
         s.search(query, 31, result);
     }
     s.get_timer().reset();
 
-    isi::timer t;
     for (size_t i = 0; i < num_iterations; i++) {
-        std::string query = isi::random_sequence(query_len, std::rand());
-        t.active("total");
+        std::string query = isi::random_sequence(query_len, std::time(nullptr));
         s.search(query, 31, result);
-        t.stop();
     }
-    std::cout << s.get_timer() << std::endl;
-    std::cout << t << std::endl;
+    isi::timer t = s.get_timer();
+    std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
 }
 
 void status_messages() {

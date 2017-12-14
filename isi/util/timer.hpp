@@ -24,6 +24,7 @@ namespace isi {
         void active(const std::string& timer);
         void stop();
         void reset();
+        double get(const std::string& timer);
         void print(std::ostream& ostream) const;
     };
 }
