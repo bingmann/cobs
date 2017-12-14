@@ -44,16 +44,16 @@ std::experimental::filesystem::path get_path(const std::string& value, const std
 }
 
 struct parameters {
-    uint64_t query_len;
+    uint64_t num_kmers;
     uint64_t num_exps;
     uint64_t num_warmup_exps;
     std::experimental::filesystem::path in_file;
 
-    CLI::Option* add_query_len(CLI::App* app) {
-        return app->add_option("<query_len>", [&](std::vector<std::string> val) {
-            this->query_len = get_unsigned_integer(val[0], "<query_len>", 1);
+    CLI::Option* add_num_kmers(CLI::App* app) {
+        return app->add_option("<num_kmers>", [&](std::vector<std::string> val) {
+            this->num_kmers = get_unsigned_integer(val[0], "<num_kmers>", 1);
             return true;
-        }, "length of queryies");
+        }, "number of kmers of each query");
     }
 
     CLI::Option* add_num_exps(CLI::App* app) {
@@ -77,7 +77,7 @@ struct parameters {
     }
 };
 
-void run(const std::experimental::filesystem::path p, size_t query_len, size_t num_iterations, size_t num_warmup_iterations) {
+void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t num_iterations, size_t num_warmup_iterations) {
 #ifdef NO_AIO
     isi::query::compact_index::mmap s(p);
 #else
@@ -87,13 +87,13 @@ void run(const std::experimental::filesystem::path p, size_t query_len, size_t n
     std::vector<std::pair<uint16_t, std::string>> result;
     sync();
     for (size_t i = 0; i < num_warmup_iterations; i++) {
-        std::string query = isi::random_sequence(query_len, std::time(nullptr));
+        std::string query = isi::random_sequence(num_kmers + 30, std::time(nullptr));
         s.search(query, 31, result);
     }
     s.get_timer().reset();
 
     for (size_t i = 0; i < num_iterations; i++) {
-        std::string query = isi::random_sequence(query_len, std::time(nullptr));
+        std::string query = isi::random_sequence(num_kmers + 30, std::time(nullptr));
         s.search(query, 31, result);
     }
     std::string simd = "on";
@@ -113,7 +113,7 @@ void run(const std::experimental::filesystem::path p, size_t query_len, size_t n
 #endif
 
     isi::timer t = s.get_timer();
-    std::cout << p.string() << "," << query_len << "," << num_iterations << "," << num_warmup_iterations << ",";
+    std::cout << p.string() << "," << num_kmers << "," << num_iterations << "," << num_warmup_iterations << ",";
     std::cout << simd << "," << openmp << "," << aio << ",";
     std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
 }
@@ -124,7 +124,7 @@ void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
 //    p->add_num_warmup_exps(sub)->required();
 //    p->add_in_file(sub)->required();
 //    sub->set_callback([p]() {
-//        run(p->in_file, p->query_len, p->num_exps, p->num_warmup_exps);
+//        run(p->in_file, p->num_kmers, p->num_exps, p->num_warmup_exps);
 //    });
 }
 
@@ -133,11 +133,11 @@ void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
 int main(int argc, char **argv) {
     CLI::App app("Experiments", false);
     auto p = std::make_shared<parameters>();
-    p->add_query_len(&app)->required();
+    p->add_num_kmers(&app)->required();
     p->add_num_exps(&app)->required();
     p->add_num_warmup_exps(&app)->required();
     p->add_in_file(&app)->required();
     CLI11_PARSE(app, argc, argv);
 
-    run(p->in_file, p->query_len, p->num_exps, p->num_warmup_exps);
+    run(p->in_file, p->num_kmers, p->num_exps, p->num_warmup_exps);
 }
