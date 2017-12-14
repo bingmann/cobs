@@ -3,7 +3,29 @@ cmake_policy(VERSION 3.9.6)
 
 project(thesis)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -fopenmp -std=c++17 -lstdc++fs -mavx2 -march=native")
+if(NOT DEFINED SIMD)
+    message(WARNING "SIMD was not specified use: -DSIMD=<ON/OFF>\nSIMD default value ON is used")
+endif()
+if(NOT DEFINED OPENMP)
+    message(WARNING "OPENMP was not specified use: -DOPENMP=<ON/OFF>\nOPENMP default value ON is used")
+endif()
+
+option(SIMD "use simd" ON)
+if(SIMD)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+else()
+    add_definitions(-DNO_SIMD)
+endif()
+
+option(OPENMP "use openmp" ON)
+if(OPENMP)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgomp")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -std=c++17 -lstdc++fs -march=native")
+MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 set(SOURCE_FILES
         isi/construction/classic_index.cpp
@@ -69,7 +91,7 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 include(dependencies/dependency.cmake)
 file(COPY test/resources DESTINATION test)
-include_directories(${PROJECT_SOURCE_DIR} ${STXXL_INCLUDE_DIRS} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
+include_directories(${PROJECT_SOURCE_DIR} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
 
 if(libstdc++fs)
     add_library(stdc++fs UNKNOWN IMPORTED)
@@ -78,7 +100,7 @@ else()
     message(WARNING "libstdc++fs was not specified use: -D libstdc++fs=\"<path_to_libstdc++fs.a>\"")
 endif()
 
-set(libs stdc++fs ${STXXL_LIBRARIES} xxhash)
+set(libs stdc++fs xxhash)
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)

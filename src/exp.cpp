@@ -1,4 +1,3 @@
-#define NO_SIMD
 #include <isi/query/classic_index/base.hpp>
 #include <isi/query/classic_index/mmap.hpp>
 #include <zconf.h>
@@ -33,6 +32,9 @@ int main(int argc, char **argv) {
     query_len = 1000;
     num_iterations = 100;
     p = "/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi";
+#ifdef NO_SIMD
+    std::cout << "SIMD is disabled" << std::endl;
+#endif
 
 #ifdef __linux__
     isi::query::compact_index::aio server(p);
