@@ -88,7 +88,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::aio s_aio(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
@@ -104,7 +104,7 @@ namespace {
         auto samples = generate_samples_one(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::mmap s_aio(index_path);
 
         std::vector<std::pair<uint16_t, std::string>> result;
@@ -119,7 +119,7 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::mmap s_aio(index_path);
 
         size_t num_tests = 10000;
