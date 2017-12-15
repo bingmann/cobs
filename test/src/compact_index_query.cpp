@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 #include "test_util.hpp"
+#ifdef __linux__
+#include <isi/query/compact_index/aio.hpp>
+#endif
 
 namespace {
     std::experimental::filesystem::path in_dir("test/out/compact_index_query/input");
