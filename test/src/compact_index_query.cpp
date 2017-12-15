@@ -87,7 +87,7 @@ namespace {
     TEST_F(compact_index_query, all_included_aio) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 4096);
         isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::aio s_aio(index_path);
 
@@ -103,7 +103,7 @@ namespace {
     TEST_F(compact_index_query, one_included_aio) {
         auto samples = generate_samples_one(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 4096);
         isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::mmap s_aio(index_path);
 
@@ -118,7 +118,7 @@ namespace {
     TEST_F(compact_index_query, false_positive_aio) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
+        isi::compact_index::create_folders(tmp_dir, in_dir, 4096);
         isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 4096);
         isi::query::compact_index::mmap s_aio(index_path);
 
