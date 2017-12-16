@@ -8,7 +8,7 @@ namespace {
     std::experimental::filesystem::path in_dir("test/out/compact_index_query/input");
     std::experimental::filesystem::path index_path(in_dir.string() + "/index.com_idx.isi");
     std::experimental::filesystem::path tmp_dir("test/out/compact_index_query/tmp");
-    std::string query = isi::random_sequence(50000, 1);
+    std::string query = isi::random_sequence(21000, 1);
 
     class compact_index_query : public ::testing::Test {
     protected:
