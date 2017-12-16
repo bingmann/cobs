@@ -8,7 +8,10 @@
 #include <fcntl.h>
 
 namespace isi::query::compact_index {
-    aio::aio(const std::experimental::filesystem::path& path) : compact_index::base(path), m_ctx(0) {
+    aio::aio(const std::experimental::filesystem::path& path) :
+            compact_index::base(path), m_ctx(0), m_max_nr_ios(65536 * m_header.parameters().size()),
+            m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios) {
+        //todo use sysctl to check max-nr-io
         assert_exit(m_header.page_size() % isi::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
 
         m_offsets.resize(m_header.parameters().size());
@@ -18,7 +21,7 @@ namespace isi::query::compact_index {
         }
 
         m_fd = open_file(path, O_RDONLY | O_DIRECT);
-        if (io_setup(65536, &m_ctx) < 0) {
+        if (io_setup(m_max_nr_ios, &m_ctx) < 0) {
             exit_error_errno("io_setup error");
         }
 
