@@ -2,9 +2,9 @@
 #include <zconf.h>
 #include <cmath>
 #include <ctime>
+#include <map>
 #ifdef NO_AIO
 #include <isi/query/compact_index/mmap.hpp>
-#include <map>
 
 #else
 #include <isi/query/compact_index/aio.hpp>
