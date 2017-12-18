@@ -69,6 +69,7 @@ struct parameters {
             return true;
         }, "number of warmup experiments");
     }
+
     CLI::Option* add_in_file(CLI::App* app) {
         return app->add_option("<in_file>", [&](std::vector<std::string> val) {
             this->in_file = get_path(val[0], "<in_file>", true);
@@ -92,10 +93,21 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
     }
     s.get_timer().reset();
 
+#ifdef FALSE_POSITIVE_DIST
+    std::unordered_map<uint64_t, double> counts;
+#endif
+
     for (size_t i = 0; i < num_iterations; i++) {
         std::string query = isi::random_sequence(num_kmers + 30, std::time(nullptr));
         s.search(query, 31, result);
+#ifdef FALSE_POSITIVE_DIST
+        for (const auto& r: result) {
+            counts[r.first]++;
+        }
+#endif
     }
+
+#ifdef QUERY
     std::string simd = "on";
     std::string openmp = "on";
     std::string aio = "on";
@@ -115,7 +127,15 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
     isi::timer t = s.get_timer();
     std::cout << p.string() << "," << num_kmers << "," << num_iterations << "," << num_warmup_iterations << ",";
     std::cout << simd << "," << openmp << "," << aio << ",";
-    std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows") << "," << t.get("sort results") << std::endl;
+    std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows")
+              << "," << t.get("sort results") << std::endl;
+#endif
+
+#ifdef FALSE_POSITIVE_DIST
+    for (const auto& c: counts) {
+        std::cout << c.first << "," << c.second << std::endl;
+    }
+#endif
 }
 
 void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
