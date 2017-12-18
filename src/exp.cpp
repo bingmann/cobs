@@ -4,6 +4,8 @@
 #include <ctime>
 #ifdef NO_AIO
 #include <isi/query/compact_index/mmap.hpp>
+#include <map>
+
 #else
 #include <isi/query/compact_index/aio.hpp>
 #endif
@@ -94,7 +96,7 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
     s.get_timer().reset();
 
 #ifdef FALSE_POSITIVE_DIST
-    std::unordered_map<uint64_t, double> counts;
+    std::map<uint16_t, double> counts;
 #endif
 
     for (size_t i = 0; i < num_iterations; i++) {
@@ -133,22 +135,10 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
 
 #ifdef FALSE_POSITIVE_DIST
     for (const auto& c: counts) {
-        std::cout << c.first << "," << c.second << std::endl;
+        std::cout << c.first << "," << (c.second / num_iterations / result.size()) << std::endl;
     }
 #endif
 }
-
-void add_query(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("query", "queries the index", false);
-//    p->add_num_exps(sub)->required();
-//    p->add_num_warmup_exps(sub)->required();
-//    p->add_in_file(sub)->required();
-//    sub->set_callback([p]() {
-//        run(p->in_file, p->num_kmers, p->num_exps, p->num_warmup_exps);
-//    });
-}
-
-#define STR(x) #x << '=' << x
 
 int main(int argc, char **argv) {
     CLI::App app("Experiments", false);

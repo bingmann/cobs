@@ -9,7 +9,7 @@
 
 namespace isi::query::compact_index {
     aio::aio(const std::experimental::filesystem::path& path) :
-            compact_index::base(path), m_ctx(0), m_max_nr_ios(65536 * m_header.parameters().size()),
+            compact_index::base(path), m_max_nr_ios(65536 * m_header.parameters().size()),
             m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios) {
         //todo use sysctl to check max-nr-io
         assert_exit(m_header.page_size() % isi::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
@@ -69,8 +69,8 @@ namespace isi::query::compact_index {
             exit_error_errno("io_getevents error");
         }
 
-        for(size_t i = 0; i < num_requests; i++) {
-            if(events[i].res != m_header.page_size()) {
+        for(int i = 0; i < num_requests; i++) {
+            if(events[i].res != (int64_t) m_header.page_size()) {
                 std::cout << i << " " << std::strerror(-events[i].res) << std::endl;
             }
         }
