@@ -156,10 +156,10 @@ void run(const std::experimental::filesystem::path& p, const std::vector<std::st
 
 void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("rnd", "random queries", false);
-    p->add_in_file(&app)->required();
-    p->add_num_kmers(&app)->required();
-    p->add_num_exps(&app)->required();
-    p->add_num_warmup_exps(&app)->required();
+    p->add_in_file(sub)->required();
+    p->add_num_kmers(sub)->required();
+    p->add_num_exps(sub)->required();
+    p->add_num_warmup_exps(sub)->required();
     sub->set_callback([p]() {
         std::vector<std::string> queries;
         std::vector<std::string> warmup_queries;
@@ -175,8 +175,8 @@ void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
 
 void add_command_queries(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("queries", "fixed queries", false);
-    p->add_in_file(&app)->required();
-    p->add_query(&app)->required();
+    p->add_in_file(sub)->required();
+    p->add_query(sub)->required();
     sub->set_callback([p]() {
         std::vector<std::string> queries;
         queries.push_back(p->query);
