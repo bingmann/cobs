@@ -76,7 +76,7 @@ struct parameters {
 
     CLI::Option* add_num_warmup_exps(CLI::App* app) {
         return app->add_option("<num_warmup_exps>", [&](std::vector<std::string> val) {
-            this->num_warmup_exps = get_unsigned_integer(val[0], "<num_warmup_exps>", 1);
+            this->num_warmup_exps = get_unsigned_integer(val[0], "<num_warmup_exps>");
             return true;
         }, "number of warmup experiments");
     }
