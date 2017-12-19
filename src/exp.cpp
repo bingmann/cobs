@@ -10,6 +10,14 @@
 #include <isi/query/compact_index/aio.hpp>
 #endif
 
+std::string get_query(std::string& value, const std::string& name) {
+    std::transform(value.begin(), value.end(), value.begin(), ::toupper);
+    if (value.find_first_not_of("ACGT") != std::string::npos) {
+        throw std::invalid_argument(name + " (" + value + ") does contain characters other than A, C, G and T");
+    }
+    return value;
+}
+
 template<typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
     if ((min_inclusive && num < min) || (!min_inclusive && num <= min) || (max_inclusive && num > max) || (!max_inclusive && num >= max)) {
@@ -49,6 +57,7 @@ struct parameters {
     uint64_t num_kmers;
     uint64_t num_exps;
     uint64_t num_warmup_exps;
+    std::string query;
     std::experimental::filesystem::path in_file;
 
     CLI::Option* add_num_kmers(CLI::App* app) {
@@ -72,6 +81,13 @@ struct parameters {
         }, "number of warmup experiments");
     }
 
+    CLI::Option* add_query(CLI::App* app) {
+        return app->add_option("<query>", [&](std::vector<std::string> val) {
+            this->query = get_query(val[0], "<query>");
+            return true;
+        }, "the dna sequence to search for");
+    }
+
     CLI::Option* add_in_file(CLI::App* app) {
         return app->add_option("<in_file>", [&](std::vector<std::string> val) {
             this->in_file = get_path(val[0], "<in_file>", true);
@@ -80,7 +96,7 @@ struct parameters {
     }
 };
 
-void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t num_iterations, size_t num_warmup_iterations) {
+void run(const std::experimental::filesystem::path& p, const std::vector<std::string>& queries, const std::vector<std::string>& warump_queries) {
 #ifdef NO_AIO
     isi::query::compact_index::mmap s(p);
 #else
@@ -89,9 +105,8 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
 
     std::vector<std::pair<uint16_t, std::string>> result;
     sync();
-    for (size_t i = 0; i < num_warmup_iterations; i++) {
-        std::string query = isi::random_sequence(num_kmers + 30, std::time(nullptr));
-        s.search(query, 31, result);
+    for (size_t i = 0; i < warump_queries.size(); i++) {
+        s.search(warump_queries[i], 31, result);
     }
     s.get_timer().reset();
 
@@ -99,9 +114,8 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
     std::map<uint16_t, double> counts;
 #endif
 
-    for (size_t i = 0; i < num_iterations; i++) {
-        std::string query = isi::random_sequence(num_kmers + 30, std::time(nullptr));
-        s.search(query, 31, result);
+    for (size_t i = 0; i < queries.size(); i++) {
+        s.search(queries[i], 31, result);
 #ifdef FALSE_POSITIVE_DIST
         for (const auto& r: result) {
             counts[r.first]++;
@@ -127,7 +141,7 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
 #endif
 
     isi::timer t = s.get_timer();
-    std::cout << p.string() << "," << num_kmers << "," << num_iterations << "," << num_warmup_iterations << ",";
+    std::cout << p.string() << "," << queries[0].size() << "," << queries.size() << "," << warump_queries.size() << ",";
     std::cout << simd << "," << openmp << "," << aio << ",";
     std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows")
               << "," << t.get("sort results") << std::endl;
@@ -135,19 +149,45 @@ void run(const std::experimental::filesystem::path p, size_t num_kmers, size_t n
 
 #ifdef FALSE_POSITIVE_DIST
     for (const auto& c: counts) {
-        std::cout << c.first << "," << (c.second / num_iterations / result.size()) << std::endl;
+        std::cout << c.first << "," << (c.second / queries.size() / result.size()) << std::endl;
     }
 #endif
+}
+
+void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("rnd", "random queries", false);
+    p->add_in_file(&app)->required();
+    p->add_num_kmers(&app)->required();
+    p->add_num_exps(&app)->required();
+    p->add_num_warmup_exps(&app)->required();
+    sub->set_callback([p]() {
+        std::vector<std::string> queries;
+        std::vector<std::string> warmup_queries;
+        for (size_t i = 0; i < p->num_exps; i++) {
+            queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
+        }
+        for (size_t i = 0; i < p->num_exps; i++) {
+            warmup_queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
+        }
+        run(p->in_file, queries, warmup_queries);
+    });
+}
+
+void add_command_queries(CLI::App& app, std::shared_ptr<parameters> p) {
+    auto sub = app.add_subcommand("queries", "fixed queries", false);
+    p->add_in_file(&app)->required();
+    p->add_query(&app)->required();
+    sub->set_callback([p]() {
+        std::vector<std::string> queries;
+        queries.push_back(p->query);
+        run(p->in_file, queries, std::vector<std::string>());
+    });
 }
 
 int main(int argc, char **argv) {
     CLI::App app("Experiments", false);
     auto p = std::make_shared<parameters>();
-    p->add_num_kmers(&app)->required();
-    p->add_num_exps(&app)->required();
-    p->add_num_warmup_exps(&app)->required();
-    p->add_in_file(&app)->required();
+    add_command_rnd(app, p);
+    add_command_queries(app, p);
     CLI11_PARSE(app, argc, argv);
-
-    run(p->in_file, p->num_kmers, p->num_exps, p->num_warmup_exps);
 }
