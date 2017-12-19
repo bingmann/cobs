@@ -166,7 +166,7 @@ void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
         for (size_t i = 0; i < p->num_exps; i++) {
             queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
         }
-        for (size_t i = 0; i < p->num_exps; i++) {
+        for (size_t i = 0; i < p->num_warmup_exps; i++) {
             warmup_queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
         }
         run(p->in_file, queries, warmup_queries);
