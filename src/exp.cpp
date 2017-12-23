@@ -104,7 +104,6 @@ void run(const std::experimental::filesystem::path& p, const std::vector<std::st
 #endif
 
     std::vector<std::pair<uint16_t, std::string>> result;
-    sync();
     for (size_t i = 0; i < warump_queries.size(); i++) {
         s.search(warump_queries[i], 31, result);
     }
@@ -164,10 +163,10 @@ void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
         std::vector<std::string> queries;
         std::vector<std::string> warmup_queries;
         for (size_t i = 0; i < p->num_exps; i++) {
-            queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
+            queries.push_back(isi::random_sequence(p->num_kmers, (size_t) time(nullptr)));
         }
         for (size_t i = 0; i < p->num_warmup_exps; i++) {
-            warmup_queries.push_back(isi::random_sequence(p->num_kmers, (size_t) std::rand()));
+            warmup_queries.push_back(isi::random_sequence(p->num_kmers, (size_t) time(nullptr)));
         }
         run(p->in_file, queries, warmup_queries);
     });
