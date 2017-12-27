@@ -102,6 +102,10 @@ void run(const std::experimental::filesystem::path& p, const std::vector<std::st
 #else
     isi::query::compact_index::aio s(p);
 #endif
+    sync();
+    std::ofstream ofs("/proc/sys/vm/drop_caches");
+    ofs << "3" << std::endl;
+    ofs.close();
 
     std::vector<std::pair<uint16_t, std::string>> result;
     for (size_t i = 0; i < warump_queries.size(); i++) {
@@ -140,7 +144,7 @@ void run(const std::experimental::filesystem::path& p, const std::vector<std::st
 #endif
 
     isi::timer t = s.get_timer();
-    std::cout << p.string() << "," << queries[0].size() << "," << queries.size() << "," << warump_queries.size() << ",";
+    std::cout << p.string() << "," << (queries[0].size() - 30) << "," << queries.size() << "," << warump_queries.size() << ",";
     std::cout << simd << "," << openmp << "," << aio << ",";
     std::cout << t.get("hashes") << "," << t.get("io") << "," << t.get("and rows") << "," << t.get("add rows")
               << "," << t.get("sort results") << std::endl;
@@ -163,10 +167,10 @@ void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
         std::vector<std::string> queries;
         std::vector<std::string> warmup_queries;
         for (size_t i = 0; i < p->num_exps; i++) {
-            queries.push_back(isi::random_sequence(p->num_kmers, (size_t) time(nullptr)));
+            queries.push_back(isi::random_sequence(p->num_kmers + 30, (size_t) time(nullptr)));
         }
         for (size_t i = 0; i < p->num_warmup_exps; i++) {
-            warmup_queries.push_back(isi::random_sequence(p->num_kmers, (size_t) time(nullptr)));
+            warmup_queries.push_back(isi::random_sequence(p->num_kmers + 30, (size_t) time(nullptr)));
         }
         run(p->in_file, queries, warmup_queries);
     });
