@@ -161,16 +161,16 @@ void add_command_rnd(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("rnd", "random queries", false);
     p->add_in_file(sub)->required();
     p->add_num_kmers(sub)->required();
-    p->add_num_exps(sub)->required();
     p->add_num_warmup_exps(sub)->required();
+    p->add_num_exps(sub)->required();
     sub->set_callback([p]() {
-        std::vector<std::string> queries;
         std::vector<std::string> warmup_queries;
-        for (size_t i = 0; i < p->num_exps; i++) {
-            queries.push_back(isi::random_sequence(p->num_kmers + 30, (size_t) time(nullptr)));
-        }
+        std::vector<std::string> queries;
         for (size_t i = 0; i < p->num_warmup_exps; i++) {
             warmup_queries.push_back(isi::random_sequence(p->num_kmers + 30, (size_t) time(nullptr)));
+        }
+        for (size_t i = 0; i < p->num_exps; i++) {
+            queries.push_back(isi::random_sequence(p->num_kmers + 30, (size_t) time(nullptr)));
         }
         run(p->in_file, queries, warmup_queries);
     });
