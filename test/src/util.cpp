@@ -12,5 +12,7 @@ namespace {
         is_aligned(ptr1, isi::get_page_size());
         auto ptr2 = isi::allocate_aligned<uint16_t>(1337, 16);
         is_aligned(ptr2, 16);
+        isi::deallocate_aligned(ptr1);
+        isi::deallocate_aligned(ptr2);
     }
 }

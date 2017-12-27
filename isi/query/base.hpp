@@ -161,6 +161,7 @@ namespace isi::query {
         aggregate_rows(hashes.size(), rows);
         m_timer.active("add rows");
         compute_counts(hashes.size(), counts, rows);
+        deallocate_aligned(rows);
         //todo test if it is faster to combine these functions for better cache locality
     }
 
