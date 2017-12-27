@@ -12,6 +12,7 @@ namespace isi::query::compact_index {
         std::vector<uint64_t> m_offsets;
         std::vector<iocb> m_iocbs;
         std::vector<iocb*> m_iocbpp;
+        std::vector<io_event> m_io_events;
     protected:
         virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows);
     public:
