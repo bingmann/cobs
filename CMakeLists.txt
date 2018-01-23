@@ -72,6 +72,7 @@ if(OPENMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgomp")
+    add_definitions(-DNO_OPENMP)
 endif()
 
 if(LINUX)
