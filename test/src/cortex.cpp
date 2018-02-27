@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <isi/cortex.hpp>
+#include <cobs/cortex.hpp>
 #include <iostream>
 #include <experimental/filesystem>
-#include <isi/util/processing.hpp>
-#include <isi/util/file.hpp>
+#include <cobs/util/processing.hpp>
+#include <cobs/util/file.hpp>
 
 
 namespace {
@@ -16,7 +16,7 @@ namespace {
     std::string sample_name = "DRR030535";
 
     template<unsigned int N>
-    void assert_equals_sample(isi::sample<N> sample) {
+    void assert_equals_sample(cobs::sample<N> sample) {
         std::ifstream ifs(sample_path);
         std::string line;
         size_t i = 0;
@@ -28,36 +28,36 @@ namespace {
     }
 
     TEST(cortex, file_name) {
-        isi::sample<31> sample1;
-        isi::sample<31> sample2;
-        isi::cortex::process_file(in_path, out_path, sample1);
-        isi::file::sample_header h;
-        isi::file::deserialize(out_path, sample2, h);
+        cobs::sample<31> sample1;
+        cobs::sample<31> sample2;
+        cobs::cortex::process_file(in_path, out_path, sample1);
+        cobs::file::sample_header h;
+        cobs::file::deserialize(out_path, sample2, h);
         ASSERT_EQ(h.name(), sample_name);
     }
 
     TEST(cortex, process_file) {
         std::experimental::filesystem::remove_all(out_dir);
-        isi::sample<31> sample;
-        isi::cortex::process_file(in_path, out_path, sample);
+        cobs::sample<31> sample;
+        cobs::cortex::process_file(in_path, out_path, sample);
         assert_equals_sample(sample);
     }
 
     TEST(cortex, file_serialization) {
         std::experimental::filesystem::remove_all(out_dir);
-        isi::sample<31> sample1;
-        isi::sample<31> sample2;
-        isi::cortex::process_file(in_path, out_path, sample1);
-        isi::file::deserialize(out_path, sample2);
+        cobs::sample<31> sample1;
+        cobs::sample<31> sample2;
+        cobs::cortex::process_file(in_path, out_path, sample1);
+        cobs::file::deserialize(out_path, sample2);
         assert_equals_sample(sample1);
         assert_equals_sample(sample2);
     }
 
     TEST(cortex, process_all_in_directory) {
         std::experimental::filesystem::remove_all(out_dir);
-        isi::cortex::process_all_in_directory<31>(in_dir, out_dir);
-        isi::sample<31> sample;
-        isi::file::deserialize(out_path_rec, sample);
+        cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
+        cobs::sample<31> sample;
+        cobs::file::deserialize(out_path_rec, sample);
         assert_equals_sample(sample);
     }
 }

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "test_util.hpp"
-#include <isi/util/parameters.hpp>
+#include <cobs/util/parameters.hpp>
 
 namespace {
     std::experimental::filesystem::path in_dir("test/out/compact_index_construction/input");
@@ -9,7 +9,7 @@ namespace {
     std::experimental::filesystem::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
     std::experimental::filesystem::path tmp_dir("test/out/compact_index_construction/tmp");
 
-    std::string query = isi::random_sequence(10000, 1);
+    std::string query = cobs::random_sequence(10000, 1);
 
     class compact_index_construction : public ::testing::Test {
     protected:
@@ -25,12 +25,12 @@ namespace {
     TEST_F(compact_index_construction, padding) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        size_t page_size = isi::get_page_size();
-        isi::compact_index::create_folders(tmp_dir, in_dir, page_size);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, page_size);
+        size_t page_size = cobs::get_page_size();
+        cobs::compact_index::create_folders(tmp_dir, in_dir, page_size);
+        cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, page_size);
         std::ifstream ifs;
-        isi::file::deserialize_header<isi::file::compact_index_header>(ifs, compact_index_path);
-        isi::stream_metadata smd = isi::get_stream_metadata(ifs);
+        cobs::file::deserialize_header<cobs::file::compact_index_header>(ifs, compact_index_path);
+        cobs::stream_metadata smd = cobs::get_stream_metadata(ifs);
         ASSERT_EQ(smd.curr_pos % page_size, 0U);
     }
 
@@ -38,11 +38,11 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
 
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
+        cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
-        isi::file::compact_index_header h;
-        isi::file::deserialize(compact_index_path, data, h);
+        cobs::file::compact_index_header h;
+        cobs::file::deserialize(compact_index_path, data, h);
         ASSERT_EQ(h.file_names().size(), 33U);
         ASSERT_EQ(h.parameters().size(), 3U);
         ASSERT_EQ(data.size(), 3U);
@@ -55,7 +55,7 @@ namespace {
         std::vector<std::experimental::filesystem::path> paths;
         std::experimental::filesystem::recursive_directory_iterator it(tmp_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-            return isi::file::file_is<isi::file::sample_header>(p);
+            return cobs::file::file_is<cobs::file::sample_header>(p);
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
             return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
@@ -65,13 +65,13 @@ namespace {
             std::sort(paths.begin() + i, paths.begin() + middle_index);
         }
 
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
+        cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
-        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(compact_index_path);
-        isi::file::deserialize(compact_index_path, data, h);
+        auto h = cobs::file::deserialize_header<cobs::file::compact_index_header>(compact_index_path);
+        cobs::file::deserialize(compact_index_path, data, h);
         for (size_t i = 0; i < h.file_names().size(); i++) {
-            ASSERT_EQ(h.file_names()[i], isi::file::file_name(paths[i]));
+            ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
         }
     }
 
@@ -79,15 +79,15 @@ namespace {
         uint64_t num_hashes = 3;
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, num_hashes, 0.1, 2);
+        cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
+        cobs::compact_index::create_from_folders(in_dir, 8, num_hashes, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
-        auto h = isi::file::deserialize_header<isi::file::compact_index_header>(compact_index_path);
+        auto h = cobs::file::deserialize_header<cobs::file::compact_index_header>(compact_index_path);
 
         std::vector<uint64_t> sample_sizes;
-        std::vector<isi::file::compact_index_header::parameter> parameters;
+        std::vector<cobs::file::compact_index_header::parameter> parameters;
         for(const std::experimental::filesystem::path& p: std::experimental::filesystem::recursive_directory_iterator(samples_dir)) {
-            if (isi::file::file_is<isi::file::classic_index_header>(p)) {
+            if (cobs::file::file_is<cobs::file::classic_index_header>(p)) {
                 sample_sizes.push_back(std::experimental::filesystem::file_size(p));
             }
         }
@@ -95,7 +95,7 @@ namespace {
         std::sort(sample_sizes.begin(), sample_sizes.end());
         for (size_t i = 0; i < sample_sizes.size(); i++) {
             if (i % 8 == 7) {
-                uint64_t signature_size = isi::calc_signature_size(sample_sizes[i] / 8, num_hashes, 0.1);
+                uint64_t signature_size = cobs::calc_signature_size(sample_sizes[i] / 8, num_hashes, 0.1);
                 ASSERT_EQ(h.parameters()[i / 8].signature_size, signature_size);
                 ASSERT_EQ(h.parameters()[i / 8].num_hashes, num_hashes);
             }
@@ -106,8 +106,8 @@ namespace {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
         std::experimental::filesystem::path path_sample(tmp_dir.string() + "/sample_00.sam.isi");
-        isi::sample<31> s;
-        isi::file::deserialize(path_sample, s);
+        cobs::sample<31> s;
+        cobs::file::deserialize(path_sample, s);
 
         size_t file_size = std::experimental::filesystem::file_size(path_sample);
         ASSERT_EQ(s.data().size(), file_size / 8 - 3);
@@ -116,11 +116,11 @@ namespace {
     TEST_F(compact_index_construction, num_ones) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
+        cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
-        isi::file::compact_index_header h;
-        isi::file::deserialize(compact_index_path, data, h);
+        cobs::file::compact_index_header h;
+        cobs::file::deserialize(compact_index_path, data, h);
 
         std::vector<std::map<std::string, size_t>> num_ones(h.parameters().size());
         for (size_t i = 0; i < h.parameters().size(); i++) {
@@ -139,7 +139,7 @@ namespace {
         }
 
         for (size_t i = 0; i < h.parameters().size(); i++) {
-            double set_bit_ratio = isi::calc_average_set_bit_ratio(h.parameters()[i].signature_size, 3, 0.1);
+            double set_bit_ratio = cobs::calc_average_set_bit_ratio(h.parameters()[i].signature_size, 3, 0.1);
             double num_ones_average = set_bit_ratio * h.parameters()[i].signature_size;
             for (auto& no: num_ones[i]) {
                 ASSERT_LE(no.second, num_ones_average * 1.02);
@@ -150,18 +150,18 @@ namespace {
     TEST_F(compact_index_construction, content) {
         auto samples = generate_samples_all(query);
         generate_test_case(samples, tmp_dir);
-        isi::compact_index::create_folders(tmp_dir, in_dir, 2);
-        isi::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+        cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
+        cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> cisi_data;
-        isi::file::deserialize(compact_index_path, cisi_data);
+        cobs::file::deserialize(compact_index_path, cisi_data);
 
         std::vector<std::vector<uint8_t>> indices;
         for(auto& p: std::experimental::filesystem::directory_iterator(isi_2_dir)) {
             if (std::experimental::filesystem::is_directory(p)) {
                 for(const std::experimental::filesystem::path& isi_p: std::experimental::filesystem::directory_iterator(p)) {
-                    if(isi::file::file_is<isi::file::classic_index_header>(isi_p)) {
+                    if(cobs::file::file_is<cobs::file::classic_index_header>(isi_p)) {
                         std::vector<uint8_t> data;
-                        isi::file::deserialize(isi_p, data);
+                        cobs::file::deserialize(isi_p, data);
                         indices.push_back(data);
                     }
                 }

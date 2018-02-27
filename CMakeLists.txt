@@ -9,49 +9,49 @@ endif()
 
 
 set(SOURCE_FILES
-        isi/construction/classic_index.cpp
-        isi/construction/classic_index.hpp
-        isi/construction/compact_index.cpp
-        isi/construction/compact_index.hpp
-        isi/cortex.hpp
-        isi/file/classic_index_header.cpp
-        isi/file/classic_index_header.hpp
-        isi/file/compact_index_header.cpp
-        isi/file/compact_index_header.hpp
-        isi/file/file_io_exception.hpp
-        isi/file/frequency_header.cpp
-        isi/file/frequency_header.hpp
-        isi/file/header.hpp
-        isi/file/sample_header.cpp
-        isi/file/sample_header.hpp
-        isi/frequency.hpp
-        isi/kmer.hpp
-        isi/query/base.hpp
-        isi/query/classic_index/base.cpp
-        isi/query/classic_index/base.hpp
-        isi/query/classic_index/mmap.cpp
-        isi/query/classic_index/mmap.hpp
-        isi/query/compact_index/base.cpp
-        isi/query/compact_index/base.hpp
-        isi/query/compact_index/mmap.cpp
-        isi/query/compact_index/mmap.hpp
-        isi/sample.hpp
-        isi/util/error_handling.cpp
-        isi/util/error_handling.hpp
-        isi/util/file.cpp
-        isi/util/file.hpp
-        isi/util/misc.cpp
-        isi/util/misc.hpp
-        isi/util/parameters.cpp
-        isi/util/parameters.hpp
-        isi/util/processing.cpp
-        isi/util/processing.hpp
-        isi/util/query.cpp
-        isi/util/query.hpp
-        isi/util/serialization.cpp
-        isi/util/serialization.hpp
-        isi/util/timer.cpp
-        isi/util/timer.hpp
+        cobs/construction/classic_index.cpp
+        cobs/construction/classic_index.hpp
+        cobs/construction/compact_index.cpp
+        cobs/construction/compact_index.hpp
+        cobs/cortex.hpp
+        cobs/file/classic_index_header.cpp
+        cobs/file/classic_index_header.hpp
+        cobs/file/compact_index_header.cpp
+        cobs/file/compact_index_header.hpp
+        cobs/file/file_io_exception.hpp
+        cobs/file/frequency_header.cpp
+        cobs/file/frequency_header.hpp
+        cobs/file/header.hpp
+        cobs/file/sample_header.cpp
+        cobs/file/sample_header.hpp
+        cobs/frequency.hpp
+        cobs/kmer.hpp
+        cobs/query/base.hpp
+        cobs/query/classic_index/base.cpp
+        cobs/query/classic_index/base.hpp
+        cobs/query/classic_index/mmap.cpp
+        cobs/query/classic_index/mmap.hpp
+        cobs/query/compact_index/base.cpp
+        cobs/query/compact_index/base.hpp
+        cobs/query/compact_index/mmap.cpp
+        cobs/query/compact_index/mmap.hpp
+        cobs/sample.hpp
+        cobs/util/error_handling.cpp
+        cobs/util/error_handling.hpp
+        cobs/util/file.cpp
+        cobs/util/file.hpp
+        cobs/util/misc.cpp
+        cobs/util/misc.hpp
+        cobs/util/parameters.cpp
+        cobs/util/parameters.hpp
+        cobs/util/processing.cpp
+        cobs/util/processing.hpp
+        cobs/util/query.cpp
+        cobs/util/query.hpp
+        cobs/util/serialization.cpp
+        cobs/util/serialization.hpp
+        cobs/util/timer.cpp
+        cobs/util/timer.hpp
         )
 
 if(NOT DEFINED SIMD)
@@ -81,7 +81,7 @@ if(LINUX)
     endif()
     option(AIO "use linux aio to access index" ON)
     if(AIO)
-        set(SOURCE_FILES ${SOURCE_FILES} isi/query/compact_index/aio.hpp isi/query/compact_index/aio.cpp isi/util/aio.hpp isi/util/aio.cpp)
+        set(SOURCE_FILES ${SOURCE_FILES} cobs/query/compact_index/aio.hpp cobs/query/compact_index/aio.cpp cobs/util/aio.hpp cobs/util/aio.cpp)
     else()
         add_definitions(-DNO_AIO)
     endif()
@@ -121,7 +121,7 @@ endforeach(target)
 enable_testing()
 include(GoogleTest)
 add_executable(tests ${TEST_FILES} ${SOURCE_FILES})
-target_compile_definitions(tests PRIVATE isi_test)
+target_compile_definitions(tests PRIVATE cobs_test)
 target_link_libraries(tests ${libs} gtest gtest_main)
 gtest_add_tests(tests "" ${TEST_FILES})
 

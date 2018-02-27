@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
-#include <isi/util/processing.hpp>
-#include <isi/construction/classic_index.hpp>
+#include <cobs/util/processing.hpp>
+#include <cobs/construction/classic_index.hpp>
 #include <xxhash.h>
-#include <isi/util/parameters.hpp>
-#include <isi/util/query.hpp>
+#include <cobs/util/parameters.hpp>
+#include <cobs/util/query.hpp>
 
 namespace {
-    std::string query = isi::random_sequence(10000, 1);
+    std::string query = cobs::random_sequence(10000, 1);
     std::unordered_map<char, char> basepairs = {{'A', 'T'}, {'C', 'G'}, {'G', 'C'}, {'T', 'A'}};
 
     size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
-        uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+        uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_probability);
 
         std::vector<bool> signature(signature_size);
         std::srand(1);
@@ -30,14 +30,14 @@ namespace {
     }
 
     size_t get_num_positives_hash(uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
-        std::string query = isi::random_sequence(10000, 1);
+        std::string query = cobs::random_sequence(10000, 1);
         uint64_t num_elements = query.size() - 30;
-        uint64_t signature_size = isi::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+        uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_probability);
 
         std::vector<bool> signature(signature_size);
-        isi::kmer<31> k;
+        cobs::kmer<31> k;
         for (size_t i = 0; i < num_elements; i++) {
-            isi::classic_index::create_hashes(query.data() + i, 31, signature_size, num_hashes, [&](size_t index) {
+            cobs::classic_index::create_hashes(query.data() + i, 31, signature_size, num_hashes, [&](size_t index) {
                 signature[index] = true;
             });
         }
@@ -93,7 +93,7 @@ namespace {
         std::array<char, 31> kmer_raw;
         for (size_t i = 0; i < query.size() - 31; i++) {
             char* kmer_8 = query.data() + i;
-            const char* canonic_kmer = isi::query::canonicalize_kmer(kmer_8, kmer_raw.data(), 31);
+            const char* canonic_kmer = cobs::query::canonicalize_kmer(kmer_8, kmer_raw.data(), 31);
 
             std::string kmer_result(canonic_kmer, 31);
             std::string kmer_original(kmer_8, 31);

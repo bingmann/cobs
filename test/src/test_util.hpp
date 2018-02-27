@@ -4,9 +4,9 @@
 #include <fstream>
 #include <vector>
 #include <gtest/gtest.h>
-#include <isi/query/compact_index/mmap.hpp>
-#include <isi/construction/compact_index.hpp>
-#include <isi/util/query.hpp>
+#include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/construction/compact_index.hpp>
+#include <cobs/util/query.hpp>
 
 inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     std::ifstream ifs1(f1, std::ios::in | std::ios::binary);
@@ -23,12 +23,12 @@ inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     }
 }
 
-inline std::vector<isi::sample<31>> generate_samples_all(const std::string& query) {
-    std::vector<isi::sample<31>> samples(33);
-    isi::kmer<31> k;
+inline std::vector<cobs::sample<31>> generate_samples_all(const std::string& query) {
+    std::vector<cobs::sample<31>> samples(33);
+    cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
     for (size_t i = 0; i < query.size() - 31; i++) {
-        const char* normalized_kmer = isi::query::canonicalize_kmer(query.data() + i, kmer_raw.data(), 31);
+        const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data() + i, kmer_raw.data(), 31);
         k.init(normalized_kmer);
         for (size_t j = 0; j < samples.size(); j++) {
             if (j % (i % (samples.size() - 1) + 1) == 0) {
@@ -39,11 +39,11 @@ inline std::vector<isi::sample<31>> generate_samples_all(const std::string& quer
     return samples;
 }
 
-inline std::vector<isi::sample<31>> generate_samples_one(const std::string& query) {
-    std::vector<isi::sample<31>> samples(33);
-    isi::kmer<31> k;
+inline std::vector<cobs::sample<31>> generate_samples_one(const std::string& query) {
+    std::vector<cobs::sample<31>> samples(33);
+    cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
-    const char* normalized_kmer = isi::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
+    const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
     k.init(normalized_kmer);
     for (size_t i = 0; i < samples.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
@@ -59,10 +59,10 @@ inline std::string get_file_stem(size_t index) {
     return "sample_" + num;
 }
 
-inline void generate_test_case(std::vector<isi::sample<31>> samples, const std::string& out_dir) {
+inline void generate_test_case(std::vector<cobs::sample<31>> samples, const std::string& out_dir) {
     for (size_t i = 0; i < samples.size(); i++) {
         std::string file_name = get_file_stem(i);
-        isi::file::serialize(out_dir + "/" + file_name + isi::file::sample_header::file_extension, samples[i], file_name);
+        cobs::file::serialize(out_dir + "/" + file_name + cobs::file::sample_header::file_extension, samples[i], file_name);
     }
 }
 
