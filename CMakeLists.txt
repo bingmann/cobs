@@ -118,15 +118,6 @@ foreach(target ${EXECUTABLE_FILES})
     target_link_libraries(${target_name} ${libs})
 endforeach(target)
 
-################# EXPERIMENTS #################
-if(QUERY)
-    target_compile_definitions(exp PRIVATE -DQUERY)
-endif()
-if(FALSE_POSITIVE_DIST)
-    target_compile_definitions(exp PRIVATE -DFALSE_POSITIVE_DIST)
-endif()
-################# ########### #################
-
 enable_testing()
 include(GoogleTest)
 add_executable(tests ${TEST_FILES} ${SOURCE_FILES})
