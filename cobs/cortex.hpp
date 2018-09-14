@@ -93,8 +93,9 @@ namespace cobs::cortex {
         }
 
         t.active("sort");
-        std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
-                  reinterpret_cast<uint64_t*>(&(*sample.data().end())));
+        // std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
+        //           reinterpret_cast<uint64_t*>(&(*sample.data().end())));
+        std::sort(sample.data().begin(), sample.data().end());
     }
 
     template<unsigned int N>
@@ -132,7 +133,8 @@ namespace cobs::cortex {
                 bool success = true;
                 try {
                     process_file(it->path(), out_path, sample);
-                } catch (const std::exception& e) {
+                }
+                catch (const std::exception& e) {
                     std::cerr << it->path().string() << " - " << e.what()
                               << " - " << std::strerror(errno) << std::endl;
                     success = false;

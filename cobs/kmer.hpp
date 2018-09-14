@@ -25,6 +25,11 @@ namespace cobs {
         void print(std::ostream& ostream) const;
         static void init(const char* chars, char* kmer_data, uint32_t kmer_size);
         static uint32_t data_size(uint32_t kmer_size);
+        bool operator < (const kmer& b) const {
+            return std::lexicographical_compare(
+                m_data.rbegin(), m_data.rend(),
+                b.m_data.rbegin(), b.m_data.rend());
+        }
     };
 }
 
@@ -67,9 +72,11 @@ namespace cobs{
     std::string kmer<N>::string() const {
         std::string result;
         for (size_t i = 0; i < m_data.size(); i++) {
-            std::string uint8_t_string = m_to_base_pairs[m_data[m_data.size() - i - 1]];
+            std::string uint8_t_string =
+                m_to_base_pairs[m_data[m_data.size() - i - 1]];
             if (i == 0 && N % 4 != 0) {
-                uint8_t_string = uint8_t_string.substr(4 - N % 4, std::string::npos);
+                uint8_t_string =
+                    uint8_t_string.substr(4 - N % 4, std::string::npos);
             }
             result += uint8_t_string;
         }
