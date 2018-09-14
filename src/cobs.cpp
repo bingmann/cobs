@@ -57,9 +57,9 @@ std::string get_query(std::string& value, const std::string& name) {
     return value;
 }
 
-std::experimental::filesystem::path get_path(const std::string& value, const std::string& name, bool needs_to_exist = false) {
-    std::experimental::filesystem::path p(value);
-    if(needs_to_exist && !std::experimental::filesystem::exists(p)) {
+cobs::fs::path get_path(const std::string& value, const std::string& name, bool needs_to_exist = false) {
+    cobs::fs::path p(value);
+    if(needs_to_exist && !cobs::fs::exists(p)) {
         throw std::invalid_argument("path " + name + " (" + p.string() + ") does not exist");
     }
     return p;
@@ -76,10 +76,10 @@ struct parameters {
     uint64_t page_size;
     uint64_t kmer_size;
     std::string query;
-    std::experimental::filesystem::path in_file;
-    std::experimental::filesystem::path out_file;
-    std::experimental::filesystem::path in_dir;
-    std::experimental::filesystem::path out_dir;
+    cobs::fs::path in_file;
+    cobs::fs::path out_file;
+    cobs::fs::path in_dir;
+    cobs::fs::path out_dir;
 
     CLI::Option* add_num_hashes(CLI::App* app) {
         return app->add_option("<num_hashes>", [&](std::vector<std::string> val) {

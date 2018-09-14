@@ -4,9 +4,9 @@
 #include <cobs/file/sample_header.hpp>
 #include <cobs/file/frequency_header.hpp>
 #include <cobs/util/file.hpp>
+#include <cobs/util/fs.hpp>
 #include <cobs/util/processing.hpp>
 
-#include <experimental/filesystem>
 #include <iostream>
 #include <queue>
 
@@ -20,8 +20,8 @@ namespace cobs::frequency {
 
     public:
         explicit pq_element(std::ifstream* ifs);
-        static void serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p);
-        static void deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p);
+        static void serialize_header(std::ofstream& ofs, const fs::path& p);
+        static void deserialize_header(std::ifstream& ifs, const fs::path& p);
         static bool comp(const pq_element& bs1, const pq_element& bs2);
         std::ifstream* ifs();
         uint64_t kmer();
@@ -39,8 +39,8 @@ namespace cobs::frequency {
     };
 
     template<typename H, typename PQE = typename std::conditional<std::is_same<H, file::sample_header>::value, bin_pq_element, fre_pq_element>::type>
-    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size);
-    inline void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file);
+    void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size);
+    inline void combine(const fs::path& in_file, const fs::path& out_file);
 }
 
 
@@ -51,12 +51,12 @@ namespace cobs::frequency {
     }
 
     template<typename H>
-    void pq_element<H>::serialize_header(std::ofstream& ofs, const std::experimental::filesystem::path& p) {
+    void pq_element<H>::serialize_header(std::ofstream& ofs, const fs::path& p) {
         file::serialize_header<H>(ofs, p);
     }
 
     template<typename H>
-    void pq_element<H>::deserialize_header(std::ifstream& ifs, const std::experimental::filesystem::path& p) {
+    void pq_element<H>::deserialize_header(std::ifstream& ifs, const fs::path& p) {
         file::deserialize_header<H>(ifs, p);
     }
 
@@ -99,7 +99,7 @@ namespace cobs::frequency {
         }
 
         template<typename PqElement>
-        void process(std::vector<std::ifstream>& ifstreams, const std::experimental::filesystem::path& out_file) {
+        void process(std::vector<std::ifstream>& ifstreams, const fs::path& out_file) {
             std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&,
                                                                                       const PqElement&)>> pq(PqElement::comp);
             std::ofstream ofs;
@@ -134,12 +134,12 @@ namespace cobs::frequency {
     }
 
     template<typename H, typename PQE>
-    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
+    void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size) {
         timer t;
         t.active("process");
         std::vector<std::ifstream> ifstreams;
         bulk_process_files<H>(in_dir, out_dir, batch_size, cobs::file::frequency_header::file_extension,
-                           [&](const std::vector<std::experimental::filesystem::path>& paths, const std::experimental::filesystem::path& out_file) {
+                           [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
                                for (const auto& p: paths) {
                                    ifstreams.emplace_back(std::ifstream());
                                    PQE::deserialize_header(ifstreams.back(), p);
@@ -152,7 +152,7 @@ namespace cobs::frequency {
         std::cout << t;
     }
 
-    inline void combine(const std::experimental::filesystem::path& in_file, const std::experimental::filesystem::path& out_file) {
+    inline void combine(const fs::path& in_file, const fs::path& out_file) {
         std::ifstream ifs;
         file::deserialize_header<file::frequency_header>(ifs, in_file);
         std::unordered_map<uint32_t, uint32_t> counts;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <experimental/filesystem>
 #include <cobs/util/processing.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/timer.hpp>
 #include <cobs/file/classic_index_header.hpp>
+#include <cobs/util/fs.hpp>
 
 /** The classic Inverted Signature Index without the space-saving improvements.
  *  This namespace provides methods for creation of this index. It can either be created from existing samples or
@@ -16,18 +16,18 @@ namespace cobs::classic_index  {
      *  First calls cobs::classic_index::create_from_samples to create multiple small indices.
      *  Afterwards combines these indices with calls to cobs::classic_index::combine until only one index remains.
      */
-    void create(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
+    void create(const fs::path& in_dir, const fs::path& out_dir,
                 uint64_t batch_size, uint64_t num_hashes, double false_positive_probability);
 
 
     /** Creates multiple small indices from sample files.
      */
-    void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir,
+    void create_from_samples(const fs::path& in_dir, const fs::path& out_dir,
                              uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
 
     /** Combines multiple indices into one or more bigger indices.
      */
-    bool combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t batch_size);
+    bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size);
 
     /** Creates the hash used by the signatures.
      */
@@ -36,5 +36,5 @@ namespace cobs::classic_index  {
 
     /** Creates a dummy index filled with random data.
      */
-    void create_dummy(const std::experimental::filesystem::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
+    void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
 }

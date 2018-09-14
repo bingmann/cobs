@@ -1,26 +1,27 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include <experimental/filesystem>
 #include <fstream>
 #include "test_util.hpp"
 
 #include <cobs/frequency.hpp>
+#include <cobs/util/fs.hpp>
 
 namespace {
+    namespace fs = cobs::fs;
 
-    std::experimental::filesystem::path in_dir("test/resources/frequency/input/");
-    std::experimental::filesystem::path out_dir("test/out/frequency/");
-    std::experimental::filesystem::path result_bin("test/resources/frequency/result/bin.freq.isi");
-    std::experimental::filesystem::path result_freq("test/resources/frequency/result/freq.freq.isi");
-    std::experimental::filesystem::path sample_1(in_dir.string() + "sample_1.sam.isi");
-    std::experimental::filesystem::path sample_2(in_dir.string() + "sample_2.sam.isi");
-    std::experimental::filesystem::path sample_3(in_dir.string() + "sample_3.sam.isi");
+    fs::path in_dir("test/resources/frequency/input/");
+    fs::path out_dir("test/out/frequency/");
+    fs::path result_bin("test/resources/frequency/result/bin.freq.isi");
+    fs::path result_freq("test/resources/frequency/result/freq.freq.isi");
+    fs::path sample_1(in_dir.string() + "sample_1.sam.isi");
+    fs::path sample_2(in_dir.string() + "sample_2.sam.isi");
+    fs::path sample_3(in_dir.string() + "sample_3.sam.isi");
 
     /*
     std::string sample_4 = in_dir + "sample_4.freq.cobs";
     std::string sample_5 = in_dir + "sample_5.freq.cobs";
     void generate_result_bin() {
-        std::experimental::filesystem::create_directories(out_dir);
+        fs::create_directories(out_dir);
         std::vector<uint64_t> v;
         sample<31> s;
         file::deserialize(sample_1, s);
@@ -64,7 +65,7 @@ namespace {
     }
 
     void generate_result_fre() {
-        std::experimental::filesystem::create_directories(out_dir);
+        fs::create_directories(out_dir);
         std::vector<uint64_t> kmers;
         std::vector<uint32_t> counts;
         std::back_insert_iterator<std::vector<uint64_t>> iter_kmer(kmers);
@@ -104,7 +105,7 @@ namespace {
     */
 
 
-    size_t get_count_sample(const std::experimental::filesystem::path& file) {
+    size_t get_count_sample(const fs::path& file) {
         std::ifstream ifs;
         cobs::file::deserialize_header<cobs::file::sample_header>(ifs, file);
         ifs.exceptions(std::ios::failbit | std::ios::badbit);
@@ -117,7 +118,7 @@ namespace {
         return total_count;
     }
 
-    size_t get_count_frequency(const std::experimental::filesystem::path& file) {
+    size_t get_count_frequency(const fs::path& file) {
         std::ifstream ifs;
         cobs::file::deserialize_header<cobs::file::frequency_header>(ifs, file);
         ifs.exceptions(std::ios::failbit | std::ios::badbit);
@@ -136,23 +137,23 @@ namespace {
     protected:
         virtual void SetUp() {
 
-            std::error_code ec;
-            std::experimental::filesystem::remove_all(out_dir, ec);
+            cobs::error_code ec;
+            fs::remove_all(out_dir, ec);
         }
     };
 
     TEST_F(frequency, bin) {
         cobs::frequency::process_all_in_directory<cobs::file::sample_header>(in_dir, out_dir, 40);
         size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
-        std::experimental::filesystem::path p(out_dir.string() + "[sample_1-sample_3]" + cobs::file::frequency_header::file_extension);
+        fs::path p(out_dir.string() + "[sample_1-sample_3]" + cobs::file::frequency_header::file_extension);
         ASSERT_EQ(get_count_frequency(p), total_count);
-        assert_equals_files(result_bin, p);
+        assert_equals_files(result_bin.string(), p.string());
     }
 
     TEST_F(frequency, freq) {
         cobs::frequency::process_all_in_directory<cobs::file::frequency_header>(in_dir, out_dir, 40);
-        std::experimental::filesystem::path p(out_dir.string() + "[sample_4-sample_5]" + cobs::file::frequency_header::file_extension);
-        assert_equals_files(result_freq, p);
+        fs::path p(out_dir.string() + "[sample_4-sample_5]" + cobs::file::frequency_header::file_extension);
+        assert_equals_files(result_freq.string(), p.string());
     }
 }
 

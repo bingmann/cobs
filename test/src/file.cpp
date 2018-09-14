@@ -1,23 +1,25 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include <experimental/filesystem>
 
 #include <cobs/util/file.hpp>
+#include <cobs/util/fs.hpp>
 #include <cobs/file/header.hpp>
 
 
 namespace {
-    std::experimental::filesystem::path out_dir("test/out/file");
-    std::experimental::filesystem::path out_path_s(out_dir.string() + "/classic_index.sam.isi");
-    std::experimental::filesystem::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
-    std::experimental::filesystem::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
+    namespace fs = cobs::fs;
+
+    fs::path out_dir("test/out/file");
+    fs::path out_path_s(out_dir.string() + "/classic_index.sam.isi");
+    fs::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
+    fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
 
     class file : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            std::error_code ec;
-            std::experimental::filesystem::remove_all(out_dir, ec);
-            std::experimental::filesystem::create_directories(out_dir);
+            cobs::error_code ec;
+            fs::remove_all(out_dir, ec);
+            fs::create_directories(out_dir);
         }
     };
 

@@ -16,7 +16,7 @@ namespace cobs::query::compact_index {
     protected:
         virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows);
     public:
-        explicit aio(const std::experimental::filesystem::path& path);
+        explicit aio(const fs::path& path);
         ~aio();
     };
 }

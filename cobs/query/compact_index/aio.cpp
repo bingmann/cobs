@@ -8,7 +8,7 @@
 #include <fcntl.h>
 
 namespace cobs::query::compact_index {
-    aio::aio(const std::experimental::filesystem::path& path) :
+    aio::aio(const fs::path& path) :
             compact_index::base(path), m_max_nr_ios(65536 * m_header.parameters().size()),
             m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios), m_io_events(m_max_nr_ios) {
         //todo use sysctl to check max-nr-io

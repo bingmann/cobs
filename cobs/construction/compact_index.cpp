@@ -8,37 +8,37 @@ namespace cobs::compact_index {
         return ss.str();
     }
 
-    void create_folders(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, uint64_t page_size) {
-        std::vector<std::experimental::filesystem::path> paths;
-        std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
+    void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t page_size) {
+        std::vector<fs::path> paths;
+        fs::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
             return cobs::file::file_is<cobs::file::sample_header>(p);
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
-            return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
+            return fs::file_size(p1) < fs::file_size(p2);
         });
 
         size_t batch = 1;
         size_t i = 0;
-        std::experimental::filesystem::path sub_out_dir;
+        fs::path sub_out_dir;
         for(const auto& p: paths) {
             if (i % (8 * page_size) == 0) {
-                sub_out_dir = out_dir / std::experimental::filesystem::path("/samples/" + pad_directory_number(batch));
-                std::experimental::filesystem::create_directories(sub_out_dir);
+                sub_out_dir = out_dir / fs::path("/samples/" + pad_directory_number(batch));
+                fs::create_directories(sub_out_dir);
                 batch++;
             }
-            std::experimental::filesystem::rename(p, sub_out_dir / p.filename());
+            fs::rename(p, sub_out_dir / p.filename());
             i++;
         }
     }
 
-//    void create_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
+//    void create_from_samples(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
 //                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
 //        size_t num_files = 0;
 //        size_t max_file_size = 0;
-//        for (std::experimental::filesystem::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
+//        for (fs::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
 //            if (cobs::file::file_is<cobs::file::sample_header>(sub_it->path())) {
-//                max_file_size = std::max(max_file_size, std::experimental::filesystem::file_size(sub_it->path()));
+//                max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
 //                num_files++;
 //            }
 //        }
@@ -51,21 +51,21 @@ namespace cobs::compact_index {
 //        }
 //    }
 
-    void create_classic_index_from_samples(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size,
+    void create_classic_index_from_samples(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
                                                   size_t num_hashes, double false_positive_probability, uint64_t page_size) {
         assert(batch_size % 8 == 0);
-        std::vector<std::experimental::filesystem::path> paths;
-        std::copy_if(std::experimental::filesystem::directory_iterator(in_dir), std::experimental::filesystem::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
-            return std::experimental::filesystem::is_directory(p);
+        std::vector<fs::path> paths;
+        std::copy_if(fs::directory_iterator(in_dir), fs::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
+            return fs::is_directory(p);
         });
         std::sort(paths.begin(), paths.end());
 
         for (const auto& p: paths) {
             size_t num_files = 0;
             size_t max_file_size = 0;
-            for (std::experimental::filesystem::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
+            for (fs::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
                 if (cobs::file::file_is<cobs::file::sample_header>(sub_it->path())) {
-                    max_file_size = std::max(max_file_size, std::experimental::filesystem::file_size(sub_it->path()));
+                    max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
                     num_files++;
                 }
             }
@@ -79,19 +79,19 @@ namespace cobs::compact_index {
         }
     }
 
-    bool combine_classic_index(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir, size_t batch_size) {
+    bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size) {
         bool all_combined = false;
-        for (std::experimental::filesystem::directory_iterator it(in_dir), end; it != end; it++) {
-            if (std::experimental::filesystem::is_directory(it->path())) {
+        for (fs::directory_iterator it(in_dir), end; it != end; it++) {
+            if (fs::is_directory(it->path())) {
                 all_combined = cobs::classic_index::combine(in_dir / it->path().filename(), out_dir / it->path().filename(), batch_size);
             }
         }
         return all_combined;
     }
 
-    void combine(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_file, uint64_t page_size) {
-        std::vector<std::experimental::filesystem::path> paths;
-        std::experimental::filesystem::recursive_directory_iterator it(in_dir), end;
+    void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_size) {
+        std::vector<fs::path> paths;
+        fs::recursive_directory_iterator it(in_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
             return cobs::file::file_is<cobs::file::classic_index_header>(p);
         });
@@ -138,9 +138,9 @@ namespace cobs::compact_index {
         }
     }
 
-    void create_from_folders(const std::experimental::filesystem::path& in_dir, size_t batch_size, size_t num_hashes,
+    void create_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
                                                   double false_positive_probability, uint64_t page_size) {
-        std::experimental::filesystem::path samples_dir = in_dir / std::experimental::filesystem::path("samples/");
+        fs::path samples_dir = in_dir / fs::path("samples/");
         std::string bloom_dir = in_dir.string() +  "/isi_";
         size_t iteration = 1;
         create_classic_index_from_samples(samples_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
@@ -150,9 +150,9 @@ namespace cobs::compact_index {
         combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + cobs::file::compact_index_header::file_extension), page_size);
     }
 
-    void create(const std::experimental::filesystem::path& in_dir, std::experimental::filesystem::path out_dir,
+    void create(const fs::path& in_dir, fs::path out_dir,
                        size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-        create_folders(in_dir, out_dir / std::experimental::filesystem::path("/samples"), page_size);
+        create_folders(in_dir, out_dir / fs::path("/samples"), page_size);
         create_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
     }
 }

@@ -110,7 +110,10 @@ else()
     message(WARNING "libstdc++fs was not specified use: -D libstdc++fs=\"<path_to_libstdc++fs.a>\"")
 endif()
 
-set(libs stdc++fs xxhash)
+find_package(Boost 1.42.0 REQUIRED COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
+
+set(libs stdc++fs xxhash ${Boost_LIBRARIES})
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)

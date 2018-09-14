@@ -6,31 +6,33 @@
 
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/classic_index_query/input");
-    std::experimental::filesystem::path tmp_dir("test/out/classic_index_query/tmp");
-    std::experimental::filesystem::path index_path(in_dir.string() + "/index.cla_idx.isi");
+    namespace fs = cobs::fs;
+
+    fs::path in_dir("test/out/classic_index_query/input");
+    fs::path tmp_dir("test/out/classic_index_query/tmp");
+    fs::path index_path(in_dir.string() + "/index.cla_idx.isi");
     std::string query = cobs::random_sequence(50000, 2);
 
     class classic_index_query : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            std::error_code ec;
-            std::experimental::filesystem::remove_all(in_dir, ec);
+            cobs::error_code ec;
+            fs::remove_all(in_dir, ec);
             if (ec) {
                 std::cout << ec.message() << std::endl;
             }
-            std::experimental::filesystem::remove_all(tmp_dir, ec);
+            fs::remove_all(tmp_dir, ec);
             if (ec) {
                 std::cout << ec.message() << std::endl;
             }
-            std::experimental::filesystem::create_directories(in_dir);
-            std::experimental::filesystem::create_directories(tmp_dir);
+            fs::create_directories(in_dir);
+            fs::create_directories(tmp_dir);
         }
     };
 
     TEST_F(classic_index_query, all_included_small_batch) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -45,7 +47,7 @@ namespace {
 
     TEST_F(classic_index_query, all_included_large_batch) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -60,7 +62,7 @@ namespace {
 
     TEST_F(classic_index_query, all_included_max_batch) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -75,7 +77,7 @@ namespace {
 
     TEST_F(classic_index_query, one_included_small_batch) {
         auto samples = generate_samples_one(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -90,7 +92,7 @@ namespace {
 
     TEST_F(classic_index_query, one_included_large_batch) {
         auto samples = generate_samples_one(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -104,7 +106,7 @@ namespace {
 
     TEST_F(classic_index_query, one_included_max_batch) {
         auto samples = generate_samples_one(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 
@@ -118,7 +120,7 @@ namespace {
 
     TEST_F(classic_index_query, false_positive) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
         cobs::query::classic_index::mmap s_mmap(index_path);
 

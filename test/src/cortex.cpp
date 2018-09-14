@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 #include <cobs/cortex.hpp>
 #include <iostream>
-#include <experimental/filesystem>
 #include <cobs/util/processing.hpp>
 #include <cobs/util/file.hpp>
+#include <cobs/util/fs.hpp>
 
 
 namespace {
+    namespace fs = cobs::fs;
+
     std::string in_dir = "test/resources/cortex/input/";
     std::string out_dir = "test/out/cortex/";
     std::string in_path = in_dir + "sample.ctx";
@@ -37,14 +39,14 @@ namespace {
     }
 
     TEST(cortex, process_file) {
-        std::experimental::filesystem::remove_all(out_dir);
+        fs::remove_all(out_dir);
         cobs::sample<31> sample;
         cobs::cortex::process_file(in_path, out_path, sample);
         assert_equals_sample(sample);
     }
 
     TEST(cortex, file_serialization) {
-        std::experimental::filesystem::remove_all(out_dir);
+        fs::remove_all(out_dir);
         cobs::sample<31> sample1;
         cobs::sample<31> sample2;
         cobs::cortex::process_file(in_path, out_path, sample1);
@@ -54,7 +56,7 @@ namespace {
     }
 
     TEST(cortex, process_all_in_directory) {
-        std::experimental::filesystem::remove_all(out_dir);
+        fs::remove_all(out_dir);
         cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
         cobs::sample<31> sample;
         cobs::file::deserialize(out_path_rec, sample);

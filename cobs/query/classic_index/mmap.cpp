@@ -2,10 +2,11 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/query.hpp>
 #include <cstring>
+#include <cobs/util/fs.hpp>
 
 namespace cobs::query::classic_index {
 
-    mmap::mmap(const std::experimental::filesystem::path& path) : classic_index::base(path) {
+    mmap::mmap(const fs::path& path) : classic_index::base(path) {
         std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
         m_fd = handles.first;
         m_data = handles.second;

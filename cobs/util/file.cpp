@@ -1,4 +1,5 @@
 #include <cobs/util/file.hpp>
+#include <cobs/util/fs.hpp>
 
 namespace cobs::file {
     void serialize(std::ofstream& ofs, const std::vector<uint8_t>& data, const classic_index_header& h) {
@@ -7,8 +8,8 @@ namespace cobs::file {
         ofs.write(reinterpret_cast<const char*>(data.data()), data.size());
     }
 
-    void serialize(const std::experimental::filesystem::path& p, const std::vector<uint8_t>& data, const classic_index_header& h) {
-        std::experimental::filesystem::create_directories(p.parent_path());
+    void serialize(const fs::path& p, const std::vector<uint8_t>& data, const classic_index_header& h) {
+        fs::create_directories(p.parent_path());
         std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
         serialize(ofs, data, h);
     }
@@ -35,18 +36,18 @@ namespace cobs::file {
         }
     }
 
-    void deserialize(const std::experimental::filesystem::path& p, std::vector<uint8_t>& data, classic_index_header& h) {
+    void deserialize(const fs::path& p, std::vector<uint8_t>& data, classic_index_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, data, h);
     }
 
-    void deserialize(const std::experimental::filesystem::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h) {
+    void deserialize(const fs::path& p, std::vector<std::vector<uint8_t>>& data, compact_index_header& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, data, h);
     }
 
-    std::string file_name(const std::experimental::filesystem::path& p) {
-        std::string result = p.filename();
+    std::string file_name(const fs::path& p) {
+        std::string result = p.filename().string();
         auto comp = [](char c){
             return c == '.';
         };

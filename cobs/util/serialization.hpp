@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <fstream>
-#include <experimental/filesystem>
+#include <cobs/util/fs.hpp>
 
 namespace cobs {
 
@@ -14,7 +14,7 @@ namespace cobs {
     stream_metadata get_stream_metadata(std::ifstream& ifs);
 
     template<typename T>
-    void read_file(const std::experimental::filesystem::path& path, std::vector<T>& v);
+    void read_file(const fs::path& path, std::vector<T>& v);
     template<typename T>
     void write(std::ostream& ost, const T& t);
     template<typename T, typename... Args>
@@ -28,7 +28,7 @@ namespace cobs {
 
 namespace cobs {
     template<typename T>
-    void read_file(const std::experimental::filesystem::path& path, std::vector<T>& v) {
+    void read_file(const fs::path& path, std::vector<T>& v) {
         std::ifstream ifs(path.string(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         stream_metadata smd = get_stream_metadata(ifs);

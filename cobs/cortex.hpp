@@ -2,9 +2,9 @@
 
 #include <string>
 #include <vector>
-#include <experimental/filesystem>
 
 #include <cobs/sample.hpp>
+#include <cobs/util/fs.hpp>
 #include <cobs/util/timer.hpp>
 #include <cobs/util/file.hpp>
 #include <iomanip>
@@ -93,7 +93,7 @@ namespace cobs::cortex {
     }
 
     template<unsigned int N>
-    void process_file(const std::experimental::filesystem::path& in_path, const std::experimental::filesystem::path& out_path, sample <N>& s) {
+    void process_file(const fs::path& in_path, const fs::path& out_path, sample <N>& s) {
         t.active("read");
         read_file(in_path, v);
         if (!v.empty()) {
@@ -110,16 +110,16 @@ namespace cobs::cortex {
     }
 
     template<unsigned int N>
-    void process_all_in_directory(const std::experimental::filesystem::path& in_dir, const std::experimental::filesystem::path& out_dir) {
+    void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
         sample<N> sample;
         t.reset();
         size_t i = 0;
-        for (std::experimental::filesystem::recursive_directory_iterator end, it(in_dir); it != end; it++) {
-            std::experimental::filesystem::path out_path = out_dir / it->path().stem().concat(file::sample_header::file_extension);
-            if (std::experimental::filesystem::is_regular_file(*it)
+        for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
+            fs::path out_path = out_dir / it->path().stem().concat(file::sample_header::file_extension);
+            if (fs::is_regular_file(*it)
                 && it->path().extension().string() == ".ctx"
                 && it->path().string().find("uncleaned") == std::string::npos
-                && !std::experimental::filesystem::exists(out_path)) {
+                && !fs::exists(out_path)) {
                 std::cout << "BE - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::flush;
                 bool success = true;
                 try {

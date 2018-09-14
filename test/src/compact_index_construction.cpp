@@ -1,30 +1,33 @@
 #include <gtest/gtest.h>
 #include "test_util.hpp"
 #include <cobs/util/parameters.hpp>
+#include <cobs/util/fs.hpp>
 
 namespace {
-    std::experimental::filesystem::path in_dir("test/out/compact_index_construction/input");
-    std::experimental::filesystem::path samples_dir(in_dir.string() + "/samples");
-    std::experimental::filesystem::path isi_2_dir(in_dir.string() + "/isi_2");
-    std::experimental::filesystem::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
-    std::experimental::filesystem::path tmp_dir("test/out/compact_index_construction/tmp");
+    namespace fs = cobs::fs;
+
+    fs::path in_dir("test/out/compact_index_construction/input");
+    fs::path samples_dir(in_dir.string() + "/samples");
+    fs::path isi_2_dir(in_dir.string() + "/isi_2");
+    fs::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
+    fs::path tmp_dir("test/out/compact_index_construction/tmp");
 
     std::string query = cobs::random_sequence(10000, 1);
 
     class compact_index_construction : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            std::error_code ec;
-            std::experimental::filesystem::remove_all(in_dir, ec);
-            std::experimental::filesystem::remove_all(tmp_dir, ec);
-            std::experimental::filesystem::create_directories(in_dir);
-            std::experimental::filesystem::create_directories(tmp_dir);
+            cobs::error_code ec;
+            fs::remove_all(in_dir, ec);
+            fs::remove_all(tmp_dir, ec);
+            fs::create_directories(in_dir);
+            fs::create_directories(tmp_dir);
         }
     };
 
     TEST_F(compact_index_construction, padding) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         size_t page_size = cobs::get_page_size();
         cobs::compact_index::create_folders(tmp_dir, in_dir, page_size);
         cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, page_size);
@@ -36,7 +39,7 @@ namespace {
 
     TEST_F(compact_index_construction, deserialization) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
 
         cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
         cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
@@ -50,15 +53,15 @@ namespace {
 
     TEST_F(compact_index_construction, file_names) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
 
-        std::vector<std::experimental::filesystem::path> paths;
-        std::experimental::filesystem::recursive_directory_iterator it(tmp_dir), end;
+        std::vector<fs::path> paths;
+        fs::recursive_directory_iterator it(tmp_dir), end;
         std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
             return cobs::file::file_is<cobs::file::sample_header>(p);
         });
         std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
-            return std::experimental::filesystem::file_size(p1) < std::experimental::filesystem::file_size(p2);
+            return fs::file_size(p1) < fs::file_size(p2);
         });
         for(size_t i = 0; i < samples.size(); i += 2 * 8) {
             size_t middle_index = std::min(i + 16, paths.size());
@@ -78,7 +81,7 @@ namespace {
     TEST_F(compact_index_construction, parameters) {
         uint64_t num_hashes = 3;
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
         cobs::compact_index::create_from_folders(in_dir, 8, num_hashes, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
@@ -86,9 +89,9 @@ namespace {
 
         std::vector<uint64_t> sample_sizes;
         std::vector<cobs::file::compact_index_header::parameter> parameters;
-        for(const std::experimental::filesystem::path& p: std::experimental::filesystem::recursive_directory_iterator(samples_dir)) {
+        for(const fs::path& p: fs::recursive_directory_iterator(samples_dir)) {
             if (cobs::file::file_is<cobs::file::classic_index_header>(p)) {
-                sample_sizes.push_back(std::experimental::filesystem::file_size(p));
+                sample_sizes.push_back(fs::file_size(p));
             }
         }
 
@@ -104,18 +107,18 @@ namespace {
 
     TEST_F(compact_index_construction, num_kmers_calculation) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
-        std::experimental::filesystem::path path_sample(tmp_dir.string() + "/sample_00.sam.isi");
+        generate_test_case(samples, tmp_dir.string());
+        fs::path path_sample(tmp_dir.string() + "/sample_00.sam.isi");
         cobs::sample<31> s;
         cobs::file::deserialize(path_sample, s);
 
-        size_t file_size = std::experimental::filesystem::file_size(path_sample);
+        size_t file_size = fs::file_size(path_sample);
         ASSERT_EQ(s.data().size(), file_size / 8 - 3);
     }
 
     TEST_F(compact_index_construction, num_ones) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
         cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> data;
@@ -149,16 +152,16 @@ namespace {
 
     TEST_F(compact_index_construction, content) {
         auto samples = generate_samples_all(query);
-        generate_test_case(samples, tmp_dir);
+        generate_test_case(samples, tmp_dir.string());
         cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
         cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
         std::vector<std::vector<uint8_t>> cisi_data;
         cobs::file::deserialize(compact_index_path, cisi_data);
 
         std::vector<std::vector<uint8_t>> indices;
-        for(auto& p: std::experimental::filesystem::directory_iterator(isi_2_dir)) {
-            if (std::experimental::filesystem::is_directory(p)) {
-                for(const std::experimental::filesystem::path& isi_p: std::experimental::filesystem::directory_iterator(p)) {
+        for(auto& p: fs::directory_iterator(isi_2_dir)) {
+            if (fs::is_directory(p)) {
+                for(const fs::path& isi_p: fs::directory_iterator(p)) {
                     if(cobs::file::file_is<cobs::file::classic_index_header>(isi_p)) {
                         std::vector<uint8_t> data;
                         cobs::file::deserialize(isi_p, data);

@@ -2,7 +2,7 @@
 #include <cobs/query/compact_index/base.hpp>
 
 namespace cobs::query::compact_index {
-    base::base(const std::experimental::filesystem::path& path) : query::base<file::compact_index_header>(path) {
+    base::base(const fs::path& path) : query::base<file::compact_index_header>(path) {
         //todo assertions that all the data in the header is correct
         m_block_size = m_header.page_size() * m_header.parameters().size();
         m_num_hashes = m_header.parameters()[0].num_hashes;

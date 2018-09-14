@@ -28,7 +28,7 @@ namespace cobs::query {
         stream_metadata m_smd;
         timer m_timer;
 
-        explicit base(const std::experimental::filesystem::path& path);
+        explicit base(const fs::path& path);
 
         virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows) = 0;
         virtual uint64_t block_size() const = 0;
@@ -141,7 +141,7 @@ namespace cobs::query {
     }
 
     template<class T>
-    base<T>::base(const std::experimental::filesystem::path& path) {
+    base<T>::base(const fs::path& path) {
         std::ifstream ifs;
         m_header = file::deserialize_header<T>(ifs, path);
         m_smd = get_stream_metadata(ifs);

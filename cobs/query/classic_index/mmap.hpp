@@ -10,7 +10,7 @@ namespace cobs::query::classic_index {
     protected:
         void read_from_disk(const std::vector<size_t>& hashes, char* rows) override;
     public:
-        explicit mmap(const std::experimental::filesystem::path& path);
+        explicit mmap(const fs::path& path);
         ~mmap();
     };
 }
