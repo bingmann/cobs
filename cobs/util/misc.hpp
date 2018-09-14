@@ -29,7 +29,9 @@ namespace cobs {
     template<typename T>
     T* allocate_aligned(uint64_t size, size_t alignment) {
         T* ptr;
-        posix_memalign(reinterpret_cast<void**>(&ptr), alignment, sizeof(T) * size);
+        int r = posix_memalign(reinterpret_cast<void**>(&ptr), alignment, sizeof(T) * size);
+        if (r != 0)
+            throw std::runtime_error("Out of memory");
         std::fill(ptr, ptr + size, 0);
         return ptr;
     }
