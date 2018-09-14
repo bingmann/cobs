@@ -27,6 +27,13 @@ namespace cobs::cortex {
         return *reinterpret_cast<const size_type*>(&(*iter));
     }
 
+    template<typename Type, typename ForwardIterator>
+    Type cast_advance(ForwardIterator& iter) {
+        Type t = *reinterpret_cast<const Type*>(&(*iter));
+        std::advance(iter, sizeof(Type));
+        return t;
+    }
+
     template<typename ForwardIterator>
     void check_magic_number(ForwardIterator& iter) {
         std::string magic_word = "CORTEX";
@@ -40,34 +47,32 @@ namespace cobs::cortex {
 
     template<typename ForwardIterator>
     header skip_header(ForwardIterator& iter) {
-        header h{};
+        header h;
         check_magic_number(iter);
-        h.version = cast<uint32_t>(iter);
+        h.version = cast_advance<uint32_t>(iter);
         if (h.version != 6) {
-            throw std::invalid_argument("invalid .ctx file version (" + std::to_string(h.version));
+            throw std::invalid_argument(
+                "invalid .ctx file version (" + std::to_string(h.version));
         }
-        std::advance(iter, 4);
-        h.kmer_size = cast<uint32_t>(iter);
+        h.kmer_size = cast_advance<uint32_t>(iter);
         assert(h.kmer_size == 31);
-        std::advance(iter, 4);
-        h.num_words_per_kmer = cast<uint32_t>(iter);
-        std::advance(iter, 4);
+        h.num_words_per_kmer = cast_advance<uint32_t>(iter);
         h.num_colors = cast<uint32_t>(iter);
         if (h.num_colors != 1) {
-            throw std::invalid_argument("invalid number of colors (" + std::to_string(h.num_colors) + "), should be 1");
+            throw std::invalid_argument(
+                "invalid number of colors (" + std::to_string(h.num_colors) + "), must be 1");
         }
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
-            auto sample_name_length = cast<uint32_t>(iter);
-            std::advance(iter, 4);
+            auto sample_name_length = cast_advance<uint32_t>(iter);
             h.name.assign(iter, iter + sample_name_length);
             std::advance(iter, sample_name_length);
         }
         std::advance(iter, 16 * h.num_colors);
         for (size_t i = 0; i < h.num_colors; i++) {
             std::advance(iter, 12);
-            auto length_graph_name = cast<uint32_t>(iter);
-            std::advance(iter, 4 + length_graph_name);
+            auto length_graph_name = cast_advance<uint32_t>(iter);
+            std::advance(iter, length_graph_name);
         }
         check_magic_number(iter);
         return h;
@@ -100,7 +105,8 @@ namespace cobs::cortex {
             t.active("iter");
             auto iter = v.begin();
             auto h = skip_header(iter);
-            s.data().resize(std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
+            s.data().resize(
+                std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
             read_sample(iter, v.end(), h, s);
             t.active("write");
@@ -116,20 +122,25 @@ namespace cobs::cortex {
         size_t i = 0;
         for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
             fs::path out_path = out_dir / it->path().stem().concat(file::sample_header::file_extension);
-            if (fs::is_regular_file(*it)
-                && it->path().extension().string() == ".ctx"
-                && it->path().string().find("uncleaned") == std::string::npos
-                && !fs::exists(out_path)) {
-                std::cout << "BE - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::flush;
+            if (fs::is_regular_file(*it) &&
+                it->path().extension().string() == ".ctx" &&
+                it->path().string().find("uncleaned") == std::string::npos &&
+                !fs::exists(out_path))
+            {
+                std::cout << "BE - " << std::setfill('0') << std::setw(7) << i
+                          << " - " << it->path().string() << std::flush;
                 bool success = true;
                 try {
                     process_file(it->path(), out_path, sample);
                 } catch (const std::exception& e) {
-                    std::cerr << it->path().string() << " - " << e.what() << " - " << std::strerror(errno) << std::endl;
+                    std::cerr << it->path().string() << " - " << e.what()
+                              << " - " << std::strerror(errno) << std::endl;
                     success = false;
                     t.stop();
                 }
-                std::cout << "\r" << (success ? "OK" : "ER") << " - " << std::setfill('0') << std::setw(7) << i << " - " << it->path().string() << std::endl;
+                std::cout << "\r" << (success ? "OK" : "ER")
+                          << " - " << std::setfill('0') << std::setw(7) << i
+                          << " - " << it->path().string() << std::endl;
                 i++;
             }
         }
