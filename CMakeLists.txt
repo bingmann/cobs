@@ -99,7 +99,22 @@ MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
 MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
-include(dependencies/dependency.cmake)
+### use Google Test ###
+
+add_subdirectory(extlib/googletest)
+
+### use CLI11 command line parser ###
+
+add_subdirectory(extlib/cli11)
+
+### use xxHash ###
+
+add_subdirectory(extlib/xxhash/cmake_unofficial)
+
+### use Boost filesystem ###
+
+find_package(Boost 1.42.0 REQUIRED COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIRS})
 
 ### use TLX ###
 
@@ -108,17 +123,10 @@ add_subdirectory(extlib/tlx)
 ################################################################################
 
 file(COPY test/resources DESTINATION test)
-include_directories(${PROJECT_SOURCE_DIR} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
 
-if(libstdc++fs)
-    add_library(stdc++fs UNKNOWN IMPORTED)
-    set_property(TARGET stdc++fs PROPERTY IMPORTED_LOCATION ${libstdc++fs})
-else()
-    message(WARNING "libstdc++fs was not specified use: -D libstdc++fs=\"<path_to_libstdc++fs.a>\"")
-endif()
-
-find_package(Boost 1.42.0 REQUIRED COMPONENTS system filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}
+   ${PROJECT_SOURCE_DIR}/extlib/xxhash
+  ${PROJECT_SOURCE_DIR}/extlib/cli11/include)
 
 set(libs stdc++fs xxhash tlx ${Boost_LIBRARIES})
 
