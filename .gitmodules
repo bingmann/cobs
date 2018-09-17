@@ -1,0 +1,3 @@
+[submodule "extlib/tlx"]
+	path = extlib/tlx
+	url = https://github.com/tlx/tlx.git

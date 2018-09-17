@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cobs/kmer.hpp>
+
 #include <ostream>
 #include <vector>
-#include <cobs/kmer.hpp>
+#include <algorithm>
 
 namespace cobs {
     template<unsigned int N>

@@ -100,6 +100,13 @@ MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 include(dependencies/dependency.cmake)
+
+### use TLX ###
+
+add_subdirectory(extlib/tlx)
+
+################################################################################
+
 file(COPY test/resources DESTINATION test)
 include_directories(${PROJECT_SOURCE_DIR} ${DEPENDENCY_DIR}/xxhash/src ${DEPENDENCY_DIR}/cli11/src/include)
 
@@ -113,7 +120,7 @@ endif()
 find_package(Boost 1.42.0 REQUIRED COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(libs stdc++fs xxhash ${Boost_LIBRARIES})
+set(libs stdc++fs xxhash tlx ${Boost_LIBRARIES})
 
 foreach(target ${EXECUTABLE_FILES})
     get_filename_component(target_name ${target} NAME_WE)
