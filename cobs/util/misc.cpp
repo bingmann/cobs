@@ -1,28 +1,37 @@
-#include <cobs/util/misc.hpp>
-#include <cassert>
-#include <zconf.h>
+/*******************************************************************************
+ * cobs/util/misc.cpp
+ *
+ * Copyright (c) 2018 Florian Gauger
+ *
+ * All rights reserved. Published under the MIT License in the LICENSE file.
+ ******************************************************************************/
+
 #include <array>
+#include <cassert>
+#include <cobs/util/misc.hpp>
 #include <iostream>
+#include <zconf.h>
 
 namespace cobs {
-    uint64_t get_page_size() {
-        int page_size = getpagesize();
-        assert(page_size > 0);
-        assert(page_size == 4096); //todo check for experiments
-        return (uint64_t) page_size;
-    }
 
-    std::string random_sequence(size_t len, size_t seed) {
-        std::array<char, 4> basepairs = {'A', 'C', 'G', 'T'};
-        std::string result;
-        std::srand(seed);
-        for (size_t i = 0; i < len; i++) {
-            result += basepairs[std::rand() % 4];
-        }
-        return result;
-    }
+uint64_t get_page_size() {
+    int page_size = getpagesize();
+    assert(page_size > 0);
+    assert(page_size == 4096);     // todo check for experiments
+    return (uint64_t)page_size;
+}
 
-    void initialize_map() {
+std::string random_sequence(size_t len, size_t seed) {
+    std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };
+    std::string result;
+    std::srand(seed);
+    for (size_t i = 0; i < len; i++) {
+        result += basepairs[std::rand() % 4];
+    }
+    return result;
+}
+
+void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;
 //    for (uint8_t i = 0; i < 4; i++) {
@@ -37,22 +46,25 @@ namespace cobs {
 //            }
 //        }
 //    }
-    }
-
-    void initialize_map_server() {
-        std::cout << "{";
-        for (uint64_t i = 0; i < 16; i++) {
-            uint64_t result = 0;
-            result |= (i & 1);
-            result |= (i & 2) << 15;
-            result |= (i & 4) << 30;
-            result |= (i & 8) << 45;
-            std::cout << result << ", ";
-        };
-        std::cout << "}" << std::endl;
-    }
-
-    void deallocate_aligned(void* counts) {
-        free(counts);
-    }
 }
+
+void initialize_map_server() {
+    std::cout << "{";
+    for (uint64_t i = 0; i < 16; i++) {
+        uint64_t result = 0;
+        result |= (i & 1);
+        result |= (i & 2) << 15;
+        result |= (i & 4) << 30;
+        result |= (i & 8) << 45;
+        std::cout << result << ", ";
+    }
+    std::cout << "}" << std::endl;
+}
+
+void deallocate_aligned(void* counts) {
+    free(counts);
+}
+
+} // namespace cobs
+
+/******************************************************************************/

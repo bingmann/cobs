@@ -1,7 +1,9 @@
 /*******************************************************************************
  * cobs/util/fs.hpp
  *
+ * Copyright (c) 2018 Florian Gauger
  *
+ * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
 #ifndef COBS_UTIL_FS_HEADER

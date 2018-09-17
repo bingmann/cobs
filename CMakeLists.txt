@@ -1,3 +1,11 @@
+################################################################################
+# CMakeLists.txt
+#
+# Copyright (c) 2018 Florian Gauger
+#
+# All rights reserved. Published under the MIT License in the LICENSE file.
+################################################################################
+
 cmake_minimum_required(VERSION 3.9.6)
 cmake_policy(VERSION 3.9.6)
 
@@ -143,3 +151,5 @@ target_compile_definitions(tests PRIVATE cobs_test)
 target_link_libraries(tests ${libs} gtest gtest_main)
 gtest_add_tests(tests "" ${TEST_FILES})
 
+
+################################################################################

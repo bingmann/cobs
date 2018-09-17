@@ -1,12 +1,22 @@
+/*******************************************************************************
+ * test/src/test_util.hpp
+ *
+ * Copyright (c) 2018 Florian Gauger
+ *
+ * All rights reserved. Published under the MIT License in the LICENSE file.
+ ******************************************************************************/
+
+#ifndef COBS_TEST_SRC_TEST_UTIL_HEADER
+#define COBS_TEST_SRC_TEST_UTIL_HEADER
 #pragma once
 
-#include <string>
-#include <fstream>
-#include <vector>
-#include <gtest/gtest.h>
-#include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/construction/compact_index.hpp>
+#include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/query.hpp>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <string>
+#include <vector>
 
 inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     std::ifstream ifs1(f1, std::ios::in | std::ios::binary);
@@ -23,8 +33,8 @@ inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     }
 }
 
-inline std::vector<cobs::sample<31>> generate_samples_all(const std::string& query) {
-    std::vector<cobs::sample<31>> samples(33);
+inline std::vector<cobs::sample<31> > generate_samples_all(const std::string& query) {
+    std::vector<cobs::sample<31> > samples(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
     for (size_t i = 0; i < query.size() - 31; i++) {
@@ -39,8 +49,8 @@ inline std::vector<cobs::sample<31>> generate_samples_all(const std::string& que
     return samples;
 }
 
-inline std::vector<cobs::sample<31>> generate_samples_one(const std::string& query) {
-    std::vector<cobs::sample<31>> samples(33);
+inline std::vector<cobs::sample<31> > generate_samples_one(const std::string& query) {
+    std::vector<cobs::sample<31> > samples(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
     const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
@@ -59,10 +69,13 @@ inline std::string get_file_stem(size_t index) {
     return "sample_" + num;
 }
 
-inline void generate_test_case(std::vector<cobs::sample<31>> samples, const std::string& out_dir) {
+inline void generate_test_case(std::vector<cobs::sample<31> > samples, const std::string& out_dir) {
     for (size_t i = 0; i < samples.size(); i++) {
         std::string file_name = get_file_stem(i);
         cobs::file::serialize(out_dir + "/" + file_name + cobs::file::sample_header::file_extension, samples[i], file_name);
     }
 }
 
+#endif // !COBS_TEST_SRC_TEST_UTIL_HEADER
+
+/******************************************************************************/
