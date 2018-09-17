@@ -19,6 +19,7 @@
 #include <cobs/util/timer.hpp>
 #include <cstring>
 #include <iomanip>
+#include <sstream>
 
 #include <tlx/die.hpp>
 #include <tlx/unused.hpp>
@@ -36,56 +37,53 @@ struct header {
 std::vector<char> v;
 timer t;
 
-template <typename Type, typename ForwardIterator>
-Type cast_advance(ForwardIterator& iter) {
-    Type t = *reinterpret_cast<const Type*>(&(*iter));
-    std::advance(iter, sizeof(Type));
+template <typename Type>
+Type cast_advance(std::istream& is) {
+    Type t;
+    is.read(reinterpret_cast<char*>(&t), sizeof(t));
     return t;
 }
 
-template <typename ForwardIterator>
-void check_magic_number(ForwardIterator& iter) {
+void check_magic_number(std::istream& is) {
     std::string magic_word = "CORTEX";
     for (size_t i = 0; i < magic_word.size(); i++) {
-        if (*iter != magic_word[i]) {
+        if (is.get() != magic_word[i]) {
             throw std::invalid_argument("magic number does not match");
         }
-        std::advance(iter, 1);
     }
 }
 
-template <typename ForwardIterator>
-header skip_header(ForwardIterator& iter) {
+header skip_header(std::istream& is) {
     header h;
-    check_magic_number(iter);
-    h.version = cast_advance<uint32_t>(iter);
+    check_magic_number(is);
+    h.version = cast_advance<uint32_t>(is);
     if (h.version != 6)
         die("Invalid .ctx file version (" << h.version);
 
-    h.kmer_size = cast_advance<uint32_t>(iter);
+    h.kmer_size = cast_advance<uint32_t>(is);
     die_unequal(h.kmer_size, 31);
-    h.num_words_per_kmer = cast_advance<uint32_t>(iter);
-    h.num_colors = cast_advance<uint32_t>(iter);
+    h.num_words_per_kmer = cast_advance<uint32_t>(is);
+    h.num_colors = cast_advance<uint32_t>(is);
     if (h.num_colors != 1)
         die("Invalid number of colors (" << h.num_colors << "), must be 1");
 
     for (size_t i = 0; i < h.num_colors; i++) {
-        uint32_t mean_read_length = cast_advance<uint32_t>(iter);
-        uint64_t total_length = cast_advance<uint64_t>(iter);
+        uint32_t mean_read_length = cast_advance<uint32_t>(is);
+        uint64_t total_length = cast_advance<uint64_t>(is);
         tlx::unused(mean_read_length, total_length);
     }
     for (size_t i = 0; i < h.num_colors; i++) {
-        auto sample_name_length = cast_advance<uint32_t>(iter);
-        h.name.assign(iter, iter + sample_name_length);
-        std::advance(iter, sample_name_length);
+        auto sample_name_length = cast_advance<uint32_t>(is);
+        h.name.resize(sample_name_length);
+        is.read(h.name.data(), sample_name_length);
     }
-    std::advance(iter, 16 * h.num_colors);
+    is.ignore(16 * h.num_colors);
     for (size_t i = 0; i < h.num_colors; i++) {
-        std::advance(iter, 12);
-        auto length_graph_name = cast_advance<uint32_t>(iter);
-        std::advance(iter, length_graph_name);
+        is.ignore(12);
+        auto length_graph_name = cast_advance<uint32_t>(is);
+        is.ignore(length_graph_name);
     }
-    check_magic_number(iter);
+    check_magic_number(is);
     return h;
 }
 
@@ -117,7 +115,12 @@ void process_file(const fs::path& in_path, const fs::path& out_path, sample<N>& 
     if (!v.empty()) {
         t.active("iter");
         auto iter = v.begin();
-        auto h = skip_header(iter);
+        std::string vs(v.begin(), v.end());
+        std::istringstream vss(vs);
+
+        auto h = skip_header(vss);
+        iter += vss.tellg();
+
         s.data().resize(
             std::distance(iter, v.end()) / (8 * h.num_words_per_kmer + 5 * h.num_colors));
 
