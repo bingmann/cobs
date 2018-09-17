@@ -405,7 +405,7 @@ int parse(CLI::App& app, int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-    CLI::App app("(I)nverted (S)ignature (I)ndex for Genome Search\n", false);
+    CLI::App app("(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
     add_classic(app, p);
