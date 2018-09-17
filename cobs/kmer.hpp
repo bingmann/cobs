@@ -34,7 +34,8 @@ public:
     kmer();
     explicit kmer(std::array<uint8_t, size> data);
     void init(const char* chars);
-    const std::array<uint8_t, size>& data() const;
+    const std::array<uint8_t, size>& data() const { return m_data; }
+    std::array<uint8_t, size>& data() { return m_data; }
     std::string string() const;
     void print(std::ostream& ostream) const;
     static void init(const char* chars, char* kmer_data, uint32_t kmer_size);
@@ -72,11 +73,6 @@ void kmer<N>::init(const char* chars) {
             m_data[m_data.size() - 1] = m_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
         }
     }
-}
-
-template <unsigned int N>
-const std::array<uint8_t, kmer<N>::size>& kmer<N>::data() const {
-    return m_data;
 }
 
 template <unsigned int N>
