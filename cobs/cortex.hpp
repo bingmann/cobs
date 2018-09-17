@@ -95,7 +95,8 @@ namespace cobs::cortex {
         t.active("sort");
         // std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
         //           reinterpret_cast<uint64_t*>(&(*sample.data().end())));
-        std::sort(sample.data().begin(), sample.data().end());
+        // disabled sorting -tb 2018-09-17 (is this only needed for frequency counting?)
+        // std::sort(sample.data().begin(), sample.data().end());
     }
 
     template<unsigned int N>
