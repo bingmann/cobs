@@ -20,7 +20,8 @@
 
 namespace cobs::classic_index {
 
-void create_hashes(const void* input, size_t len, uint64_t signature_size, uint64_t num_hashes,
+void create_hashes(const void* input, size_t len, uint64_t signature_size,
+                   uint64_t num_hashes,
                    const std::function<void(uint64_t)>& callback) {
     for (unsigned int i = 0; i < num_hashes; i++) {
         uint64_t hash = XXH32(input, len, i);
@@ -44,7 +45,7 @@ void process(const std::vector<fs::path>& paths,
         h.file_names()[i] = sh.name();
         t.active("process");
 
-                #pragma omp parallel for
+#pragma omp parallel for
         for (uint64_t j = 0; j < s.data().size(); j++) {
             create_hashes(s.data().data() + j, 8, h.signature_size(), h.num_hashes(), [&](uint64_t hash) {
                               set_bit(data, h, hash, i);
@@ -56,8 +57,10 @@ void process(const std::vector<fs::path>& paths,
     t.stop();
 }
 
-void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams, const fs::path& out_file,
-             uint64_t signature_size, uint64_t block_size, uint64_t num_hash, timer& t, const std::vector<std::string>& file_names) {
+void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
+             const fs::path& out_file,
+             uint64_t signature_size, uint64_t block_size, uint64_t num_hash,
+             timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
     file::classic_index_header h(signature_size, num_hash, file_names);
     file::serialize_header(ofs, out_file, h);
@@ -77,17 +80,19 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams, const 
 }
 
 void create_from_samples(const fs::path& in_dir, const fs::path& out_dir,
-                         uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size) {
+                         uint64_t signature_size, uint64_t num_hashes,
+                         uint64_t batch_size) {
     timer t;
     cobs::file::classic_index_header h(signature_size, num_hashes);
     std::vector<uint8_t> data;
-    bulk_process_files<file::sample_header>(in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
-                                            [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
-                                                h.file_names().resize(paths.size());
-                                                data.resize(signature_size * h.block_size());
-                                                std::fill(data.begin(), data.end(), 0);
-                                                process(paths, out_file, data, h, t);
-                                            });
+    bulk_process_files<file::sample_header>(
+        in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
+        [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
+            h.file_names().resize(paths.size());
+            data.resize(signature_size * h.block_size());
+            std::fill(data.begin(), data.end(), 0);
+            process(paths, out_file, data, h, t);
+        });
     std::cout << t;
 }
 
@@ -98,33 +103,34 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
     uint64_t signature_size = 0;
     uint64_t num_hashes = 0;
     bool all_combined =
-        bulk_process_files<file::classic_index_header>(in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
-                                                       [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
-                                                           uint64_t new_block_size = 0;
-                                                           for (size_t i = 0; i < paths.size(); i++) {
-                                                               ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                                                               auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
-                                                               if (signature_size == 0) {
-                                                                   signature_size = h.signature_size();
-                                                                   num_hashes = h.num_hashes();
-                                                               }
-                                                               assert(h.signature_size() == signature_size);
-                                                               assert(h.num_hashes() == num_hashes);
-                                           #ifndef isi_test
-                                                               if (i < paths.size() - 2) {
-                                                                   // todo doesnt work because of padding for compact, which means there could be two files with less file_names
-                                                                   // todo quickfix with -2 to allow for paddding
-                                                                   // assert(h.file_names().size() == 8 * h.block_size());
-                                                               }
-                                           #endif
-                                                               ifstreams.back().second = h.block_size();
-                                                               new_block_size += h.block_size();
-                                                               std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
-                                                           }
-                                                           combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
-                                                           ifstreams.clear();
-                                                           file_names.clear();
-                                                       });
+        bulk_process_files<file::classic_index_header>(
+            in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
+            [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
+                uint64_t new_block_size = 0;
+                for (size_t i = 0; i < paths.size(); i++) {
+                    ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
+                    auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
+                    if (signature_size == 0) {
+                        signature_size = h.signature_size();
+                        num_hashes = h.num_hashes();
+                    }
+                    assert(h.signature_size() == signature_size);
+                    assert(h.num_hashes() == num_hashes);
+#ifndef isi_test
+                    if (i < paths.size() - 2) {
+                        // todo doesnt work because of padding for compact, which means there could be two files with less file_names
+                        // todo quickfix with -2 to allow for paddding
+                        // assert(h.file_names().size() == 8 * h.block_size());
+                    }
+#endif
+                    ifstreams.back().second = h.block_size();
+                    new_block_size += h.block_size();
+                    std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
+                }
+                combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
+                ifstreams.clear();
+                file_names.clear();
+            });
     std::cout << t;
     return all_combined;
 }
@@ -132,14 +138,16 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
 uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                             uint64_t num_hashes, double false_positive_probability) {
     uint64_t signature_size;
-    bulk_process_files<file::sample_header>(in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
-                                            [&](std::vector<fs::path>& paths, const fs::path& /*out_file*/) {
-                                                std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
-                                                              return fs::file_size(p1) > fs::file_size(p2);
-                                                          });
-                                                size_t max_num_elements = fs::file_size(paths[0]) / 8;
-                                                signature_size = cobs::calc_signature_size(max_num_elements, num_hashes, false_positive_probability);
-                                            });
+    bulk_process_files<file::sample_header>(
+        in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
+        [&](std::vector<fs::path>& paths, const fs::path& /*out_file*/) {
+            std::sort(paths.begin(), paths.end(),
+                      [](const auto& p1, const auto& p2) {
+                          return fs::file_size(p1) > fs::file_size(p2);
+                      });
+            size_t max_num_elements = fs::file_size(paths[0]) / 8;
+            signature_size = cobs::calc_signature_size(max_num_elements, num_hashes, false_positive_probability);
+        });
     return signature_size;
 }
 
