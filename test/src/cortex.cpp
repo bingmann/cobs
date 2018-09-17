@@ -42,6 +42,7 @@ namespace {
         fs::remove_all(out_dir);
         cobs::sample<31> sample;
         cobs::cortex::process_file(in_path, out_path, sample);
+        sample.sort_samples();
         assert_equals_sample(sample);
     }
 
@@ -51,6 +52,8 @@ namespace {
         cobs::sample<31> sample2;
         cobs::cortex::process_file(in_path, out_path, sample1);
         cobs::file::deserialize(out_path, sample2);
+        sample1.sort_samples();
+        sample2.sort_samples();
         assert_equals_sample(sample1);
         assert_equals_sample(sample2);
     }
@@ -60,6 +63,7 @@ namespace {
         cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
         cobs::sample<31> sample;
         cobs::file::deserialize(out_path_rec, sample);
+        sample.sort_samples();
         assert_equals_sample(sample);
     }
 }

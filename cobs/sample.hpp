@@ -13,6 +13,10 @@ namespace cobs {
         void print(std::ostream& ostream) const;
         std::vector<kmer<N>>& data();
         const std::vector<kmer<N>>& data() const;
+
+        void sort_samples() {
+            std::sort(m_data.begin(), m_data.end());
+        }
     };
 }
 
