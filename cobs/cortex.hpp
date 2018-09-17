@@ -20,6 +20,9 @@
 #include <cstring>
 #include <iomanip>
 
+#include <tlx/die.hpp>
+#include <tlx/unused.hpp>
+
 namespace cobs::cortex {
 
 struct header {
@@ -32,11 +35,6 @@ struct header {
 
 std::vector<char> v;
 timer t;
-
-template <typename size_type, typename ForwardIterator>
-size_type cast(ForwardIterator iter) {
-    return *reinterpret_cast<const size_type*>(&(*iter));
-}
 
 template <typename Type, typename ForwardIterator>
 Type cast_advance(ForwardIterator& iter) {
@@ -61,19 +59,21 @@ header skip_header(ForwardIterator& iter) {
     header h;
     check_magic_number(iter);
     h.version = cast_advance<uint32_t>(iter);
-    if (h.version != 6) {
-        throw std::invalid_argument(
-                  "invalid .ctx file version (" + std::to_string(h.version));
-    }
+    if (h.version != 6)
+        die("Invalid .ctx file version (" << h.version);
+
     h.kmer_size = cast_advance<uint32_t>(iter);
-    assert(h.kmer_size == 31);
+    die_unequal(h.kmer_size, 31);
     h.num_words_per_kmer = cast_advance<uint32_t>(iter);
-    h.num_colors = cast<uint32_t>(iter);
-    if (h.num_colors != 1) {
-        throw std::invalid_argument(
-                  "invalid number of colors (" + std::to_string(h.num_colors) + "), must be 1");
+    h.num_colors = cast_advance<uint32_t>(iter);
+    if (h.num_colors != 1)
+        die("Invalid number of colors (" << h.num_colors << "), must be 1");
+
+    for (size_t i = 0; i < h.num_colors; i++) {
+        uint32_t mean_read_length = cast_advance<uint32_t>(iter);
+        uint64_t total_length = cast_advance<uint64_t>(iter);
+        tlx::unused(mean_read_length, total_length);
     }
-    std::advance(iter, 16 * h.num_colors);
     for (size_t i = 0; i < h.num_colors; i++) {
         auto sample_name_length = cast_advance<uint32_t>(iter);
         h.name.assign(iter, iter + sample_name_length);
