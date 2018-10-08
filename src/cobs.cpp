@@ -18,6 +18,41 @@
     #include <cobs/query/compact_index/aio.hpp>
 #endif
 
+#include <tlx/cmdline_parser.hpp>
+
+/******************************************************************************/
+// Cortex File Tools
+
+int cortex_dump(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::vector<std::string> filelist;
+    cp.add_param_stringlist(
+        "filelist", filelist,
+        "List of cortex files to process");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    for (const std::string& file : filelist) {
+        cobs::cortex::CortexFile cortex(file);
+
+        if (cortex.kmer_size_ == 31u) {
+            cortex.process_kmers<31>(
+                [&](const cobs::kmer<31>& m) {
+                    std::cout << m << '\n';
+                });
+        }
+        else {
+            die("cortex_dump: FIXME, add kmer_size " << cortex.kmer_size_);
+        }
+    }
+
+    return 0;
+}
+
+/******************************************************************************/
+
 template <typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
     if ((min_inclusive && num < min) || (!min_inclusive && num <= min) || (max_inclusive && num > max) || (!max_inclusive && num >= max)) {
@@ -398,13 +433,83 @@ void add_compact(CLI::App& app, std::shared_ptr<parameters> p) {
 int parse(CLI::App& app, int argc, char** argv) {
     try {
         CLI11_PARSE(app, argc, argv);
-    } catch (std::ios::failure e) {
+    } catch (std::ios::failure& e) {
         std::cout << e.what() << " - " << e.code().message() << std::endl;
     }
     return 0;
 }
 
+/******************************************************************************/
+
+struct SubTool {
+    const char* name;
+    int (* func)(int argc, char* argv[]);
+    bool shortline;
+    const char* description;
+};
+
+struct SubTool subtools[] = {
+    {
+        "cortex_dump", &cortex_dump, false,
+        "read a cortex file and dump its samples"
+    },
+    { nullptr, nullptr, false, nullptr }
+};
+
+int main_usage(const char* arg0) {
+    std::cout << "(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search"
+              << std::endl << std::endl;
+    std::cout << "Usage: " << arg0 << " <subtool> ..." << std::endl << std::endl
+              << "Available subtools: " << std::endl;
+
+    int shortlen = 0;
+
+    for (size_t i = 0; subtools[i].name; ++i)
+    {
+        if (!subtools[i].shortline) continue;
+        shortlen = std::max(shortlen, static_cast<int>(strlen(subtools[i].name)));
+    }
+
+    for (size_t i = 0; subtools[i].name; ++i)
+    {
+        if (subtools[i].shortline) continue;
+        std::cout << "  " << subtools[i].name << std::endl;
+        tlx::CmdlineParser::output_wrap(
+            std::cout, subtools[i].description, 80, 6, 6);
+        std::cout << std::endl;
+    }
+
+    for (size_t i = 0; subtools[i].name; ++i)
+    {
+        if (!subtools[i].shortline) continue;
+        std::cout << "  " << std::left << std::setw(shortlen + 2)
+                  << subtools[i].name << subtools[i].description << std::endl;
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
 int main(int argc, char** argv) {
+    char progsub[256];
+
+    if (argc > 1)
+    {
+        for (size_t i = 0; subtools[i].name; ++i)
+        {
+            if (strcmp(subtools[i].name, argv[1]) == 0)
+            {
+                // replace argv[1] with call string of subtool.
+                snprintf(progsub, sizeof(progsub), "%s %s", argv[0], argv[1]);
+                argv[1] = progsub;
+                return subtools[i].func(argc - 1, argv + 1);
+            }
+        }
+        // std::cout << "Unknown subtool '" << argv[1] << "'" << std::endl;
+    }
+
+    // return main_usage(argv[0]);
+
     CLI::App app("(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
@@ -415,6 +520,9 @@ int main(int argc, char** argv) {
     add_print_header(app, p);
     add_create_kmers(app, p);
     add_cortex(app, p);
+    for (size_t i = 0; subtools[i].name; ++i) {
+        app.add_subcommand(subtools[i].name, subtools[i].description, false);
+    }
     return parse(app, argc, argv);
 }
 
