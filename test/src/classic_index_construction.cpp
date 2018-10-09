@@ -37,7 +37,7 @@ TEST_F(classic_index_construction, deserialization) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
 
-    cobs::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     cobs::file::classic_index_header h;
     cobs::file::deserialize(classic_index_path, data, h);
@@ -56,7 +56,7 @@ TEST_F(classic_index_construction, file_names) {
                  });
     std::sort(paths.begin(), paths.end());
 
-    cobs::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     auto h = cobs::file::deserialize_header<cobs::file::classic_index_header>(classic_index_path);
     cobs::file::deserialize(classic_index_path, data, h);
@@ -68,7 +68,7 @@ TEST_F(classic_index_construction, file_names) {
 TEST_F(classic_index_construction, num_ones) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     cobs::file::classic_index_header h;
     cobs::file::deserialize(classic_index_path, data, h);

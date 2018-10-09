@@ -41,7 +41,7 @@ protected:
 TEST_F(classic_index_query, all_included_small_batch) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -56,7 +56,7 @@ TEST_F(classic_index_query, all_included_small_batch) {
 TEST_F(classic_index_query, all_included_large_batch) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -71,7 +71,7 @@ TEST_F(classic_index_query, all_included_large_batch) {
 TEST_F(classic_index_query, all_included_max_batch) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 16, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -86,7 +86,7 @@ TEST_F(classic_index_query, all_included_max_batch) {
 TEST_F(classic_index_query, one_included_small_batch) {
     auto samples = generate_samples_one(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -101,7 +101,7 @@ TEST_F(classic_index_query, one_included_small_batch) {
 TEST_F(classic_index_query, one_included_large_batch) {
     auto samples = generate_samples_one(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 8, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -115,7 +115,7 @@ TEST_F(classic_index_query, one_included_large_batch) {
 TEST_F(classic_index_query, one_included_max_batch) {
     auto samples = generate_samples_one(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -129,7 +129,7 @@ TEST_F(classic_index_query, one_included_max_batch) {
 TEST_F(classic_index_query, false_positive) {
     auto samples = generate_samples_all(query);
     generate_test_case(samples, tmp_dir.string());
-    cobs::classic_index::create(tmp_dir, in_dir, 32, 3, 0.1);
+    cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     size_t num_tests = 10000;

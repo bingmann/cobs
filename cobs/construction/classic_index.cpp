@@ -151,11 +151,15 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
     return signature_size;
 }
 
-void create(const fs::path& in_dir, const fs::path& out_dir,
-            uint64_t batch_size, uint64_t num_hashes, double false_positive_probability) {
-    assert_throw<std::invalid_argument>(batch_size % 8 == 0, "batch size must be divisible by 8");
-    uint64_t signature_size = get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
-    create_from_samples(in_dir, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
+void construct(const fs::path& in_dir, const fs::path& out_dir,
+               uint64_t batch_size, uint64_t num_hashes,
+               double false_positive_probability) {
+    assert_throw<std::invalid_argument>(
+        batch_size % 8 == 0, "batch size must be divisible by 8");
+    uint64_t signature_size =
+        get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
+    create_from_samples(
+        in_dir, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
     size_t i = 1;
     while (!combine(out_dir / fs::path(std::to_string(i)),
                     out_dir / fs::path(std::to_string(i + 1)), batch_size)) {

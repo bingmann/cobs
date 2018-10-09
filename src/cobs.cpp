@@ -286,7 +286,7 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
                       });
 }
 
-void add_classic_create(CLI::App& app, std::shared_ptr<parameters> p) {
+void add_classic_construct(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("construct", "constructs an index from the samples in <in_dir>", false);
     p->add_in_dir(sub)->required();
     p->add_out_dir(sub)->required();
@@ -294,7 +294,7 @@ void add_classic_create(CLI::App& app, std::shared_ptr<parameters> p) {
     p->add_num_hashes(sub)->required();
     p->add_false_positive_rate(sub)->required();
     sub->set_callback([p]() {
-                          cobs::classic_index::create(p->in_dir, p->out_dir, p->batch_size, p->num_hashes, p->false_positive_rate);
+                          cobs::classic_index::construct(p->in_dir, p->out_dir, p->batch_size, p->num_hashes, p->false_positive_rate);
                       });
 }
 
@@ -350,7 +350,7 @@ void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
 void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("classic", "commands for the classic index", false);
     sub->require_subcommand(1);
-    add_classic_create(*sub, p);
+    add_classic_construct(*sub, p);
     add_classic_create_from_samples(*sub, p);
     add_classic_combine(*sub, p);
     add_classic_query(*sub, p);

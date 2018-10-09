@@ -26,8 +26,8 @@ namespace cobs::classic_index  {
  *  First calls cobs::classic_index::create_from_samples to create multiple small indices.
  *  Afterwards combines these indices with calls to cobs::classic_index::combine until only one index remains.
  */
-void create(const fs::path& in_dir, const fs::path& out_dir,
-            uint64_t batch_size, uint64_t num_hashes, double false_positive_probability);
+void construct(const fs::path& in_dir, const fs::path& out_dir,
+               uint64_t batch_size, uint64_t num_hashes, double false_positive_probability);
 
 /** Creates multiple small indices from sample files.
  */
