@@ -85,7 +85,7 @@ void create_from_samples(const fs::path& in_dir, const fs::path& out_dir,
     timer t;
     cobs::file::classic_index_header h(signature_size, num_hashes);
     std::vector<uint8_t> data;
-    bulk_process_files<file::sample_header>(
+    process_file_batches<file::sample_header>(
         in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
             h.file_names().resize(paths.size());
@@ -103,7 +103,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
     uint64_t signature_size = 0;
     uint64_t num_hashes = 0;
     bool all_combined =
-        bulk_process_files<file::classic_index_header>(
+        process_file_batches<file::classic_index_header>(
             in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
             [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
                 uint64_t new_block_size = 0;
@@ -138,7 +138,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
 uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                             uint64_t num_hashes, double false_positive_probability) {
     uint64_t signature_size;
-    bulk_process_files<file::sample_header>(
+    process_file_batches<file::sample_header>(
         in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
         [&](std::vector<fs::path>& paths, const fs::path& /*out_file*/) {
             std::sort(paths.begin(), paths.end(),

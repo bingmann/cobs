@@ -27,23 +27,14 @@
 namespace cobs {
 
 void get_sorted_file_names(const fs::path& in_dir,
-                           const fs::path& out_dir,
-                           std::vector<fs::path>& paths);
+                           std::vector<fs::path>* paths);
 
 template <class T, typename Functor>
-bool bulk_process_files(const fs::path& in_dir,
-                        const fs::path& out_dir, size_t bulk_size,
-                        const std::string& file_extension_out, const Functor& callback);
-
-} // namespace cobs
-
-namespace cobs {
-
-template <class T, typename Functor>
-bool bulk_process_files(const fs::path& in_dir, const fs::path& out_dir, size_t bulk_size,
-                        const std::string& file_extension_out, const Functor& callback) {
+bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_t bulk_size,
+                          const std::string& file_extension_out, const Functor& callback) {
     std::vector<fs::path> sorted_paths;
-    get_sorted_file_names(in_dir, out_dir, sorted_paths);
+    get_sorted_file_names(in_dir, &sorted_paths);
+    fs::create_directories(out_dir);
 
     std::string first_filename;
     std::string last_filename;

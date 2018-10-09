@@ -148,16 +148,17 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, s
     timer t;
     t.active("process");
     std::vector<std::ifstream> ifstreams;
-    bulk_process_files<H>(in_dir, out_dir, batch_size, cobs::file::frequency_header::file_extension,
-                          [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
-                              for (const auto& p : paths) {
-                                  ifstreams.emplace_back(std::ifstream());
-                                  PQE::deserialize_header(ifstreams.back(), p);
-                                  ifstreams.back().exceptions(std::ios::failbit | std::ios::badbit);
-                              }
-                              process<PQE>(ifstreams, out_file);
-                              ifstreams.clear();
-                          });
+    process_file_batches<H>(
+        in_dir, out_dir, batch_size, cobs::file::frequency_header::file_extension,
+        [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
+            for (const auto& p : paths) {
+                ifstreams.emplace_back(std::ifstream());
+                PQE::deserialize_header(ifstreams.back(), p);
+                ifstreams.back().exceptions(std::ios::failbit | std::ios::badbit);
+            }
+            process<PQE>(ifstreams, out_file);
+            ifstreams.clear();
+        });
     t.stop();
     std::cout << t;
 }
