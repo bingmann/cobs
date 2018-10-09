@@ -29,20 +29,20 @@ namespace cobs {
 void get_sorted_file_names(const fs::path& in_dir,
                            std::vector<fs::path>* paths);
 
-template <class T, typename Functor>
+template <typename Selector, typename Callback>
 bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_t bulk_size,
-                          const std::string& file_extension_out, const Functor& callback) {
+                          const std::string& file_extension_out,
+                          Selector selector, Callback callback) {
     std::vector<fs::path> sorted_paths;
     get_sorted_file_names(in_dir, &sorted_paths);
     fs::create_directories(out_dir);
 
-    std::string first_filename;
-    std::string last_filename;
+    std::string first_filename, last_filename;
 
     size_t j = 1;
     std::vector<fs::path> paths;
     for (size_t i = 0; i < sorted_paths.size(); i++) {
-        if (cobs::file::file_is<T>(sorted_paths[i])) {
+        if (selector(sorted_paths[i])) {
             std::string filename = cobs::file::file_name(sorted_paths[i]);
             if (first_filename.empty()) {
                 first_filename = filename;
@@ -52,12 +52,15 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
         }
         if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
             fs::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
-            std::cout << "BE - " << std::setfill('0') << std::setw(7) << j << " - " << out_file << std::flush;
+            std::cout << "BE - " << std::setfill('0') << std::setw(7) << j
+                      << " - " << out_file << std::flush;
             bool exists = fs::exists(out_file);
             if (!exists) {
                 callback(paths, out_file);
             }
-            std::cout << "\r" << (exists ? "EX" : "OK") << " - " << std::setfill('0') << std::setw(7) << j << " - " << out_file << std::endl;
+            std::cout << "\r" << (exists ? "EX" : "OK")
+                      << " - " << std::setfill('0') << std::setw(7) << j
+                      << " - " << out_file << std::endl;
             paths.clear();
             first_filename.clear();
             j++;

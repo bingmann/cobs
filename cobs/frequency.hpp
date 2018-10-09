@@ -148,8 +148,11 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, s
     timer t;
     t.active("process");
     std::vector<std::ifstream> ifstreams;
-    process_file_batches<H>(
+    process_file_batches(
         in_dir, out_dir, batch_size, cobs::file::frequency_header::file_extension,
+        [](const fs::path& path) {
+            return file::file_is<H>(path);
+        },
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
             for (const auto& p : paths) {
                 ifstreams.emplace_back(std::ifstream());
