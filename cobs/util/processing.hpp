@@ -53,12 +53,12 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
         if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
             fs::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
             std::cout << "BE - " << std::setfill('0') << std::setw(7) << j
-                      << " - " << out_file << std::flush;
+                      << " - " << out_file << std::endl;
             bool exists = fs::exists(out_file);
             if (!exists) {
                 callback(paths, out_file);
             }
-            std::cout << "\r" << (exists ? "EX" : "OK")
+            std::cout << (exists ? "EX" : "OK")
                       << " - " << std::setfill('0') << std::setw(7) << j
                       << " - " << out_file << std::endl;
             paths.clear();

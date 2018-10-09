@@ -39,7 +39,8 @@ void assert_equals_sample(cobs::sample<N> sample) {
 TEST(cortex, file_name) {
     cobs::sample<31> sample1;
     cobs::sample<31> sample2;
-    cobs::cortex::process_file(in_path, out_path, sample1);
+    cobs::timer t;
+    cobs::cortex::process_file(in_path, out_path, sample1, t);
     cobs::file::sample_header h;
     cobs::file::deserialize(out_path, sample2, h);
     ASSERT_EQ(h.name(), sample_name);
@@ -48,7 +49,8 @@ TEST(cortex, file_name) {
 TEST(cortex, process_file) {
     fs::remove_all(out_dir);
     cobs::sample<31> sample;
-    cobs::cortex::process_file(in_path, out_path, sample);
+    cobs::timer t;
+    cobs::cortex::process_file(in_path, out_path, sample, t);
     sample.sort_samples();
     assert_equals_sample(sample);
 }
@@ -57,7 +59,8 @@ TEST(cortex, file_serialization) {
     fs::remove_all(out_dir);
     cobs::sample<31> sample1;
     cobs::sample<31> sample2;
-    cobs::cortex::process_file(in_path, out_path, sample1);
+    cobs::timer t;
+    cobs::cortex::process_file(in_path, out_path, sample1, t);
     cobs::file::deserialize(out_path, sample2);
     sample1.sort_samples();
     sample2.sort_samples();

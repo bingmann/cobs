@@ -11,12 +11,15 @@
 #include <xxhash.h>
 
 #include <cobs/construction/classic_index.hpp>
+#include <cobs/cortex.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
 #include <cobs/util/processing.hpp>
 #include <cobs/util/timer.hpp>
+
+#include <tlx/logger.hpp>
 
 namespace cobs::classic_index {
 
@@ -29,7 +32,9 @@ void create_hashes(const void* input, size_t len, uint64_t signature_size,
     }
 }
 
-void set_bit(std::vector<uint8_t>& data, const cobs::file::classic_index_header& h, uint64_t pos, uint64_t bit_in_block) {
+void set_bit(std::vector<uint8_t>& data,
+             const cobs::file::classic_index_header& h,
+             uint64_t pos, uint64_t bit_in_block) {
     data[h.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
 }
 
@@ -40,16 +45,37 @@ void process(const std::vector<fs::path>& paths,
     sample<31> s;
     cobs::file::sample_header sh;
     for (uint64_t i = 0; i < paths.size(); i++) {
-        t.active("read");
-        file::deserialize(paths[i], s, sh);
-        h.file_names()[i] = sh.name();
-        t.active("process");
+        if (paths[i].extension() == ".ctx") {
+            t.active("read");
+            cortex::CortexFile ctx(paths[i].string());
+            h.file_names()[i] = ctx.name_;
+            s.data().clear();
+            ctx.process_kmers<31>(
+                [&](const kmer<31>& m) { s.data().push_back(m); });
 
 #pragma omp parallel for
-        for (uint64_t j = 0; j < s.data().size(); j++) {
-            create_hashes(s.data().data() + j, 8, h.signature_size(), h.num_hashes(), [&](uint64_t hash) {
-                              set_bit(data, h, hash, i);
-                          });
+            for (uint64_t j = 0; j < s.data().size(); j++) {
+                create_hashes(s.data().data() + j, 8,
+                              h.signature_size(), h.num_hashes(),
+                              [&](uint64_t hash) {
+                                  set_bit(data, h, hash, i);
+                              });
+            }
+        }
+        else if (paths[i].extension() == ".isi") {
+            t.active("read");
+            file::deserialize(paths[i], s, sh);
+            h.file_names()[i] = sh.name();
+            t.active("process");
+
+#pragma omp parallel for
+            for (uint64_t j = 0; j < s.data().size(); j++) {
+                create_hashes(s.data().data() + j, 8,
+                              h.signature_size(), h.num_hashes(),
+                              [&](uint64_t hash) {
+                                  set_bit(data, h, hash, i);
+                              });
+            }
         }
     }
     t.active("write");
@@ -70,11 +96,11 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
         uint64_t pos = 0;
         t.active("read");
         for (auto& ifs : ifstreams) {
-            ifs.first.read(&(*(block.begin() + pos)), ifs.second);
+            ifs.first.read(block.data() + pos, ifs.second);
             pos += ifs.second;
         }
         t.active("write");
-        ofs.write(&(*block.begin()), block_size);
+        ofs.write(block.data(), block_size);
     }
     t.stop();
 }
@@ -88,7 +114,7 @@ void create_from_samples(const fs::path& in_dir, const fs::path& out_dir,
     process_file_batches(
         in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
         [](const fs::path& path) {
-            return file::file_is<file::sample_header>(path);
+            return path.extension() == ".ctx" || path.extension() == ".isi";
         },
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
             h.file_names().resize(paths.size());
@@ -111,7 +137,6 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
             [](const fs::path& path) {
                 return file::file_is<file::classic_index_header>(path);
             },
-
             [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
                 uint64_t new_block_size = 0;
                 for (size_t i = 0; i < paths.size(); i++) {
@@ -148,15 +173,30 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
     process_file_batches(
         in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
         [](const fs::path& path) {
-            return file::file_is<file::sample_header>(path);
+            return path.extension() == ".ctx" || path.extension() == ".isi";
         },
-        [&](std::vector<fs::path>& paths, const fs::path& /*out_file*/) {
+        [&](std::vector<fs::path>& paths, const fs::path& /* out_file */) {
             std::sort(paths.begin(), paths.end(),
                       [](const auto& p1, const auto& p2) {
                           return fs::file_size(p1) > fs::file_size(p2);
                       });
-            size_t max_num_elements = fs::file_size(paths[0]) / 8;
-            signature_size = cobs::calc_signature_size(max_num_elements, num_hashes, false_positive_probability);
+            if (paths[0].extension() == ".ctx") {
+                cortex::CortexFile ctx(paths[0].string());
+                size_t max_num_elements = ctx.num_samples();
+                sLOG1 << "CTX: max_num_elements" << max_num_elements;
+                signature_size = cobs::calc_signature_size(
+                    max_num_elements, num_hashes, false_positive_probability);
+            }
+            else if (paths[0].extension() == ".isi") {
+                file::sample_header sh;
+                sample<31> s;
+                file::deserialize(paths[0], s, sh);
+
+                size_t max_num_elements = s.data().size();
+                sLOG1 << "ISI: max_num_elements" << max_num_elements;
+                signature_size = cobs::calc_signature_size(
+                    max_num_elements, num_hashes, false_positive_probability);
+            }
         });
     return signature_size;
 }

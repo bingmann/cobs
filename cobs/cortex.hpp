@@ -26,15 +26,13 @@
 
 namespace cobs::cortex {
 
-timer t;
-
 class CortexFile
 {
 public:
     CortexFile(std::string path) {
         is_.open(path);
         die_unless(is_.good());
-        read_header(is_);
+        read_header(is_, path);
     }
 
     template <typename Type>
@@ -44,17 +42,17 @@ public:
         return t;
     }
 
-    static void check_magic_number(std::istream& is) {
+    static void check_magic_number(std::istream& is, std::string path) {
         std::string magic_word = "CORTEX";
         for (size_t i = 0; i < magic_word.size(); i++) {
             if (is.get() != magic_word[i]) {
-                throw std::invalid_argument("magic number does not match");
+                die("CortexFile: magic number not found @ " << path);
             }
         }
     }
 
-    void read_header(std::istream& is) {
-        check_magic_number(is);
+    void read_header(std::istream& is, std::string path) {
+        check_magic_number(is, path);
         version_ = cast_advance<uint32_t>(is);
         if (version_ != 6)
             die("Invalid .ctx file version (" << version_);
@@ -82,7 +80,7 @@ public:
             auto length_graph_name = cast_advance<uint32_t>(is);
             is.ignore(length_graph_name);
         }
-        check_magic_number(is);
+        check_magic_number(is, path);
 
         pos_data_begin_ = is.tellg();
         is.seekg(0, std::ios::end);
@@ -136,7 +134,8 @@ private:
 };
 
 template <unsigned int N>
-void process_file(const fs::path& in_path, const fs::path& out_path, sample<N>& sample) {
+void process_file(const fs::path& in_path, const fs::path& out_path, sample<N>& sample,
+                  timer& t) {
     t.active("read");
     CortexFile ctx(in_path);
 
@@ -154,6 +153,7 @@ void process_file(const fs::path& in_path, const fs::path& out_path, sample<N>& 
 template <unsigned int N>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
     sample<N> sample;
+    timer t;
     t.reset();
     size_t i = 0;
     for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
@@ -168,7 +168,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
                       << " - " << it->path().string() << std::flush;
             bool success = true;
             try {
-                process_file(it->path(), out_path, sample);
+                process_file(it->path(), out_path, sample, t);
             }
             catch (const std::exception& e) {
                 std::cerr << it->path().string() << " - " << e.what()
