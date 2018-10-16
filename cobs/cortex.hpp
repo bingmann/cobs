@@ -46,7 +46,8 @@ public:
         std::string magic_word = "CORTEX";
         for (size_t i = 0; i < magic_word.size(); i++) {
             if (is.get() != magic_word[i]) {
-                die("CortexFile: magic number not found @ " << path);
+                throw std::invalid_argument(
+                          "CortexFile: magic number not found @ " + path);
             }
         }
     }
@@ -165,7 +166,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
             !fs::exists(out_path))
         {
             std::cout << "BE - " << std::setfill('0') << std::setw(7) << i
-                      << " - " << it->path().string() << std::flush;
+                      << " - " << it->path().string() << std::endl;
             bool success = true;
             try {
                 process_file(it->path(), out_path, sample, t);
@@ -176,7 +177,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
                 success = false;
                 t.stop();
             }
-            std::cout << "\r" << (success ? "OK" : "ER")
+            std::cout << (success ? "OK" : "ER")
                       << " - " << std::setfill('0') << std::setw(7) << i
                       << " - " << it->path().string() << std::endl;
             i++;
