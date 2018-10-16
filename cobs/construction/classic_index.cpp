@@ -20,6 +20,7 @@
 #include <cobs/util/timer.hpp>
 
 #include <tlx/logger.hpp>
+#include <tlx/math/popcount.hpp>
 
 namespace cobs::classic_index {
 
@@ -78,6 +79,10 @@ void process(const std::vector<fs::path>& paths,
             }
         }
     }
+    size_t bit_count = tlx::popcount(data.data(), data.size());
+    LOG1 << "percent of ones: "
+         << static_cast<double>(bit_count) / data.size();
+
     t.active("write");
     file::serialize(out_file, data, h);
     t.stop();
