@@ -52,6 +52,46 @@ int cortex_dump(int argc, char** argv) {
 }
 
 /******************************************************************************/
+// "Classical" Index Construction
+
+int classic_construct(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+        "out_dir", out_dir, "path to the output directory");
+
+    unsigned batch_size = 32;
+    cp.add_unsigned(
+        'b', "batch_size", batch_size,
+        "number of input files to be read at once");
+
+    unsigned num_hashes = 1;
+    cp.add_unsigned(
+        'h', "num_hashes", num_hashes,
+        "number of hash functions");
+
+    double false_positive_rate = 0.3;
+    cp.add_double(
+        'f', "false_positive_rate", false_positive_rate,
+        "false positive rate");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::classic_index::construct(
+        in_dir, out_dir, batch_size, num_hashes, false_positive_rate);
+
+    return 0;
+}
+
+/******************************************************************************/
 
 template <typename T>
 void check_between(std::string name, T num, T min, T max, bool min_inclusive, bool max_inclusive) {
@@ -255,14 +295,6 @@ void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
                       });
 }
 
-void add_print_header(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("print_header", "prints the header at <in_file>", false);
-    p->add_in_file(sub)->required();
-    sub->set_callback([p]() {
-                          throw new std::invalid_argument("not supported yet");
-                      });
-}
-
 void add_create_kmers(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("create_kmers", "creates all canonical kmers from <query>", false);
     p->add_query(sub)->required();
@@ -283,18 +315,6 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
     p->add_out_dir(sub)->required();
     sub->set_callback([p]() {
                           cobs::cortex::process_all_in_directory<31>(p->in_dir, p->out_dir);
-                      });
-}
-
-void add_classic_construct(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct", "constructs an index from the samples in <in_dir>", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_dir(sub)->required();
-    p->add_batch_size(sub)->required();
-    p->add_num_hashes(sub)->required();
-    p->add_false_positive_rate(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::classic_index::construct(p->in_dir, p->out_dir, p->batch_size, p->num_hashes, p->false_positive_rate);
                       });
 }
 
@@ -350,7 +370,6 @@ void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
 void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("classic", "commands for the classic index", false);
     sub->require_subcommand(1);
-    add_classic_construct(*sub, p);
     add_classic_create_from_samples(*sub, p);
     add_classic_combine(*sub, p);
     add_classic_query(*sub, p);
@@ -453,6 +472,10 @@ struct SubTool subtools[] = {
         "cortex_dump", &cortex_dump, false,
         "read a cortex file and dump its samples"
     },
+    {
+        "classic_construct", &classic_construct, false,
+        "constructs a classic index from the samples in <in_dir>"
+    },
     { nullptr, nullptr, false, nullptr }
 };
 
@@ -502,6 +525,7 @@ int main(int argc, char** argv) {
                 // replace argv[1] with call string of subtool.
                 snprintf(progsub, sizeof(progsub), "%s %s", argv[0], argv[1]);
                 argv[1] = progsub;
+                std::cerr << "COBS " << subtools[i].name << std::endl;
                 return subtools[i].func(argc - 1, argv + 1);
             }
         }
@@ -517,7 +541,6 @@ int main(int argc, char** argv) {
     add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);
-    add_print_header(app, p);
     add_create_kmers(app, p);
     add_cortex(app, p);
     for (size_t i = 0; subtools[i].name; ++i) {
