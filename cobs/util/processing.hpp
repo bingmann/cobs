@@ -55,7 +55,7 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
             std::cout << "BE - " << std::setfill('0') << std::setw(7) << j
                       << " - " << out_file << std::endl;
             bool exists = fs::exists(out_file);
-            if (!exists) {
+            if (!exists || /* TODO: add command line parameter */ 1) {
                 callback(paths, out_file);
             }
             std::cout << (exists ? "EX" : "OK")
