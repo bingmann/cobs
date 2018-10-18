@@ -26,6 +26,27 @@
 /******************************************************************************/
 // Cortex File Tools
 
+int cortex_convert(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+        "out_dir", out_dir, "path to the output directory");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
+
+    return 0;
+}
+
 int cortex_dump(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
@@ -336,6 +357,41 @@ int compact_query(int argc, char** argv) {
 /******************************************************************************/
 // Miscellaneous Methods
 
+int print_parameters(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    unsigned num_hashes = 1;
+    cp.add_unsigned(
+        'h', "num_hashes", num_hashes,
+        "number of hash functions, default: 1");
+
+    double false_positive_rate = 0.3;
+    cp.add_double(
+        'f', "false_positive_rate", false_positive_rate,
+        "false positive rate, default: 0.3");
+
+    unsigned num_elements = 0;
+    cp.add_unsigned(
+        'n', "num_elements", num_elements,
+        "number of elements to be inserted into the index");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    if (num_elements == 0) {
+        double signature_size_ratio =
+            cobs::calc_signature_size_ratio(num_hashes, false_positive_rate);
+        std::cout << signature_size_ratio << '\n';
+    }
+    else {
+        uint64_t signature_size =
+            cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
+        std::cout << signature_size << '\n';
+    }
+
+    return 0;
+}
+
 int print_basepair_map(int, char**) {
     char basepair_map[256];
     memset(basepair_map, 0, sizeof(basepair_map));
@@ -553,52 +609,6 @@ struct parameters {
     }
 };
 
-void add_parameters(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("parameters", "calculates index parameters", false);
-    p->add_num_hashes(sub)->required();
-    p->add_false_positive_rate(sub)->required();
-    p->add_num_elements(sub);
-    sub->set_callback([p]() {
-                          if (p->num_elements == 0) {
-                              double signature_size_ratio = cobs::calc_signature_size_ratio(p->num_hashes, p->false_positive_rate);
-                              std::cout << signature_size_ratio;
-                          }
-                          else {
-                              uint64_t signature_size = cobs::calc_signature_size(p->num_elements, p->num_hashes, p->false_positive_rate);
-                              std::cout << signature_size;
-                          }
-                      });
-}
-
-void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("print_sample", "prints the sample at <in_file>", false);
-    p->add_in_file(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::sample<31> s;
-                          cobs::file::sample_header h;
-                          cobs::file::deserialize(p->in_file, s, h);
-                          std::cout << s;
-                      });
-}
-
-void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("cortex", "converts the cortex files in <in_dir> to the cobs sample format", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_dir(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::cortex::process_all_in_directory<31>(p->in_dir, p->out_dir);
-                      });
-}
-
-int parse(CLI::App& app, int argc, char** argv) {
-    try {
-        CLI11_PARSE(app, argc, argv);
-    } catch (std::ios::failure& e) {
-        std::cout << e.what() << " - " << e.code().message() << std::endl;
-    }
-    return 0;
-}
-
 /******************************************************************************/
 
 struct SubTool {
@@ -610,50 +620,58 @@ struct SubTool {
 
 struct SubTool subtools[] = {
     {
-        "cortex_dump", &cortex_dump, false,
+        "cortex_convert", &cortex_convert, true,
+        "converts the cortex files in <in_dir> to the cobs sample format"
+    },
+    {
+        "cortex_dump", &cortex_dump, true,
         "read a cortex file and dump its samples"
     },
     {
-        "classic_construct", &classic_construct, false,
+        "classic_construct", &classic_construct, true,
         "constructs a classic index from the samples in <in_dir>"
     },
     {
-        "classic_construct_step1", &classic_construct_step1, false,
+        "classic_construct_step1", &classic_construct_step1, true,
         "constructs multiple small indices form the samples in <in_dir>"
     },
     {
-        "classic_construct_step2", &classic_construct_step2, false,
+        "classic_construct_step2", &classic_construct_step2, true,
         "combines the indices in <in_dir>"
     },
     {
-        "classic_construct_dummy", &classic_construct_dummy, false,
+        "classic_construct_dummy", &classic_construct_dummy, true,
         "constructs a dummy index with random content"
     },
     {
-        "classic_query", &classic_query, false,
+        "classic_query", &classic_query, true,
         "queries the index"
     },
     {
-        "compact_construct_step1", &compact_construct_step1, false,
+        "compact_construct_step1", &compact_construct_step1, true,
         "creates the folders used for further construction"
     },
     {
-        "compact_construct_combine", &compact_construct_combine, false,
+        "compact_construct_combine", &compact_construct_combine, true,
         "combines the classic indices in <in_dir> to form a compact index"
     },
     {
-        "compact_query", &compact_query, false,
+        "compact_query", &compact_query, true,
         "queries the index"
     },
     {
-        "print_kmers", &print_kmers, false,
+        "print_parameters", &print_parameters, true,
+        "calculates index parameters"
+    },
+    {
+        "print_kmers", &print_kmers, true,
         "print all canonical kmers from <query>"
     },
     {
-        "print_basepair_map", &print_basepair_map, false,
+        "print_basepair_map", &print_basepair_map, true,
         "print canonical basepair character mapping"
     },
-    { nullptr, nullptr, false, nullptr }
+    { nullptr, nullptr, true, nullptr }
 };
 
 int main_usage(const char* arg0) {
@@ -693,39 +711,29 @@ int main_usage(const char* arg0) {
 int main(int argc, char** argv) {
     char progsub[256];
 
-    if (argc > 1)
+    if (argc < 2)
+        return main_usage(argv[0]);
+
+    for (size_t i = 0; subtools[i].name; ++i)
     {
-        for (size_t i = 0; subtools[i].name; ++i)
+        if (strcmp(subtools[i].name, argv[1]) == 0)
         {
-            if (strcmp(subtools[i].name, argv[1]) == 0)
-            {
-                // replace argv[1] with call string of subtool.
-                snprintf(progsub, sizeof(progsub), "%s %s", argv[0], argv[1]);
-                argv[1] = progsub;
-                try {
-                    return subtools[i].func(argc - 1, argv + 1);
-                }
-                catch (std::exception& e) {
-                    std::cerr << "EXCEPTION: " << e.what() << std::endl;
-                    return -1;
-                }
+            // replace argv[1] with call string of subtool.
+            snprintf(progsub, sizeof(progsub), "%s %s", argv[0], argv[1]);
+            argv[1] = progsub;
+            try {
+                return subtools[i].func(argc - 1, argv + 1);
+            }
+            catch (std::exception& e) {
+                std::cerr << "EXCEPTION: " << e.what() << std::endl;
+                return -1;
             }
         }
-        // std::cout << "Unknown subtool '" << argv[1] << "'" << std::endl;
     }
 
-    // return main_usage(argv[0]);
+    std::cout << "Unknown subtool '" << argv[1] << "'" << std::endl;
 
-    CLI::App app("(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search\n", false);
-    app.require_subcommand(1);
-    auto p = std::make_shared<parameters>();
-    add_parameters(app, p);
-    add_print_sample(app, p);
-    add_cortex(app, p);
-    for (size_t i = 0; subtools[i].name; ++i) {
-        app.add_subcommand(subtools[i].name, subtools[i].description, false);
-    }
-    return parse(app, argc, argv);
+    return main_usage(argv[0]);
 }
 
 /******************************************************************************/
