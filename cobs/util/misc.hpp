@@ -10,6 +10,7 @@
 #define COBS_UTIL_MISC_HEADER
 #pragma once
 
+#include <array>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
@@ -22,6 +23,17 @@ template <class T>
 auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os);
 
 std::string random_sequence(size_t len, size_t seed = std::time(0));
+
+template <typename RandomGenerator>
+std::string random_sequence_new(size_t len, RandomGenerator rng) {
+    static const std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };
+    std::string result;
+    for (size_t i = 0; i < len; i++) {
+        result += basepairs[rng() % 4];
+    }
+    return result;
+}
+
 void initialize_map();
 void initialize_map_server();
 

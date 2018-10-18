@@ -9,6 +9,8 @@
 #include <cmath>
 #include <ctime>
 #include <map>
+#include <random>
+
 #include <unistd.h>
 
 #include <cobs/query/classic_index/mmap.hpp>
@@ -117,15 +119,17 @@ int main(int argc, char** argv) {
     if (!cp.process(argc, argv))
         return -1;
 
+    std::default_random_engine rng(std::random_device { } ());
+
     std::vector<std::string> warmup_queries;
     std::vector<std::string> queries;
     for (size_t i = 0; i < num_warmup; i++) {
         warmup_queries.push_back(
-            cobs::random_sequence(num_kmers + 30, (size_t)time(nullptr)));
+            cobs::random_sequence_new(num_kmers + 30, rng));
     }
     for (size_t i = 0; i < num_random; i++) {
         queries.push_back(
-            cobs::random_sequence(num_kmers + 30, (size_t)time(nullptr)));
+            cobs::random_sequence_new(num_kmers + 30, rng));
     }
     run(in_file, queries, warmup_queries);
 
