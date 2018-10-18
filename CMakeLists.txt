@@ -111,10 +111,6 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 add_subdirectory(extlib/googletest)
 
-### use CLI11 command line parser ###
-
-add_subdirectory(extlib/cli11)
-
 ### use xxHash ###
 
 add_subdirectory(extlib/xxhash/cmake_unofficial)
