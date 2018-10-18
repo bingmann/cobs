@@ -1,9 +1,17 @@
+/*******************************************************************************
+ * src/main_avx.cpp
+ *
+ * Copyright (c) 2018 Florian Gauger
+ *
+ * All rights reserved. Published under the MIT License in the LICENSE file.
+ ******************************************************************************/
+
 #include <immintrin.h>
-#include <vector>
-#include <numeric>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <math.h>
+#include <numeric>
+#include <vector>
 
 int main() {
 //    std::vector<char> data(32 * 10);
@@ -41,3 +49,5 @@ int main() {
 //        std::cout << std::endl;
 //    }
 }
+
+/******************************************************************************/

@@ -1,22 +1,30 @@
-//#include <fcntl.h>
-//#include <sys/mman.h>
-//#include <fstream>
-//#include <isi/util/timer.hpp>
-//#include <iostream>
-//#include <omp.h>
-//#include <stxxl/aligned_alloc>
-//#include <stxxl/bits/io/syscall_file.h>
-//#include <stxxl/request>
-//#include <experimental/filesystem>
-//#include <cstring>
+/*******************************************************************************
+ * src/main_ssd_performance.cpp
+ *
+ * Copyright (c) 2018 Florian Gauger
+ *
+ * All rights reserved. Published under the MIT License in the LICENSE file.
+ ******************************************************************************/
+
+// #include <fcntl.h>
+// #include <sys/mman.h>
+// #include <fstream>
+// #include <isi/util/timer.hpp>
+// #include <iostream>
+// #include <omp.h>
+// #include <stxxl/aligned_alloc>
+// #include <stxxl/bits/io/syscall_file.h>
+// #include <stxxl/request>
+// #include <experimental/filesystem>
+// #include <cstring>
 //
-//void clear_caches() {
+// void clear_caches() {
 //    sync();
 //    std::ofstream ofs("/proc/sys/vm/drop_caches");
 //    ofs << "3" << std::endl;
-//}
+// }
 //
-//char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
+// char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
 //    auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 ////    std::vector<char> data(num_access * page_size);
 //    std::srand(std::time(nullptr));
@@ -42,9 +50,9 @@
 //    }
 //    stxxl::aligned_dealloc<4096>(data);
 //    return sum;
-//}
+// }
 //
-//char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
+// char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
 //    auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 ////    std::vector<char> data(num_access * page_size);
 //    std::srand(std::time(nullptr));
@@ -70,9 +78,9 @@
 //    }
 //    stxxl::aligned_dealloc<4096>(data);
 //    return sum;
-//}
+// }
 //
-//void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
+// void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
 //    isi::timer t;
 //    char sum;
 //    size_t max = std::pow(2, 14);
@@ -83,7 +91,7 @@
 ////        sum += test(file_asio, i * getpagesize(), max / i, file_size, t);
 //    }
 //    std::cout << t << std::endl << sum;
-//}
+// }
 //
 int main() {
 //    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
@@ -98,9 +106,11 @@ int main() {
 //    int fd = open(p.string().data(), O_RDONLY, 0);
 //    assert(fd != -1);
 //
-//    char* file_mmap = reinterpret_cast<char*>(mmap(NULL, end_pos, PROT_READ, MAP_PRIVATE, fd, 0));
+//    char* file_mmap = reinterpret_cast<char*>(mmap(nullptr, end_pos, PROT_READ, MAP_PRIVATE, fd, 0));
 //
 //    assert(madvise(file_mmap, end_pos, MADV_RANDOM) == 0);
 //    stxxl::syscall_file file_asio(p.string(), stxxl::file::RDONLY);
 //    test(file_mmap, file_asio, end_pos);
-};
+}
+
+/******************************************************************************/

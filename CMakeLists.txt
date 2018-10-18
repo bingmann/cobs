@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.9.6)
 cmake_policy(VERSION 3.9.6)
 
-project(thesis)
+project(cobs)
 
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
