@@ -45,7 +45,7 @@ void create_hashes(const void* input, size_t len, uint64_t signature_size, uint6
 
 /** Creates a dummy index filled with random data.
  */
-void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes);
+void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed);
 
 } // namespace cobs::classic_index
 

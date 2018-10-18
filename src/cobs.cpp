@@ -19,6 +19,9 @@
 #endif
 
 #include <tlx/cmdline_parser.hpp>
+#include <tlx/string.hpp>
+
+#include <random>
 
 /******************************************************************************/
 // Cortex File Tools
@@ -68,17 +71,17 @@ int classic_construct(int argc, char** argv) {
     unsigned batch_size = 32;
     cp.add_unsigned(
         'b', "batch_size", batch_size,
-        "number of input files to be read at once");
+        "number of input files to be read at once, default: 32");
 
     unsigned num_hashes = 1;
     cp.add_unsigned(
         'h', "num_hashes", num_hashes,
-        "number of hash functions");
+        "number of hash functions, default: 1");
 
     double false_positive_rate = 0.3;
     cp.add_double(
         'f', "false_positive_rate", false_positive_rate,
-        "false positive rate");
+        "false positive rate, default: 0.3");
 
     if (!cp.process(argc, argv))
         return -1;
@@ -87,6 +90,142 @@ int classic_construct(int argc, char** argv) {
 
     cobs::classic_index::construct(
         in_dir, out_dir, batch_size, num_hashes, false_positive_rate);
+
+    return 0;
+}
+
+int classic_construct_step1(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+        "out_dir", out_dir, "path to the output directory");
+
+    unsigned batch_size = 32;
+    cp.add_unsigned(
+        'b', "batch_size", batch_size,
+        "number of input files to be read at once, default: 32");
+
+    unsigned num_hashes = 1;
+    cp.add_unsigned(
+        'h', "num_hashes", num_hashes,
+        "number of hash functions, default: 1");
+
+    size_t signature_size = 64 * 1024 * 1024;
+    cp.add_size_t(
+        's', "signature_size", signature_size,
+        "number of bits of the signatures (vertical size), default: 64 M");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::classic_index::create_from_samples(
+        in_dir, out_dir, signature_size, num_hashes, batch_size);
+
+    return 0;
+}
+
+int classic_construct_step2(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+        "out_dir", out_dir, "path to the output directory");
+
+    unsigned batch_size = 32;
+    cp.add_unsigned(
+        'b', "batch_size", batch_size,
+        "number of input files to be read at once, default: 32");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::classic_index::combine(in_dir, out_dir, batch_size);
+
+    return 0;
+}
+
+int classic_construct_dummy(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string out_file;
+    cp.add_param_string(
+        "out_file", out_file, "path to the output file");
+
+    size_t signature_size = 8 * 1024 * 1024;
+    cp.add_size_t(
+        's', "signature_size", signature_size,
+        "number of bits of the signatures (vertical size), default: 8 Mi");
+
+    unsigned block_size = 1024;
+    cp.add_unsigned(
+        'b', "block_size", block_size,
+        "horizontal size of the inverted signature index in bytes, default: 1024");
+
+    unsigned num_hashes = 1;
+    cp.add_unsigned(
+        'h', "num_hashes", num_hashes,
+        "number of hash functions, default: 1");
+
+    size_t seed = std::random_device { } ();
+    cp.add_size_t("seed", seed, "random seed");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    std::cerr << "Constructing dummy index, num_documents = " << 8 * block_size
+              << ", result size = "
+              << tlx::format_iec_units(block_size * signature_size)
+              << std::endl;
+
+    cobs::classic_index::create_dummy(
+        out_file, signature_size, block_size, num_hashes, seed);
+
+    return 0;
+}
+
+int classic_query(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_file;
+    cp.add_param_string(
+        "in_file", in_file, "path to the input file");
+
+    std::string query;
+    cp.add_param_string(
+        "query", query, "the dna sequence to search for");
+
+    unsigned num_results = 100;
+    cp.add_unsigned(
+        'h', "num_results", num_results,
+        "number of results to return, default: 100");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::query::classic_index::mmap mmap(in_file);
+    std::vector<std::pair<uint16_t, std::string> > result;
+    mmap.search(query, 31, result, num_results);
+    for (const auto& res : result) {
+        std::cout << res.second << " - " << res.first << "\n";
+    }
+    std::cout << mmap.get_timer() << std::endl;
 
     return 0;
 }
@@ -318,64 +457,6 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
                       });
 }
 
-void add_classic_create_from_samples(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_step1", "constructs multiple small indices form the samples in <in_dir>", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_dir(sub)->required();
-    p->add_signature_size(sub)->required();
-    p->add_num_hashes(sub)->required();
-    p->add_batch_size(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::classic_index::create_from_samples(p->in_dir, p->out_dir, p->signature_size, p->num_hashes, p->batch_size);
-                      });
-}
-
-void add_classic_combine(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_step2", "combines the indices in <in_dir>", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_dir(sub)->required();
-    p->add_batch_size(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::classic_index::combine(p->in_dir, p->out_dir, p->batch_size);
-                      });
-}
-
-void add_classic_query(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("query", "queries the index", false);
-    p->add_in_file(sub)->required();
-    p->add_query(sub)->required();
-    p->add_num_result(sub);
-    sub->set_callback([p]() {
-                          cobs::query::classic_index::mmap mmap(p->in_file);
-                          std::vector<std::pair<uint16_t, std::string> > result;
-                          mmap.search(p->query, 31, result, p->num_result);
-                          for (const auto& res : result) {
-                              std::cout << res.second << " - " << res.first << "\n";
-                          }
-                          std::cout << mmap.get_timer() << std::endl;
-                      });
-}
-
-void add_classic_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
-    p->add_out_file(sub)->required();
-    p->add_signature_size(sub)->required();
-    p->add_block_size(sub)->required();
-    p->add_num_hashes(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::classic_index::create_dummy(p->out_file, p->signature_size, p->block_size, p->num_hashes);
-                      });
-}
-
-void add_classic(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("classic", "commands for the classic index", false);
-    sub->require_subcommand(1);
-    add_classic_create_from_samples(*sub, p);
-    add_classic_combine(*sub, p);
-    add_classic_query(*sub, p);
-    add_classic_dummy(*sub, p);
-}
-
 void add_compact_create_folders(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("construct_step1", "creates the folders used for further construction", false);
     p->add_in_dir(sub)->required();
@@ -476,6 +557,22 @@ struct SubTool subtools[] = {
         "classic_construct", &classic_construct, false,
         "constructs a classic index from the samples in <in_dir>"
     },
+    {
+        "classic_construct_step1", &classic_construct_step1, false,
+        "constructs multiple small indices form the samples in <in_dir>"
+    },
+    {
+        "classic_construct_step2", &classic_construct_step2, false,
+        "combines the indices in <in_dir>"
+    },
+    {
+        "classic_construct_dummy", &classic_construct_dummy, false,
+        "constructs a dummy index with random content"
+    },
+    {
+        "classic_query", &classic_query, false,
+        "queries the index"
+    },
     { nullptr, nullptr, false, nullptr }
 };
 
@@ -537,7 +634,6 @@ int main(int argc, char** argv) {
     CLI::App app("(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
-    add_classic(app, p);
     add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);

@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <xxhash.h>
 
 #include <cobs/construction/classic_index.hpp>
@@ -230,7 +231,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     fs::rename(index, out_dir.string() + "/index" + cobs::file::classic_index_header::file_extension);
 }
 
-void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes) {
+void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed) {
     std::vector<std::string> file_names;
     for (size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));
@@ -239,9 +240,10 @@ void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_siz
     std::ofstream ofs;
     cobs::file::serialize_header(ofs, p, h);
 
+    std::default_random_engine rng(seed);
     for (size_t i = 0; i < signature_size * block_size; i += 4) {
-        int rnd = std::rand();
-        ofs.write(reinterpret_cast<char*>(&rnd), 4);
+        uint32_t v = rng();
+        ofs.write(reinterpret_cast<char*>(&v), 4);
     }
 }
 
