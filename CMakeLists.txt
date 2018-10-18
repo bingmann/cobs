@@ -15,7 +15,6 @@ if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-
 set(SOURCE_FILES
         cobs/construction/classic_index.cpp
         cobs/construction/classic_index.hpp
@@ -140,13 +139,6 @@ foreach(target ${EXECUTABLE_FILES})
     target_link_libraries(${target_name} ${libs})
 endforeach(target)
 
-################# EXPERIMENTS #################
-if(QUERY)
-    target_compile_definitions(exp PRIVATE -DQUERY)
-endif()
-if(FALSE_POSITIVE_DIST)
-    target_compile_definitions(exp PRIVATE -DFALSE_POSITIVE_DIST)
-endif()
 ################# ########### #################
 
 enable_testing()

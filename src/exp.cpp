@@ -20,7 +20,7 @@
 
 #include <tlx/cmdline_parser.hpp>
 
-#define QUERY
+#define FALSE_POSITIVE_DIST
 
 void run(const cobs::fs::path& p,
          const std::vector<std::string>& queries,
@@ -53,7 +53,6 @@ void run(const cobs::fs::path& p,
 #endif
     }
 
-#ifdef QUERY
     std::string simd = "on";
     std::string openmp = "on";
     std::string aio = "on";
@@ -83,15 +82,14 @@ void run(const cobs::fs::path& p,
               << " t_io=" << t.get("io")
               << " t_and=" << t.get("and rows")
               << " t_add=" << t.get("add rows")
-              << " t_sort=" << t.get("sort results")
-              << std::endl;
-#endif
-
+              << " t_sort=" << t.get("sort results");
 #ifdef FALSE_POSITIVE_DIST
     for (const auto& c : counts) {
-        std::cout << c.first << "," << (c.second / queries.size() / result.size()) << std::endl;
+        std::cout << " c_" << c.first << "="
+                  << (c.second / queries.size() / result.size());
     }
 #endif
+    std::cout << std::endl;
 }
 
 int main(int argc, char** argv) {
