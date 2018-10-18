@@ -16,7 +16,6 @@
 #include <cstring>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <unordered_map>
 #include <utility>
 
 namespace cobs::query {

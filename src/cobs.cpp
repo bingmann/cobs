@@ -217,8 +217,6 @@ int classic_query(int argc, char** argv) {
     if (!cp.process(argc, argv))
         return -1;
 
-    cp.print_result(std::cerr);
-
     cobs::query::classic_index::mmap mmap(in_file);
     std::vector<std::pair<uint16_t, std::string> > result;
     mmap.search(query, 31, result, num_results);
@@ -226,6 +224,50 @@ int classic_query(int argc, char** argv) {
         std::cout << res.second << " - " << res.first << "\n";
     }
     std::cout << mmap.get_timer() << std::endl;
+
+    return 0;
+}
+
+/******************************************************************************/
+// Miscellaneous Methods
+
+int print_basepair_map(int, char**) {
+    char basepair_map[256];
+    memset(basepair_map, 0, sizeof(basepair_map));
+    basepair_map['A'] = 'T';
+    basepair_map['C'] = 'G';
+    basepair_map['G'] = 'C';
+    basepair_map['T'] = 'A';
+    for (size_t i = 0; i < sizeof(basepair_map); ++i) {
+        std::cout << int(basepair_map[i]) << ',';
+        if (i % 16 == 15) {
+            std::cout << '\n';
+        }
+    }
+    return 0;
+}
+
+int print_kmers(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string query;
+    cp.add_param_string(
+        "query", query, "the dna sequence to search for");
+
+    unsigned kmer_size = 31;
+    cp.add_unsigned(
+        'k', "kmer_size", kmer_size,
+        "the size of one kmer, default: 31");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    std::vector<char> kmer_raw(kmer_size);
+    for (size_t i = 0; i < query.size() - kmer_size; i++) {
+        auto kmer = cobs::query::canonicalize_kmer(
+            query.data() + i, kmer_raw.data(), kmer_size);
+        std::cout << std::string(kmer, kmer_size) << '\n';
+    }
 
     return 0;
 }
@@ -434,20 +476,6 @@ void add_print_sample(CLI::App& app, std::shared_ptr<parameters> p) {
                       });
 }
 
-void add_create_kmers(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("create_kmers", "creates all canonical kmers from <query>", false);
-    p->add_query(sub)->required();
-    p->add_kmer_size(sub);
-    sub->set_callback([p]() {
-                          uint64_t kmer_size = p->kmer_size == 0 ? 31U : p->kmer_size;
-                          std::vector<char> kmer_raw(kmer_size);
-                          for (size_t i = 0; i < p->query.size() - kmer_size; i++) {
-                              auto kmer = cobs::query::canonicalize_kmer(p->query.data() + i, kmer_raw.data(), kmer_size);
-                              std::cout << std::string(kmer, kmer_size) << "\n";
-                          }
-                      });
-}
-
 void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
     auto sub = app.add_subcommand("cortex", "converts the cortex files in <in_dir> to the cobs sample format", false);
     p->add_in_dir(sub)->required();
@@ -573,6 +601,14 @@ struct SubTool subtools[] = {
         "classic_query", &classic_query, false,
         "queries the index"
     },
+    {
+        "print_kmers", &print_kmers, false,
+        "print all canonical kmers from <query>"
+    },
+    {
+        "print_basepair_map", &print_basepair_map, false,
+        "print canonical basepair character mapping"
+    },
     { nullptr, nullptr, false, nullptr }
 };
 
@@ -622,8 +658,13 @@ int main(int argc, char** argv) {
                 // replace argv[1] with call string of subtool.
                 snprintf(progsub, sizeof(progsub), "%s %s", argv[0], argv[1]);
                 argv[1] = progsub;
-                std::cerr << "COBS " << subtools[i].name << std::endl;
-                return subtools[i].func(argc - 1, argv + 1);
+                try {
+                    return subtools[i].func(argc - 1, argv + 1);
+                }
+                catch (std::exception& e) {
+                    std::cerr << "EXCEPTION: " << e.what() << std::endl;
+                    return -1;
+                }
             }
         }
         // std::cout << "Unknown subtool '" << argv[1] << "'" << std::endl;
@@ -637,7 +678,6 @@ int main(int argc, char** argv) {
     add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);
-    add_create_kmers(app, p);
     add_cortex(app, p);
     for (size_t i = 0; subtools[i].name; ++i) {
         app.add_subcommand(subtools[i].name, subtools[i].description, false);
