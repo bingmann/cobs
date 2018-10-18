@@ -229,6 +229,111 @@ int classic_query(int argc, char** argv) {
 }
 
 /******************************************************************************/
+// "Compact" Index Construction
+
+int compact_construct_step1(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+        "out_dir", out_dir, "path to the output directory");
+
+    unsigned page_size = 8192;
+    cp.add_unsigned(
+        'p', "page_size", page_size,
+        "the page size of the SSD the index is constructed for, default: 8192");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::compact_index::create_folders(in_dir, out_dir, page_size);
+
+    return 0;
+}
+
+int compact_construct_combine(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_file;
+    cp.add_param_string(
+        "out_file", out_file, "path to the output file");
+
+    unsigned page_size = 8192;
+    cp.add_unsigned(
+        'p', "page_size", page_size,
+        "the page size of the SSD the index is constructed for, default: 8192");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::compact_index::combine(in_dir, out_file, page_size);
+
+    return 0;
+}
+
+int compact_query(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_file;
+    cp.add_param_string(
+        "in_file", in_file, "path to the input file");
+
+    std::string query;
+    cp.add_param_string(
+        "query", query, "the dna sequence to search for");
+
+    unsigned num_results = 100;
+    cp.add_unsigned(
+        'h', "num_results", num_results,
+        "number of results to return, default: 100");
+
+    bool use_aio = false;
+    cp.add_flag('a', "aio", use_aio,
+                "queries the index with async I/O operations");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    if (use_aio) {
+#ifdef __linux__
+        cobs::query::compact_index::aio aio(in_file);
+        std::vector<std::pair<uint16_t, std::string> > result;
+        aio.search(query, 31, result, num_results);
+        for (const auto& res : result) {
+            std::cout << res.second << " - " << res.first << "\n";
+        }
+        std::cout << aio.get_timer() << std::endl;
+#else
+        std::cout << "AIO not supported." << std::endl;
+        return -1;
+#endif
+    }
+    else {
+        cobs::query::compact_index::mmap mmap(in_file);
+        std::vector<std::pair<uint16_t, std::string> > result;
+        mmap.search(query, 31, result, num_results);
+        for (const auto& res : result) {
+            std::cout << res.second << " - " << res.first << "\n";
+        }
+        std::cout << mmap.get_timer() << std::endl;
+    }
+
+    return 0;
+}
+
+/******************************************************************************/
 // Miscellaneous Methods
 
 int print_basepair_map(int, char**) {
@@ -485,79 +590,6 @@ void add_cortex(CLI::App& app, std::shared_ptr<parameters> p) {
                       });
 }
 
-void add_compact_create_folders(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_step1", "creates the folders used for further construction", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_dir(sub)->required();
-    p->add_page_size(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::compact_index::create_folders(p->in_dir, p->out_dir, p->page_size);
-                      });
-}
-
-void add_compact_combine(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_combine", "combines the classic indices in <in_dir> to form a compact index", false);
-    p->add_in_dir(sub)->required();
-    p->add_out_file(sub)->required();
-    p->add_page_size(sub)->required();
-    sub->set_callback([p]() {
-                          cobs::compact_index::combine(p->in_dir, p->out_file, p->page_size);
-                      });
-}
-
-void add_compact_query(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("query", "queries the index", false);
-    p->add_in_file(sub)->required();
-    p->add_query(sub)->required();
-    p->add_num_result(sub);
-    sub->set_callback([p]() {
-                          cobs::query::compact_index::mmap mmap(p->in_file);
-                          std::vector<std::pair<uint16_t, std::string> > result;
-                          mmap.search(p->query, 31, result, p->num_result);
-                          for (const auto& res : result) {
-                              std::cout << res.second << " - " << res.first << "\n";
-                          }
-                          std::cout << mmap.get_timer() << std::endl;
-                      });
-}
-
-#ifdef __linux__
-void add_compact_query_aio(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("query_aio", "queries the index", false);
-    p->add_in_file(sub)->required();
-    p->add_query(sub)->required();
-    p->add_num_result(sub);
-    sub->set_callback([p]() {
-                          cobs::query::compact_index::aio aio(p->in_file);
-                          std::vector<std::pair<uint16_t, std::string> > result;
-                          aio.search(p->query, 31, result, p->num_result);
-                          for (const auto& res : result) {
-                              std::cout << res.second << " - " << res.first << "\n";
-                          }
-                          std::cout << aio.get_timer() << std::endl;
-                      });
-}
-#endif
-
-void add_compact_dummy(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("construct_dummy", "constructs a dummy index with random content", false);
-    sub->set_callback([p]() {
-                          throw new std::invalid_argument("not supported yet");
-                      });
-}
-
-void add_compact(CLI::App& app, std::shared_ptr<parameters> p) {
-    auto sub = app.add_subcommand("compact", "commands for the compact index", false);
-    sub->require_subcommand(1);
-    add_compact_create_folders(*sub, p);
-    add_compact_combine(*sub, p);
-    add_compact_query(*sub, p);
-#ifdef __linux__
-    add_compact_query_aio(*sub, p);
-#endif
-    add_compact_dummy(*sub, p);
-}
-
 int parse(CLI::App& app, int argc, char** argv) {
     try {
         CLI11_PARSE(app, argc, argv);
@@ -599,6 +631,18 @@ struct SubTool subtools[] = {
     },
     {
         "classic_query", &classic_query, false,
+        "queries the index"
+    },
+    {
+        "compact_construct_step1", &compact_construct_step1, false,
+        "creates the folders used for further construction"
+    },
+    {
+        "compact_construct_combine", &compact_construct_combine, false,
+        "combines the classic indices in <in_dir> to form a compact index"
+    },
+    {
+        "compact_query", &compact_query, false,
         "queries the index"
     },
     {
@@ -675,7 +719,6 @@ int main(int argc, char** argv) {
     CLI::App app("(Co)mpact (B)it-Sliced (S)ignature Index for Genome Search\n", false);
     app.require_subcommand(1);
     auto p = std::make_shared<parameters>();
-    add_compact(app, p);
     add_parameters(app, p);
     add_print_sample(app, p);
     add_cortex(app, p);
