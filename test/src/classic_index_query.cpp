@@ -39,96 +39,96 @@ protected:
 };
 
 TEST_F(classic_index_query, all_included_small_batch) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, samples[index].data().size());
+        ASSERT_GE(r.first, documents[index].data().size());
     }
 }
 
 TEST_F(classic_index_query, all_included_large_batch) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, samples[index].data().size());
+        ASSERT_GE(r.first, documents[index].data().size());
     }
 }
 
 TEST_F(classic_index_query, all_included_max_batch) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 16, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, samples[index].data().size());
+        ASSERT_GE(r.first, documents[index].data().size());
     }
 }
 
 TEST_F(classic_index_query, one_included_small_batch) {
-    auto samples = generate_samples_one(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_one(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
     std::vector<std::string> split;
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
     }
 }
 
 TEST_F(classic_index_query, one_included_large_batch) {
-    auto samples = generate_samples_one(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_one(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
     }
 }
 
 TEST_F(classic_index_query, one_included_max_batch) {
-    auto samples = generate_samples_one(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_one(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
-    ASSERT_EQ(samples.size(), result.size());
+    ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
     }
 }
 
 TEST_F(classic_index_query, false_positive) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 32, 3, 0.1);
     cobs::query::classic_index::mmap s_mmap(index_path);
 

@@ -15,17 +15,18 @@ namespace cobs::file {
 class file_io_exception : public std::runtime_error
 {
 private:
-    std::string m_msg;
+    std::string msg_;
 
 public:
-    explicit file_io_exception(const std::string& msg) : std::runtime_error(msg), m_msg(msg) { }
+    explicit file_io_exception(const std::string& msg)
+        : std::runtime_error(msg), msg_(msg) { }
 
     virtual const char * what() const noexcept {
-        return m_msg.c_str();
+        return msg_.c_str();
     }
 
     std::string& message() {
-        return m_msg;
+        return msg_;
     }
 };
 

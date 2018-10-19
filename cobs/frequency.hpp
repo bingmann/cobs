@@ -10,8 +10,8 @@
 #define COBS_FREQUENCY_HEADER
 #pragma once
 
+#include <cobs/file/document_header.hpp>
 #include <cobs/file/frequency_header.hpp>
-#include <cobs/file/sample_header.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/processing.hpp>
@@ -40,7 +40,7 @@ public:
     virtual uint32_t count();
 };
 
-class bin_pq_element : public pq_element<file::sample_header>
+class bin_pq_element : public pq_element<file::document_header>
 {
 public:
     explicit bin_pq_element(std::ifstream* ifs);
@@ -52,7 +52,7 @@ public:
     explicit fre_pq_element(std::ifstream* ifs);
 };
 
-template <typename H, typename PQE = typename std::conditional<std::is_same<H, file::sample_header>::value, bin_pq_element, fre_pq_element>::type>
+template <typename H, typename PQE = typename std::conditional<std::is_same<H, file::document_header>::value, bin_pq_element, fre_pq_element>::type>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size);
 inline void combine(const fs::path& in_file, const fs::path& out_file);
 

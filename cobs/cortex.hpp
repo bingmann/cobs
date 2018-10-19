@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <cobs/sample.hpp>
+#include <cobs/document.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/timer.hpp>
@@ -71,9 +71,9 @@ public:
             tlx::unused(mean_read_length, total_length);
         }
         for (size_t i = 0; i < num_colors_; i++) {
-            auto sample_name_length = cast_advance<uint32_t>(is);
-            name_.resize(sample_name_length);
-            is.read(name_.data(), sample_name_length);
+            auto document_name_length = cast_advance<uint32_t>(is);
+            name_.resize(document_name_length);
+            is.read(name_.data(), document_name_length);
         }
         is.ignore(16 * num_colors_);
         for (size_t i = 0; i < num_colors_; i++) {
@@ -88,7 +88,7 @@ public:
         pos_data_end_ = is.tellg();
     }
 
-    size_t num_samples() const {
+    size_t num_documents() const {
         return (pos_data_end_ - pos_data_begin_)
                / (8 * num_words_per_kmer_ + 5 * num_colors_);
     }
@@ -104,7 +104,7 @@ public:
         is_.clear();
         is_.seekg(pos_data_begin_, std::ios::beg);
 
-        size_t r = num_samples();
+        size_t r = num_documents();
         while (r != 0) {
             --r;
             if (!is_.good())
@@ -117,10 +117,10 @@ public:
         }
 
         // t.active("sort");
-        // std::sort(reinterpret_cast<uint64_t*>(&(*sample.data().begin())),
-        //           reinterpret_cast<uint64_t*>(&(*sample.data().end())));
+        // std::sort(reinterpret_cast<uint64_t*>(&(*document.data().begin())),
+        //           reinterpret_cast<uint64_t*>(&(*document.data().end())));
         // disabled sorting -tb 2018-09-17 (is this only needed for frequency counting?)
-        // std::sort(sample.data().begin(), sample.data().end());
+        // std::sort(document.data().begin(), document.data().end());
     }
 
     uint32_t version_;
@@ -135,31 +135,31 @@ private:
 };
 
 template <unsigned int N>
-void process_file(const fs::path& in_path, const fs::path& out_path, sample<N>& sample,
+void process_file(const fs::path& in_path, const fs::path& out_path, document<N>& document,
                   timer& t) {
     t.active("read");
     CortexFile ctx(in_path);
 
-    sample.data().clear();
-    sample.data().reserve(ctx.num_samples());
+    document.data().clear();
+    document.data().reserve(ctx.num_documents());
     ctx.process_kmers<N>(
-        [&](const kmer<N>& m) { sample.data().push_back(m); });
+        [&](const kmer<N>& m) { document.data().push_back(m); });
 
     t.active("write");
-    file::serialize<N>(out_path, sample, ctx.name_);
+    file::serialize<N>(out_path, document, ctx.name_);
 
     t.stop();
 }
 
 template <unsigned int N>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
-    sample<N> sample;
+    document<N> document;
     timer t;
     t.reset();
     size_t i = 0;
     for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
         fs::path out_path =
-            out_dir / it->path().stem().concat(file::sample_header::file_extension);
+            out_dir / it->path().stem().concat(file::document_header::file_extension);
         if (fs::is_regular_file(*it) &&
             it->path().extension().string() == ".ctx" &&
             it->path().string().find("uncleaned") == std::string::npos &&
@@ -169,7 +169,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
                       << " - " << it->path().string() << std::endl;
             bool success = true;
             try {
-                process_file(it->path(), out_path, sample, t);
+                process_file(it->path(), out_path, document, t);
             }
             catch (const std::exception& e) {
                 std::cerr << it->path().string() << " - " << e.what()

@@ -21,7 +21,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file::file_is<cobs::file::sample_header>(p);
+                     return cobs::file::file_is<cobs::file::document_header>(p);
                  });
     std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
                   return fs::file_size(p1) < fs::file_size(p2);
@@ -32,7 +32,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
     fs::path sub_out_dir;
     for (const auto& p : paths) {
         if (i % (8 * page_size) == 0) {
-            sub_out_dir = out_dir / fs::path("/samples/" + pad_directory_number(batch));
+            sub_out_dir = out_dir / fs::path("/documents/" + pad_directory_number(batch));
             fs::create_directories(sub_out_dir);
             batch++;
         }
@@ -41,18 +41,18 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
     }
 }
 
-//    void create_from_samples(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
+//    void create_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
 //                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
 //        size_t num_files = 0;
 //        size_t max_file_size = 0;
 //        for (fs::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
-//            if (cobs::file::file_is<cobs::file::sample_header>(sub_it->path())) {
+//            if (cobs::file::file_is<cobs::file::document_header>(sub_it->path())) {
 //                max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
 //                num_files++;
 //            }
 //        }
 //        size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-//        classic_index::create_from_samples(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
+//        classic_index::create_from_documents(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
 //
 //        if (num_files != 8 * page_size) {
 //            assert(num_files < 8 * page_size);
@@ -60,8 +60,8 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
 //        }
 //    }
 
-void create_classic_index_from_samples(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
-                                       size_t num_hashes, double false_positive_probability, uint64_t page_size) {
+void create_classic_index_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
+                                         size_t num_hashes, double false_positive_probability, uint64_t page_size) {
     assert(batch_size % 8 == 0);
     std::vector<fs::path> paths;
     std::copy_if(fs::directory_iterator(in_dir), fs::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
@@ -73,13 +73,13 @@ void create_classic_index_from_samples(const fs::path& in_dir, const fs::path& o
         size_t num_files = 0;
         size_t max_file_size = 0;
         for (fs::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
-            if (cobs::file::file_is<cobs::file::sample_header>(sub_it->path())) {
+            if (cobs::file::file_is<cobs::file::document_header>(sub_it->path())) {
                 max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
                 num_files++;
             }
         }
         size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-        classic_index::create_from_samples(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
+        classic_index::create_from_documents(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
 
         if (num_files != 8 * page_size) {
             assert(num_files < 8 * page_size);
@@ -151,10 +151,10 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
 
 void create_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
                          double false_positive_probability, uint64_t page_size) {
-    fs::path samples_dir = in_dir / fs::path("samples/");
+    fs::path documents_dir = in_dir / fs::path("documents/");
     std::string bloom_dir = in_dir.string() + "/isi_";
     size_t iteration = 1;
-    create_classic_index_from_samples(samples_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
+    create_classic_index_from_documents(documents_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
     while (!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
         iteration++;
     }
@@ -163,7 +163,7 @@ void create_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_h
 
 void create(const fs::path& in_dir, fs::path out_dir,
             size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-    create_folders(in_dir, out_dir / fs::path("/samples"), page_size);
+    create_folders(in_dir, out_dir / fs::path("/documents"), page_size);
     create_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
 }
 

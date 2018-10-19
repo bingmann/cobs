@@ -21,22 +21,22 @@ fs::path in_dir("test/resources/frequency/input/");
 fs::path out_dir("test/out/frequency/");
 fs::path result_bin("test/resources/frequency/result/bin.freq.isi");
 fs::path result_freq("test/resources/frequency/result/freq.freq.isi");
-fs::path sample_1(in_dir.string() + "sample_1.sam.isi");
-fs::path sample_2(in_dir.string() + "sample_2.sam.isi");
-fs::path sample_3(in_dir.string() + "sample_3.sam.isi");
+fs::path document_1(in_dir.string() + "document_1.doc.isi");
+fs::path document_2(in_dir.string() + "document_2.doc.isi");
+fs::path document_3(in_dir.string() + "document_3.doc.isi");
 
 /*
-std::string sample_4 = in_dir + "sample_4.freq.cobs";
-std::string sample_5 = in_dir + "sample_5.freq.cobs";
+std::string document_4 = in_dir + "document_4.freq.cobs";
+std::string document_5 = in_dir + "document_5.freq.cobs";
 void generate_result_bin() {
     fs::create_directories(out_dir);
     std::vector<uint64_t> v;
-    sample<31> s;
-    file::deserialize(sample_1, s);
+    document<31> s;
+    file::deserialize(document_1, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
-    file::deserialize(sample_2, s);
+    file::deserialize(document_2, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
-    file::deserialize(sample_3, s);
+    file::deserialize(document_3, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
     std::sort(v.begin(), v.end());
 
@@ -59,7 +59,7 @@ void generate_result_bin() {
 }
 
 template<class OutputIteratorKmer, class OutputIteratorCount>
-void read_sample(const std::string& file, OutputIteratorKmer& iter_kmer, OutputIteratorCount& iter_count) {
+void read_document(const std::string& file, OutputIteratorKmer& iter_kmer, OutputIteratorCount& iter_count) {
     std::ifstream ifs;
     file::deserialize_header<file::frequency_header>(ifs, file);
     while(ifs && ifs.peek() != EOF) {
@@ -78,8 +78,8 @@ void generate_result_fre() {
     std::vector<uint32_t> counts;
     std::back_insert_iterator<std::vector<uint64_t>> iter_kmer(kmers);
     std::back_insert_iterator<std::vector<uint32_t >> iter_count(counts);
-    read_sample(sample_4, iter_kmer, iter_count);
-    read_sample(sample_5, iter_kmer, iter_count);
+    read_document(document_4, iter_kmer, iter_count);
+    read_document(document_5, iter_kmer, iter_count);
     std::vector<size_t> indices(kmers.size());
     for (size_t i = 0; i < kmers.size(); i++) {
         indices[i] = i;
@@ -112,9 +112,9 @@ TEST(frequency, generate_results) {
 }
 */
 
-size_t get_count_sample(const fs::path& file) {
+size_t get_count_document(const fs::path& file) {
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::file::sample_header>(ifs, file);
+    cobs::file::deserialize_header<cobs::file::document_header>(ifs, file);
     ifs.exceptions(std::ios::failbit | std::ios::badbit);
     size_t total_count = 0;
     uint64_t kmer;
@@ -151,16 +151,16 @@ protected:
 };
 
 TEST_F(frequency, bin) {
-    cobs::frequency::process_all_in_directory<cobs::file::sample_header>(in_dir, out_dir, 40);
-    size_t total_count = get_count_sample(sample_1) + get_count_sample(sample_2) + get_count_sample(sample_3);
-    fs::path p(out_dir.string() + "[sample_1-sample_3]" + cobs::file::frequency_header::file_extension);
+    cobs::frequency::process_all_in_directory<cobs::file::document_header>(in_dir, out_dir, 40);
+    size_t total_count = get_count_document(document_1) + get_count_document(document_2) + get_count_document(document_3);
+    fs::path p(out_dir.string() + "[document_1-document_3]" + cobs::file::frequency_header::file_extension);
     ASSERT_EQ(get_count_frequency(p), total_count);
     assert_equals_files(result_bin.string(), p.string());
 }
 
 TEST_F(frequency, freq) {
     cobs::frequency::process_all_in_directory<cobs::file::frequency_header>(in_dir, out_dir, 40);
-    fs::path p(out_dir.string() + "[sample_4-sample_5]" + cobs::file::frequency_header::file_extension);
+    fs::path p(out_dir.string() + "[document_4-document_5]" + cobs::file::frequency_header::file_extension);
     assert_equals_files(result_freq.string(), p.string());
 }
 }

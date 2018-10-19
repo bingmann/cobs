@@ -1,20 +1,20 @@
 /*******************************************************************************
- * cobs/file/sample_header.hpp
+ * cobs/file/document_header.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_FILE_SAMPLE_HEADER_HEADER
-#define COBS_FILE_SAMPLE_HEADER_HEADER
+#ifndef COBS_FILE_DOCUMENT_HEADER_HEADER
+#define COBS_FILE_DOCUMENT_HEADER_HEADER
 #pragma once
 
 #include <cobs/file/header.hpp>
 
 namespace cobs::file {
 
-class sample_header : public header<sample_header>
+class document_header : public header<document_header>
 {
 private:
     std::string m_name;
@@ -27,14 +27,14 @@ protected:
 public:
     static const std::string magic_word;
     static const std::string file_extension;
-    sample_header() = default;
-    sample_header(std::string name, uint32_t kmer_size);
+    document_header() = default;
+    document_header(std::string name, uint32_t kmer_size);
     std::string name() const;
     uint32_t kmer_size() const;
 };
 
 } // namespace cobs::file
 
-#endif // !COBS_FILE_SAMPLE_HEADER_HEADER
+#endif // !COBS_FILE_DOCUMENT_HEADER_HEADER
 
 /******************************************************************************/

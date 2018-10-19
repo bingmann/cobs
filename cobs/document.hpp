@@ -1,13 +1,13 @@
 /*******************************************************************************
- * cobs/sample.hpp
+ * cobs/document.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_SAMPLE_HEADER
-#define COBS_SAMPLE_HEADER
+#ifndef COBS_DOCUMENT_HEADER
+#define COBS_DOCUMENT_HEADER
 
 #include <cobs/kmer.hpp>
 
@@ -18,7 +18,7 @@
 namespace cobs {
 
 template <unsigned int N>
-class sample
+class document
 {
 private:
     std::vector<kmer<N> > m_data;
@@ -32,13 +32,13 @@ public:
         return m_data;
     }
 
-    void sort_samples() {
+    void sort_kmers() {
         std::sort(m_data.begin(), m_data.end());
     }
 };
 
 template <unsigned int N>
-void sample<N>::print(std::ostream& ostream) const {
+void document<N>::print(std::ostream& ostream) const {
     for (size_t i = 0; i < m_data.size(); i++) {
         ostream << m_data[i] << std::endl;
     }
@@ -46,6 +46,6 @@ void sample<N>::print(std::ostream& ostream) const {
 
 } // namespace cobs
 
-#endif // !COBS_SAMPLE_HEADER
+#endif // !COBS_DOCUMENT_HEADER
 
 /******************************************************************************/

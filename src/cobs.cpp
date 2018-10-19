@@ -145,7 +145,7 @@ int classic_construct_step1(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::classic_index::create_from_samples(
+    cobs::classic_index::create_from_documents(
         in_dir, out_dir, signature_size, num_hashes, batch_size);
 
     return 0;
@@ -444,19 +444,19 @@ struct SubTool {
 struct SubTool subtools[] = {
     {
         "cortex_convert", &cortex_convert, true,
-        "converts the cortex files in <in_dir> to the cobs sample format"
+        "converts the cortex files in <in_dir> to the cobs document format"
     },
     {
         "cortex_dump", &cortex_dump, true,
-        "read a cortex file and dump its samples"
+        "read a cortex file and dump its documents"
     },
     {
         "classic_construct", &classic_construct, true,
-        "constructs a classic index from the samples in <in_dir>"
+        "constructs a classic index from the documents in <in_dir>"
     },
     {
         "classic_construct_step1", &classic_construct_step1, true,
-        "constructs multiple small indices form the samples in <in_dir>"
+        "constructs multiple small indices from the documents in <in_dir>"
     },
     {
         "classic_construct_step2", &classic_construct_step2, true,

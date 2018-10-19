@@ -96,10 +96,10 @@ int main() {
 //    uint64_t size = cobs::compact_index::calc_signature_size(1000, 2, 0.1);
 //    int a = 0;
 //    cobs::compact_index::create_folders("/users/flo/projects/thesis/data/compact_index_out", "/users/flo/projects/thesis/data/compact_index_out_2", 64);
-//    cobs::compact_index::create_classic_indexs_from_samples("/users/flo/projects/thesis/data/compact_index_out_2", "/users/flo/projects/thesis/data/compact_index_out_3", 32, 1, 0.3);
+//    cobs::compact_index::create_classic_indexs_from_documents("/users/flo/projects/thesis/data/compact_index_out_2", "/users/flo/projects/thesis/data/compact_index_out_3", 32, 1, 0.3);
 //    cobs::compact_index::combine_classic_indexs("/users/flo/projects/thesis/data/compact_index_out_3", "/users/flo/projects/thesis/data/compact_index_out_4", 32);
 //    cobs::compact_index::create_folders("/users/flo/projects/thesis/data/compact_index_in", "/users/flo/projects/thesis/data/compact_index", 16);
-//    cobs::compact_index::create_compact_index_from_samples("/users/flo/projects/thesis/data/compact_index", 8, 1, 0.3);
+//    cobs::compact_index::create_compact_index_from_documents("/users/flo/projects/thesis/data/compact_index", 8, 1, 0.3);
 //    cobs::file::compact_index_header h;
 //    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/tests.g_mfs");
 //    std::ofstream ofs;

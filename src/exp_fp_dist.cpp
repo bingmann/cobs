@@ -16,7 +16,7 @@
 int main(int argc, char** argv) {
     std::array<uint32_t, 6> indices = { 4096, 8192, 12288, 16384, 28672, 57344 };
 
-    std::string sample_name = "ERR498185";
+    std::string document_name = "ERR498185";
     std::vector<std::string> queries;
     for (size_t i = 0; i < 1; i++) {
         queries.push_back(cobs::random_sequence(1030, (size_t)time(nullptr)));

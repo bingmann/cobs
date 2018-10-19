@@ -12,12 +12,12 @@
 #include <immintrin.h>
 #include <numeric>
 
-void sample() {
+void document() {
     cobs::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
 }
 
 void classic_index() {
-    cobs::classic_index::create_from_samples("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
+    cobs::classic_index::create_from_documents("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
 }
 
 void classic_index_2() {
@@ -324,7 +324,7 @@ int main() {
     for (size_t i = 0; i < 100; i++) {
         std::cout << counts[i] << ", ";
     }
-//    sample();
+//    document();
 //    classic_index();
 //    classic_index_2();
 }

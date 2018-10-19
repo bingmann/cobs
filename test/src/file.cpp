@@ -17,7 +17,7 @@ namespace {
 namespace fs = cobs::fs;
 
 fs::path out_dir("test/out/file");
-fs::path out_path_s(out_dir.string() + "/classic_index.sam.isi");
+fs::path out_path_s(out_dir.string() + "/classic_index.doc.isi");
 fs::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
 fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
 
@@ -31,11 +31,11 @@ protected:
     }
 };
 
-TEST_F(file, sample) {
-    cobs::sample<31> s_out;
-    cobs::file::serialize(out_path_s, s_out, "sample");
+TEST_F(file, document) {
+    cobs::document<31> s_out;
+    cobs::file::serialize(out_path_s, s_out, "document");
 
-    cobs::sample<31> s_in;
+    cobs::document<31> s_in;
     cobs::file::deserialize(out_path_s, s_in);
 }
 

@@ -14,7 +14,7 @@
 namespace {
 namespace fs = cobs::fs;
 fs::path in_dir("test/out/classic_index_construction/input");
-fs::path samples_dir(in_dir.string() + "/samples");
+fs::path documents_dir(in_dir.string() + "/documents");
 fs::path isi_2_dir(in_dir.string() + "/isi_2");
 fs::path classic_index_path(in_dir.string() + "/index.cla_idx.isi");
 fs::path tmp_dir("test/out/classic_index_construction/tmp");
@@ -34,8 +34,8 @@ protected:
 };
 
 TEST_F(classic_index_construction, deserialization) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
 
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
@@ -46,13 +46,13 @@ TEST_F(classic_index_construction, deserialization) {
 }
 
 TEST_F(classic_index_construction, file_names) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
 
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(tmp_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file::file_is<cobs::file::sample_header>(p);
+                     return cobs::file::file_is<cobs::file::document_header>(p);
                  });
     std::sort(paths.begin(), paths.end());
 
@@ -66,8 +66,8 @@ TEST_F(classic_index_construction, file_names) {
 }
 
 TEST_F(classic_index_construction, num_ones) {
-    auto samples = generate_samples_all(query);
-    generate_test_case(samples, tmp_dir.string());
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     cobs::file::classic_index_header h;

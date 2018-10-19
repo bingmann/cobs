@@ -21,16 +21,17 @@ set(SOURCE_FILES
         cobs/construction/compact_index.cpp
         cobs/construction/compact_index.hpp
         cobs/cortex.hpp
+        cobs/document.hpp
         cobs/file/classic_index_header.cpp
         cobs/file/classic_index_header.hpp
         cobs/file/compact_index_header.cpp
         cobs/file/compact_index_header.hpp
+        cobs/file/document_header.cpp
+        cobs/file/document_header.hpp
         cobs/file/file_io_exception.hpp
         cobs/file/frequency_header.cpp
         cobs/file/frequency_header.hpp
         cobs/file/header.hpp
-        cobs/file/sample_header.cpp
-        cobs/file/sample_header.hpp
         cobs/frequency.hpp
         cobs/kmer.hpp
         cobs/query/base.hpp
@@ -42,7 +43,6 @@ set(SOURCE_FILES
         cobs/query/compact_index/base.hpp
         cobs/query/compact_index/mmap.cpp
         cobs/query/compact_index/mmap.hpp
-        cobs/sample.hpp
         cobs/util/error_handling.cpp
         cobs/util/error_handling.hpp
         cobs/util/file.cpp

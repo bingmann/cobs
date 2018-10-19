@@ -33,46 +33,46 @@ inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     }
 }
 
-inline std::vector<cobs::sample<31> > generate_samples_all(const std::string& query) {
-    std::vector<cobs::sample<31> > samples(33);
+inline std::vector<cobs::document<31> > generate_documents_all(const std::string& query) {
+    std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
     for (size_t i = 0; i < query.size() - 31; i++) {
         const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data() + i, kmer_raw.data(), 31);
         k.init(normalized_kmer);
-        for (size_t j = 0; j < samples.size(); j++) {
-            if (j % (i % (samples.size() - 1) + 1) == 0) {
-                samples[j].data().push_back(k);
+        for (size_t j = 0; j < documents.size(); j++) {
+            if (j % (i % (documents.size() - 1) + 1) == 0) {
+                documents[j].data().push_back(k);
             }
         }
     }
-    return samples;
+    return documents;
 }
 
-inline std::vector<cobs::sample<31> > generate_samples_one(const std::string& query) {
-    std::vector<cobs::sample<31> > samples(33);
+inline std::vector<cobs::document<31> > generate_documents_one(const std::string& query) {
+    std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
     const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
     k.init(normalized_kmer);
-    for (size_t i = 0; i < samples.size(); i++) {
+    for (size_t i = 0; i < documents.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
-            samples[i].data().push_back(k);
+            documents[i].data().push_back(k);
         }
     }
-    return samples;
+    return documents;
 }
 
 inline std::string get_file_stem(size_t index) {
     assert(index < 100);
     std::string num = (index < 10 ? "0" : "") + std::to_string(index);
-    return "sample_" + num;
+    return "document_" + num;
 }
 
-inline void generate_test_case(std::vector<cobs::sample<31> > samples, const std::string& out_dir) {
-    for (size_t i = 0; i < samples.size(); i++) {
+inline void generate_test_case(std::vector<cobs::document<31> > documents, const std::string& out_dir) {
+    for (size_t i = 0; i < documents.size(); i++) {
         std::string file_name = get_file_stem(i);
-        cobs::file::serialize(out_dir + "/" + file_name + cobs::file::sample_header::file_extension, samples[i], file_name);
+        cobs::file::serialize(out_dir + "/" + file_name + cobs::file::document_header::file_extension, documents[i], file_name);
     }
 }
 

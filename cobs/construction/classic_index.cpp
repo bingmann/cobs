@@ -44,8 +44,8 @@ void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
              cobs::file::classic_index_header& h, timer& t) {
 
-    sample<31> s;
-    cobs::file::sample_header sh;
+    document<31> s;
+    cobs::file::document_header sh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
@@ -111,9 +111,9 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
     t.stop();
 }
 
-void create_from_samples(const fs::path& in_dir, const fs::path& out_dir,
-                         uint64_t signature_size, uint64_t num_hashes,
-                         uint64_t batch_size) {
+void create_from_documents(const fs::path& in_dir, const fs::path& out_dir,
+                           uint64_t signature_size, uint64_t num_hashes,
+                           uint64_t batch_size) {
     timer t;
     cobs::file::classic_index_header h(signature_size, num_hashes);
     std::vector<uint8_t> data;
@@ -177,7 +177,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                             uint64_t num_hashes, double false_positive_probability) {
     uint64_t signature_size;
     process_file_batches(
-        in_dir, out_dir, UINT64_MAX, file::sample_header::file_extension,
+        in_dir, out_dir, UINT64_MAX, file::document_header::file_extension,
         [](const fs::path& path) {
             return path.extension() == ".ctx" || path.extension() == ".isi";
         },
@@ -188,14 +188,14 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                       });
             if (paths[0].extension() == ".ctx") {
                 cortex::CortexFile ctx(paths[0].string());
-                size_t max_num_elements = ctx.num_samples();
+                size_t max_num_elements = ctx.num_documents();
                 sLOG1 << "CTX: max_num_elements" << max_num_elements;
                 signature_size = cobs::calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
             }
             else if (paths[0].extension() == ".isi") {
-                file::sample_header sh;
-                sample<31> s;
+                file::document_header sh;
+                document<31> s;
                 file::deserialize(paths[0], s, sh);
 
                 size_t max_num_elements = s.data().size();
@@ -214,7 +214,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
         batch_size % 8 == 0, "batch size must be divisible by 8");
     uint64_t signature_size =
         get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
-    create_from_samples(
+    create_from_documents(
         in_dir, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
     size_t i = 1;
     while (!combine(out_dir / fs::path(std::to_string(i)),

@@ -10,7 +10,8 @@
 
 namespace cobs::query::classic_index {
 
-base::base(const fs::path& path) : query::base<file::classic_index_header>(path) { }
+base::base(const fs::path& path)
+    : query::base<file::classic_index_header>(path) { }
 
 uint64_t base::num_hashes() const {
     return m_header.num_hashes();
