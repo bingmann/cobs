@@ -39,7 +39,7 @@ TEST_F(compact_index_construction, padding) {
     generate_test_case(documents, tmp_dir.string());
     size_t page_size = cobs::get_page_size();
     cobs::compact_index::create_folders(tmp_dir, in_dir, page_size);
-    cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, page_size);
+    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, page_size);
     std::ifstream ifs;
     cobs::file::deserialize_header<cobs::file::compact_index_header>(ifs, compact_index_path);
     cobs::stream_metadata smd = cobs::get_stream_metadata(ifs);
@@ -51,7 +51,7 @@ TEST_F(compact_index_construction, deserialization) {
     generate_test_case(documents, tmp_dir.string());
 
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     cobs::file::compact_index_header h;
     cobs::file::deserialize(compact_index_path, data, h);
@@ -78,7 +78,7 @@ TEST_F(compact_index_construction, file_names) {
     }
 
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     auto h = cobs::file::deserialize_header<cobs::file::compact_index_header>(compact_index_path);
     cobs::file::deserialize(compact_index_path, data, h);
@@ -92,7 +92,7 @@ TEST_F(compact_index_construction, parameters) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::create_from_folders(in_dir, 8, num_hashes, 0.1, 2);
+    cobs::compact_index::construct_from_folders(in_dir, 8, num_hashes, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     auto h = cobs::file::deserialize_header<cobs::file::compact_index_header>(compact_index_path);
 
@@ -130,7 +130,7 @@ TEST_F(compact_index_construction, num_ones) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     cobs::file::compact_index_header h;
     cobs::file::deserialize(compact_index_path, data, h);
@@ -165,7 +165,7 @@ TEST_F(compact_index_construction, content) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::create_from_folders(in_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > cisi_data;
     cobs::file::deserialize(compact_index_path, cisi_data);
 

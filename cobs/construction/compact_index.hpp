@@ -17,19 +17,19 @@
 #include <cobs/util/fs.hpp>
 
 /** The compact Inverted Signature Index with the space-saving improvements.
- *  This namespace provides methods for creation of this index. It can either be created from existing documents or
+ *  This namespace provides methods for creation of this index. It can either be constructed from existing documents or
  *  with random dummy data for performance testing purposes. The index uses different signature sizes to minimize
  *  space wastage.
  */
 namespace cobs::compact_index {
 
-/** Creates the index by executing all necessary steps.
+/** Constructs the index by executing all necessary steps.
  *  First calls cobs::compact_index::create_folders to sort the documents by size and then
  *  split them into multiple batches. Afterwards combines these indices with a call
- *  to cobs::compact_index::create_from_folders.
+ *  to cobs::compact_index::construct_from_folders.
  */
-void create(const fs::path& in_dir, fs::path out_dir,
-            size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size = get_page_size());
+void construct(const fs::path& in_dir, fs::path out_dir,
+               size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size = get_page_size());
 
 /** Creates the folders used by the cobs::compact_index::create_from_folders.
  *  Sorts the documents by file size and then splits them into several directories.
@@ -37,17 +37,17 @@ void create(const fs::path& in_dir, fs::path out_dir,
 void create_folders(const fs::path& in_dir,
                     const fs::path& out_dir, uint64_t page_size = get_page_size());
 
-/** Creates the folders used by the cobs::compact_index::create_from_documents.
+/** Constructs the folders used by the cobs::compact_index::construct_from_documents.
  *  Sorts the documents by file size and then splits them into several directories.
  */
-void create_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
-                         double false_positive_probability, uint64_t page_size = get_page_size());
+void construct_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
+                            double false_positive_probability, uint64_t page_size = get_page_size());
 
 void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_size = get_page_size());
 
-/** Creates a dummy index filled with random data.
+/** Constructs a dummy index filled with random data.
  */
-void create_dummy(const fs::path& p, size_t signature_size, size_t block_size, size_t num_hashes);
+void construct_dummy(const fs::path& p, size_t signature_size, size_t block_size, size_t num_hashes);
 
 } // namespace cobs::compact_index
 

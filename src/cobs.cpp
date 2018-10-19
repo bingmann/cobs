@@ -145,7 +145,7 @@ int classic_construct_step1(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::classic_index::create_from_documents(
+    cobs::classic_index::construct_from_documents(
         in_dir, out_dir, signature_size, num_hashes, batch_size);
 
     return 0;
@@ -212,7 +212,7 @@ int classic_construct_dummy(int argc, char** argv) {
               << tlx::format_iec_units(block_size * signature_size)
               << std::endl;
 
-    cobs::classic_index::create_dummy(
+    cobs::classic_index::construct_dummy(
         out_file, signature_size, block_size, num_hashes, seed);
 
     return 0;

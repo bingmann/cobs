@@ -41,7 +41,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
     }
 }
 
-//    void create_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
+//    void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
 //                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
 //        size_t num_files = 0;
 //        size_t max_file_size = 0;
@@ -52,7 +52,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
 //            }
 //        }
 //        size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-//        classic_index::create_from_documents(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
+//        classic_index::construct_from_documents(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
 //
 //        if (num_files != 8 * page_size) {
 //            assert(num_files < 8 * page_size);
@@ -60,8 +60,8 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
 //        }
 //    }
 
-void create_classic_index_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
-                                         size_t num_hashes, double false_positive_probability, uint64_t page_size) {
+void construct_classic_index_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
+                                            size_t num_hashes, double false_positive_probability, uint64_t page_size) {
     assert(batch_size % 8 == 0);
     std::vector<fs::path> paths;
     std::copy_if(fs::directory_iterator(in_dir), fs::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
@@ -79,7 +79,7 @@ void create_classic_index_from_documents(const fs::path& in_dir, const fs::path&
             }
         }
         size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-        classic_index::create_from_documents(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
+        classic_index::construct_from_documents(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
 
         if (num_files != 8 * page_size) {
             assert(num_files < 8 * page_size);
@@ -149,22 +149,22 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
     }
 }
 
-void create_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
-                         double false_positive_probability, uint64_t page_size) {
+void construct_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
+                            double false_positive_probability, uint64_t page_size) {
     fs::path documents_dir = in_dir / fs::path("documents/");
     std::string bloom_dir = in_dir.string() + "/isi_";
     size_t iteration = 1;
-    create_classic_index_from_documents(documents_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
+    construct_classic_index_from_documents(documents_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
     while (!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
         iteration++;
     }
     combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + cobs::file::compact_index_header::file_extension), page_size);
 }
 
-void create(const fs::path& in_dir, fs::path out_dir,
-            size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
+void construct(const fs::path& in_dir, fs::path out_dir,
+               size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
     create_folders(in_dir, out_dir / fs::path("/documents"), page_size);
-    create_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
+    construct_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
 }
 
 } // namespace cobs::compact_index

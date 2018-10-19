@@ -111,9 +111,9 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
     t.stop();
 }
 
-void create_from_documents(const fs::path& in_dir, const fs::path& out_dir,
-                           uint64_t signature_size, uint64_t num_hashes,
-                           uint64_t batch_size) {
+void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
+                              uint64_t signature_size, uint64_t num_hashes,
+                              uint64_t batch_size) {
     timer t;
     cobs::file::classic_index_header h(signature_size, num_hashes);
     std::vector<uint8_t> data;
@@ -214,7 +214,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
         batch_size % 8 == 0, "batch size must be divisible by 8");
     uint64_t signature_size =
         get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
-    create_from_documents(
+    construct_from_documents(
         in_dir, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
     size_t i = 1;
     while (!combine(out_dir / fs::path(std::to_string(i)),
@@ -231,7 +231,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     fs::rename(index, out_dir.string() + "/index" + cobs::file::classic_index_header::file_extension);
 }
 
-void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed) {
+void construct_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed) {
     std::vector<std::string> file_names;
     for (size_t i = 0; i < 8 * block_size; i++) {
         file_names.push_back("file_" + std::to_string(i));

@@ -17,35 +17,35 @@
 #include <cobs/util/timer.hpp>
 
 /** The classic Inverted Signature Index without the space-saving improvements.
- *  This namespace provides methods for creation of this index. It can either be created from existing documents or
+ *  This namespace provides methods for creation of this index. It can either be constructed from existing documents or
  *  with random dummy data for performance testing purposes.
  */
 namespace cobs::classic_index  {
 
-/** Creates the index by executing all necessary steps.
- *  First calls cobs::classic_index::create_from_documents to create multiple small indices.
+/** Constructs the index by executing all necessary steps.
+ *  First calls cobs::classic_index::construct_from_documents to construct multiple small indices.
  *  Afterwards combines these indices with calls to cobs::classic_index::combine until only one index remains.
  */
 void construct(const fs::path& in_dir, const fs::path& out_dir,
                uint64_t batch_size, uint64_t num_hashes, double false_positive_probability);
 
-/** Creates multiple small indices from document files.
+/** Constructs multiple small indices from document files.
  */
-void create_from_documents(const fs::path& in_dir, const fs::path& out_dir,
-                           uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
+void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
+                              uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
 
 /** Combines multiple indices into one or more bigger indices.
  */
 bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size);
 
-/** Creates the hash used by the signatures.
+/** Constructs the hash used by the signatures.
  */
 void create_hashes(const void* input, size_t len, uint64_t signature_size, uint64_t num_hashes,
                    const std::function<void(uint64_t)>& callback);
 
-/** Creates a dummy index filled with random data.
+/** Constructs a dummy index filled with random data.
  */
-void create_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed);
+void construct_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed);
 
 } // namespace cobs::classic_index
 
