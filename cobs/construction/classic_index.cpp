@@ -9,7 +9,6 @@
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <xxhash.h>
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/cortex.hpp>
@@ -24,15 +23,6 @@
 #include <tlx/math/popcount.hpp>
 
 namespace cobs::classic_index {
-
-void create_hashes(const void* input, size_t len, uint64_t signature_size,
-                   uint64_t num_hashes,
-                   const std::function<void(uint64_t)>& callback) {
-    for (unsigned int i = 0; i < num_hashes; i++) {
-        uint64_t hash = XXH32(input, len, i);
-        callback(hash % signature_size);
-    }
-}
 
 void set_bit(std::vector<uint8_t>& data,
              const cobs::file::classic_index_header& h,
@@ -57,11 +47,11 @@ void process(const std::vector<fs::path>& paths,
 
 #pragma omp parallel for
             for (uint64_t j = 0; j < s.data().size(); j++) {
-                create_hashes(s.data().data() + j, 8,
-                              h.signature_size(), h.num_hashes(),
-                              [&](uint64_t hash) {
-                                  set_bit(data, h, hash, i);
-                              });
+                process_hashes(s.data().data() + j, 8,
+                               h.signature_size(), h.num_hashes(),
+                               [&](uint64_t hash) {
+                                   set_bit(data, h, hash, i);
+                               });
             }
         }
         else if (paths[i].extension() == ".isi") {
@@ -72,11 +62,11 @@ void process(const std::vector<fs::path>& paths,
 
 #pragma omp parallel for
             for (uint64_t j = 0; j < s.data().size(); j++) {
-                create_hashes(s.data().data() + j, 8,
-                              h.signature_size(), h.num_hashes(),
-                              [&](uint64_t hash) {
-                                  set_bit(data, h, hash, i);
-                              });
+                process_hashes(s.data().data() + j, 8,
+                               h.signature_size(), h.num_hashes(),
+                               [&](uint64_t hash) {
+                                   set_bit(data, h, hash, i);
+                               });
             }
         }
     }

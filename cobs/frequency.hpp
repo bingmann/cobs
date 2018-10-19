@@ -34,10 +34,13 @@ public:
     explicit pq_element(std::ifstream* ifs);
     static void serialize_header(std::ofstream& ofs, const fs::path& p);
     static void deserialize_header(std::ifstream& ifs, const fs::path& p);
-    static bool comp(const pq_element& bs1, const pq_element& bs2);
     std::ifstream * ifs();
     uint64_t kmer();
     virtual uint32_t count();
+
+    bool operator < (const pq_element& b) const {
+        return m_kmer > b.m_kmer;
+    }
 };
 
 class bin_pq_element : public pq_element<file::document_header>
@@ -72,11 +75,6 @@ void pq_element<H>::deserialize_header(std::ifstream& ifs, const fs::path& p) {
 }
 
 template <typename H>
-bool pq_element<H>::comp(const pq_element& bs1, const pq_element& bs2) {
-    return bs1.m_kmer > bs2.m_kmer;
-}
-
-template <typename H>
 std::ifstream* pq_element<H>::ifs() {
     return m_ifs;
 }
@@ -100,8 +98,7 @@ fre_pq_element::fre_pq_element(std::ifstream* ifs) : pq_element(ifs) {
 }
 
 template <typename PqElement>
-void add_pq_element(std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&,
-                                                                                              const PqElement&)> >& pq,
+void add_pq_element(std::priority_queue<PqElement>& pq,
                     std::ifstream* ifs) {
     if (ifs && ifs->peek() != EOF) {
         pq.push(PqElement(ifs));
@@ -110,8 +107,7 @@ void add_pq_element(std::priority_queue<PqElement, std::vector<PqElement>, std::
 
 template <typename PqElement>
 void process(std::vector<std::ifstream>& ifstreams, const fs::path& out_file) {
-    std::priority_queue<PqElement, std::vector<PqElement>, std::function<bool(const PqElement&,
-                                                                              const PqElement&)> > pq(PqElement::comp);
+    std::priority_queue<PqElement> pq;
     std::ofstream ofs;
     file::serialize_header<file::frequency_header>(ofs, out_file, file::frequency_header());
 

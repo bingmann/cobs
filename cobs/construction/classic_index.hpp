@@ -16,6 +16,8 @@
 #include <cobs/util/processing.hpp>
 #include <cobs/util/timer.hpp>
 
+#include <xxhash.h>
+
 /** The classic Inverted Signature Index without the space-saving improvements.
  *  This namespace provides methods for creation of this index. It can either be constructed from existing documents or
  *  with random dummy data for performance testing purposes.
@@ -40,8 +42,14 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
 
 /** Constructs the hash used by the signatures.
  */
-void create_hashes(const void* input, size_t len, uint64_t signature_size, uint64_t num_hashes,
-                   const std::function<void(uint64_t)>& callback);
+template <typename Callback>
+void process_hashes(const void* input, size_t size, uint64_t signature_size,
+                    uint64_t num_hashes, Callback callback) {
+    for (unsigned int i = 0; i < num_hashes; i++) {
+        uint64_t hash = XXH32(input, size, i);
+        callback(hash % signature_size);
+    }
+}
 
 /** Constructs a dummy index filled with random data.
  */
