@@ -45,6 +45,16 @@ public:
             m_data.rbegin(), m_data.rend(),
             b.m_data.rbegin(), b.m_data.rend());
     }
+    template <typename RandomGenerator>
+    void fill_random(RandomGenerator& rng) {
+        size_t i = 0;
+        for ( ; i + 3 < size; i += 4) {
+            *reinterpret_cast<uint32_t*>(m_data.data() + i) = rng();
+        }
+        for ( ; i < size; ++i) {
+            m_data.data()[i] = rng();
+        }
+    }
 };
 
 static inline

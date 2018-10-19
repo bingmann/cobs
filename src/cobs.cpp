@@ -177,22 +177,29 @@ int classic_construct_step2(int argc, char** argv) {
     return 0;
 }
 
-int classic_construct_dummy(int argc, char** argv) {
+int classic_construct_random(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
     std::string out_file;
     cp.add_param_string(
         "out_file", out_file, "path to the output file");
 
-    size_t signature_size = 8 * 1024 * 1024;
+    size_t signature_size = 16 * 1024 * 1024;
     cp.add_size_t(
         's', "signature_size", signature_size,
-        "number of bits of the signatures (vertical size), default: 8 Mi");
+        "number of bits of the signatures (vertical size), default: 16 Mi");
 
-    unsigned block_size = 1024;
+    unsigned num_documents = 1000;
     cp.add_unsigned(
-        'b', "block_size", block_size,
-        "horizontal size of the inverted signature index in bytes, default: 1024");
+        'n', "num_documents", num_documents,
+        "number of random documents in index,"
+        " default: " + std::to_string(num_documents));
+
+    unsigned document_size = 1000000;
+    cp.add_unsigned(
+        'm', "document_size", document_size,
+        "number of random 31-mers in document,"
+        " default: " + std::to_string(document_size));
 
     unsigned num_hashes = 1;
     cp.add_unsigned(
@@ -207,13 +214,15 @@ int classic_construct_dummy(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    std::cerr << "Constructing dummy index, num_documents = " << 8 * block_size
+    std::cerr << "Constructing random index"
+              << ", num_documents = " << num_documents
+              << ", signature_size = " << signature_size
               << ", result size = "
-              << tlx::format_iec_units(block_size * signature_size)
+              << tlx::format_iec_units(num_documents / 8 * signature_size)
               << std::endl;
 
-    cobs::classic_index::construct_dummy(
-        out_file, signature_size, block_size, num_hashes, seed);
+    cobs::classic_index::construct_random(
+        out_file, signature_size, num_documents, document_size, num_hashes, seed);
 
     return 0;
 }
@@ -463,8 +472,8 @@ struct SubTool subtools[] = {
         "combines the indices in <in_dir>"
     },
     {
-        "classic_construct_dummy", &classic_construct_dummy, true,
-        "constructs a dummy index with random content"
+        "classic_construct_random", &classic_construct_random, true,
+        "constructs an index with random content"
     },
     {
         "classic_query", &classic_query, true,

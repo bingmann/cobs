@@ -25,17 +25,17 @@
 namespace cobs::classic_index {
 
 void set_bit(std::vector<uint8_t>& data,
-             const cobs::file::classic_index_header& h,
+             const file::classic_index_header& h,
              uint64_t pos, uint64_t bit_in_block) {
     data[h.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
 }
 
 void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
-             cobs::file::classic_index_header& h, timer& t) {
+             file::classic_index_header& h, timer& t) {
 
     document<31> s;
-    cobs::file::document_header sh;
+    file::document_header sh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
@@ -105,7 +105,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     timer t;
-    cobs::file::classic_index_header h(signature_size, num_hashes);
+    file::classic_index_header h(signature_size, num_hashes);
     std::vector<uint8_t> data;
     process_file_batches(
         in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
@@ -180,7 +180,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                 cortex::CortexFile ctx(paths[0].string());
                 size_t max_num_elements = ctx.num_documents();
                 sLOG1 << "CTX: max_num_elements" << max_num_elements;
-                signature_size = cobs::calc_signature_size(
+                signature_size = calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
             }
             else if (paths[0].extension() == ".isi") {
@@ -190,7 +190,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
 
                 size_t max_num_elements = s.data().size();
                 sLOG1 << "ISI: max_num_elements" << max_num_elements;
-                signature_size = cobs::calc_signature_size(
+                signature_size = calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
             }
         });
@@ -214,27 +214,62 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
 
     fs::path index;
     for (fs::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
-        if (cobs::file::file_is<cobs::file::classic_index_header>(sub_it->path())) {
+        if (file::file_is<file::classic_index_header>(sub_it->path())) {
             index = sub_it->path();
         }
     }
-    fs::rename(index, out_dir.string() + "/index" + cobs::file::classic_index_header::file_extension);
+    fs::rename(index, out_dir.string() + "/index" + file::classic_index_header::file_extension);
 }
 
-void construct_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed) {
+void construct_random(const fs::path& p,
+                      uint64_t signature_size,
+                      uint64_t num_documents, size_t document_size,
+                      uint64_t num_hashes, size_t seed) {
+    timer t;
+
     std::vector<std::string> file_names;
-    for (size_t i = 0; i < 8 * block_size; i++) {
+    for (size_t i = 0; i < num_documents; ++i) {
         file_names.push_back("file_" + std::to_string(i));
     }
-    cobs::file::classic_index_header h(signature_size, num_hashes, file_names);
-    std::ofstream ofs;
-    cobs::file::serialize_header(ofs, p, h);
 
-    std::default_random_engine rng(seed);
-    for (size_t i = 0; i < signature_size * block_size; i += 4) {
-        uint32_t v = rng();
-        ofs.write(reinterpret_cast<char*>(&v), 4);
+    file::classic_index_header h(signature_size, num_hashes, file_names);
+    std::vector<uint8_t> data;
+    data.resize(signature_size * h.block_size());
+
+    std::mt19937 rng(seed);
+    document<31> s;
+
+    t.active("generate");
+    for (size_t i = 0; i < num_documents; ++i) {
+        h.file_names()[i] = file_names[i];
+        s.data().clear();
+        for (size_t i = 0; i < document_size; ++i) {
+            kmer<31> m;
+            m.fill_random(rng);
+            s.data().push_back(m);
+        }
+
+#pragma omp parallel for
+        for (uint64_t j = 0; j < s.data().size(); j++) {
+            process_hashes(s.data().data() + j, 8,
+                           h.signature_size(), h.num_hashes(),
+                           [&](uint64_t hash) {
+                               set_bit(data, h, hash, i);
+                           });
+        }
     }
+
+    size_t bit_count = tlx::popcount(data.data(), data.size());
+    LOG1 << "percent of ones: "
+         << static_cast<double>(bit_count) / data.size();
+
+    t.active("write");
+    std::ofstream ofs;
+    file::serialize_header(ofs, p, h);
+    file::serialize(ofs, data, h);
+    t.stop();
+
+    std::cout << t;
 }
 
 } // namespace cobs::classic_index

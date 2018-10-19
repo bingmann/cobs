@@ -51,9 +51,11 @@ void process_hashes(const void* input, size_t size, uint64_t signature_size,
     }
 }
 
-/** Constructs a dummy index filled with random data.
+/** Constructs an index filled with random data.
  */
-void construct_dummy(const fs::path& p, uint64_t signature_size, uint64_t block_size, uint64_t num_hashes, size_t seed);
+void construct_random(const fs::path& p, uint64_t signature_size,
+                      uint64_t num_documents, size_t document_size,
+                      uint64_t num_hashes, size_t seed);
 
 } // namespace cobs::classic_index
 
