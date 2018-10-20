@@ -96,7 +96,7 @@ public:
     template <unsigned N, typename Callback>
     void process_kmers(Callback callback) {
         kmer<N> kmer;
-        auto kmer_data = reinterpret_cast<char*>(kmer.data().data());
+        auto kmer_data = reinterpret_cast<char*>(kmer.data());
 
         size_t num_uint8_ts_per_kmer = 8 * num_words_per_kmer_;
         die_unequal(num_uint8_ts_per_kmer, kmer.size);
