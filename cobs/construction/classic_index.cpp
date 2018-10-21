@@ -245,13 +245,14 @@ void construct_random(const fs::path& p,
         doc.data().clear();
         for (size_t j = 0; j < document_size; ++j) {
             kmer<31> m;
+            // should canonicalize the kmer, but since we can assume uniform
+            // hashing, this is not needed.
             m.fill_random(rng);
-            // TODO! m.canonicalize_kmer();
             doc.data().push_back(m);
         }
 
 #pragma omp parallel for
-        for (uint64_t j = 0; j < doc.data().size(); ++j) {
+        for (size_t j = 0; j < doc.data().size(); ++j) {
             process_hashes(doc.data().data() + j, 8,
                            h.signature_size(), h.num_hashes(),
                            [&](uint64_t hash) {

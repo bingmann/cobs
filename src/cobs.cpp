@@ -185,12 +185,12 @@ int classic_construct_random(int argc, char** argv) {
     cp.add_param_string(
         "out_file", out_file, "path to the output file");
 
-    size_t signature_size = 16 * 1024 * 1024;
+    size_t signature_size = 2 * 1024 * 1024;
     cp.add_bytes(
         's', "signature_size", signature_size,
-        "number of bits of the signatures (vertical size), default: 16 Mi");
+        "number of bits of the signatures (vertical size), default: 2 Mi");
 
-    unsigned num_documents = 1000;
+    unsigned num_documents = 10000;
     cp.add_unsigned(
         'n', "num_documents", num_documents,
         "number of random documents in index,"
@@ -512,7 +512,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     for (const auto& c : counts) {
         std::cout << "RESULT"
                   << " name=benchmark_fpr"
-                  << " c=" << c.first
+                  << " fpr=" << c.first
                   << " dist=" << c.second
                   << std::endl;
     }
