@@ -99,12 +99,16 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -std=c++17 -lstdc++fs -march=native")
 MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
-file(GLOB_RECURSE TEST_FILES "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
-file(GLOB_RECURSE EXECUTABLE_FILES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE TEST_FILES
+  "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
+file(GLOB_RECURSE EXECUTABLE_FILES
+  "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
 MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
+
+################################################################################
 
 ### use Google Test ###
 
@@ -125,28 +129,31 @@ add_subdirectory(extlib/tlx)
 
 ################################################################################
 
+include_directories(${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/extlib/xxhash)
+
+add_library(cobs_static STATIC ${SOURCE_FILES})
+
+target_link_libraries(cobs_static
+  stdc++fs xxhash tlx ${Boost_LIBRARIES})
+
+################################################################################
+
 file(COPY test/resources DESTINATION test)
 
-include_directories(${PROJECT_SOURCE_DIR}
-   ${PROJECT_SOURCE_DIR}/extlib/xxhash
-  ${PROJECT_SOURCE_DIR}/extlib/cli11/include)
-
-set(libs stdc++fs xxhash tlx ${Boost_LIBRARIES})
-
 foreach(target ${EXECUTABLE_FILES})
-    get_filename_component(target_name ${target} NAME_WE)
-    add_executable(${target_name} ${target} ${SOURCE_FILES})
-    target_link_libraries(${target_name} ${libs})
+  get_filename_component(target_name ${target} NAME_WE)
+  add_executable(${target_name} ${target})
+  target_link_libraries(${target_name} cobs_static)
 endforeach(target)
 
-################# ########### #################
+################################################################################
 
 enable_testing()
 include(GoogleTest)
 add_executable(tests ${TEST_FILES} ${SOURCE_FILES})
 target_compile_definitions(tests PRIVATE cobs_test)
-target_link_libraries(tests ${libs} gtest gtest_main)
+target_link_libraries(tests cobs_static gtest gtest_main)
 gtest_add_tests(tests "" ${TEST_FILES})
-
 
 ################################################################################
