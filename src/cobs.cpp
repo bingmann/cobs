@@ -20,6 +20,7 @@
 #include <tlx/cmdline_parser.hpp>
 #include <tlx/string.hpp>
 
+#include <map>
 #include <random>
 
 /******************************************************************************/
@@ -185,7 +186,7 @@ int classic_construct_random(int argc, char** argv) {
         "out_file", out_file, "path to the output file");
 
     size_t signature_size = 16 * 1024 * 1024;
-    cp.add_size_t(
+    cp.add_bytes(
         's', "signature_size", signature_size,
         "number of bits of the signatures (vertical size), default: 16 Mi");
 
@@ -442,6 +443,141 @@ int print_kmers(int argc, char** argv) {
 }
 
 /******************************************************************************/
+// Benchmarking
+
+template <bool FalsePositiveDist>
+void benchmark_fpr_run(const cobs::fs::path& p,
+                       const std::vector<std::string>& queries,
+                       const std::vector<std::string>& warmup_queries) {
+
+    cobs::query::classic_index::mmap s(p);
+
+    sync();
+    std::ofstream ofs("/proc/sys/vm/drop_caches");
+    ofs << "3" << std::endl;
+    ofs.close();
+
+    std::vector<std::pair<uint16_t, std::string> > result;
+    for (size_t i = 0; i < warmup_queries.size(); i++) {
+        s.search(warmup_queries[i], 31, result);
+    }
+    s.get_timer().reset();
+
+    std::map<uint32_t, uint64_t> counts;
+
+    for (size_t i = 0; i < queries.size(); i++) {
+        s.search(queries[i], 31, result);
+
+        if (FalsePositiveDist) {
+            for (const auto& r : result) {
+                counts[r.first]++;
+            }
+        }
+    }
+
+    std::string simd = "on";
+    std::string openmp = "on";
+    std::string aio = "on";
+
+#ifdef NO_SIMD
+    simd = "off";
+#endif
+
+#ifdef NO_OPENMP
+    openmp = "off";
+#endif
+
+#ifdef NO_AIO
+    aio = "off";
+#endif
+
+    cobs::timer t = s.get_timer();
+    std::cout << "RESULT"
+              << " name=benchmark "
+              << " index=" << p.string()
+              << " kmer_queries=" << (queries[0].size() - 30)
+              << " queries=" << queries.size()
+              << " warmup=" << warmup_queries.size()
+              << " results=" << result.size()
+              << " simd=" << simd
+              << " openmp=" << openmp
+              << " aio=" << aio
+              << " t_hashes=" << t.get("hashes")
+              << " t_io=" << t.get("io")
+              << " t_and=" << t.get("and rows")
+              << " t_add=" << t.get("add rows")
+              << " t_sort=" << t.get("sort results")
+              << std::endl;
+
+    for (const auto& c : counts) {
+        std::cout << "RESULT"
+                  << " name=benchmark_fpr"
+                  << " c=" << c.first
+                  << " dist=" << c.second
+                  << std::endl;
+    }
+}
+
+int benchmark_fpr(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_file;
+    cp.add_param_string(
+        "in_file", in_file, "path to the input file");
+
+    unsigned num_kmers = 1000;
+    cp.add_unsigned(
+        'k', "num_kmers", num_kmers,
+        "number of kmers of each query, "
+        "default: " + std::to_string(num_kmers));
+
+    unsigned num_queries = 10000;
+    cp.add_unsigned(
+        'q', "queries", num_queries,
+        "number of random queries to run, "
+        "default: " + std::to_string(num_queries));
+
+    unsigned num_warmup = 100;
+    cp.add_unsigned(
+        'w', "warmup", num_warmup,
+        "number of random warmup queries to run, "
+        "default: " + std::to_string(num_warmup));
+
+    bool fpr_dist = false;
+    cp.add_flag(
+        'd', "dist", fpr_dist,
+        "calculate false positive distribution");
+
+    size_t seed = std::random_device { } ();
+    cp.add_size_t("seed", seed, "random seed");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    std::mt19937 rng(seed);
+
+    std::vector<std::string> warmup_queries;
+    std::vector<std::string> queries;
+    for (size_t i = 0; i < num_warmup; i++) {
+        warmup_queries.push_back(
+            cobs::random_sequence_new(num_kmers + 30, rng));
+    }
+    for (size_t i = 0; i < num_queries; i++) {
+        queries.push_back(
+            cobs::random_sequence_new(num_kmers + 30, rng));
+    }
+
+    if (fpr_dist)
+        benchmark_fpr_run</* FalsePositiveDist */ true>(
+            in_file, queries, warmup_queries);
+    else
+        benchmark_fpr_run</* FalsePositiveDist */ false>(
+            in_file, queries, warmup_queries);
+
+    return 0;
+}
+
+/******************************************************************************/
 
 struct SubTool {
     const char* name;
@@ -502,6 +638,10 @@ struct SubTool subtools[] = {
     {
         "print_basepair_map", &print_basepair_map, true,
         "print canonical basepair character mapping"
+    },
+    {
+        "benchmark_fpr", &benchmark_fpr, true,
+        "run benchmark and false positive measurement"
     },
     { nullptr, nullptr, true, nullptr }
 };

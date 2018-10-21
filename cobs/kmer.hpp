@@ -20,9 +20,8 @@
 namespace cobs {
 
 static inline
-unsigned int chars_to_int(char c1, char c2, char c3, char c4) {
-    unsigned int result = 0;
-    return result + (c1 << 24) + (c2 << 16) + (c3 << 8) + c4;
+uint32_t chars_to_int(char c1, char c2, char c3, char c4) {
+    return uint32_t(0) | (c1 << 24) | (c2 << 16) | (c3 << 8) | c4;
 }
 
 template <unsigned int N>

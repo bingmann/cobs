@@ -51,28 +51,30 @@ protected:
 public:
     virtual ~base() = default;
     timer& get_timer();
-    void search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string> >& result, size_t num_results = 0);
+    void search(const std::string& query, uint32_t kmer_size,
+                std::vector<std::pair<uint16_t, std::string> >& result,
+                size_t num_results = 0);
 };
 
 static inline
-void create_hashes(std::vector<size_t>& hashes, const std::string& query, uint32_t kmer_size, uint64_t num_hashes) {
+void create_hashes(std::vector<size_t>& hashes, const std::string& query,
+                   uint32_t kmer_size, size_t num_hashes) {
     size_t kmer_data_size = kmer<31>::data_size(kmer_size);
     size_t num_kmers = query.size() - kmer_size + 1;
     hashes.resize(num_hashes * num_kmers);
 
     const char* query_8 = query.data();
-            #pragma omp parallel
+#pragma omp parallel
     {
-        std::vector<char> kmer_data(kmer_data_size);
-        std::vector<char> kmer_raw(kmer_size);
-        char* kmer_data_8 = kmer_data.data();
-        char* kmer_raw_8 = kmer_raw.data();
-                #pragma omp for
+        char kmer_data[kmer_data_size];
+        char kmer_raw[kmer_size];
+#pragma omp for
         for (size_t i = 0; i < num_kmers; i++) {
-            const char* normalized_kmer = canonicalize_kmer(query_8 + i, kmer_raw_8, kmer_size);
-            kmer<31>::init(normalized_kmer, kmer_data_8, kmer_size);
-            for (unsigned int j = 0; j < num_hashes; j++) {
-                hashes[i * num_hashes + j] = XXH32(kmer_data_8, kmer_data_size, j);
+            const char* normalized_kmer =
+                canonicalize_kmer(query_8 + i, kmer_raw, kmer_size);
+            kmer<31>::init(normalized_kmer, kmer_data, kmer_size);
+            for (size_t j = 0; j < num_hashes; j++) {
+                hashes[i * num_hashes + j] = XXH32(kmer_data, kmer_data_size, j);
             }
         }
     }
@@ -80,16 +82,19 @@ void create_hashes(std::vector<size_t>& hashes, const std::string& query, uint32
 
 static inline
 void counts_to_result(const std::vector<std::string>& file_names, const uint16_t* counts,
-                      std::vector<std::pair<uint16_t, std::string> >& result, size_t num_results) {
+                      std::vector<std::pair<uint16_t, std::string> >& result,
+                      size_t num_results) {
     std::vector<uint32_t> sorted_indices(file_names.size());
     std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
-    std::partial_sort(sorted_indices.begin(), sorted_indices.begin() + num_results, sorted_indices.end(),
-                      [&](auto v1, auto v2) {
-                          return counts[v1] > counts[v2];
-                      });
+    std::partial_sort(
+        sorted_indices.begin(), sorted_indices.begin() + num_results,
+        sorted_indices.end(),
+        [&](auto v1, auto v2) {
+            return counts[v1] > counts[v2];
+        });
 
     result.resize(num_results);
-            #pragma omp parallel for
+#pragma omp parallel for
     for (size_t i = 0; i < num_results; i++) {
         result[i] = std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]);
     }
@@ -104,14 +109,14 @@ void base<T>::compute_counts(size_t hashes_size, uint16_t* counts, const char* r
     uint64_t nh = num_hashes();
     uint64_t bs = block_size();
 
-        #pragma omp parallel reduction(+:counts[:counts_size()])
+#pragma omp parallel reduction(+:counts[:counts_size()])
     {
 #ifdef NO_SIMD
         auto counts_64 = reinterpret_cast<uint64_t*>(counts);
 #else
         auto counts_128 = reinterpret_cast<__m128i_u*>(counts);
 #endif
-            #pragma omp for
+#pragma omp for
         for (uint64_t i = 0; i < hashes_size; i += nh) {
             auto rows_8 = rows_b + i * bs;
             for (size_t k = 0; k < bs; k++) {
@@ -128,7 +133,7 @@ void base<T>::compute_counts(size_t hashes_size, uint16_t* counts, const char* r
 
 template <class T>
 void base<T>::aggregate_rows(size_t hashes_size, char* rows) {
-        #pragma omp parallel for
+#pragma omp parallel for
     for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
         auto rows_8 = rows + i * block_size();
         auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
@@ -175,14 +180,19 @@ void base<T>::calculate_counts(const std::vector<size_t>& hashes, uint16_t* coun
 }
 
 template <class T>
-void base<T>::search(const std::string& query, uint32_t kmer_size, std::vector<std::pair<uint16_t, std::string> >& result, size_t num_results) {
+void base<T>::search(const std::string& query, uint32_t kmer_size,
+                     std::vector<std::pair<uint16_t, std::string> >& result,
+                     size_t num_results) {
     assert_exit(query.size() >= kmer_size,
-                "query to short, needs to be at least " + std::to_string(kmer_size) + " characters long");
+                "query to short, needs to be at least "
+                + std::to_string(kmer_size) + " characters long");
     assert_exit(query.size() - kmer_size < UINT16_MAX,
-                "query to long, can not be longer than " + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
+                "query to long, can not be longer than "
+                + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
 
     m_timer.active("hashes");
-    num_results = num_results == 0 ? m_header.file_names().size() : std::min(num_results, m_header.file_names().size());
+    num_results = num_results == 0 ? m_header.file_names().size()
+                  : std::min(num_results, m_header.file_names().size());
     uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
     std::vector<size_t> hashes;
     create_hashes(hashes, query, kmer_size, num_hashes());
@@ -195,9 +205,11 @@ void base<T>::search(const std::string& query, uint32_t kmer_size, std::vector<s
 
 #ifdef NO_SIMD
 template <class T>
-const uint64_t base<T>::m_expansions[] = { 0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
-                                           281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
-                                           281479271743488, 281479271743489 };
+const uint64_t base<T>::m_expansions[] = {
+    0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833,
+    281474976710656, 281474976710657, 281474976776192, 281474976776193,
+    281479271677952, 281479271677953, 281479271743488, 281479271743489
+};
 #else
 template <class T>
 const uint16_t base<T>::m_expansion[] = {

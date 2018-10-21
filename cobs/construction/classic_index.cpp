@@ -34,20 +34,20 @@ void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
              file::classic_index_header& h, timer& t) {
 
-    document<31> s;
+    document<31> doc;
     file::document_header sh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
             cortex::CortexFile ctx(paths[i].string());
             h.file_names()[i] = ctx.name_;
-            s.data().clear();
+            doc.data().clear();
             ctx.process_kmers<31>(
-                [&](const kmer<31>& m) { s.data().push_back(m); });
+                [&](const kmer<31>& m) { doc.data().push_back(m); });
 
 #pragma omp parallel for
-            for (uint64_t j = 0; j < s.data().size(); j++) {
-                process_hashes(s.data().data() + j, 8,
+            for (uint64_t j = 0; j < doc.data().size(); j++) {
+                process_hashes(doc.data().data() + j, 8,
                                h.signature_size(), h.num_hashes(),
                                [&](uint64_t hash) {
                                    set_bit(data, h, hash, i);
@@ -56,13 +56,13 @@ void process(const std::vector<fs::path>& paths,
         }
         else if (paths[i].extension() == ".isi") {
             t.active("read");
-            file::deserialize(paths[i], s, sh);
+            file::deserialize(paths[i], doc, sh);
             h.file_names()[i] = sh.name();
             t.active("process");
 
 #pragma omp parallel for
-            for (uint64_t j = 0; j < s.data().size(); j++) {
-                process_hashes(s.data().data() + j, 8,
+            for (uint64_t j = 0; j < doc.data().size(); j++) {
+                process_hashes(doc.data().data() + j, 8,
                                h.signature_size(), h.num_hashes(),
                                [&](uint64_t hash) {
                                    set_bit(data, h, hash, i);
@@ -72,7 +72,7 @@ void process(const std::vector<fs::path>& paths,
     }
     size_t bit_count = tlx::popcount(data.data(), data.size());
     LOG1 << "percent of ones: "
-         << static_cast<double>(bit_count) / data.size();
+         << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
     file::serialize(out_file, data, h);
@@ -185,10 +185,10 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
             }
             else if (paths[0].extension() == ".isi") {
                 file::document_header sh;
-                document<31> s;
-                file::deserialize(paths[0], s, sh);
+                document<31> doc;
+                file::deserialize(paths[0], doc, sh);
 
-                size_t max_num_elements = s.data().size();
+                size_t max_num_elements = doc.data().size();
                 sLOG1 << "ISI: max_num_elements" << max_num_elements;
                 signature_size = calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
@@ -237,21 +237,22 @@ void construct_random(const fs::path& p,
     data.resize(signature_size * h.block_size());
 
     std::mt19937 rng(seed);
-    document<31> s;
+    document<31> doc;
 
     t.active("generate");
     for (size_t i = 0; i < num_documents; ++i) {
         h.file_names()[i] = file_names[i];
-        s.data().clear();
-        for (size_t i = 0; i < document_size; ++i) {
+        doc.data().clear();
+        for (size_t j = 0; j < document_size; ++j) {
             kmer<31> m;
             m.fill_random(rng);
-            s.data().push_back(m);
+            // TODO! m.canonicalize_kmer();
+            doc.data().push_back(m);
         }
 
 #pragma omp parallel for
-        for (uint64_t j = 0; j < s.data().size(); j++) {
-            process_hashes(s.data().data() + j, 8,
+        for (uint64_t j = 0; j < doc.data().size(); ++j) {
+            process_hashes(doc.data().data() + j, 8,
                            h.signature_size(), h.num_hashes(),
                            [&](uint64_t hash) {
                                set_bit(data, h, hash, i);
@@ -261,7 +262,7 @@ void construct_random(const fs::path& p,
 
     size_t bit_count = tlx::popcount(data.data(), data.size());
     LOG1 << "percent of ones: "
-         << static_cast<double>(bit_count) / data.size();
+         << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
     std::ofstream ofs;
