@@ -2,6 +2,7 @@
 # CMakeLists.txt
 #
 # Copyright (c) 2018 Florian Gauger
+# Copyright (c) 2018 Timo Bingmann
 #
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
