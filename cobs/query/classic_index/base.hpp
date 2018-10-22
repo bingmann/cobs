@@ -16,7 +16,7 @@
 
 namespace cobs::query::classic_index {
 
-class base : public query::base<file::classic_index_header>
+class base : public query::base
 {
 protected:
     explicit base(const fs::path& path);
@@ -24,6 +24,8 @@ protected:
     uint64_t block_size() const override;
     uint64_t counts_size() const override;
     const std::vector<std::string>& file_names() const override;
+
+    file::classic_index_header m_header;
 
 public:
     virtual ~base() = default;

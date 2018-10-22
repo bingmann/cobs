@@ -15,7 +15,7 @@
 
 namespace cobs::query::compact_index {
 
-class base : public query::base<file::compact_index_header>
+class base : public query::base
 {
 protected:
     size_t m_num_hashes;
@@ -25,6 +25,8 @@ protected:
     uint64_t block_size() const override;
     uint64_t counts_size() const override;
     const std::vector<std::string>& file_names() const override;
+
+    file::compact_index_header m_header;
 
 public:
     virtual ~base() = default;
