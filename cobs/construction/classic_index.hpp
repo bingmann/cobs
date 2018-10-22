@@ -10,11 +10,7 @@
 #define COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
 #pragma once
 
-#include <cobs/file/classic_index_header.hpp>
-#include <cobs/kmer.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/processing.hpp>
-#include <cobs/util/timer.hpp>
 
 #include <xxhash.h>
 
@@ -29,16 +25,19 @@ namespace cobs::classic_index  {
  *  Afterwards combines these indices with calls to cobs::classic_index::combine until only one index remains.
  */
 void construct(const fs::path& in_dir, const fs::path& out_dir,
-               uint64_t batch_size, uint64_t num_hashes, double false_positive_probability);
+               uint64_t batch_size, uint64_t num_hashes,
+               double false_positive_probability);
 
 /** Constructs multiple small indices from document files.
  */
-void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
-                              uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
+void construct_from_documents(
+    const fs::path& in_dir, const fs::path& out_dir,
+    uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
 
 /** Combines multiple indices into one or more bigger indices.
  */
-bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size);
+bool combine(const fs::path& in_dir, const fs::path& out_dir,
+             uint64_t batch_size);
 
 /** Constructs the hash used by the signatures.
  */

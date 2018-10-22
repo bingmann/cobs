@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cobs/util/misc.hpp>
 #include <iostream>
-#include <zconf.h>
+#include <unistd.h>
 
 namespace cobs {
 

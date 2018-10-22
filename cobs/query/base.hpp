@@ -168,7 +168,7 @@ timer& base<T>::get_timer() {
 
 template <class T>
 void base<T>::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
-    char* rows = allocate_aligned<char>(block_size() * hashes.size(), cobs::get_page_size());
+    char* rows = allocate_aligned<char>(block_size() * hashes.size(), get_page_size());
     m_timer.active("io");
     read_from_disk(hashes, rows);
     m_timer.active("and rows");

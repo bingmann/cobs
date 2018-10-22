@@ -10,7 +10,9 @@
 #define COBS_TEST_SRC_TEST_UTIL_HEADER
 #pragma once
 
+#include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
+#include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/query.hpp>
 #include <fstream>
@@ -18,7 +20,8 @@
 #include <string>
 #include <vector>
 
-inline void assert_equals_files(const std::string& f1, const std::string& f2) {
+static inline
+void assert_equals_files(const std::string& f1, const std::string& f2) {
     std::ifstream ifs1(f1, std::ios::in | std::ios::binary);
     std::ifstream ifs2(f2, std::ios::in | std::ios::binary);
     std::istream_iterator<char> start1(ifs1);
@@ -33,7 +36,8 @@ inline void assert_equals_files(const std::string& f1, const std::string& f2) {
     }
 }
 
-inline std::vector<cobs::document<31> > generate_documents_all(const std::string& query) {
+static inline
+std::vector<cobs::document<31> > generate_documents_all(const std::string& query) {
     std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
@@ -49,7 +53,8 @@ inline std::vector<cobs::document<31> > generate_documents_all(const std::string
     return documents;
 }
 
-inline std::vector<cobs::document<31> > generate_documents_one(const std::string& query) {
+static inline
+std::vector<cobs::document<31> > generate_documents_one(const std::string& query) {
     std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
     std::vector<char> kmer_raw(31);
@@ -63,13 +68,16 @@ inline std::vector<cobs::document<31> > generate_documents_one(const std::string
     return documents;
 }
 
-inline std::string get_file_stem(size_t index) {
+static inline
+std::string get_file_stem(size_t index) {
     assert(index < 100);
     std::string num = (index < 10 ? "0" : "") + std::to_string(index);
     return "document_" + num;
 }
 
-inline void generate_test_case(std::vector<cobs::document<31> > documents, const std::string& out_dir) {
+static inline
+void generate_test_case(std::vector<cobs::document<31> > documents,
+                        const std::string& out_dir) {
     for (size_t i = 0; i < documents.size(); i++) {
         std::string file_name = get_file_stem(i);
         cobs::file::serialize(out_dir + "/" + file_name + cobs::file::document_header::file_extension, documents[i], file_name);

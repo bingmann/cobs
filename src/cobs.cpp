@@ -6,7 +6,6 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cmath>
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
 #include <cobs/cortex.hpp>
@@ -20,8 +19,11 @@
 #include <tlx/cmdline_parser.hpp>
 #include <tlx/string.hpp>
 
+#include <cmath>
 #include <map>
 #include <random>
+
+#include <unistd.h>
 
 /******************************************************************************/
 // Cortex File Tools

@@ -11,7 +11,7 @@
 #include <cobs/util/fs.hpp>
 #include <cobs/util/query.hpp>
 #include <iostream>
-#include <zconf.h>
+#include <unistd.h>
 
 namespace cobs::query {
 

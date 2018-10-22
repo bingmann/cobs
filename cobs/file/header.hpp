@@ -41,7 +41,8 @@ const std::string header<T>::magic_word = "INSIIN";
 template <class T>
 const uint32_t header<T>::m_version = 1;
 
-static inline void check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
+static inline
+void check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
     std::vector<char> mw_v(magic_word.size(), ' ');
     ifs.read(mw_v.data(), magic_word.size());
     std::string mw(mw_v.data(), mw_v.size());

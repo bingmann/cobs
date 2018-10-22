@@ -10,6 +10,8 @@
 #define COBS_FILE_FILE_IO_EXCEPTION_HEADER
 #pragma once
 
+#include <stdexcept>
+
 namespace cobs::file {
 
 class file_io_exception : public std::runtime_error

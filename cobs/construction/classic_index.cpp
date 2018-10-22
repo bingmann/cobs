@@ -12,6 +12,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/cortex.hpp>
+#include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -25,22 +26,22 @@
 namespace cobs::classic_index {
 
 void set_bit(std::vector<uint8_t>& data,
-             const file::classic_index_header& h,
+             const file::classic_index_header& cih,
              uint64_t pos, uint64_t bit_in_block) {
-    data[h.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
+    data[cih.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
 }
 
 void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
-             file::classic_index_header& h, timer& t) {
+             file::classic_index_header& cih, timer& t) {
 
     document<31> doc;
-    file::document_header sh;
+    file::document_header dh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
             cortex::CortexFile ctx(paths[i].string());
-            h.file_names()[i] = ctx.name_;
+            cih.file_names()[i] = ctx.name_;
             doc.data().clear();
             ctx.process_kmers<31>(
                 [&](const kmer<31>& m) { doc.data().push_back(m); });
@@ -48,24 +49,24 @@ void process(const std::vector<fs::path>& paths,
 #pragma omp parallel for
             for (uint64_t j = 0; j < doc.data().size(); j++) {
                 process_hashes(doc.data().data() + j, 8,
-                               h.signature_size(), h.num_hashes(),
+                               cih.signature_size(), cih.num_hashes(),
                                [&](uint64_t hash) {
-                                   set_bit(data, h, hash, i);
+                                   set_bit(data, cih, hash, i);
                                });
             }
         }
         else if (paths[i].extension() == ".isi") {
             t.active("read");
-            file::deserialize(paths[i], doc, sh);
-            h.file_names()[i] = sh.name();
+            file::deserialize(paths[i], doc, dh);
+            cih.file_names()[i] = dh.name();
             t.active("process");
 
 #pragma omp parallel for
             for (uint64_t j = 0; j < doc.data().size(); j++) {
                 process_hashes(doc.data().data() + j, 8,
-                               h.signature_size(), h.num_hashes(),
+                               cih.signature_size(), cih.num_hashes(),
                                [&](uint64_t hash) {
-                                   set_bit(data, h, hash, i);
+                                   set_bit(data, cih, hash, i);
                                });
             }
         }
@@ -75,7 +76,7 @@ void process(const std::vector<fs::path>& paths,
          << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
-    file::serialize(out_file, data, h);
+    file::serialize(out_file, data, cih);
     t.stop();
 }
 
@@ -84,8 +85,8 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
              uint64_t signature_size, uint64_t block_size, uint64_t num_hash,
              timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
-    file::classic_index_header h(signature_size, num_hash, file_names);
-    file::serialize_header(ofs, out_file, h);
+    file::classic_index_header cih(signature_size, num_hash, file_names);
+    file::serialize_header(ofs, out_file, cih);
 
     std::vector<char> block(block_size);
     for (uint64_t i = 0; i < signature_size; i++) {
@@ -105,7 +106,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     timer t;
-    file::classic_index_header h(signature_size, num_hashes);
+    file::classic_index_header cih(signature_size, num_hashes);
     std::vector<uint8_t> data;
     process_file_batches(
         in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
@@ -113,10 +114,10 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
             return path.extension() == ".ctx" || path.extension() == ".isi";
         },
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
-            h.file_names().resize(paths.size());
-            data.resize(signature_size * h.block_size());
+            cih.file_names().resize(paths.size());
+            data.resize(signature_size * cih.block_size());
             std::fill(data.begin(), data.end(), 0);
-            process(paths, out_file, data, h, t);
+            process(paths, out_file, data, cih, t);
         });
     std::cout << t;
 }
@@ -137,23 +138,23 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
                 uint64_t new_block_size = 0;
                 for (size_t i = 0; i < paths.size(); i++) {
                     ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                    auto h = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
+                    auto cih = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
                     if (signature_size == 0) {
-                        signature_size = h.signature_size();
-                        num_hashes = h.num_hashes();
+                        signature_size = cih.signature_size();
+                        num_hashes = cih.num_hashes();
                     }
-                    assert(h.signature_size() == signature_size);
-                    assert(h.num_hashes() == num_hashes);
+                    assert(cih.signature_size() == signature_size);
+                    assert(cih.num_hashes() == num_hashes);
 #ifndef isi_test
                     if (i < paths.size() - 2) {
                         // todo doesnt work because of padding for compact, which means there could be two files with less file_names
                         // todo quickfix with -2 to allow for paddding
-                        // assert(h.file_names().size() == 8 * h.block_size());
+                        // assert(cih.file_names().size() == 8 * cih.block_size());
                     }
 #endif
-                    ifstreams.back().second = h.block_size();
-                    new_block_size += h.block_size();
-                    std::copy(h.file_names().begin(), h.file_names().end(), std::back_inserter(file_names));
+                    ifstreams.back().second = cih.block_size();
+                    new_block_size += cih.block_size();
+                    std::copy(cih.file_names().begin(), cih.file_names().end(), std::back_inserter(file_names));
                 }
                 combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
                 ifstreams.clear();
@@ -184,9 +185,9 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                     max_num_elements, num_hashes, false_positive_probability);
             }
             else if (paths[0].extension() == ".isi") {
-                file::document_header sh;
+                file::document_header dh;
                 document<31> doc;
-                file::deserialize(paths[0], doc, sh);
+                file::deserialize(paths[0], doc, dh);
 
                 size_t max_num_elements = doc.data().size();
                 sLOG1 << "ISI: max_num_elements" << max_num_elements;
@@ -232,16 +233,16 @@ void construct_random(const fs::path& p,
         file_names.push_back("file_" + std::to_string(i));
     }
 
-    file::classic_index_header h(signature_size, num_hashes, file_names);
+    file::classic_index_header cih(signature_size, num_hashes, file_names);
     std::vector<uint8_t> data;
-    data.resize(signature_size * h.block_size());
+    data.resize(signature_size * cih.block_size());
 
     std::mt19937 rng(seed);
     document<31> doc;
 
     t.active("generate");
     for (size_t i = 0; i < num_documents; ++i) {
-        h.file_names()[i] = file_names[i];
+        cih.file_names()[i] = file_names[i];
         doc.data().clear();
         for (size_t j = 0; j < document_size; ++j) {
             kmer<31> m;
@@ -254,9 +255,9 @@ void construct_random(const fs::path& p,
 #pragma omp parallel for
         for (size_t j = 0; j < doc.data().size(); ++j) {
             process_hashes(doc.data().data() + j, 8,
-                           h.signature_size(), h.num_hashes(),
+                           cih.signature_size(), cih.num_hashes(),
                            [&](uint64_t hash) {
-                               set_bit(data, h, hash, i);
+                               set_bit(data, cih, hash, i);
                            });
         }
     }
@@ -267,8 +268,8 @@ void construct_random(const fs::path& p,
 
     t.active("write");
     std::ofstream ofs;
-    file::serialize_header(ofs, p, h);
-    file::serialize(ofs, data, h);
+    file::serialize_header(ofs, p, cih);
+    file::serialize(ofs, data, cih);
     t.stop();
 
     std::cout << t;
