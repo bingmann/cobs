@@ -40,6 +40,9 @@ public:
     const std::vector<parameter>& parameters() const;
     const std::vector<std::string>& file_names() const;
     uint64_t page_size() const;
+
+    void read_file(std::ifstream& ifs, std::vector<std::vector<uint8_t> >& data);
+    void read_file(const fs::path& p, std::vector<std::vector<uint8_t> >& data);
 };
 
 } // namespace cobs::file

@@ -7,11 +7,15 @@
  ******************************************************************************/
 
 #include <cobs/construction/classic_index.hpp>
+#include <cobs/kmer.hpp>
+#include <cobs/util/misc.hpp>
 #include <cobs/util/parameters.hpp>
 #include <cobs/util/processing.hpp>
 #include <cobs/util/query.hpp>
 #include <gtest/gtest.h>
 #include <xxhash.h>
+
+#include <unordered_map>
 
 namespace {
 std::string query = cobs::random_sequence(10000, 1);

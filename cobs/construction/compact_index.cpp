@@ -8,6 +8,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
+#include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/file/document_header.hpp>
 #include <cobs/util/file.hpp>

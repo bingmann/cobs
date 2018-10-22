@@ -66,6 +66,26 @@ uint64_t compact_index_header::page_size() const {
     return m_page_size;
 }
 
+void compact_index_header::read_file(std::ifstream& ifs,
+                                     std::vector<std::vector<uint8_t> >& data) {
+    ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    header<compact_index_header>::deserialize(ifs, *this);
+    data.clear();
+    data.resize(parameters().size());
+    for (size_t i = 0; i < parameters().size(); i++) {
+        size_t data_size = page_size() * parameters()[i].signature_size;
+        std::vector<uint8_t> d(data_size);
+        ifs.read(reinterpret_cast<char*>(d.data()), data_size);
+        data[i] = std::move(d);
+    }
+}
+
+void compact_index_header::read_file(const fs::path& p,
+                                     std::vector<std::vector<uint8_t> >& data) {
+    std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+    read_file(ifs, data);
+}
+
 } // namespace cobs::file
 
 /******************************************************************************/

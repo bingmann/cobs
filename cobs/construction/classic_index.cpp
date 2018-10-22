@@ -77,7 +77,7 @@ void process(const std::vector<fs::path>& paths,
          << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
-    file::serialize(out_file, data, cih);
+    cih.write_file(out_file, data);
     t.stop();
 }
 
@@ -223,7 +223,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     fs::rename(index, out_dir.string() + "/index" + file::classic_index_header::file_extension);
 }
 
-void construct_random(const fs::path& p,
+void construct_random(const fs::path& out_file,
                       uint64_t signature_size,
                       uint64_t num_documents, size_t document_size,
                       uint64_t num_hashes, size_t seed) {
@@ -268,9 +268,7 @@ void construct_random(const fs::path& p,
          << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
-    std::ofstream ofs;
-    file::serialize_header(ofs, p, cih);
-    file::serialize(ofs, data, cih);
+    cih.write_file(out_file, data);
     t.stop();
 
     std::cout << t;

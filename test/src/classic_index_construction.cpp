@@ -40,7 +40,7 @@ TEST_F(classic_index_construction, deserialization) {
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     cobs::file::classic_index_header h;
-    cobs::file::deserialize(classic_index_path, data, h);
+    h.read_file(classic_index_path, data);
     ASSERT_EQ(h.file_names().size(), 33U);
     ASSERT_EQ(h.num_hashes(), 3U);
 }
@@ -59,7 +59,7 @@ TEST_F(classic_index_construction, file_names) {
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     auto h = cobs::file::deserialize_header<cobs::file::classic_index_header>(classic_index_path);
-    cobs::file::deserialize(classic_index_path, data, h);
+    h.read_file(classic_index_path, data);
     for (size_t i = 0; i < h.file_names().size(); i++) {
         ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
     }
@@ -71,7 +71,7 @@ TEST_F(classic_index_construction, num_ones) {
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
     cobs::file::classic_index_header h;
-    cobs::file::deserialize(classic_index_path, data, h);
+    h.read_file(classic_index_path, data);
 
     std::map<std::string, size_t> num_ones;
     for (size_t j = 0; j < h.signature_size(); j++) {

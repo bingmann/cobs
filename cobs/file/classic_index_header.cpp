@@ -53,6 +53,36 @@ std::vector<std::string>& classic_index_header::file_names() {
     return m_file_names;
 }
 
+void classic_index_header::write_file(std::ofstream& ofs,
+                                      const std::vector<uint8_t>& data) {
+    ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    header<classic_index_header>::serialize(ofs, *this);
+    ofs.write(reinterpret_cast<const char*>(data.data()), data.size());
+}
+
+void classic_index_header::write_file(const fs::path& p,
+                                      const std::vector<uint8_t>& data) {
+    fs::create_directories(p.parent_path());
+    std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
+    write_file(ofs, data);
+}
+
+void classic_index_header::read_file(std::ifstream& ifs,
+                                     std::vector<uint8_t>& data) {
+    ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    header<classic_index_header>::deserialize(ifs, *this);
+    stream_metadata smd = get_stream_metadata(ifs);
+    size_t size = smd.end_pos - smd.curr_pos;
+    data.resize(size);
+    ifs.read(reinterpret_cast<char*>(data.data()), size);
+}
+
+void classic_index_header::read_file(const fs::path& p,
+                                     std::vector<uint8_t>& data) {
+    std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+    read_file(ifs, data);
+}
+
 } // namespace cobs::file
 
 /******************************************************************************/

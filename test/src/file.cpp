@@ -9,6 +9,9 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
+#include <cobs/document.hpp>
+#include <cobs/file/classic_index_header.hpp>
+#include <cobs/file/compact_index_header.hpp>
 #include <cobs/file/header.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -44,11 +47,11 @@ TEST_F(file, classic_index) {
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
     cobs::file::classic_index_header h_out(123, 12, file_names);
     std::vector<uint8_t> v_out(h_out.block_size() * h_out.signature_size(), 7);
-    cobs::file::serialize(out_path_isi, v_out, h_out);
+    h_out.write_file(out_path_isi, v_out);
 
     cobs::file::classic_index_header h_in;
     std::vector<uint8_t> v_in;
-    cobs::file::deserialize(out_path_isi, v_in, h_in);
+    h_in.read_file(out_path_isi, v_in);
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
     ASSERT_EQ(h_out.block_size(), h_in.block_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());

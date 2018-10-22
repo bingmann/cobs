@@ -29,12 +29,20 @@ public:
     static const std::string magic_word;
     static const std::string file_extension;
     classic_index_header() = default;
-    classic_index_header(uint64_t signature_size, uint64_t num_hashes, const std::vector<std::string>& file_names = std::vector<std::string>());
+    classic_index_header(
+        uint64_t signature_size, uint64_t num_hashes,
+        const std::vector<std::string>& file_names = std::vector<std::string>());
     uint64_t signature_size() const;
     uint64_t block_size() const;
     uint64_t num_hashes() const;
     const std::vector<std::string>& file_names() const;
     std::vector<std::string>& file_names();
+
+    void write_file(std::ofstream& ofs, const std::vector<uint8_t>& data);
+    void write_file(const fs::path& p, const std::vector<uint8_t>& data);
+
+    void read_file(std::ifstream& ifs, std::vector<uint8_t>& data);
+    void read_file(const fs::path& p, std::vector<uint8_t>& data);
 };
 
 } // namespace cobs::file

@@ -12,6 +12,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
+#include <cobs/document.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/query.hpp>

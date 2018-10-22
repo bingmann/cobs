@@ -54,7 +54,7 @@ TEST_F(compact_index_construction, deserialization) {
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     cobs::file::compact_index_header h;
-    cobs::file::deserialize(compact_index_path, data, h);
+    h.read_file(compact_index_path, data);
     ASSERT_EQ(h.file_names().size(), 33U);
     ASSERT_EQ(h.parameters().size(), 3U);
     ASSERT_EQ(data.size(), 3U);
@@ -81,7 +81,7 @@ TEST_F(compact_index_construction, file_names) {
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     auto h = cobs::file::deserialize_header<cobs::file::compact_index_header>(compact_index_path);
-    cobs::file::deserialize(compact_index_path, data, h);
+    h.read_file(compact_index_path, data);
     for (size_t i = 0; i < h.file_names().size(); i++) {
         ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
     }
@@ -134,7 +134,7 @@ TEST_F(compact_index_construction, num_ones) {
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
     cobs::file::compact_index_header h;
-    cobs::file::deserialize(compact_index_path, data, h);
+    h.read_file(compact_index_path, data);
 
     std::vector<std::map<std::string, size_t> > num_ones(h.parameters().size());
     for (size_t i = 0; i < h.parameters().size(); i++) {
@@ -168,15 +168,17 @@ TEST_F(compact_index_construction, content) {
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > cisi_data;
-    cobs::file::deserialize(compact_index_path, cisi_data);
+    cobs::file::compact_index_header h;
+    h.read_file(compact_index_path, cisi_data);
 
     std::vector<std::vector<uint8_t> > indices;
     for (auto& p : fs::directory_iterator(isi_2_dir)) {
         if (fs::is_directory(p)) {
             for (const fs::path& isi_p : fs::directory_iterator(p)) {
                 if (cobs::file::file_is<cobs::file::classic_index_header>(isi_p)) {
+                    cobs::file::classic_index_header cih;
                     std::vector<uint8_t> data;
-                    cobs::file::deserialize(isi_p, data);
+                    cih.read_file(isi_p, data);
                     indices.push_back(data);
                 }
             }

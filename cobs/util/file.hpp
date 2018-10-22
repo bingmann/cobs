@@ -11,27 +11,13 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 
-#include <cobs/document.hpp>
-#include <cobs/file/classic_index_header.hpp>
-#include <cobs/file/compact_index_header.hpp>
-#include <cobs/file/document_header.hpp>
-#include <cobs/file/frequency_header.hpp>
+#include <cobs/file/header.hpp>
 #include <cobs/util/fs.hpp>
 
 namespace cobs::file {
-
-static classic_index_header dummy_isih;
-static compact_index_header dummy_cisih;
-
-void serialize(std::ofstream& ofs, const std::vector<uint8_t>& data, const classic_index_header& h);
-void serialize(const fs::path& p, const std::vector<uint8_t>& data, const classic_index_header& h);
-
-void deserialize(std::ifstream& ifs, std::vector<uint8_t>& data, classic_index_header& h = dummy_isih);
-void deserialize(std::ifstream& ifs, std::vector<std::vector<uint8_t> >& data, compact_index_header& h = dummy_cisih);
-void deserialize(const fs::path& p, std::vector<uint8_t>& data, classic_index_header& h = dummy_isih);
-void deserialize(const fs::path& p, std::vector<std::vector<uint8_t> >& data, compact_index_header& h = dummy_cisih);
 
 template <class T>
 void serialize_header(std::ofstream& ofs, const fs::path& p, const T& h);

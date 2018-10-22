@@ -9,6 +9,8 @@
 
 #include <cobs/query/classic_base.hpp>
 
+#include <cobs/kmer.hpp>
+
 namespace cobs::query {
 
 void create_hashes(std::vector<size_t>& hashes, const std::string& query,
