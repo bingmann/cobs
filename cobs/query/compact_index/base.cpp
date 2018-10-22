@@ -12,6 +12,10 @@
 namespace cobs::query::compact_index {
 
 base::base(const fs::path& path) : query::base<file::compact_index_header>(path) {
+    std::ifstream ifs;
+    m_header = file::deserialize_header<file::compact_index_header>(ifs, path);
+    m_smd = get_stream_metadata(ifs);
+
     // todo assertions that all the data in the header is correct
     m_block_size = m_header.page_size() * m_header.parameters().size();
     m_num_hashes = m_header.parameters()[0].num_hashes;
@@ -30,6 +34,10 @@ uint64_t base::block_size() const {
 
 uint64_t base::counts_size() const {
     return 8 * m_header.parameters().size() * m_header.page_size();
+}
+
+const std::vector<std::string>& base::file_names() const {
+    return m_header.file_names();
 }
 
 } // namespace cobs::query::compact_index

@@ -47,6 +47,7 @@ protected:
     virtual uint64_t block_size() const = 0;
     virtual uint64_t num_hashes() const = 0;
     virtual uint64_t counts_size() const = 0;
+    virtual const std::vector<std::string>& file_names() const = 0;
 
 public:
     virtual ~base() = default;
@@ -155,11 +156,7 @@ void base<T>::aggregate_rows(size_t hashes_size, char* rows) {
 }
 
 template <class T>
-base<T>::base(const fs::path& path) {
-    std::ifstream ifs;
-    m_header = file::deserialize_header<T>(ifs, path);
-    m_smd = get_stream_metadata(ifs);
-}
+base<T>::base(const fs::path& path) { }
 
 template <class T>
 timer& base<T>::get_timer() {
@@ -191,14 +188,14 @@ void base<T>::search(const std::string& query, uint32_t kmer_size,
                 + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
 
     m_timer.active("hashes");
-    num_results = num_results == 0 ? m_header.file_names().size()
-                  : std::min(num_results, m_header.file_names().size());
+    num_results = num_results == 0 ? file_names().size()
+                  : std::min(num_results, file_names().size());
     uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
     std::vector<size_t> hashes;
     create_hashes(hashes, query, kmer_size, num_hashes());
     calculate_counts(hashes, counts);
     m_timer.active("sort results");
-    counts_to_result(m_header.file_names(), counts, result, num_results);
+    counts_to_result(file_names(), counts, result, num_results);
     deallocate_aligned(counts);
     m_timer.stop();
 }

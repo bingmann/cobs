@@ -11,7 +11,11 @@
 namespace cobs::query::classic_index {
 
 base::base(const fs::path& path)
-    : query::base<file::classic_index_header>(path) { }
+    : query::base<file::classic_index_header>(path) {
+    std::ifstream ifs;
+    m_header = file::deserialize_header<file::classic_index_header>(ifs, path);
+    m_smd = get_stream_metadata(ifs);
+}
 
 uint64_t base::num_hashes() const {
     return m_header.num_hashes();
@@ -23,6 +27,10 @@ uint64_t base::block_size() const {
 
 uint64_t base::counts_size() const {
     return 8 * m_header.block_size();
+}
+
+const std::vector<std::string>& base::file_names() const {
+    return m_header.file_names();
 }
 
 } // namespace cobs::query::classic_index
