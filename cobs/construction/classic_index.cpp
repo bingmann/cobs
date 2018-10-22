@@ -58,7 +58,7 @@ void process(const std::vector<fs::path>& paths,
         }
         else if (paths[i].extension() == ".isi") {
             t.active("read");
-            file::deserialize(paths[i], doc, dh);
+            doc.deserialize(paths[i], dh);
             cih.file_names()[i] = dh.name();
             t.active("process");
 
@@ -188,7 +188,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
             else if (paths[0].extension() == ".isi") {
                 file::document_header dh;
                 document<31> doc;
-                file::deserialize(paths[0], doc, dh);
+                doc.deserialize(paths[0], dh);
 
                 size_t max_num_elements = doc.data().size();
                 sLOG1 << "ISI: max_num_elements" << max_num_elements;

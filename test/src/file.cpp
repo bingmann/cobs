@@ -33,10 +33,11 @@ protected:
 
 TEST_F(file, document) {
     cobs::document<31> s_out;
-    cobs::file::serialize(out_path_s, s_out, "document");
+    s_out.serialize(out_path_s, "document");
 
+    cobs::file::document_header hdoc;
     cobs::document<31> s_in;
-    cobs::file::deserialize(out_path_s, s_in);
+    s_in.deserialize(out_path_s, hdoc);
 }
 
 TEST_F(file, classic_index) {

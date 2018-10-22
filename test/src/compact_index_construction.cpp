@@ -119,11 +119,12 @@ TEST_F(compact_index_construction, num_kmers_calculation) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
     fs::path path_document(tmp_dir.string() + "/document_00.doc.isi");
-    cobs::document<31> s;
-    cobs::file::deserialize(path_document, s);
+    cobs::document<31> doc;
+    cobs::file::document_header hdoc;
+    doc.deserialize(path_document, hdoc);
 
     size_t file_size = fs::file_size(path_document);
-    ASSERT_EQ(s.data().size(), file_size / 8 - 4);
+    ASSERT_EQ(doc.data().size(), file_size / 8 - 4);
 }
 
 TEST_F(compact_index_construction, num_ones) {

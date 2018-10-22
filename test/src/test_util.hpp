@@ -80,7 +80,9 @@ void generate_test_case(std::vector<cobs::document<31> > documents,
                         const std::string& out_dir) {
     for (size_t i = 0; i < documents.size(); i++) {
         std::string file_name = get_file_stem(i);
-        cobs::file::serialize(out_dir + "/" + file_name + cobs::file::document_header::file_extension, documents[i], file_name);
+        documents[i].serialize(
+            out_dir + "/" + file_name + cobs::file::document_header::file_extension,
+            file_name);
     }
 }
 

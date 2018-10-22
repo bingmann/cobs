@@ -10,6 +10,7 @@
 #ifndef COBS_DOCUMENT_HEADER
 #define COBS_DOCUMENT_HEADER
 
+#include <cobs/file/document_header.hpp>
 #include <cobs/kmer.hpp>
 
 #include <algorithm>
@@ -35,6 +36,36 @@ public:
 
     void sort_kmers() {
         std::sort(m_data.begin(), m_data.end());
+    }
+
+    void serialize(std::ofstream& ofs, const std::string& name) const {
+        ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+        file::document_header sh(name, N);
+        file::header<file::document_header>::serialize(ofs, sh);
+        ofs.write(reinterpret_cast<const char*>(m_data.data()),
+                  kmer<N>::size* m_data.size());
+    }
+
+    void serialize(const fs::path& p, const std::string& name) const {
+        fs::create_directories(p.parent_path());
+        std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
+        serialize(ofs, name);
+    }
+
+    void deserialize(std::ifstream& ifs, file::document_header& h) {
+        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+        file::header<file::document_header>::deserialize(ifs, h);
+        assert(N == h.kmer_size());
+
+        stream_metadata smd = get_stream_metadata(ifs);
+        size_t size = smd.end_pos - smd.curr_pos;
+        m_data.resize(size / kmer<N>::size);
+        ifs.read(reinterpret_cast<char*>(m_data.data()), size);
+    }
+
+    void deserialize(const fs::path& p, file::document_header& h) {
+        std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
+        deserialize(ifs, h);
     }
 };
 

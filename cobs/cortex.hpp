@@ -147,7 +147,7 @@ void process_file(const fs::path& in_path, const fs::path& out_path, document<N>
         [&](const kmer<N>& m) { document.data().push_back(m); });
 
     t.active("write");
-    file::serialize<N>(out_path, document, ctx.name_);
+    document.serialize(out_path, ctx.name_);
 
     t.stop();
 }

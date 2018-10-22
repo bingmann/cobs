@@ -42,7 +42,7 @@ TEST(cortex, file_name) {
     cobs::timer t;
     cobs::cortex::process_file(in_path, out_path, document1, t);
     cobs::file::document_header h;
-    cobs::file::deserialize(out_path, document2, h);
+    document2.deserialize(out_path, h);
     ASSERT_EQ(h.name(), document_name);
 }
 
@@ -61,7 +61,8 @@ TEST(cortex, file_serialization) {
     cobs::document<31> document2;
     cobs::timer t;
     cobs::cortex::process_file(in_path, out_path, document1, t);
-    cobs::file::deserialize(out_path, document2);
+    cobs::file::document_header hdoc;
+    document2.deserialize(out_path, hdoc);
     document1.sort_kmers();
     document2.sort_kmers();
     assert_equals_document(document1);
@@ -71,8 +72,9 @@ TEST(cortex, file_serialization) {
 TEST(cortex, process_all_in_directory) {
     fs::remove_all(out_dir);
     cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
+    cobs::file::document_header hdoc;
     cobs::document<31> document;
-    cobs::file::deserialize(out_path_rec, document);
+    document.deserialize(out_path_rec, hdoc);
     document.sort_kmers();
     assert_equals_document(document);
 }
