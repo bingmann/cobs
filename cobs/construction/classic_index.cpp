@@ -40,7 +40,7 @@ void process(const std::vector<fs::path>& paths,
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
-            cortex::CortexFile ctx(paths[i].string());
+            cortex::cortex_file ctx(paths[i].string());
             cih.file_names()[i] = ctx.name_;
             doc.data().clear();
             ctx.process_kmers<31>(
@@ -178,7 +178,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                           return fs::file_size(p1) > fs::file_size(p2);
                       });
             if (paths[0].extension() == ".ctx") {
-                cortex::CortexFile ctx(paths[0].string());
+                cortex::cortex_file ctx(paths[0].string());
                 size_t max_num_elements = ctx.num_documents();
                 sLOG1 << "CTX: max_num_elements" << max_num_elements;
                 signature_size = calc_signature_size(

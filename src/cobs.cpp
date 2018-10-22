@@ -61,7 +61,7 @@ int cortex_dump(int argc, char** argv) {
         return -1;
 
     for (const std::string& file : filelist) {
-        cobs::cortex::CortexFile cortex(file);
+        cobs::cortex::cortex_file cortex(file);
 
         if (cortex.kmer_size_ == 31u) {
             cortex.process_kmers<31>(

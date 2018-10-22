@@ -26,10 +26,10 @@
 
 namespace cobs::cortex {
 
-class CortexFile
+class cortex_file
 {
 public:
-    CortexFile(std::string path) {
+    cortex_file(std::string path) {
         is_.open(path);
         die_unless(is_.good());
         read_header(is_, path);
@@ -47,7 +47,7 @@ public:
         for (size_t i = 0; i < magic_word.size(); i++) {
             if (is.get() != magic_word[i]) {
                 throw std::invalid_argument(
-                          "CortexFile: magic number not found @ " + path);
+                          "cortex_file: magic number not found @ " + path);
             }
         }
     }
@@ -138,7 +138,7 @@ template <unsigned int N>
 void process_file(const fs::path& in_path, const fs::path& out_path, document<N>& document,
                   timer& t) {
     t.active("read");
-    CortexFile ctx(in_path);
+    cortex_file ctx(in_path);
 
     document.data().clear();
     document.data().reserve(ctx.num_documents());
