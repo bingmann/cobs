@@ -11,12 +11,12 @@
 #pragma once
 
 #include <cobs/file/classic_index_header.hpp>
-#include <cobs/query/base.hpp>
+#include <cobs/query/classic_base.hpp>
 #include <cobs/util/timer.hpp>
 
 namespace cobs::query::classic_index {
 
-class base : public query::base
+class base : public query::classic_base
 {
 protected:
     explicit base(const fs::path& path);

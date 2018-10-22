@@ -11,11 +11,11 @@
 #pragma once
 
 #include <cobs/file/compact_index_header.hpp>
-#include <cobs/query/base.hpp>
+#include <cobs/query/classic_base.hpp>
 
 namespace cobs::query::compact_index {
 
-class base : public query::base
+class base : public query::classic_base
 {
 protected:
     size_t m_num_hashes;

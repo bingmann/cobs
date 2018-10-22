@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/query/base.cpp
+ * cobs/query/classic_base.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,7 +7,7 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/query/base.hpp>
+#include <cobs/query/classic_base.hpp>
 
 namespace cobs::query {
 
@@ -53,7 +53,7 @@ void counts_to_result(const std::vector<std::string>& file_names, const uint16_t
     }
 }
 
-void base::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows) {
+void classic_base::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows) {
 #ifndef NO_SIMD
     auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
 #endif
@@ -83,7 +83,7 @@ void base::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows
     }
 }
 
-void base::aggregate_rows(size_t hashes_size, char* rows) {
+void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
 #pragma omp parallel for
     for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
         auto rows_8 = rows + i * block_size();
@@ -105,11 +105,11 @@ void base::aggregate_rows(size_t hashes_size, char* rows) {
     }
 }
 
-timer& base::get_timer() {
+timer& classic_base::get_timer() {
     return m_timer;
 }
 
-void base::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
+void classic_base::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
     char* rows = allocate_aligned<char>(block_size() * hashes.size(), get_page_size());
     m_timer.active("io");
     read_from_disk(hashes, rows);
@@ -121,9 +121,9 @@ void base::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts)
     // todo test if it is faster to combine these functions for better cache locality
 }
 
-void base::search(const std::string& query, uint32_t kmer_size,
-                  std::vector<std::pair<uint16_t, std::string> >& result,
-                  size_t num_results) {
+void classic_base::search(const std::string& query, uint32_t kmer_size,
+                          std::vector<std::pair<uint16_t, std::string> >& result,
+                          size_t num_results) {
     assert_exit(query.size() >= kmer_size,
                 "query to short, needs to be at least "
                 + std::to_string(kmer_size) + " characters long");
@@ -145,13 +145,13 @@ void base::search(const std::string& query, uint32_t kmer_size,
 }
 
 #ifdef NO_SIMD
-const uint64_t base::m_expansions[] = {
+const uint64_t classic_base::m_expansions[] = {
     0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833,
     281474976710656, 281474976710657, 281474976776192, 281474976776193,
     281479271677952, 281479271677953, 281479271743488, 281479271743489
 };
 #else
-const uint16_t base::m_expansion[] = {
+const uint16_t classic_base::m_expansion[] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,

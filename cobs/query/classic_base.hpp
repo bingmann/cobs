@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/query/base.hpp
+ * cobs/query/classic_base.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,8 +7,8 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_BASE_HEADER
-#define COBS_QUERY_BASE_HEADER
+#ifndef COBS_QUERY_CLASSIC_BASE_HEADER
+#define COBS_QUERY_CLASSIC_BASE_HEADER
 #pragma once
 
 #include <algorithm>
@@ -24,7 +24,7 @@
 
 namespace cobs::query {
 
-class base
+class classic_base
 {
 private:
 #ifdef NO_SIMD
@@ -47,7 +47,7 @@ protected:
     virtual const std::vector<std::string>& file_names() const = 0;
 
 public:
-    virtual ~base() = default;
+    virtual ~classic_base() = default;
     timer& get_timer();
     void search(const std::string& query, uint32_t kmer_size,
                 std::vector<std::pair<uint16_t, std::string> >& result,
@@ -56,6 +56,6 @@ public:
 
 } // namespace cobs::query
 
-#endif // !COBS_QUERY_BASE_HEADER
+#endif // !COBS_QUERY_CLASSIC_BASE_HEADER
 
 /******************************************************************************/

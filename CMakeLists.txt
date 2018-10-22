@@ -35,8 +35,8 @@ set(SOURCE_FILES
         cobs/file/header.hpp
         cobs/frequency.hpp
         cobs/kmer.hpp
-        cobs/query/base.hpp
-        cobs/query/base.cpp
+        cobs/query/classic_base.hpp
+        cobs/query/classic_base.cpp
         cobs/query/classic_index/base.cpp
         cobs/query/classic_index/base.hpp
         cobs/query/classic_index/mmap.cpp
