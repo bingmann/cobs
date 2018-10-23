@@ -57,7 +57,6 @@ set(SOURCE_FILES
         cobs/util/processing.hpp
         cobs/util/query.cpp
         cobs/util/query.hpp
-        cobs/util/serialization.cpp
         cobs/util/serialization.hpp
         cobs/util/timer.cpp
         cobs/util/timer.hpp
