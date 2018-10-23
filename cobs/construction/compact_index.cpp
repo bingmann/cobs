@@ -16,6 +16,8 @@
 
 #include <iomanip>
 
+#include <tlx/die.hpp>
+
 namespace cobs::compact_index {
 
 std::string pad_directory_number(size_t index) {
@@ -62,14 +64,14 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
 //        classic_index::construct_from_documents(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
 //
 //        if (num_files != 8 * page_size) {
-//            assert(num_files < 8 * page_size);
-//            assert(in_dir == paths.back());
+//            die_unless(num_files < 8 * page_size);
+//            die_unless(in_dir == paths.back());
 //        }
 //    }
 
 void construct_classic_index_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
                                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-    assert(batch_size % 8 == 0);
+    die_unless(batch_size % 8 == 0);
     std::vector<fs::path> paths;
     std::copy_if(fs::directory_iterator(in_dir), fs::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
                      return fs::is_directory(p);
@@ -89,8 +91,8 @@ void construct_classic_index_from_documents(const fs::path& in_dir, const fs::pa
         classic_index::construct_from_documents(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
 
         if (num_files != 8 * page_size) {
-            assert(num_files < 8 * page_size);
-            assert(p == paths.back());
+            die_unless(num_files < 8 * page_size);
+            die_unless(p == paths.back());
         }
     }
 }
@@ -121,10 +123,10 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
         file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
         std::cout << i << ": " << h.block_size() << " " << paths[i].string() << std::endl;
         if (i < paths.size() - 1) {
-            assert(h.block_size() == page_size);
+            die_unless(h.block_size() == page_size);
         }
         else {
-            assert(h.block_size() <= page_size);
+            die_unless(h.block_size() <= page_size);
         }
     }
 

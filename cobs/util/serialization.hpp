@@ -12,9 +12,10 @@
 
 #include <cobs/util/fs.hpp>
 
-#include <cassert>
 #include <fstream>
 #include <type_traits>
+
+#include <tlx/die.hpp>
 
 namespace cobs {
 
@@ -29,10 +30,10 @@ stream_metadata get_stream_metadata(std::ifstream& is) {
     is.seekg(0, std::ios::end);
     std::streamoff end_pos = is.tellg();
     is.seekg(curr_pos, std::ios::beg);
-    assert(is.good());
-    assert(curr_pos >= 0);
-    assert(end_pos >= 0);
-    assert(end_pos >= curr_pos);
+    die_unless(is.good());
+    die_unless(curr_pos >= 0);
+    die_unless(end_pos >= 0);
+    die_unless(end_pos >= curr_pos);
     return stream_metadata { (uint64_t)curr_pos, (uint64_t)end_pos };
 }
 
@@ -41,7 +42,7 @@ void read_file(const fs::path& path, std::vector<T>& v) {
     std::ifstream is(path.string(), std::ios::in | std::ios::binary);
     is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     stream_metadata smd = get_stream_metadata(is);
-    assert(smd.end_pos % sizeof(T) == 0);
+    die_unless(smd.end_pos % sizeof(T) == 0);
     v.resize(smd.end_pos / sizeof(T));
     is.read(reinterpret_cast<char*>(v.data()), smd.end_pos);
 }

@@ -7,17 +7,18 @@
  ******************************************************************************/
 
 #include <array>
-#include <cassert>
 #include <cobs/util/misc.hpp>
 #include <iostream>
 #include <unistd.h>
+
+#include <tlx/die.hpp>
 
 namespace cobs {
 
 uint64_t get_page_size() {
     int page_size = getpagesize();
-    assert(page_size > 0);
-    assert(page_size == 4096);     // todo check for experiments
+    die_unless(page_size > 0);
+    die_unless(page_size == 4096);     // todo check for experiments
     return (uint64_t)page_size;
 }
 

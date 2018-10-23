@@ -8,14 +8,15 @@
 
 #include <cobs/util/timer.hpp>
 
-#include <cassert>
 #include <iomanip>
 #include <iostream>
+
+#include <tlx/die.hpp>
 
 namespace cobs {
 
 void timer::active(const std::string& timer) {
-    assert(!timer.empty());
+    die_unless(!timer.empty());
     stop();
     if (timers.count(timer) == 0) {
         order.push_back(timer);
@@ -49,7 +50,7 @@ void timer::print(std::ostream& ostream, size_t max_name_length, const std::stri
 }
 
 void timer::print(std::ostream& ostream) const {
-    assert(running.empty());
+    die_unless(running.empty());
     size_t max_name_length = total_name.size();
     for (const auto& timer : timers) {
         max_name_length = std::max(max_name_length, timer.first.size());

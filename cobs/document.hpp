@@ -17,6 +17,8 @@
 #include <ostream>
 #include <vector>
 
+#include <tlx/die.hpp>
+
 namespace cobs {
 
 template <unsigned int N>
@@ -55,7 +57,7 @@ public:
     void deserialize(std::ifstream& ifs, file::document_header& h) {
         ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         file::header<file::document_header>::deserialize(ifs, h);
-        assert(N == h.kmer_size());
+        die_unless(N == h.kmer_size());
 
         stream_metadata smd = get_stream_metadata(ifs);
         size_t size = smd.end_pos - smd.curr_pos;

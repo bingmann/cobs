@@ -6,8 +6,9 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cassert>
 #include <cobs/query/compact_index/base.hpp>
+
+#include <tlx/die.hpp>
 
 namespace cobs::query::compact_index {
 
@@ -20,7 +21,7 @@ base::base(const fs::path& path) : query::classic_base() {
     m_block_size = m_header.page_size() * m_header.parameters().size();
     m_num_hashes = m_header.parameters()[0].num_hashes;
     for (const auto& p : m_header.parameters()) {
-        assert(m_num_hashes == p.num_hashes);
+        die_unless(m_num_hashes == p.num_hashes);
     }
 }
 

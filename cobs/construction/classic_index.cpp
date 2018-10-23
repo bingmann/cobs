@@ -21,6 +21,7 @@
 #include <cobs/util/processing.hpp>
 #include <cobs/util/timer.hpp>
 
+#include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/math/popcount.hpp>
 
@@ -144,13 +145,13 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
                         signature_size = cih.signature_size();
                         num_hashes = cih.num_hashes();
                     }
-                    assert(cih.signature_size() == signature_size);
-                    assert(cih.num_hashes() == num_hashes);
+                    die_unless(cih.signature_size() == signature_size);
+                    die_unless(cih.num_hashes() == num_hashes);
 #ifndef isi_test
                     if (i < paths.size() - 2) {
                         // todo doesnt work because of padding for compact, which means there could be two files with less file_names
                         // todo quickfix with -2 to allow for paddding
-                        // assert(cih.file_names().size() == 8 * cih.block_size());
+                        // die_unless(cih.file_names().size() == 8 * cih.block_size());
                     }
 #endif
                     ifstreams.back().second = cih.block_size();
@@ -202,8 +203,8 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
 void construct(const fs::path& in_dir, const fs::path& out_dir,
                uint64_t batch_size, uint64_t num_hashes,
                double false_positive_probability) {
-    assert_throw<std::invalid_argument>(
-        batch_size % 8 == 0, "batch size must be divisible by 8");
+    if (batch_size % 8 != 0)
+        die("batch size must be divisible by 8");
     uint64_t signature_size =
         get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
     construct_from_documents(
