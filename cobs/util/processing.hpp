@@ -24,8 +24,13 @@
 
 namespace cobs {
 
+static inline
 void get_sorted_file_names(const fs::path& in_dir,
-                           std::vector<fs::path>* paths);
+                           std::vector<fs::path>* paths) {
+    fs::recursive_directory_iterator it(in_dir), end;
+    std::copy(it, end, std::back_inserter(*paths));
+    std::sort(paths->begin(), paths->end());
+}
 
 template <typename Selector, typename Callback>
 bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_t bulk_size,

@@ -55,7 +55,6 @@ set(SOURCE_FILES
         cobs/util/misc.hpp
         cobs/util/parameters.cpp
         cobs/util/parameters.hpp
-        cobs/util/processing.cpp
         cobs/util/processing.hpp
         cobs/util/query.cpp
         cobs/util/query.hpp
