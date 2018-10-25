@@ -9,7 +9,17 @@
 
 #include <cobs/query/classic_base.hpp>
 
+#include <algorithm>
 #include <cobs/kmer.hpp>
+#include <cobs/util/file.hpp>
+#include <cobs/util/misc.hpp>
+#include <cobs/util/query.hpp>
+#include <cobs/util/timer.hpp>
+#include <numeric>
+#include <string>
+#include <vector>
+
+#include <xxhash.h>
 
 namespace cobs::query {
 
@@ -105,10 +115,6 @@ void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
             }
         }
     }
-}
-
-timer& classic_base::get_timer() {
-    return m_timer;
 }
 
 void classic_base::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {

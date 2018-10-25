@@ -11,20 +11,14 @@
 #define COBS_QUERY_CLASSIC_BASE_HEADER
 #pragma once
 
-#include <algorithm>
-#include <cobs/util/file.hpp>
-#include <cobs/util/misc.hpp>
+#include <cobs/query/base.hpp>
 #include <cobs/util/query.hpp>
-#include <cobs/util/timer.hpp>
+
 #include <immintrin.h>
-#include <numeric>
-#include <string>
-#include <vector>
-#include <xxhash.h>
 
 namespace cobs::query {
 
-class classic_base
+class classic_base : public base
 {
 private:
 #ifdef NO_SIMD
@@ -38,7 +32,6 @@ private:
 
 protected:
     stream_metadata m_smd;
-    timer m_timer;
 
     virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows) = 0;
     virtual uint64_t block_size() const = 0;
@@ -47,11 +40,9 @@ protected:
     virtual const std::vector<std::string>& file_names() const = 0;
 
 public:
-    virtual ~classic_base() = default;
-    timer& get_timer();
     void search(const std::string& query, uint32_t kmer_size,
                 std::vector<std::pair<uint16_t, std::string> >& result,
-                size_t num_results = 0);
+                size_t num_results = 0) final;
 };
 
 } // namespace cobs::query

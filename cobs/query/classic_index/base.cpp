@@ -8,6 +8,8 @@
 
 #include <cobs/query/classic_index/base.hpp>
 
+#include <cobs/util/file.hpp>
+
 namespace cobs::query::classic_index {
 
 base::base(const fs::path& path) : query::classic_base() {

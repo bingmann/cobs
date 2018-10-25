@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include "test_util.hpp"
+#include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
 #include <gtest/gtest.h>

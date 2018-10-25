@@ -7,8 +7,10 @@
  ******************************************************************************/
 
 #include <cobs/query/compact_index/mmap.hpp>
+
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>

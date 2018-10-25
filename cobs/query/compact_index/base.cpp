@@ -8,6 +8,8 @@
 
 #include <cobs/query/compact_index/base.hpp>
 
+#include <cobs/util/file.hpp>
+
 #include <tlx/die.hpp>
 
 namespace cobs::query::compact_index {
