@@ -9,6 +9,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
+#include <cobs/construction/ranfold_index.hpp>
 #include <cobs/cortex.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
@@ -367,6 +368,80 @@ int compact_query(int argc, char** argv) {
 }
 
 /******************************************************************************/
+// "Ranfold" Index Construction
+
+int ranfold_construct_random(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string out_file;
+    cp.add_param_string(
+        "out_file", out_file, "path to the output file");
+
+    size_t term_space = 2 * 1024 * 1024;
+    cp.add_bytes(
+        't', "term_space", term_space,
+        "size of term space for kmer signatures (vertical size), "
+        "default: " + tlx::format_iec_units(term_space));
+
+    unsigned num_term_hashes = 1;
+    cp.add_unsigned(
+        'T', "term_hashes", num_term_hashes,
+        "number of hash functions per term, default: 1");
+
+    size_t doc_space_bits = 16 * 1024;
+    cp.add_bytes(
+        'd', "doc_space_bits", doc_space_bits,
+        "number of bits in the document space (horizontal size), "
+        "default: " + tlx::format_iec_units(doc_space_bits));
+
+    unsigned num_doc_hashes = 2;
+    cp.add_unsigned(
+        'D', "doc_hashes", num_doc_hashes,
+        "number of hash functions per term, default: 2");
+
+    unsigned num_documents = 10000;
+    cp.add_unsigned(
+        'n', "num_documents", num_documents,
+        "number of random documents in index,"
+        " default: " + std::to_string(num_documents));
+
+    unsigned document_size = 1000000;
+    cp.add_unsigned(
+        'm', "document_size", document_size,
+        "number of random 31-mers in document,"
+        " default: " + std::to_string(document_size));
+
+    size_t seed = std::random_device { } ();
+    cp.add_size_t("seed", seed, "random seed");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    std::cerr << "Constructing ranfold index"
+              << ", term_space = " << term_space
+              << ", num_term_hashes = " << num_term_hashes
+              << ", doc_space_bits = " << doc_space_bits
+              << ", num_doc_hashes = " << num_doc_hashes
+              << ", num_documents = " << num_documents
+              << ", document_size = " << document_size
+              << ", result size = "
+              << tlx::format_iec_units(
+        (term_space * (doc_space_bits + 7) / 8))
+              << std::endl;
+
+    cobs::ranfold_index::construct_random(
+        out_file,
+        term_space, num_term_hashes,
+        doc_space_bits, num_doc_hashes,
+        num_documents, document_size,
+        seed);
+
+    return 0;
+}
+
+/******************************************************************************/
 // Miscellaneous Methods
 
 int print_parameters(int argc, char** argv) {
@@ -629,6 +704,10 @@ struct SubTool subtools[] = {
     {
         "compact_query", &compact_query, true,
         "queries the index"
+    },
+    {
+        "ranfold_construct_random", &ranfold_construct_random, true,
+        "constructs a ranfold index with random content"
     },
     {
         "print_parameters", &print_parameters, true,

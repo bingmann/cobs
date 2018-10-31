@@ -21,6 +21,8 @@ set(SOURCE_FILES
         cobs/construction/classic_index.hpp
         cobs/construction/compact_index.cpp
         cobs/construction/compact_index.hpp
+        cobs/construction/ranfold_index.cpp
+        cobs/construction/ranfold_index.hpp
         cobs/cortex.hpp
         cobs/document.hpp
         cobs/file/classic_index_header.cpp
@@ -33,9 +35,10 @@ set(SOURCE_FILES
         cobs/file/frequency_header.cpp
         cobs/file/frequency_header.hpp
         cobs/file/header.hpp
+        cobs/file/ranfold_index_header.cpp
+        cobs/file/ranfold_index_header.hpp
         cobs/frequency.hpp
         cobs/kmer.hpp
-        cobs/query/base.cpp
         cobs/query/base.hpp
         cobs/query/classic_base.cpp
         cobs/query/classic_base.hpp
@@ -47,6 +50,10 @@ set(SOURCE_FILES
         cobs/query/compact_index/base.hpp
         cobs/query/compact_index/mmap.cpp
         cobs/query/compact_index/mmap.hpp
+        cobs/query/ranfold_index/base.cpp
+        cobs/query/ranfold_index/base.hpp
+        cobs/query/ranfold_index/mmap.cpp
+        cobs/query/ranfold_index/mmap.hpp
         cobs/util/error_handling.cpp
         cobs/util/error_handling.hpp
         cobs/util/file.cpp
