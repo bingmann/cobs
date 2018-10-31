@@ -74,7 +74,7 @@ void process(const std::vector<fs::path>& paths,
         }
     }
     size_t bit_count = tlx::popcount(data.data(), data.size());
-    LOG1 << "percent of ones: "
+    LOG1 << "ratio of ones: "
          << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
@@ -265,7 +265,7 @@ void construct_random(const fs::path& out_file,
     }
 
     size_t bit_count = tlx::popcount(data.data(), data.size());
-    LOG1 << "percent of ones: "
+    LOG1 << "ratio of ones: "
          << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");

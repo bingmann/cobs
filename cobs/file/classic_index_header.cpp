@@ -62,7 +62,8 @@ void classic_index_header::write_file(std::ofstream& ofs,
 
 void classic_index_header::write_file(const fs::path& p,
                                       const std::vector<uint8_t>& data) {
-    fs::create_directories(p.parent_path());
+    if (!p.parent_path().empty())
+        fs::create_directories(p.parent_path());
     std::ofstream ofs(p.string(), std::ios::out | std::ios::binary);
     write_file(ofs, data);
 }
