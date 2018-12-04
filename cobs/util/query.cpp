@@ -51,7 +51,7 @@ void destroy_mmap(int fd, uint8_t* mmap_ptr, const stream_metadata& smd) {
 }
 
 // character map. A -> T, C -> G, G -> C, T -> A.
-static const char basepair_map[256] = {
+static const char canonicalize_basepair_map[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -70,23 +70,24 @@ static const char basepair_map[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-const char * canonicalize_kmer(const char* query_8, char* kmer_raw_8, uint32_t kmer_size) {
+const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t kmer_size) {
+    const char* map = canonicalize_basepair_map;
     const uint8_t* query_8_reverse =
         reinterpret_cast<const uint8_t*>(query_8) + kmer_size - 1;
     size_t i = 0;
-    while (query_8[i] == basepair_map[*(query_8_reverse - i)] && i < kmer_size / 2) {
+    while (query_8[i] == map[*(query_8_reverse - i)] && i < kmer_size / 2) {
         i++;
     }
 
-    if (query_8[i] <= basepair_map[*(query_8_reverse - i)]) {
+    if (query_8[i] <= map[*(query_8_reverse - i)]) {
         return query_8;
     }
     else {
         for (size_t j = 0; j < kmer_size; j++) {
-            kmer_raw_8[kmer_size - j - 1] =
-                basepair_map[static_cast<uint8_t>(query_8[j])];
+            kmer_buffer[kmer_size - j - 1] =
+                map[static_cast<uint8_t>(query_8[j])];
         }
-        return kmer_raw_8;
+        return kmer_buffer;
     }
 }
 

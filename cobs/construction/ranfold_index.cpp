@@ -292,7 +292,10 @@ void sketch_path(const fs::path& path,
     cortex::cortex_file ctx(path.string());
     doc.data().clear();
     ctx.process_kmers<31>(
-        [&](const kmer<31>& m) { doc.data().push_back(m); });
+        [&](kmer<31>& m) {
+            m.canonicalize();
+            doc.data().push_back(m);
+        });
 
     sketch_document(doc, rih, num_hashes, min_hash);
 

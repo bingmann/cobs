@@ -41,9 +41,10 @@ static inline
 std::vector<cobs::document<31> > generate_documents_all(const std::string& query) {
     std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
-    std::vector<char> kmer_raw(31);
+    char kmer_buffer[31];
     for (size_t i = 0; i < query.size() - 31; i++) {
-        const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data() + i, kmer_raw.data(), 31);
+        const char* normalized_kmer =
+            cobs::query::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
         k.init(normalized_kmer);
         for (size_t j = 0; j < documents.size(); j++) {
             if (j % (i % (documents.size() - 1) + 1) == 0) {
@@ -58,8 +59,9 @@ static inline
 std::vector<cobs::document<31> > generate_documents_one(const std::string& query) {
     std::vector<cobs::document<31> > documents(33);
     cobs::kmer<31> k;
-    std::vector<char> kmer_raw(31);
-    const char* normalized_kmer = cobs::query::canonicalize_kmer(query.data(), kmer_raw.data(), 31);
+    char kmer_buffer[31];
+    const char* normalized_kmer =
+        cobs::query::canonicalize_kmer(query.data(), kmer_buffer, 31);
     k.init(normalized_kmer);
     for (size_t i = 0; i < documents.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
