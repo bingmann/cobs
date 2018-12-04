@@ -74,7 +74,7 @@ public:
         for (size_t i = 0; i < num_colors_; i++) {
             auto document_name_length = cast_advance<uint32_t>(is);
             name_.resize(document_name_length);
-            is.read(name_.data(), document_name_length);
+            is.read(const_cast<char*>(name_.data()), document_name_length);
         }
         is.ignore(16 * num_colors_);
         for (size_t i = 0; i < num_colors_; i++) {
