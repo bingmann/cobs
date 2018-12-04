@@ -23,7 +23,7 @@
 
 namespace cobs::query {
 
-void create_hashes(std::vector<size_t>& hashes, const std::string& query,
+void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
                    uint32_t kmer_size, size_t num_hashes) {
     size_t kmer_data_size = kmer<31>::data_size(kmer_size);
     size_t num_kmers = query.size() - kmer_size + 1;
@@ -40,7 +40,7 @@ void create_hashes(std::vector<size_t>& hashes, const std::string& query,
                 canonicalize_kmer(query_8 + i, kmer_raw, kmer_size);
             kmer<31>::init(normalized_kmer, kmer_data, kmer_size);
             for (size_t j = 0; j < num_hashes; j++) {
-                hashes[i * num_hashes + j] = XXH32(kmer_data, kmer_data_size, j);
+                hashes[i * num_hashes + j] = XXH64(kmer_data, kmer_data_size, j);
             }
         }
     }
@@ -117,7 +117,7 @@ void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
     }
 }
 
-void classic_base::calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts) {
+void classic_base::calculate_counts(const std::vector<uint64_t>& hashes, uint16_t* counts) {
     char* rows = allocate_aligned<char>(block_size() * hashes.size(), get_page_size());
     m_timer.active("io");
     read_from_disk(hashes, rows);
@@ -143,7 +143,7 @@ void classic_base::search(const std::string& query, uint32_t kmer_size,
     num_results = num_results == 0 ? file_names().size()
                   : std::min(num_results, file_names().size());
     uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
-    std::vector<size_t> hashes;
+    std::vector<uint64_t> hashes;
     create_hashes(hashes, query, kmer_size, num_hashes());
     calculate_counts(hashes, counts);
     m_timer.active("sort results");

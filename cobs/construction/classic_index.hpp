@@ -46,7 +46,7 @@ template <typename Callback>
 void process_hashes(const void* input, size_t size, uint64_t signature_size,
                     uint64_t num_hashes, Callback callback) {
     for (unsigned int i = 0; i < num_hashes; i++) {
-        uint64_t hash = XXH32(input, size, i);
+        uint64_t hash = XXH64(input, size, i);
         callback(hash % signature_size);
     }
 }
