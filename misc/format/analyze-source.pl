@@ -235,7 +235,7 @@ sub process_cpp {
     expect($path, $i, @data, " *\n"); ++$i;
 
     # read authors
-    while ($data[$i] =~ /^ \* Copyright \(c\) ([0-9-]+(, [0-9-]+)*) (?<name>[^0-9<]+)\n/) {
+    while ($data[$i] =~ /^ \* Copyright \(c\) ([0-9-]+(, [0-9-]+)*) (?<name>[^0-9]+)\n/) {
         #print "Author: $+{name} - $+{mail}\n";
         $authormap{$+{name}}{$+{mail} || ""} = 1;
         die unless ++$i < @data;

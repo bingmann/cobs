@@ -21,6 +21,10 @@
  */
 namespace cobs::ranfold_index  {
 
+/** Constructs the index by executing all necessary steps.
+ */
+void construct(const fs::path& in_dir, const fs::path& out_dir);
+
 /** Constructs an index filled with random data.
  */
 void construct_random(const fs::path& p,

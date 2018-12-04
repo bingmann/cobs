@@ -370,6 +370,27 @@ int compact_query(int argc, char** argv) {
 /******************************************************************************/
 // "Ranfold" Index Construction
 
+int ranfold_construct(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_dir;
+    cp.add_param_string(
+        "in_dir", in_dir, "path to the input directory");
+
+    std::string out_file;
+    cp.add_param_string(
+        "out_file", out_file, "path to the output file");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::ranfold_index::construct(in_dir, out_file);
+
+    return 0;
+}
+
 int ranfold_construct_random(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
@@ -704,6 +725,10 @@ struct SubTool subtools[] = {
     {
         "compact_query", &compact_query, true,
         "queries the index"
+    },
+    {
+        "ranfold_construct", &ranfold_construct, true,
+        "constructs a ranfold index from documents"
     },
     {
         "ranfold_construct_random", &ranfold_construct_random, true,
