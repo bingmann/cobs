@@ -73,20 +73,24 @@ void mark_document(const document<31>& doc,
     }
 }
 
-struct Sketch {
-    std::vector<uint32_t> hashes;
+struct Sketch : public std::vector<uint32_t>{
+public:
+    //! path of the original file
+    fs::path path_;
+
+    size_t item_size() const { return sizeof(uint32_t); }
 
     void clear() {
-        std::vector<uint32_t>().swap(hashes);
+        std::vector<uint32_t>().swap(*this);
     }
 
     double dist_jaccard(const Sketch& other) const {
         // estimate Jaccard index
-        auto ai = hashes.begin(), bi = other.hashes.begin();
+        auto ai = begin(), bi = other.begin();
 
         // merge lists to calculate matching elements
         size_t num = 0, denom = 0;
-        while (ai != hashes.end() && bi != other.hashes.end())
+        while (ai != end() && bi != other.end())
         {
             if (*ai == *bi) {
                 num += 1, denom += 1;
@@ -103,7 +107,7 @@ struct Sketch {
         }
 
         // remaining elements do not match.
-        denom += (hashes.end() - ai) + (other.hashes.end() - bi);
+        denom += (end() - ai) + (other.end() - bi);
 
         // sLOG1 << "num" << num << "denom" << denom;
         return num / static_cast<double>(denom);
@@ -112,30 +116,30 @@ struct Sketch {
     //! merge two sketches and return all hashes in both
     Sketch merge_complete(const Sketch& other) const {
         Sketch out;
-        out.hashes.reserve(hashes.size() + other.hashes.size());
+        out.reserve(size() + other.size());
 
-        auto ai = hashes.begin(), bi = other.hashes.begin();
+        auto ai = begin(), bi = other.begin();
 
         // merge lists to calculate elements
-        while (ai != hashes.end() && bi != other.hashes.end()) {
+        while (ai != end() && bi != other.end()) {
             if (*ai == *bi) {
-                out.hashes.emplace_back(*ai);
+                out.emplace_back(*ai);
                 ++ai, ++bi;
             }
             else if (*ai < *bi) {
-                out.hashes.emplace_back(*ai);
+                out.emplace_back(*ai);
                 ++ai;
             }
             else {
-                out.hashes.emplace_back(*bi);
+                out.emplace_back(*bi);
                 ++bi;
             }
         }
 
-        while (ai != hashes.end())
-            out.hashes.emplace_back(*ai++);
-        while (bi != other.hashes.end())
-            out.hashes.emplace_back(*bi++);
+        while (ai != end())
+            out.emplace_back(*ai++);
+        while (bi != other.end())
+            out.emplace_back(*bi++);
 
         return out;
     }
@@ -143,41 +147,38 @@ struct Sketch {
     //! merge two sketches and return the smallest hashes in both
     Sketch merge(const Sketch& other, size_t limit) const {
         Sketch out;
-        out.hashes.reserve(
-            std::min(limit, hashes.size() + other.hashes.size()));
+        out.reserve(std::min(limit, size() + other.size()));
 
-        auto ai = hashes.begin(), bi = other.hashes.begin();
+        auto ai = begin(), bi = other.begin();
 
         // merge lists to calculate elements
-        while (ai != hashes.end() && bi != other.hashes.end() &&
-               out.hashes.size() < limit)
+        while (ai != end() && bi != other.end() && out.size() < limit)
         {
             if (*ai == *bi) {
-                out.hashes.emplace_back(*ai);
+                out.emplace_back(*ai);
                 ++ai, ++bi;
             }
             else if (*ai < *bi) {
-                out.hashes.emplace_back(*ai);
+                out.emplace_back(*ai);
                 ++ai;
             }
             else {
-                out.hashes.emplace_back(*bi);
+                out.emplace_back(*bi);
                 ++bi;
             }
         }
 
-        while (ai != hashes.end() && out.hashes.size() < limit)
-            out.hashes.emplace_back(*ai++);
-        while (bi != other.hashes.end() && out.hashes.size() < limit)
-            out.hashes.emplace_back(*bi++);
+        while (ai != end() && out.size() < limit)
+            out.emplace_back(*ai++);
+        while (bi != other.end() && out.size() < limit)
+            out.emplace_back(*bi++);
 
         return out;
     }
 
     //! estimate density by returning the largest hash
     double dist_density(const Sketch& other, size_t limit) const {
-        Sketch tmp = merge(other, limit);
-        return tmp.hashes.back();
+        return merge(other, limit).back();
     }
 };
 
@@ -187,7 +188,7 @@ struct CollectSketch {
     std::set<uint32_t> hashes_;
 
     void add(const Sketch& other) {
-        for (const uint32_t& h : other.hashes) {
+        for (const uint32_t& h : other) {
             hashes_.insert(h);
         }
     }
@@ -195,19 +196,19 @@ struct CollectSketch {
     size_t size() const { return hashes_.size(); }
 
     void get_complete(Sketch* out) const {
-        out->hashes.clear();
-        out->hashes.reserve(hashes_.size());
+        out->clear();
+        out->reserve(hashes_.size());
         for (const uint32_t& h : hashes_) {
-            out->hashes.push_back(h);
+            out->push_back(h);
         }
     }
 
     void get(Sketch* out, size_t num_hashes) const {
-        out->hashes.clear();
-        out->hashes.reserve(num_hashes);
+        out->clear();
+        out->reserve(num_hashes);
         for (const uint32_t& h : hashes_) {
-            out->hashes.push_back(h);
-            if (out->hashes.size() >= num_hashes)
+            out->push_back(h);
+            if (out->size() >= num_hashes)
                 break;
         }
     }
@@ -255,23 +256,23 @@ void sketch_document(const document<31>& doc,
             });
     }
 
-    min_hash->hashes.resize(pq.size());
+    min_hash->resize(pq.size());
     size_t i = pq.size();
     while (!pq.empty()) {
-        min_hash->hashes[--i] = pq.top();
+        (*min_hash)[--i] = pq.top();
         pq.pop();
     }
 }
 
 void sketch_path(const fs::path& path,
-                 document<31>& doc,
                  const file::ranfold_index_header& rih,
                  size_t num_hashes,
                  Sketch* min_hash) {
 
     fs::path mh_cache = path.string() + ".sketch_" + std::to_string(num_hashes);
-    if (fs::is_regular_file(mh_cache) &&
-        fs::last_write_time(path) < fs::last_write_time(mh_cache))
+    if (1)
+    // if (fs::is_regular_file(mh_cache) &&
+    //     fs::last_write_time(path) < fs::last_write_time(mh_cache))
     {
         LOG1 << "Sketching " << path.string() << " [cached]";
 
@@ -279,10 +280,11 @@ void sketch_path(const fs::path& path,
         die_unless(in.good());
         in.seekg(0, std::ios::end);
         size_t size = in.tellg();
-        if (size / sizeof(min_hash->hashes[0]) == num_hashes) {
-            min_hash->hashes.resize(size / sizeof(min_hash->hashes[0]));
+        if (1) {
+            // if (size / sizeof(min_hash->hashes[0]) == num_hashes) {
+            min_hash->resize(size / min_hash->item_size());
             in.seekg(0);
-            in.read(reinterpret_cast<char*>(min_hash->hashes.data()), size);
+            in.read(reinterpret_cast<char*>(min_hash->data()), size);
             die_unequal(size, in.gcount());
             return;
         }
@@ -290,18 +292,17 @@ void sketch_path(const fs::path& path,
 
     LOG1 << "Sketching " << path.string();
     cortex::cortex_file ctx(path.string());
-    doc.data().clear();
+    document<31> doc;
     ctx.process_kmers<31>(
         [&](kmer<31>& m) {
             m.canonicalize();
             doc.data().push_back(m);
         });
-
     sketch_document(doc, rih, num_hashes, min_hash);
 
     std::ofstream of(mh_cache.string());
-    of.write(reinterpret_cast<const char*>(min_hash->hashes.data()),
-             min_hash->hashes.size() * sizeof(min_hash->hashes[0]));
+    of.write(reinterpret_cast<const char*>(min_hash->data()),
+             min_hash->size() * min_hash->item_size());
 }
 
 void cluster_documents_kmeans(std::vector<Sketch>& min_hashes, size_t num_hashes) {
@@ -367,82 +368,134 @@ void cluster_documents_kmeans(std::vector<Sketch>& min_hashes, size_t num_hashes
     }
 }
 
-void cluster_documents_ward(const std::vector<Sketch>& min_hashes_, size_t num_hashes) {
-    size_t num_documents = min_hashes_.size();
+void cluster_documents_ward(std::vector<Sketch>& min_hashes, size_t num_hashes) {
+    size_t num_documents = min_hashes.size();
 
-    std::vector<Sketch> min_hashes = min_hashes_;
+    // sort documents by density
+    std::sort(min_hashes.begin(), min_hashes.end(),
+              [&](const Sketch& a, const Sketch& b) {
+                  return a.back() < b.back();
+              });
 
-    std::vector<size_t> parents;
-    std::vector<size_t> orig_size;
-    parents.resize(num_documents);
-    orig_size.resize(num_documents);
+    // parent[i] is the point's cluster representative.
+    std::vector<size_t> parent(num_documents);
+    std::vector<size_t> orig_size(num_documents);
     for (size_t i = 0; i < num_documents; ++i) {
-        parents[i] = i;
-        orig_size[i] = min_hashes_[i].hashes.back();
+        die_unless(min_hashes[i].size() > 0);
+        parent[i] = i;
+        orig_size[i] = min_hashes[i].back();
     }
 
+    // insert first 1000 documents via reorder
     using IndexPair = std::pair<size_t, size_t>;
     AddressablePriorityQueue<IndexPair, double, std::greater<double> > apq;
 
-    for (size_t i = 0; i < min_hashes.size(); ++i) {
-        for (size_t j = i + 1; j < min_hashes.size(); ++j) {
-            double dist = min_hashes[i].dist_density(min_hashes[j], num_hashes);
+    size_t apq_limit = 0, apq_initial = 2000;
+    for ( ; apq_limit < min_hashes.size() && apq_limit < apq_initial; ++apq_limit) {
+        size_t j = apq_limit;
+        LOG1 << "Inserting j=" << j
+             << " [" << j << "/" << apq_initial << "]"
+             << " apq_size " << apq.size();
+        for (size_t i = 0; i < j; ++i) {
+            double dist = min_hashes[i].dist_density(
+                min_hashes[j], num_hashes);
             apq.insert(IndexPair(i, j), dist);
-            LOG1 << "i=" << i << " j=" << j << " dist " << dist << " apq "
-                 << apq.top_priority();
+            LOG0 << "i=" << i << " j=" << j
+                 << " dist " << dist << " apq " << apq.top_priority();
         }
     }
 
-    for (size_t r = 0; r + 50 < num_documents; ++r) {
+    bool parallel = true;
+    static constexpr bool debug = false;
+
+    for (size_t r = 0; r + 500 < num_documents; ++r) {
         IndexPair top = apq.top();
         double prio = apq.top_priority();
 
-        LOG1 << "Combine top=" << top << " prio=" << prio;
-        apq.pop();
+        LOG1 << "Combine top=" << top << " prio=" << prio
+             << " apq_size " << apq.size()
+             << " [" << apq_limit << "/" << num_documents << "]";
 
         // combine min hashes
-        parents[top.second] = top.first;
+        parent[top.second] = top.first;
         min_hashes[top.first] = min_hashes[top.first].merge(
             min_hashes[top.second], num_hashes);
         min_hashes[top.second].clear();
 
-        // erase pair which is combined
-        apq.erase(top);
-
         // erase all entries with top.second
-        for (size_t i = 0; i < top.second; ++i) {
-            if (parents[i] == i) {
-                apq.erase(IndexPair(i, top.second));
-            }
-        }
-        for (size_t j = top.second + 1; j < num_documents; ++j) {
-            if (parents[j] == j) {
-                apq.erase(IndexPair(top.second, j));
-            }
-        }
-
-        // update distances
-        for (size_t i = 0; i < top.first; ++i) {
-            if (parents[i] != i)
+        for (size_t i = 0; i < apq_limit; ++i) {
+            if (parent[i] != i)
                 continue;
 
-            double dist = min_hashes[i].dist_density(
-                min_hashes[top.first], num_hashes);
-            apq.insert(IndexPair(i, top.first), dist);
-            LOG1 << "update i=" << i << " j=" << top.first
-                 << " dist " << dist << " apq "
-                 << apq.top_priority();
+            if (i <= top.second) {
+                die_unless(apq.erase(IndexPair(i, top.second)));
+                sLOG << "erase" << IndexPair(i, top.second)
+                     << "apq_size" << apq.size();
+            }
+            else if (i > top.second) {
+                die_unless(apq.erase(IndexPair(top.second, i)));
+                sLOG << "erase" << IndexPair(top.second, i)
+                     << "apq_size" << apq.size();
+            }
         }
-        for (size_t j = top.first + 1; j < num_documents; ++j) {
-            if (parents[j] != j)
+
+        // update distances with top.first
+#pragma omp parallel for schedule(static) if(parallel)
+        for (size_t i = 0; i < apq_limit; ++i) {
+            if (parent[i] != i)
                 continue;
 
-            double dist = min_hashes[top.first].dist_density(
-                min_hashes[j], num_hashes);
-            apq.insert(IndexPair(top.first, j), dist);
-            LOG1 << "update i=" << top.first << " j=" << j
-                 << " dist " << dist << " apq "
-                 << apq.top_priority();
+            if (i < top.first) {
+                double dist = min_hashes[i].dist_density(
+                    min_hashes[top.first], num_hashes);
+#pragma omp critical
+                {
+                    auto x = apq.insert(IndexPair(i, top.first), dist);
+                    die_if(x.second);
+                }
+                LOG << "update i=" << i << " j=" << top.first
+                    << " dist " << dist
+                    << " apq " << apq.top_priority()
+                    << " apq_size " << apq.size();
+            }
+            else if (i > top.first) {
+                double dist = min_hashes[top.first].dist_density(
+                    min_hashes[i], num_hashes);
+#pragma omp critical
+                {
+                    auto x = apq.insert(IndexPair(top.first, i), dist);
+                    die_if(x.second);
+                }
+                LOG << "update i=" << top.first << " j=" << i
+                    << " dist " << dist
+                    << " apq " << apq.top_priority()
+                    << " apq_size " << apq.size();
+            }
+        }
+
+        // insert one more document
+        if (apq_limit < num_documents)
+        {
+            size_t j = apq_limit++;
+            LOG0 << "Inserting j=" << j
+                 << " [" << j << "/" << num_documents << "]"
+                 << " apq_size " << apq.size();
+#pragma omp parallel for schedule(static) if(parallel)
+            for (size_t i = 0; i < j; ++i) {
+                if (parent[i] != i)
+                    continue;
+                double dist = min_hashes[i].dist_density(
+                    min_hashes[j], num_hashes);
+#pragma omp critical
+                {
+                    auto x = apq.insert(IndexPair(i, j), dist);
+                    die_unless(x.second);
+                }
+                LOG << "insert i=" << i << " j=" << j
+                    << " dist " << dist
+                    << " apq " << apq.top_priority()
+                    << " apq_size " << apq.size();
+            }
         }
     }
 
@@ -450,12 +503,43 @@ void cluster_documents_ward(const std::vector<Sketch>& min_hashes_, size_t num_h
     of << "digraph a {\n";
     for (size_t i = 0; i < num_documents; ++i) {
         std::string label = std::to_string(i) + " / " + std::to_string(orig_size[i]);
-        if (parents[i] == i)
-            label += " / " + std::to_string(min_hashes[i].hashes.back());
+        if (parent[i] == i)
+            label += " / " + std::to_string(min_hashes[i].back());
         of << i << "[label=" << std::quoted(label) << "];\n";
-        of << i << " -> " << parents[i] << ";\n";
+        of << i << " -> " << parent[i] << ";\n";
     }
     of << "}\n";
+
+    std::vector<size_t> assignment(num_documents);
+    size_t num_clusters = 0;
+    for (size_t i = 0; i < num_documents; ++i) {
+        if (parent[i] == i) {
+            assignment[i] = num_clusters++;
+        }
+    }
+
+    std::vector<size_t> cluster_density(num_clusters);
+    for (size_t i = 0; i < num_documents; ++i) {
+        if (parent[i] == i) {
+            cluster_density[assignment[i]] = min_hashes[i].back();
+            continue;
+        }
+        size_t j = i;
+        while (parent[j] != j)
+            j = parent[j];
+        assignment[i] = assignment[j];
+    }
+    sLOG1 << "num_clusters" << num_clusters;
+
+    std::vector<size_t> cluster_size(num_clusters);
+    for (size_t i = 0; i < num_documents; ++i) {
+
+        cluster_size[assignment[i]]++;
+    }
+    for (size_t i = 0; i < cluster_size.size(); ++i) {
+        LOG1 << "cluster[" << i << "] = " << cluster_size[i]
+             << " density " << cluster_density[i];
+    }
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir) {
@@ -485,21 +569,20 @@ void construct(const fs::path& in_dir, const fs::path& out_dir) {
     rih.m_doc_space_bytes = (16 * 1024 + 7) / 8;
     rih.m_doc_hashes = 2;
 
-    for (const auto& p : sorted_paths) {
-        if (p.extension() != ".ctx")
-            continue;
-        rih.m_file_names.push_back(p.filename());
-    }
-
     static const size_t num_hashes = 1024 * 16;
     std::vector<Sketch> min_hashes;
-    document<31> doc;
+    min_hashes.resize(sorted_paths.size());
 
-    for (const auto& p : sorted_paths) {
-        Sketch min_hash;
-        sketch_path(p, doc, rih, num_hashes, &min_hash);
-        min_hashes.emplace_back(min_hash);
+#pragma omp parallel for schedule(dynamic)
+    for (size_t i = 0; i < sorted_paths.size(); ++i) {
+        sketch_path(sorted_paths[i], rih, num_hashes, &min_hashes[i]);
+        min_hashes[i].path_ = sorted_paths[i];
     }
+
+    min_hashes.erase(
+        std::remove_if(min_hashes.begin(), min_hashes.end(),
+                       [](const Sketch& s) { return s.size() == 0; }),
+        min_hashes.end());
 
     cluster_documents_ward(min_hashes, num_hashes);
 }
