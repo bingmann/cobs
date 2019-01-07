@@ -78,6 +78,9 @@ public:
     //! path of the original file
     fs::path path_;
 
+    //! output: cluster id
+    size_t cluster_id;
+
     size_t item_size() const { return sizeof(uint32_t); }
 
     void clear() {
@@ -510,36 +513,45 @@ void cluster_documents_ward(std::vector<Sketch>& min_hashes, size_t num_hashes) 
     }
     of << "}\n";
 
-    std::vector<size_t> assignment(num_documents);
+    // assignment cluster ids to representatives
     size_t num_clusters = 0;
     for (size_t i = 0; i < num_documents; ++i) {
         if (parent[i] == i) {
-            assignment[i] = num_clusters++;
+            min_hashes[i].cluster_id = num_clusters++;
         }
     }
 
+    // assignment cluster ids to all other points
     std::vector<size_t> cluster_density(num_clusters);
     for (size_t i = 0; i < num_documents; ++i) {
         if (parent[i] == i) {
-            cluster_density[assignment[i]] = min_hashes[i].back();
-            continue;
+            cluster_density[min_hashes[i].cluster_id] = min_hashes[i].back();
         }
-        size_t j = i;
-        while (parent[j] != j)
-            j = parent[j];
-        assignment[i] = assignment[j];
+        else {
+            size_t j = i;
+            while (parent[j] != j)
+                j = parent[j];
+            min_hashes[i].cluster_id = min_hashes[j].cluster_id;
+        }
     }
     sLOG1 << "num_clusters" << num_clusters;
 
     std::vector<size_t> cluster_size(num_clusters);
     for (size_t i = 0; i < num_documents; ++i) {
-
-        cluster_size[assignment[i]]++;
+        cluster_size[min_hashes[i].cluster_id]++;
     }
     for (size_t i = 0; i < cluster_size.size(); ++i) {
         LOG1 << "cluster[" << i << "] = " << cluster_size[i]
              << " density " << cluster_density[i];
     }
+
+    // for output:
+
+    // sort documents by cluster id
+    std::sort(min_hashes.begin(), min_hashes.end(),
+              [&](const Sketch& a, const Sketch& b) {
+                  return a.cluster_id < b.cluster_id;
+              });
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir) {
