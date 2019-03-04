@@ -16,29 +16,11 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
-            - libbz2-dev
 
+    # gcc 7.x, Release
     - env: CMAKE_CC="gcc-7" CMAKE_CXX="g++-7" BUILD_TYPE="Release" COMPILER_FLAGS=""
       os: linux
       addons: *gcc7
-
-    # clang 3.7 without AddressSanitizer, Debug & Release
-    - env: CMAKE_CC="clang-3.7" CMAKE_CXX="clang++-3.7" BUILD_TYPE="Debug" COMPILER_FLAGS=""
-      os: linux
-      addons: &clang37
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-            - george-edison55-precise-backports # doxygen 1.8.3
-          packages:
-            - clang-3.7
-            - libbz2-dev
-
-    # clang 3.7 without AddressSanitizer (there are some system-dependent LeakSanitizer errors)
-    - env: CMAKE_CC="clang-3.7" CMAKE_CXX="clang++-3.7" BUILD_TYPE="Release" COMPILER_FLAGS=""
-      os: linux
-      addons: *clang37
 
 before_script:
 
@@ -55,4 +37,4 @@ before_script:
       $CMAKE_ARGS ..
 
 script:
-  - ctest -V
+  - make -j2 && ctest -V
