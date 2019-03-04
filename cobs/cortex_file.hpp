@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/cortex.hpp
+ * cobs/cortex_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,8 +7,8 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_CORTEX_HEADER
-#define COBS_CORTEX_HEADER
+#ifndef COBS_CORTEX_FILE_HEADER
+#define COBS_CORTEX_FILE_HEADER
 
 #include <string>
 #include <vector>
@@ -24,12 +24,12 @@
 #include <tlx/die.hpp>
 #include <tlx/unused.hpp>
 
-namespace cobs::cortex {
+namespace cobs {
 
-class cortex_file
+class CortexFile
 {
 public:
-    cortex_file(std::string path) {
+    CortexFile(std::string path) {
         is_.open(path);
         die_unless(is_.good());
         read_header(is_, path);
@@ -47,7 +47,7 @@ public:
         for (size_t i = 0; i < magic_word.size(); i++) {
             if (is.get() != magic_word[i]) {
                 throw std::invalid_argument(
-                          "cortex_file: magic number not found @ " + path);
+                          "CortexFile: magic number not found @ " + path);
             }
         }
     }
@@ -95,7 +95,7 @@ public:
 
     template <unsigned N, typename Callback>
     void process_kmers(Callback callback) {
-        kmer<N> kmer;
+        KMer<N> kmer;
         auto kmer_data = reinterpret_cast<char*>(kmer.data());
 
         size_t num_uint8_ts_per_kmer = 8 * num_words_per_kmer_;
@@ -135,15 +135,15 @@ private:
 };
 
 template <unsigned int N>
-void process_file(const fs::path& in_path, const fs::path& out_path, document<N>& document,
-                  timer& t) {
+void process_file(const fs::path& in_path, const fs::path& out_path, Document<N>& document,
+                  Timer& t) {
     t.active("read");
-    cortex_file ctx(in_path);
+    CortexFile ctx(in_path);
 
     document.data().clear();
     document.data().reserve(ctx.num_documents());
     ctx.process_kmers<N>(
-        [&](const kmer<N>& m) { document.data().push_back(m); });
+        [&](const KMer<N>& m) { document.data().push_back(m); });
 
     t.active("write");
     document.serialize(out_path, ctx.name_);
@@ -153,8 +153,8 @@ void process_file(const fs::path& in_path, const fs::path& out_path, document<N>
 
 template <unsigned int N>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
-    document<N> document;
-    timer t;
+    Document<N> document;
+    Timer t;
     t.reset();
     size_t i = 0;
     for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
@@ -186,8 +186,8 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
     std::cout << t;
 }
 
-} // namespace cobs::cortex
+} // namespace cobs
 
-#endif // !COBS_CORTEX_HEADER
+#endif // !COBS_CORTEX_FILE_HEADER
 
 /******************************************************************************/

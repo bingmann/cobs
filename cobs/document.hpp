@@ -22,17 +22,17 @@
 namespace cobs {
 
 template <unsigned int N>
-class document
+class Document
 {
 private:
-    std::vector<kmer<N> > m_data;
+    std::vector<KMer<N> > m_data;
 
 public:
     void print(std::ostream& ostream) const;
-    std::vector<kmer<N> >& data() {
+    std::vector<KMer<N> >& data() {
         return m_data;
     }
-    const std::vector<kmer<N> >& data() const {
+    const std::vector<KMer<N> >& data() const {
         return m_data;
     }
 
@@ -45,7 +45,7 @@ public:
         file::document_header sh(name, N);
         file::header<file::document_header>::serialize(ofs, sh);
         ofs.write(reinterpret_cast<const char*>(m_data.data()),
-                  kmer<N>::size* m_data.size());
+                  KMer<N>::size* m_data.size());
     }
 
     void serialize(const fs::path& p, const std::string& name) const {
@@ -61,7 +61,7 @@ public:
 
         stream_metadata smd = get_stream_metadata(ifs);
         size_t size = smd.end_pos - smd.curr_pos;
-        m_data.resize(size / kmer<N>::size);
+        m_data.resize(size / KMer<N>::size);
         ifs.read(reinterpret_cast<char*>(m_data.data()), size);
     }
 
@@ -72,7 +72,7 @@ public:
 };
 
 template <unsigned int N>
-void document<N>::print(std::ostream& ostream) const {
+void Document<N>::print(std::ostream& ostream) const {
     for (size_t i = 0; i < m_data.size(); i++) {
         ostream << m_data[i] << std::endl;
     }

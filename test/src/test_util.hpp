@@ -37,13 +37,13 @@ void assert_equals_files(const std::string& f1, const std::string& f2) {
 }
 
 static inline
-std::vector<cobs::document<31> > generate_documents_all(const std::string& query) {
-    std::vector<cobs::document<31> > documents(33);
-    cobs::kmer<31> k;
+std::vector<cobs::Document<31> > generate_documents_all(const std::string& query) {
+    std::vector<cobs::Document<31> > documents(33);
+    cobs::KMer<31> k;
     char kmer_buffer[31];
     for (size_t i = 0; i < query.size() - 31; i++) {
         const char* normalized_kmer =
-            cobs::query::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
+            cobs::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
         k.init(normalized_kmer);
         for (size_t j = 0; j < documents.size(); j++) {
             if (j % (i % (documents.size() - 1) + 1) == 0) {
@@ -55,12 +55,12 @@ std::vector<cobs::document<31> > generate_documents_all(const std::string& query
 }
 
 static inline
-std::vector<cobs::document<31> > generate_documents_one(const std::string& query) {
-    std::vector<cobs::document<31> > documents(33);
-    cobs::kmer<31> k;
+std::vector<cobs::Document<31> > generate_documents_one(const std::string& query) {
+    std::vector<cobs::Document<31> > documents(33);
+    cobs::KMer<31> k;
     char kmer_buffer[31];
     const char* normalized_kmer =
-        cobs::query::canonicalize_kmer(query.data(), kmer_buffer, 31);
+        cobs::canonicalize_kmer(query.data(), kmer_buffer, 31);
     k.init(normalized_kmer);
     for (size_t i = 0; i < documents.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
@@ -78,7 +78,7 @@ std::string get_file_stem(size_t index) {
 }
 
 static inline
-void generate_test_case(std::vector<cobs::document<31> > documents,
+void generate_test_case(std::vector<cobs::Document<31> > documents,
                         const std::string& out_dir) {
     for (size_t i = 0; i < documents.size(); i++) {
         std::string file_name = get_file_stem(i);

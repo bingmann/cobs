@@ -31,7 +31,7 @@ std::string document_5 = in_dir + "document_5.freq.cobs";
 void generate_result_bin() {
     fs::create_directories(out_dir);
     std::vector<uint64_t> v;
-    document<31> s;
+    Document<31> s;
     file::deserialize(document_1, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
     file::deserialize(document_2, s);

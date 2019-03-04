@@ -26,7 +26,7 @@ TEST(util, allocate_aligned) {
 }
 
 void test_kmer(const char* kmer_data, bool flipped) {
-    cobs::kmer<31> kmer1(kmer_data);
+    cobs::KMer<31> kmer1(kmer_data);
     die_unequal(kmer1.string(), kmer_data);
 
     std::string kmer_at_test;
@@ -38,7 +38,7 @@ void test_kmer(const char* kmer_data, bool flipped) {
 
     // check canonicalization
     char kmer_buffer[31];
-    const char* kmer_canon = cobs::query::canonicalize_kmer(
+    const char* kmer_canon = cobs::canonicalize_kmer(
         kmer_data, kmer_buffer, 31);
 
     kmer1.canonicalize();

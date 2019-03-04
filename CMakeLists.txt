@@ -23,7 +23,7 @@ set(SOURCE_FILES
         cobs/construction/compact_index.hpp
         cobs/construction/ranfold_index.cpp
         cobs/construction/ranfold_index.hpp
-        cobs/cortex.hpp
+        cobs/cortex_file.hpp
         cobs/document.hpp
         cobs/file/classic_index_header.cpp
         cobs/file/classic_index_header.hpp

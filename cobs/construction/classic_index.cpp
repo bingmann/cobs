@@ -12,7 +12,7 @@
 #include <random>
 
 #include <cobs/construction/classic_index.hpp>
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/file.hpp>
@@ -35,18 +35,18 @@ void set_bit(std::vector<uint8_t>& data,
 
 void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
-             file::classic_index_header& cih, timer& t) {
+             file::classic_index_header& cih, Timer& t) {
 
-    document<31> doc;
+    Document<31> doc;
     file::document_header dh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
-            cortex::cortex_file ctx(paths[i].string());
+            CortexFile ctx(paths[i].string());
             cih.file_names()[i] = ctx.name_;
             doc.data().clear();
             ctx.process_kmers<31>(
-                [&](const kmer<31>& m) { doc.data().push_back(m); });
+                [&](const KMer<31>& m) { doc.data().push_back(m); });
 
 #pragma omp parallel for
             for (uint64_t j = 0; j < doc.data().size(); j++) {
@@ -85,7 +85,7 @@ void process(const std::vector<fs::path>& paths,
 void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
              const fs::path& out_file,
              uint64_t signature_size, uint64_t block_size, uint64_t num_hash,
-             timer& t, const std::vector<std::string>& file_names) {
+             Timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
     file::classic_index_header cih(signature_size, num_hash, file_names);
     file::serialize_header(ofs, out_file, cih);
@@ -107,7 +107,7 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
 void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
-    timer t;
+    Timer t;
     file::classic_index_header cih(signature_size, num_hashes);
     std::vector<uint8_t> data;
     process_file_batches(
@@ -125,7 +125,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
 }
 
 bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size) {
-    timer t;
+    Timer t;
     std::vector<std::pair<std::ifstream, uint64_t> > ifstreams;
     std::vector<std::string> file_names;
     uint64_t signature_size = 0;
@@ -180,7 +180,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                           return fs::file_size(p1) > fs::file_size(p2);
                       });
             if (paths[0].extension() == ".ctx") {
-                cortex::cortex_file ctx(paths[0].string());
+                CortexFile ctx(paths[0].string());
                 size_t max_num_elements = ctx.num_documents();
                 sLOG1 << "CTX: max_num_elements" << max_num_elements;
                 signature_size = calc_signature_size(
@@ -188,7 +188,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
             }
             else if (paths[0].extension() == ".isi") {
                 file::document_header dh;
-                document<31> doc;
+                Document<31> doc;
                 doc.deserialize(paths[0], dh);
 
                 size_t max_num_elements = doc.data().size();
@@ -228,7 +228,7 @@ void construct_random(const fs::path& out_file,
                       uint64_t signature_size,
                       uint64_t num_documents, size_t document_size,
                       uint64_t num_hashes, size_t seed) {
-    timer t;
+    Timer t;
 
     std::vector<std::string> file_names;
     for (size_t i = 0; i < num_documents; ++i) {
@@ -240,14 +240,14 @@ void construct_random(const fs::path& out_file,
     data.resize(signature_size * cih.block_size());
 
     std::mt19937 rng(seed);
-    document<31> doc;
+    Document<31> doc;
 
     t.active("generate");
     for (size_t i = 0; i < num_documents; ++i) {
         cih.file_names()[i] = file_names[i];
         doc.data().clear();
         for (size_t j = 0; j < document_size; ++j) {
-            kmer<31> m;
+            KMer<31> m;
             // should canonicalize the kmer, but since we can assume uniform
             // hashing, this is not needed.
             m.fill_random(rng);

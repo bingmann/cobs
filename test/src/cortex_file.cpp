@@ -1,12 +1,12 @@
 /*******************************************************************************
- * test/src/cortex.cpp
+ * test/src/cortex_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/processing.hpp>
@@ -25,7 +25,7 @@ std::string document_path = "test/resources/cortex/result/document_sorted.txt";
 std::string document_name = "DRR030535";
 
 template <unsigned int N>
-void assert_equals_document(cobs::document<N> document) {
+void assert_equals_document(cobs::Document<N> document) {
     std::ifstream ifs(document_path);
     std::string line;
     size_t i = 0;
@@ -37,10 +37,10 @@ void assert_equals_document(cobs::document<N> document) {
 }
 
 TEST(cortex, file_name) {
-    cobs::document<31> document1;
-    cobs::document<31> document2;
-    cobs::timer t;
-    cobs::cortex::process_file(in_path, out_path, document1, t);
+    cobs::Document<31> document1;
+    cobs::Document<31> document2;
+    cobs::Timer t;
+    cobs::process_file(in_path, out_path, document1, t);
     cobs::file::document_header h;
     document2.deserialize(out_path, h);
     ASSERT_EQ(h.name(), document_name);
@@ -48,19 +48,19 @@ TEST(cortex, file_name) {
 
 TEST(cortex, process_file) {
     fs::remove_all(out_dir);
-    cobs::document<31> document;
-    cobs::timer t;
-    cobs::cortex::process_file(in_path, out_path, document, t);
+    cobs::Document<31> document;
+    cobs::Timer t;
+    cobs::process_file(in_path, out_path, document, t);
     document.sort_kmers();
     assert_equals_document(document);
 }
 
 TEST(cortex, file_serialization) {
     fs::remove_all(out_dir);
-    cobs::document<31> document1;
-    cobs::document<31> document2;
-    cobs::timer t;
-    cobs::cortex::process_file(in_path, out_path, document1, t);
+    cobs::Document<31> document1;
+    cobs::Document<31> document2;
+    cobs::Timer t;
+    cobs::process_file(in_path, out_path, document1, t);
     cobs::file::document_header hdoc;
     document2.deserialize(out_path, hdoc);
     document1.sort_kmers();
@@ -71,9 +71,9 @@ TEST(cortex, file_serialization) {
 
 TEST(cortex, process_all_in_directory) {
     fs::remove_all(out_dir);
-    cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
+    cobs::process_all_in_directory<31>(in_dir, out_dir);
     cobs::file::document_header hdoc;
-    cobs::document<31> document;
+    cobs::Document<31> document;
     document.deserialize(out_path_rec, hdoc);
     document.sort_kmers();
     assert_equals_document(document);

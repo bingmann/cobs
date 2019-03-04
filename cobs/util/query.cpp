@@ -13,7 +13,7 @@
 #include <iostream>
 #include <unistd.h>
 
-namespace cobs::query {
+namespace cobs {
 
 int open_file(const fs::path& path, int flags) {
     int fd = open(path.string().data(), flags, 0);
@@ -92,6 +92,6 @@ const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t 
     }
 }
 
-} // namespace cobs::query
+} // namespace cobs
 
 /******************************************************************************/

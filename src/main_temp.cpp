@@ -6,7 +6,7 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cobs/frequency.hpp>
 #include <cobs/query/classic_index/base.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
@@ -33,7 +33,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
 
 void run(cobs::query::classic_index::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string> >& result) {
     sync();
-    cobs::timer t;
+    cobs::Timer t;
     t.active("total");
 //    for (size_t i = 0; i < 100; i++) {
     s.search(cobs::random_sequence(query_len), 31, result, 10);

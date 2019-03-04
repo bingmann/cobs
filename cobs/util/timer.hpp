@@ -18,7 +18,7 @@
 
 namespace cobs {
 
-class timer
+class Timer
 {
 private:
     std::unordered_map<std::string, std::chrono::duration<double> > timers;
@@ -31,7 +31,7 @@ private:
     void print(std::ostream& ostream, size_t max_name_length, const std::string& name, const std::chrono::duration<double>& duration) const;
 
 public:
-    timer() = default;
+    Timer() = default;
     void active(const std::string& timer);
     void stop();
     void reset();

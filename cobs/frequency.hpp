@@ -140,7 +140,7 @@ void process(std::vector<std::ifstream>& ifstreams, const fs::path& out_file) {
 
 template <typename H, typename PQE>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size) {
-    timer t;
+    Timer t;
     t.active("process");
     std::vector<std::ifstream> ifstreams;
     process_file_batches(

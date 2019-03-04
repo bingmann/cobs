@@ -10,7 +10,7 @@
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
 #include <cobs/construction/ranfold_index.hpp>
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/parameters.hpp>
@@ -46,7 +46,7 @@ int cortex_convert(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::cortex::process_all_in_directory<31>(in_dir, out_dir);
+    cobs::process_all_in_directory<31>(in_dir, out_dir);
 
     return 0;
 }
@@ -63,11 +63,11 @@ int cortex_dump(int argc, char** argv) {
         return -1;
 
     for (const std::string& file : filelist) {
-        cobs::cortex::cortex_file cortex(file);
+        cobs::CortexFile cortex(file);
 
         if (cortex.kmer_size_ == 31u) {
             cortex.process_kmers<31>(
-                [&](const cobs::kmer<31>& m) {
+                [&](const cobs::KMer<31>& m) {
                     std::cout << m << '\n';
                 });
         }
@@ -533,7 +533,7 @@ int print_kmers(int argc, char** argv) {
 
     char kmer_buffer[kmer_size];
     for (size_t i = 0; i < query.size() - kmer_size; i++) {
-        auto kmer = cobs::query::canonicalize_kmer(
+        auto kmer = cobs::canonicalize_kmer(
             query.data() + i, kmer_buffer, kmer_size);
         std::cout << std::string(kmer, kmer_size) << '\n';
     }
@@ -590,7 +590,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     aio = "off";
 #endif
 
-    cobs::timer t = s.get_timer();
+    cobs::Timer t = s.get_timer();
     std::cout << "RESULT"
               << " name=benchmark "
               << " index=" << p.string()

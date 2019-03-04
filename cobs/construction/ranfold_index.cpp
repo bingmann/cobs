@@ -16,7 +16,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/ranfold_index.hpp>
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cobs/document.hpp>
 #include <cobs/file/ranfold_index_header.hpp>
 #include <cobs/kmer.hpp>
@@ -42,13 +42,13 @@ void set_bit(std::vector<uint8_t>& data,
 }
 
 template <typename RandomGenerator>
-document<31>& document_generator(
-    document<31>& doc, size_t document_size, RandomGenerator& rng) {
+Document<31>& document_generator(
+    Document<31>& doc, size_t document_size, RandomGenerator& rng) {
 
     // create random document
     doc.data().clear();
     for (size_t j = 0; j < document_size; ++j) {
-        kmer<31> m;
+        KMer<31> m;
         // should canonicalize the kmer, but since we can assume uniform
         // hashing, this is not needed.
         m.fill_random(rng);
@@ -58,7 +58,7 @@ document<31>& document_generator(
     return doc;
 }
 
-void mark_document(const document<31>& doc,
+void mark_document(const Document<31>& doc,
                    const file::ranfold_index_header& rih,
                    std::vector<uint8_t>& data,
                    size_t document_index) {
@@ -229,7 +229,7 @@ struct CollectSketch {
     }
 };
 
-void sketch_document(const document<31>& doc,
+void sketch_document(const Document<31>& doc,
                      const file::ranfold_index_header& rih,
                      size_t num_hashes,
                      Sketch* min_hash) {
@@ -294,10 +294,10 @@ void sketch_path(const fs::path& path,
     }
 
     LOG1 << "Sketching " << path.string();
-    cortex::cortex_file ctx(path.string());
-    document<31> doc;
+    CortexFile ctx(path.string());
+    Document<31> doc;
     ctx.process_kmers<31>(
-        [&](kmer<31>& m) {
+        [&](KMer<31>& m) {
             m.canonicalize();
             doc.data().push_back(m);
         });
@@ -555,7 +555,7 @@ void cluster_documents_ward(std::vector<Sketch>& min_hashes, size_t num_hashes) 
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir) {
-    timer t;
+    Timer t;
 
     std::vector<fs::path> sorted_paths;
     get_sorted_file_names(
@@ -604,7 +604,7 @@ void construct_random(const fs::path& out_file,
                       uint64_t doc_space_bits, uint64_t num_doc_hashes,
                       uint64_t num_documents, size_t document_size,
                       size_t seed) {
-    timer t;
+    Timer t;
 
     file::ranfold_index_header rih;
     rih.m_file_names.reserve(num_documents);
@@ -627,7 +627,7 @@ void construct_random(const fs::path& out_file,
 
         static const size_t num_hashes = 1024;
         std::vector<Sketch> min_hashes;
-        document<31> doc;
+        Document<31> doc;
 
         for (size_t doc_id = 0; doc_id < num_documents; ++doc_id) {
             document_generator(doc, document_size, rng);
@@ -646,8 +646,8 @@ void construct_random(const fs::path& out_file,
 
     t.active("generate");
 
-    std::vector<document<31> > docset;
-    document<31> doc;
+    std::vector<Document<31> > docset;
+    Document<31> doc;
 
     for (size_t doc_id = 0; doc_id < num_documents / 2; ++doc_id) {
 

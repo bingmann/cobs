@@ -15,7 +15,7 @@
 
 namespace cobs {
 
-void timer::active(const std::string& timer) {
+void Timer::active(const std::string& timer) {
     die_unless(!timer.empty());
     stop();
     if (timers.count(timer) == 0) {
@@ -24,7 +24,7 @@ void timer::active(const std::string& timer) {
     running = timer;
 }
 
-void timer::stop() {
+void Timer::stop() {
     auto new_time_point = std::chrono::high_resolution_clock::now();
     if (!running.empty()) {
         timers[running] += new_time_point - time_point;
@@ -34,22 +34,22 @@ void timer::stop() {
     running = "";
 }
 
-void timer::reset() {
+void Timer::reset() {
     for (auto& timer : timers) {
         timer.second = std::chrono::duration<double>::zero();
     }
     total_duration = std::chrono::duration<double>::zero();
 }
 
-double timer::get(const std::string& timer) {
+double Timer::get(const std::string& timer) {
     return timers.at(timer).count();
 }
 
-void timer::print(std::ostream& ostream, size_t max_name_length, const std::string& name, const std::chrono::duration<double>& duration) const {
+void Timer::print(std::ostream& ostream, size_t max_name_length, const std::string& name, const std::chrono::duration<double>& duration) const {
     ostream << std::setfill(' ') << std::left << std::setw(max_name_length) << name << " - " << duration.count() << std::right << std::endl;
 }
 
-void timer::print(std::ostream& ostream) const {
+void Timer::print(std::ostream& ostream) const {
     die_unless(running.empty());
     size_t max_name_length = total_name.size();
     for (const auto& timer : timers) {

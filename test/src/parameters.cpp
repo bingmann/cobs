@@ -49,7 +49,7 @@ size_t get_num_positives_hash(uint64_t num_hashes, double false_positive_probabi
     uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_probability);
 
     std::vector<bool> signature(signature_size);
-    cobs::kmer<31> k;
+    cobs::KMer<31> k;
     for (size_t i = 0; i < num_elements; i++) {
         cobs::classic_index::process_hashes(
             query.data() + i, 31, signature_size, num_hashes,
@@ -110,7 +110,7 @@ TEST(parameters, canonical) {
     for (size_t i = 0; i < query.size() - 31; i++) {
         char* kmer_8 = query.data() + i;
         const char* canonic_kmer =
-            cobs::query::canonicalize_kmer(kmer_8, kmer_buffer, 31);
+            cobs::canonicalize_kmer(kmer_8, kmer_buffer, 31);
 
         std::string kmer_result(canonic_kmer, 31);
         std::string kmer_original(kmer_8, 31);

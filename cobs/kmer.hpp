@@ -29,7 +29,7 @@ uint32_t chars_to_int(char c1, char c2, char c3, char c4) {
 }
 
 template <unsigned int N>
-class kmer : public std::array<uint8_t, (N + 3) / 4>
+class KMer : public std::array<uint8_t, (N + 3) / 4>
 {
 public:
     static const size_t size = (N + 3) / 4;
@@ -43,12 +43,12 @@ private:
     static uint8_t mirror_pairs_[256];
 
 public:
-    kmer() {
-        static_assert(sizeof(kmer<N>) == kmer<N>::size);
+    KMer() {
+        static_assert(sizeof(KMer<N>) == KMer<N>::size);
     }
 
-    explicit kmer(const char* chars) {
-        static_assert(sizeof(kmer<N>) == kmer<N>::size);
+    explicit KMer(const char* chars) {
+        static_assert(sizeof(KMer<N>) == KMer<N>::size);
         init(chars);
     }
 
@@ -105,7 +105,7 @@ public:
         return (kmer_size + 3) / 4;
     }
 
-    bool operator < (const kmer& b) const {
+    bool operator < (const KMer& b) const {
         return std::lexicographical_compare(
             this->rbegin(), this->rend(), b.rbegin(), b.rend());
     }
@@ -161,7 +161,7 @@ public:
 };
 
 template <unsigned int N>
-const std::unordered_map<unsigned int, uint8_t> kmer<N>::bps_to_uint8_t_ = {
+const std::unordered_map<unsigned int, uint8_t> KMer<N>::bps_to_uint8_t_ = {
     { 1094795585, 0 }, { 1128350017, 1 }, { 1195458881, 2 },
     { 1413562689, 3 }, { 1094926657, 4 }, { 1128481089, 5 },
     { 1195589953, 6 }, { 1413693761, 7 }, { 1095188801, 8 },
@@ -251,7 +251,7 @@ const std::unordered_map<unsigned int, uint8_t> kmer<N>::bps_to_uint8_t_ = {
 };
 
 template <unsigned int N>
-const char* kmer<N>::to_base_pairs_[256] = {
+const char* KMer<N>::to_base_pairs_[256] = {
     "AAAA", "AAAC", "AAAG", "AAAT", "AACA", "AACC", "AACG", "AACT",
     "AAGA", "AAGC", "AAGG", "AAGT", "AATA", "AATC", "AATG", "AATT",
     "ACAA", "ACAC", "ACAG", "ACAT", "ACCA", "ACCC", "ACCG", "ACCT",
@@ -298,7 +298,7 @@ const char* kmer<N>::to_base_pairs_[256] = {
     }
  */
 template <unsigned int N>
-uint8_t kmer<N>::mirror_pairs_[256] = {
+uint8_t KMer<N>::mirror_pairs_[256] = {
     0xFF, 0xBF, 0x7F, 0x3F, 0xEF, 0xAF, 0x6F, 0x2F,
     0xDF, 0x9F, 0x5F, 0x1F, 0xCF, 0x8F, 0x4F, 0x0F,
     0xFB, 0xBB, 0x7B, 0x3B, 0xEB, 0xAB, 0x6B, 0x2B,

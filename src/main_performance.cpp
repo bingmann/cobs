@@ -7,13 +7,13 @@
  ******************************************************************************/
 
 #include <cobs/construction/classic_index.hpp>
-#include <cobs/cortex.hpp>
+#include <cobs/cortex_file.hpp>
 #include <cstddef>
 #include <immintrin.h>
 #include <numeric>
 
 void document() {
-    cobs::cortex::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
+    cobs::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
 }
 
 void classic_index() {
@@ -313,7 +313,7 @@ int main() {
     size_t hashes_size = 1000;
     std::vector<uint16_t> counts(8 * block_size, 0);
     std::vector<char> rows(hashes_size* block_size, 63);
-    cobs::timer t;
+    cobs::Timer t;
     for (size_t i = 0; i < 1; i++) {
 //        std::iota(rows.begin(), rows.end(), i);
         t.active("counts");
