@@ -11,9 +11,9 @@
 
 #include <cobs/file/header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-class compact_index_header : public header<compact_index_header>
+class CompactIndexHeader : public Header<CompactIndexHeader>
 {
 public:
     struct parameter {
@@ -34,8 +34,8 @@ protected:
 public:
     static const std::string magic_word;
     static const std::string file_extension;
-    explicit compact_index_header(uint64_t page_size = 4096);
-    compact_index_header(const std::vector<parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size = 4096);
+    explicit CompactIndexHeader(uint64_t page_size = 4096);
+    CompactIndexHeader(const std::vector<parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size = 4096);
     const std::vector<parameter>& parameters() const;
     const std::vector<std::string>& file_names() const;
     uint64_t page_size() const;
@@ -44,7 +44,7 @@ public:
     void read_file(const fs::path& p, std::vector<std::vector<uint8_t> >& data);
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_COMPACT_INDEX_HEADER_HEADER
 

@@ -16,10 +16,10 @@ namespace cobs::query::compact_index {
 
 base::base(const fs::path& path) : query::classic_base() {
     std::ifstream ifs;
-    m_header = file::deserialize_header<file::compact_index_header>(ifs, path);
+    m_header = file::deserialize_header<CompactIndexHeader>(ifs, path);
     m_smd = get_stream_metadata(ifs);
 
-    // todo assertions that all the data in the header is correct
+    // todo assertions that all the data in the Header is correct
     m_block_size = m_header.page_size() * m_header.parameters().size();
     m_num_hashes = m_header.parameters()[0].num_hashes;
     for (const auto& p : m_header.parameters()) {

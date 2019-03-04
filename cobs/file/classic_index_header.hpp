@@ -11,9 +11,9 @@
 
 #include <cobs/file/header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-class classic_index_header : public header<classic_index_header>
+class ClassicIndexHeader : public Header<ClassicIndexHeader>
 {
 private:
     uint64_t m_signature_size;
@@ -27,8 +27,8 @@ protected:
 public:
     static const std::string magic_word;
     static const std::string file_extension;
-    classic_index_header() = default;
-    classic_index_header(
+    ClassicIndexHeader() = default;
+    ClassicIndexHeader(
         uint64_t signature_size, uint64_t num_hashes,
         const std::vector<std::string>& file_names = std::vector<std::string>());
     uint64_t signature_size() const;
@@ -44,7 +44,7 @@ public:
     void read_file(const fs::path& p, std::vector<uint8_t>& data);
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_CLASSIC_INDEX_HEADER_HEADER
 

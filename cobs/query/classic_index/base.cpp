@@ -14,7 +14,7 @@ namespace cobs::query::classic_index {
 
 base::base(const fs::path& path) : query::classic_base() {
     std::ifstream ifs;
-    m_header = file::deserialize_header<file::classic_index_header>(ifs, path);
+    m_header = file::deserialize_header<ClassicIndexHeader>(ifs, path);
     m_smd = get_stream_metadata(ifs);
 }
 

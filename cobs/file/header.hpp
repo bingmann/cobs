@@ -17,10 +17,10 @@
 #include <cobs/util/error_handling.hpp>
 #include <cobs/util/serialization.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
 template <class T>
-class header
+class Header
 {
 private:
     static const uint32_t m_version;
@@ -31,26 +31,26 @@ protected:
 
 public:
     static const std::string magic_word;
-    static void serialize(std::ofstream& ofs, const header& h);
-    static void deserialize(std::ifstream& ifs, header& h);
+    static void serialize(std::ofstream& ofs, const Header& h);
+    static void deserialize(std::ifstream& ifs, Header& h);
 };
 
 template <class T>
-const std::string header<T>::magic_word = "INSIIN";
+const std::string Header<T>::magic_word = "INSIIN";
 template <class T>
-const uint32_t header<T>::m_version = 1;
+const uint32_t Header<T>::m_version = 1;
 
 static inline
 void check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
     std::vector<char> mw_v(magic_word.size(), ' ');
     ifs.read(mw_v.data(), magic_word.size());
     std::string mw(mw_v.data(), mw_v.size());
-    assert_throw<file_io_exception>(mw == magic_word, "invalid file type");
-    assert_throw<file_io_exception>(ifs.good(), "input filestream broken");
+    assert_throw<FileIOException>(mw == magic_word, "invalid file type");
+    assert_throw<FileIOException>(ifs.good(), "input filestream broken");
 }
 
 template <class T>
-void header<T>::serialize(std::ofstream& ofs, const header& h) {
+void Header<T>::serialize(std::ofstream& ofs, const Header& h) {
     ofs << magic_word;
     cobs::serialize(ofs, m_version);
     h.serialize(ofs);
@@ -58,16 +58,16 @@ void header<T>::serialize(std::ofstream& ofs, const header& h) {
 }
 
 template <class T>
-void header<T>::deserialize(std::ifstream& ifs, header& h) {
+void Header<T>::deserialize(std::ifstream& ifs, Header& h) {
     check_magic_word(ifs, magic_word);
     uint32_t v;
     cobs::deserialize(ifs, v);
-    assert_throw<file_io_exception>(v == m_version, "invalid file version");
+    assert_throw<FileIOException>(v == m_version, "invalid file version");
     h.deserialize(ifs);
     check_magic_word(ifs, T::magic_word);
 }
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_HEADER_HEADER
 

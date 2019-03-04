@@ -28,17 +28,17 @@
 namespace cobs::classic_index {
 
 void set_bit(std::vector<uint8_t>& data,
-             const file::classic_index_header& cih,
+             const ClassicIndexHeader& cih,
              uint64_t pos, uint64_t bit_in_block) {
     data[cih.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
 }
 
 void process(const std::vector<fs::path>& paths,
              const fs::path& out_file, std::vector<uint8_t>& data,
-             file::classic_index_header& cih, Timer& t) {
+             ClassicIndexHeader& cih, Timer& t) {
 
     Document<31> doc;
-    file::document_header dh;
+    DocumentHeader dh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
@@ -87,7 +87,7 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
              uint64_t signature_size, uint64_t block_size, uint64_t num_hash,
              Timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
-    file::classic_index_header cih(signature_size, num_hash, file_names);
+    ClassicIndexHeader cih(signature_size, num_hash, file_names);
     file::serialize_header(ofs, out_file, cih);
 
     std::vector<char> block(block_size);
@@ -108,10 +108,10 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     Timer t;
-    file::classic_index_header cih(signature_size, num_hashes);
+    ClassicIndexHeader cih(signature_size, num_hashes);
     std::vector<uint8_t> data;
     process_file_batches(
-        in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
+        in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
         [](const fs::path& path) {
             return path.extension() == ".ctx" || path.extension() == ".isi";
         },
@@ -132,15 +132,15 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
     uint64_t num_hashes = 0;
     bool all_combined =
         process_file_batches(
-            in_dir, out_dir, batch_size, file::classic_index_header::file_extension,
+            in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
             [](const fs::path& path) {
-                return file::file_is<file::classic_index_header>(path);
+                return file::file_is<ClassicIndexHeader>(path);
             },
             [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
                 uint64_t new_block_size = 0;
                 for (size_t i = 0; i < paths.size(); i++) {
                     ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                    auto cih = file::deserialize_header<file::classic_index_header>(ifstreams.back().first, paths[i]);
+                    auto cih = file::deserialize_header<ClassicIndexHeader>(ifstreams.back().first, paths[i]);
                     if (signature_size == 0) {
                         signature_size = cih.signature_size();
                         num_hashes = cih.num_hashes();
@@ -170,7 +170,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                             uint64_t num_hashes, double false_positive_probability) {
     uint64_t signature_size;
     process_file_batches(
-        in_dir, out_dir, UINT64_MAX, file::document_header::file_extension,
+        in_dir, out_dir, UINT64_MAX, DocumentHeader::file_extension,
         [](const fs::path& path) {
             return path.extension() == ".ctx" || path.extension() == ".isi";
         },
@@ -187,7 +187,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                     max_num_elements, num_hashes, false_positive_probability);
             }
             else if (paths[0].extension() == ".isi") {
-                file::document_header dh;
+                DocumentHeader dh;
                 Document<31> doc;
                 doc.deserialize(paths[0], dh);
 
@@ -217,11 +217,11 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
 
     fs::path index;
     for (fs::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
-        if (file::file_is<file::classic_index_header>(sub_it->path())) {
+        if (file::file_is<ClassicIndexHeader>(sub_it->path())) {
             index = sub_it->path();
         }
     }
-    fs::rename(index, out_dir.string() + "/index" + file::classic_index_header::file_extension);
+    fs::rename(index, out_dir.string() + "/index" + ClassicIndexHeader::file_extension);
 }
 
 void construct_random(const fs::path& out_file,
@@ -235,7 +235,7 @@ void construct_random(const fs::path& out_file,
         file_names.push_back("file_" + std::to_string(i));
     }
 
-    file::classic_index_header cih(signature_size, num_hashes, file_names);
+    ClassicIndexHeader cih(signature_size, num_hashes, file_names);
     std::vector<uint8_t> data;
     data.resize(signature_size * cih.block_size());
 

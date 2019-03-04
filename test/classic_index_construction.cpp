@@ -40,7 +40,7 @@ TEST_F(classic_index_construction, deserialization) {
 
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
-    cobs::file::classic_index_header h;
+    cobs::ClassicIndexHeader h;
     h.read_file(classic_index_path, data);
     ASSERT_EQ(h.file_names().size(), 33U);
     ASSERT_EQ(h.num_hashes(), 3U);
@@ -53,13 +53,13 @@ TEST_F(classic_index_construction, file_names) {
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(tmp_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file::file_is<cobs::file::document_header>(p);
+                     return cobs::file::file_is<cobs::DocumentHeader>(p);
                  });
     std::sort(paths.begin(), paths.end());
 
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
-    auto h = cobs::file::deserialize_header<cobs::file::classic_index_header>(classic_index_path);
+    auto h = cobs::file::deserialize_header<cobs::ClassicIndexHeader>(classic_index_path);
     h.read_file(classic_index_path, data);
     for (size_t i = 0; i < h.file_names().size(); i++) {
         ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
@@ -71,7 +71,7 @@ TEST_F(classic_index_construction, num_ones) {
     generate_test_case(documents, tmp_dir.string());
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
-    cobs::file::classic_index_header h;
+    cobs::ClassicIndexHeader h;
     h.read_file(classic_index_path, data);
 
     std::map<std::string, size_t> num_ones;

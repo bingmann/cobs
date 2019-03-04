@@ -19,7 +19,7 @@ class base : public query::base
 protected:
     explicit base(const fs::path& path);
 
-    file::ranfold_index_header m_header;
+    RanfoldIndexHeader m_header;
     stream_metadata m_smd;
 
 public:

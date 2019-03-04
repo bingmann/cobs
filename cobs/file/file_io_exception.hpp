@@ -11,15 +11,15 @@
 
 #include <stdexcept>
 
-namespace cobs::file {
+namespace cobs {
 
-class file_io_exception : public std::runtime_error
+class FileIOException : public std::runtime_error
 {
 private:
     std::string msg_;
 
 public:
-    explicit file_io_exception(const std::string& msg)
+    explicit FileIOException(const std::string& msg)
         : std::runtime_error(msg), msg_(msg) { }
 
     const char * what() const noexcept override {
@@ -31,7 +31,7 @@ public:
     }
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_FILE_IO_EXCEPTION_HEADER
 

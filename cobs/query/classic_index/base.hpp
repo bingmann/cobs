@@ -23,7 +23,7 @@ protected:
     uint64_t counts_size() const override;
     const std::vector<std::string>& file_names() const override;
 
-    file::classic_index_header m_header;
+    ClassicIndexHeader m_header;
 
 public:
     virtual ~base() = default;

@@ -159,7 +159,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
     size_t i = 0;
     for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
         fs::path out_path =
-            out_dir / it->path().stem().concat(file::document_header::file_extension);
+            out_dir / it->path().stem().concat(DocumentHeader::file_extension);
         if (fs::is_regular_file(*it) &&
             it->path().extension().string() == ".ctx" &&
             it->path().string().find("uncleaned") == std::string::npos &&

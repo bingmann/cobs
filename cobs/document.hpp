@@ -42,8 +42,8 @@ public:
 
     void serialize(std::ofstream& ofs, const std::string& name) const {
         ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-        file::document_header sh(name, N);
-        file::header<file::document_header>::serialize(ofs, sh);
+        DocumentHeader sh(name, N);
+        Header<DocumentHeader>::serialize(ofs, sh);
         ofs.write(reinterpret_cast<const char*>(m_data.data()),
                   KMer<N>::size* m_data.size());
     }
@@ -54,9 +54,9 @@ public:
         serialize(ofs, name);
     }
 
-    void deserialize(std::ifstream& ifs, file::document_header& h) {
+    void deserialize(std::ifstream& ifs, DocumentHeader& h) {
         ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-        file::header<file::document_header>::deserialize(ifs, h);
+        Header<DocumentHeader>::deserialize(ifs, h);
         die_unless(N == h.kmer_size());
 
         stream_metadata smd = get_stream_metadata(ifs);
@@ -65,7 +65,7 @@ public:
         ifs.read(reinterpret_cast<char*>(m_data.data()), size);
     }
 
-    void deserialize(const fs::path& p, file::document_header& h) {
+    void deserialize(const fs::path& p, DocumentHeader& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, h);
     }

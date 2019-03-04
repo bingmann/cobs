@@ -11,9 +11,9 @@
 
 #include <cobs/file/header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-class frequency_header : public header<frequency_header>
+class FrequencyHeader : public Header<FrequencyHeader>
 {
 protected:
     void serialize(std::ofstream& ost) const override;
@@ -24,7 +24,7 @@ public:
     static const std::string file_extension;
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_FREQUENCY_HEADER_HEADER
 

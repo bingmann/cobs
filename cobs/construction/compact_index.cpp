@@ -30,7 +30,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return file::file_is<file::document_header>(p);
+                     return file::file_is<DocumentHeader>(p);
                  });
     std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
                   return fs::file_size(p1) < fs::file_size(p2);
@@ -55,7 +55,7 @@ void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t pa
 //        size_t num_files = 0;
 //        size_t max_file_size = 0;
 //        for (fs::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
-//            if (file::file_is<file::document_header>(sub_it->path())) {
+//            if (file::file_is<DocumentHeader>(sub_it->path())) {
 //                max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
 //                num_files++;
 //            }
@@ -82,7 +82,7 @@ void construct_classic_index_from_documents(const fs::path& in_dir, const fs::pa
         size_t num_files = 0;
         size_t max_file_size = 0;
         for (fs::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
-            if (file::file_is<file::document_header>(sub_it->path())) {
+            if (file::file_is<DocumentHeader>(sub_it->path())) {
                 max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
                 num_files++;
             }
@@ -111,14 +111,14 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return file::file_is<file::classic_index_header>(p);
+                     return file::file_is<ClassicIndexHeader>(p);
                  });
     std::sort(paths.begin(), paths.end());
 
-    std::vector<file::compact_index_header::parameter> parameters;
+    std::vector<CompactIndexHeader::parameter> parameters;
     std::vector<std::string> file_names;
     for (size_t i = 0; i < paths.size(); i++) {
-        auto h = file::deserialize_header<file::classic_index_header>(paths[i]);
+        auto h = file::deserialize_header<ClassicIndexHeader>(paths[i]);
         parameters.push_back({ h.signature_size(), h.num_hashes() });
         file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
         std::cout << i << ": " << h.block_size() << " " << paths[i].string() << std::endl;
@@ -130,14 +130,14 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
         }
     }
 
-    file::compact_index_header h(parameters, file_names, page_size);
+    CompactIndexHeader h(parameters, file_names, page_size);
     std::ofstream ofs;
     file::serialize_header(ofs, out_file, h);
 
     std::vector<char> buffer(1024 * page_size);
     for (const auto& p : paths) {
         std::ifstream ifs;
-        uint64_t block_size = file::deserialize_header<file::classic_index_header>(ifs, p).block_size();
+        uint64_t block_size = file::deserialize_header<ClassicIndexHeader>(ifs, p).block_size();
         if (block_size == page_size) {
             ofs << ifs.rdbuf();
         }
@@ -167,7 +167,7 @@ void construct_from_folders(const fs::path& in_dir, size_t batch_size, size_t nu
     while (!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
         iteration++;
     }
-    combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + file::compact_index_header::file_extension), page_size);
+    combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + CompactIndexHeader::file_extension), page_size);
 }
 
 void construct(const fs::path& in_dir, fs::path out_dir,

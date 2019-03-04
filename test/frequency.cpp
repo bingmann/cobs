@@ -40,7 +40,7 @@ void generate_result_bin() {
     std::sort(v.begin(), v.end());
 
     std::ofstream ofs;
-    file::serialize_header<file::frequency_header>(ofs, "bin" + file::frequency_header::file_extension, file::frequency_header());
+    file::serialize_header<file::FrequencyHeader>(ofs, "bin" + file::FrequencyHeader::file_extension, file::FrequencyHeader());
     uint64_t kmer = v[0];
     uint32_t count = 1;
     for(size_t i = 1; i < v.size(); i++) {
@@ -60,7 +60,7 @@ void generate_result_bin() {
 template<class OutputIteratorKmer, class OutputIteratorCount>
 void read_document(const std::string& file, OutputIteratorKmer& iter_kmer, OutputIteratorCount& iter_count) {
     std::ifstream ifs;
-    file::deserialize_header<file::frequency_header>(ifs, file);
+    file::deserialize_header<file::FrequencyHeader>(ifs, file);
     while(ifs && ifs.peek() != EOF) {
         uint64_t kmer;
         uint32_t count;
@@ -88,7 +88,7 @@ void generate_result_fre() {
     });
 
     std::ofstream ofs;
-    file::serialize_header<file::frequency_header>(ofs, "freq" + file::frequency_header::file_extension, file::frequency_header());
+    file::serialize_header<file::FrequencyHeader>(ofs, "freq" + file::FrequencyHeader::file_extension, file::FrequencyHeader());
     uint64_t kmer = kmers[indices[0]];
     uint32_t count = counts[indices[0]];
     for(size_t i = 1; i < kmers.size(); i++) {
@@ -113,7 +113,7 @@ TEST(frequency, generate_results) {
 
 size_t get_count_document(const fs::path& file) {
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::file::document_header>(ifs, file);
+    cobs::file::deserialize_header<cobs::DocumentHeader>(ifs, file);
     ifs.exceptions(std::ios::failbit | std::ios::badbit);
     size_t total_count = 0;
     uint64_t kmer;
@@ -126,7 +126,7 @@ size_t get_count_document(const fs::path& file) {
 
 size_t get_count_frequency(const fs::path& file) {
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::file::frequency_header>(ifs, file);
+    cobs::file::deserialize_header<cobs::FrequencyHeader>(ifs, file);
     ifs.exceptions(std::ios::failbit | std::ios::badbit);
     size_t total_count = 0;
     uint64_t kmer;
@@ -149,16 +149,16 @@ protected:
 };
 
 TEST_F(frequency, bin) {
-    cobs::frequency::process_all_in_directory<cobs::file::document_header>(in_dir, out_dir, 40);
+    cobs::frequency::process_all_in_directory<cobs::DocumentHeader>(in_dir, out_dir, 40);
     size_t total_count = get_count_document(document_1) + get_count_document(document_2) + get_count_document(document_3);
-    fs::path p(out_dir.string() + "[document_1-document_3]" + cobs::file::frequency_header::file_extension);
+    fs::path p(out_dir.string() + "[document_1-document_3]" + cobs::FrequencyHeader::file_extension);
     ASSERT_EQ(get_count_frequency(p), total_count);
     assert_equals_files(result_bin.string(), p.string());
 }
 
 TEST_F(frequency, freq) {
-    cobs::frequency::process_all_in_directory<cobs::file::frequency_header>(in_dir, out_dir, 40);
-    fs::path p(out_dir.string() + "[document_4-document_5]" + cobs::file::frequency_header::file_extension);
+    cobs::frequency::process_all_in_directory<cobs::FrequencyHeader>(in_dir, out_dir, 40);
+    fs::path p(out_dir.string() + "[document_4-document_5]" + cobs::FrequencyHeader::file_extension);
     assert_equals_files(result_freq.string(), p.string());
 }
 

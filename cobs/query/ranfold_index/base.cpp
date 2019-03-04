@@ -14,7 +14,7 @@ namespace cobs::query::ranfold_index {
 
 base::base(const fs::path& path) : query::base() {
     std::ifstream ifs;
-    m_header = file::deserialize_header<file::ranfold_index_header>(ifs, path);
+    m_header = file::deserialize_header<RanfoldIndexHeader>(ifs, path);
     m_smd = get_stream_metadata(ifs);
 }
 

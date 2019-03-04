@@ -16,10 +16,10 @@ int main(int argc, char** argv) {
         std::string out_dir = argv[3];
         size_t batch_size = std::strtoul(argv[4], &pEnd, 10);
         if (type == "bin") {
-            cobs::frequency::process_all_in_directory<cobs::file::document_header>(in_dir, out_dir, batch_size);
+            cobs::frequency::process_all_in_directory<cobs::DocumentHeader>(in_dir, out_dir, batch_size);
         }
         else if (type == "fre") {
-            cobs::frequency::process_all_in_directory<cobs::file::frequency_header>(in_dir, out_dir, batch_size);
+            cobs::frequency::process_all_in_directory<cobs::FrequencyHeader>(in_dir, out_dir, batch_size);
         }
         else {
             std::cout << "wrong type: use 'bin' or 'fre'" << std::endl;

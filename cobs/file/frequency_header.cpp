@@ -8,13 +8,13 @@
 
 #include <cobs/file/frequency_header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-const std::string frequency_header::magic_word = "FREQUENCY";
-const std::string frequency_header::file_extension = ".freq.isi";
-void frequency_header::serialize(std::ofstream& /*ost*/) const { }
-void frequency_header::deserialize(std::ifstream& /*ifs*/) { }
+const std::string FrequencyHeader::magic_word = "FREQUENCY";
+const std::string FrequencyHeader::file_extension = ".freq.isi";
+void FrequencyHeader::serialize(std::ofstream& /*ost*/) const { }
+void FrequencyHeader::deserialize(std::ifstream& /*ifs*/) { }
 
-} // namespace cobs::file
+} // namespace cobs
 
 /******************************************************************************/

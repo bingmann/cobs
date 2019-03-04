@@ -34,7 +34,7 @@
 namespace cobs::ranfold_index {
 
 void set_bit(std::vector<uint8_t>& data,
-             const file::ranfold_index_header& rih,
+             const RanfoldIndexHeader& rih,
              uint64_t term_index, uint64_t document_index) {
     size_t x = rih.m_doc_space_bytes * term_index + document_index / 8;
     die_unless(x < data.size());
@@ -59,7 +59,7 @@ Document<31>& document_generator(
 }
 
 void mark_document(const Document<31>& doc,
-                   const file::ranfold_index_header& rih,
+                   const RanfoldIndexHeader& rih,
                    std::vector<uint8_t>& data,
                    size_t document_index) {
     for (size_t j = 0; j < doc.data().size(); ++j) {
@@ -230,7 +230,7 @@ struct CollectSketch {
 };
 
 void sketch_document(const Document<31>& doc,
-                     const file::ranfold_index_header& rih,
+                     const RanfoldIndexHeader& rih,
                      size_t num_hashes,
                      Sketch* min_hash) {
 
@@ -268,7 +268,7 @@ void sketch_document(const Document<31>& doc,
 }
 
 void sketch_path(const fs::path& path,
-                 const file::ranfold_index_header& rih,
+                 const RanfoldIndexHeader& rih,
                  size_t num_hashes,
                  Sketch* min_hash) {
 
@@ -574,7 +574,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir) {
     std::cout << "Construct index from "
               << sorted_paths.size() << " documents." << std::endl;
 
-    file::ranfold_index_header rih;
+    RanfoldIndexHeader rih;
 
     rih.m_term_space = 2 * 1024 * 1024;
     rih.m_term_hashes = 1;
@@ -606,7 +606,7 @@ void construct_random(const fs::path& out_file,
                       size_t seed) {
     Timer t;
 
-    file::ranfold_index_header rih;
+    RanfoldIndexHeader rih;
     rih.m_file_names.reserve(num_documents);
     for (size_t i = 0; i < num_documents; ++i) {
         rih.m_file_names.push_back("file_" + std::to_string(i));

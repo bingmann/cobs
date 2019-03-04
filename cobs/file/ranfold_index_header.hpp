@@ -12,9 +12,9 @@
 
 #include <cobs/file/header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-class ranfold_index_header : public header<ranfold_index_header>
+class RanfoldIndexHeader : public Header<RanfoldIndexHeader>
 {
 public:
     uint64_t m_term_space;
@@ -34,7 +34,7 @@ protected:
 public:
     static const std::string magic_word;
     static const std::string file_extension;
-    ranfold_index_header() = default;
+    RanfoldIndexHeader() = default;
 
     void write_file(std::ofstream& ofs, const std::vector<uint8_t>& data);
     void write_file(const fs::path& p, const std::vector<uint8_t>& data);
@@ -43,7 +43,7 @@ public:
     void read_file(const fs::path& p, std::vector<uint8_t>& data);
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_RANFOLD_INDEX_HEADER_HEADER
 

@@ -43,7 +43,7 @@ template <class T>
 void serialize_header(std::ofstream& ofs, const fs::path& p, const T& h) {
     ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ofs.open(p.string(), std::ios::out | std::ios::binary);
-    header<T>::serialize(ofs, h);
+    Header<T>::serialize(ofs, h);
 }
 
 template <class T>
@@ -57,7 +57,7 @@ T deserialize_header(std::ifstream& ifs, const fs::path& p) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ifs.open(p.string(), std::ios::in | std::ios::binary);
     T h;
-    header<T>::deserialize(ifs, h);
+    Header<T>::deserialize(ifs, h);
     return h;
 }
 

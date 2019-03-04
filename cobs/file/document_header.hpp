@@ -11,9 +11,9 @@
 
 #include <cobs/file/header.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-class document_header : public header<document_header>
+class DocumentHeader : public Header<DocumentHeader>
 {
 private:
     std::string m_name;
@@ -26,13 +26,13 @@ protected:
 public:
     static const std::string magic_word;
     static const std::string file_extension;
-    document_header() = default;
-    document_header(std::string name, uint32_t kmer_size);
+    DocumentHeader() = default;
+    DocumentHeader(std::string name, uint32_t kmer_size);
     std::string name() const;
     uint32_t kmer_size() const;
 };
 
-} // namespace cobs::file
+} // namespace cobs
 
 #endif // !COBS_FILE_DOCUMENT_HEADER_HEADER
 
