@@ -1,13 +1,13 @@
 /*******************************************************************************
- * test/src/test_util.hpp
+ * test/test_util.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_TEST_SRC_TEST_UTIL_HEADER
-#define COBS_TEST_SRC_TEST_UTIL_HEADER
+#ifndef COBS_TEST_TEST_UTIL_HEADER
+#define COBS_TEST_TEST_UTIL_HEADER
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
@@ -88,6 +88,6 @@ void generate_test_case(std::vector<cobs::Document<31> > documents,
     }
 }
 
-#endif // !COBS_TEST_SRC_TEST_UTIL_HEADER
+#endif // !COBS_TEST_TEST_UTIL_HEADER
 
 /******************************************************************************/

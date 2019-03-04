@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/src/cortex_file.cpp
+ * test/cortex_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *

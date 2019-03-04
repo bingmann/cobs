@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/src/frequency.cpp
+ * test/frequency.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/src/util.cpp
+ * test/util.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann

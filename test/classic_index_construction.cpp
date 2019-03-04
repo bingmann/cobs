@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/src/classic_index_construction.cpp
+ * test/classic_index_construction.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *

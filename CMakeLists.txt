@@ -109,7 +109,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17 -march=native")
 MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 file(GLOB_RECURSE TEST_FILES
-  "${PROJECT_SOURCE_DIR}/test/src/*.hpp" "${PROJECT_SOURCE_DIR}/test/src/*.cpp")
+  "${PROJECT_SOURCE_DIR}/test/*.hpp" "${PROJECT_SOURCE_DIR}/test/*.cpp")
 file(GLOB_RECURSE EXECUTABLE_FILES
   "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
