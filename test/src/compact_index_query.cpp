@@ -93,7 +93,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
     }
 }
 
-#ifdef __linux__
+#if USE_AIO
 TEST_F(compact_index_query, all_included_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
