@@ -105,7 +105,7 @@ else()
     add_definitions(-DNO_AIO)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param asan-globals=0 -W -Wall -Wno-unused-function -std=c++17 -lstdc++fs -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17 -march=native")
 MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 file(GLOB_RECURSE TEST_FILES
