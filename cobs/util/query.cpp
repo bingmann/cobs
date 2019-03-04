@@ -87,6 +87,7 @@ const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t 
             kmer_buffer[kmer_size - j - 1] =
                 map[static_cast<uint8_t>(query_8[j])];
         }
+        kmer_buffer[kmer_size] = 0;
         return kmer_buffer;
     }
 }
