@@ -26,7 +26,7 @@ static fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
 class file : public ::testing::Test
 {
 protected:
-    virtual void SetUp() {
+    void SetUp() final {
         cobs::error_code ec;
         fs::remove_all(out_dir, ec);
         fs::create_directories(out_dir);

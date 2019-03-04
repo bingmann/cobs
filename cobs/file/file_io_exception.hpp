@@ -22,7 +22,7 @@ public:
     explicit file_io_exception(const std::string& msg)
         : std::runtime_error(msg), msg_(msg) { }
 
-    virtual const char * what() const noexcept {
+    const char * what() const noexcept override {
         return msg_.c_str();
     }
 

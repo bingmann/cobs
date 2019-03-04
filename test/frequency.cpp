@@ -142,8 +142,7 @@ size_t get_count_frequency(const fs::path& file) {
 class frequency : public ::testing::Test
 {
 protected:
-    virtual void SetUp() {
-
+    void SetUp() final {
         cobs::error_code ec;
         fs::remove_all(out_dir, ec);
     }

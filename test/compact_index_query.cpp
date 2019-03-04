@@ -22,7 +22,7 @@ static std::string query = cobs::random_sequence(21000, 1);
 class compact_index_query : public ::testing::Test
 {
 protected:
-    virtual void SetUp() {
+    void SetUp() final {
         cobs::error_code ec;
         fs::remove_all(in_dir, ec);
         if (ec) {

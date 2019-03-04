@@ -35,7 +35,7 @@ public:
     static void deserialize_header(std::ifstream& ifs, const fs::path& p);
     std::ifstream * ifs();
     uint64_t kmer();
-    virtual uint32_t count();
+    uint32_t count();
 
     bool operator < (const pq_element& b) const {
         return m_kmer > b.m_kmer;

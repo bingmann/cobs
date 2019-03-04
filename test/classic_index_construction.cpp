@@ -25,7 +25,7 @@ static std::string query = cobs::random_sequence(10000, 1);
 class classic_index_construction : public ::testing::Test
 {
 protected:
-    virtual void SetUp() {
+    void SetUp() final {
         cobs::error_code ec;
         fs::remove_all(in_dir, ec);
         fs::remove_all(tmp_dir, ec);
