@@ -12,16 +12,15 @@
 #include <cobs/util/parameters.hpp>
 #include <gtest/gtest.h>
 
-namespace {
 namespace fs = cobs::fs;
 
-fs::path in_dir("test/out/compact_index_construction/input");
-fs::path documents_dir(in_dir.string() + "/documents");
-fs::path isi_2_dir(in_dir.string() + "/isi_2");
-fs::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
-fs::path tmp_dir("test/out/compact_index_construction/tmp");
+static fs::path in_dir("test/out/compact_index_construction/input");
+static fs::path documents_dir(in_dir.string() + "/documents");
+static fs::path isi_2_dir(in_dir.string() + "/isi_2");
+static fs::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
+static fs::path tmp_dir("test/out/compact_index_construction/tmp");
 
-std::string query = cobs::random_sequence(10000, 1);
+static std::string query = cobs::random_sequence(10000, 1);
 
 class compact_index_construction : public ::testing::Test
 {
@@ -197,7 +196,6 @@ TEST_F(compact_index_construction, content) {
             ASSERT_EQ(indices[i].data()[j], cisi_data[i][j]);
         }
     }
-}
 }
 
 /******************************************************************************/

@@ -13,16 +13,15 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-namespace {
 namespace fs = cobs::fs;
 
-std::string in_dir = "test/resources/cortex/input/";
-std::string out_dir = "test/out/cortex/";
-std::string in_path = in_dir + "document.ctx";
-std::string out_path = out_dir + "document.doc.isi";
-std::string out_path_rec = out_dir + "document_rec.doc.isi";
-std::string document_path = "test/resources/cortex/result/document_sorted.txt";
-std::string document_name = "DRR030535";
+static std::string in_dir = "test/resources/cortex/input/";
+static std::string out_dir = "test/out/cortex/";
+static std::string in_path = in_dir + "document.ctx";
+static std::string out_path = out_dir + "document.doc.isi";
+static std::string out_path_rec = out_dir + "document_rec.doc.isi";
+static std::string document_path = "test/resources/cortex/result/document_sorted.txt";
+static std::string document_name = "DRR030535";
 
 template <unsigned int N>
 void assert_equals_document(cobs::Document<N> document) {
@@ -77,7 +76,6 @@ TEST(cortex, process_all_in_directory) {
     document.deserialize(out_path_rec, hdoc);
     document.sort_kmers();
     assert_equals_document(document);
-}
 }
 
 /******************************************************************************/

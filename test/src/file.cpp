@@ -16,13 +16,12 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 
-namespace {
 namespace fs = cobs::fs;
 
-fs::path out_dir("test/out/file");
-fs::path out_path_s(out_dir.string() + "/classic_index.doc.isi");
-fs::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
-fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
+static fs::path out_dir("test/out/file");
+static fs::path out_path_s(out_dir.string() + "/classic_index.doc.isi");
+static fs::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
+static fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
 
 class file : public ::testing::Test
 {
@@ -112,7 +111,6 @@ TEST_F(file, compact_index_header_padding) {
     cobs::file::deserialize_header<cobs::file::compact_index_header>(ifs, out_path_cisi);
     cobs::stream_metadata smd = cobs::get_stream_metadata(ifs);
     ASSERT_EQ(smd.curr_pos % page_size, 0U);
-}
 }
 
 /******************************************************************************/

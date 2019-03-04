@@ -12,15 +12,15 @@
 #include <cobs/util/parameters.hpp>
 #include <gtest/gtest.h>
 
-namespace {
 namespace fs = cobs::fs;
-fs::path in_dir("test/out/classic_index_construction/input");
-fs::path documents_dir(in_dir.string() + "/documents");
-fs::path isi_2_dir(in_dir.string() + "/isi_2");
-fs::path classic_index_path(in_dir.string() + "/index.cla_idx.isi");
-fs::path tmp_dir("test/out/classic_index_construction/tmp");
 
-std::string query = cobs::random_sequence(10000, 1);
+static fs::path in_dir("test/out/classic_index_construction/input");
+static fs::path documents_dir(in_dir.string() + "/documents");
+static fs::path isi_2_dir(in_dir.string() + "/isi_2");
+static fs::path classic_index_path(in_dir.string() + "/index.cla_idx.isi");
+static fs::path tmp_dir("test/out/classic_index_construction/tmp");
+
+static std::string query = cobs::random_sequence(10000, 1);
 
 class classic_index_construction : public ::testing::Test
 {
@@ -93,7 +93,6 @@ TEST_F(classic_index_construction, num_ones) {
     for (auto& no : num_ones) {
         ASSERT_LE(no.second, num_ones_average * 1.01);
     }
-}
 }
 
 /******************************************************************************/

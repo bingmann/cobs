@@ -12,12 +12,12 @@
 #include <cobs/query/compact_index/aio.hpp>
 #endif
 
-namespace {
 namespace fs = cobs::fs;
-fs::path in_dir("test/out/compact_index_query/input");
-fs::path index_path(in_dir.string() + "/index.com_idx.isi");
-fs::path tmp_dir("test/out/compact_index_query/tmp");
-std::string query = cobs::random_sequence(21000, 1);
+
+static fs::path in_dir("test/out/compact_index_query/input");
+static fs::path index_path(in_dir.string() + "/index.com_idx.isi");
+static fs::path tmp_dir("test/out/compact_index_query/tmp");
+static std::string query = cobs::random_sequence(21000, 1);
 
 class compact_index_query : public ::testing::Test
 {
@@ -150,6 +150,5 @@ TEST_F(compact_index_query, false_positive_aio) {
     }
 }
 #endif
-}
 
 /******************************************************************************/

@@ -17,9 +17,9 @@
 
 #include <unordered_map>
 
-namespace {
-std::string query = cobs::random_sequence(10000, 1);
-std::unordered_map<char, char> basepairs = {
+static std::string query = cobs::random_sequence(10000, 1);
+
+static std::unordered_map<char, char> basepairs = {
     { 'A', 'T' }, { 'C', 'G' }, { 'G', 'C' }, { 'T', 'A' }
 };
 
@@ -120,7 +120,6 @@ TEST(parameters, canonical) {
         }
         ASSERT_EQ(kmer_result, std::min(kmer_original, kmer_complement));
     }
-}
 }
 
 /******************************************************************************/
