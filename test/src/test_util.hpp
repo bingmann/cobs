@@ -8,7 +8,6 @@
 
 #ifndef COBS_TEST_SRC_TEST_UTIL_HEADER
 #define COBS_TEST_SRC_TEST_UTIL_HEADER
-#pragma once
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>

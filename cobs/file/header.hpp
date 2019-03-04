@@ -8,7 +8,6 @@
 
 #ifndef COBS_FILE_HEADER_HEADER
 #define COBS_FILE_HEADER_HEADER
-#pragma once
 
 #include <ostream>
 #include <string>

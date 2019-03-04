@@ -9,7 +9,6 @@
 
 #ifndef COBS_KMER_HEADER
 #define COBS_KMER_HEADER
-#pragma once
 
 #include <array>
 #include <cassert>

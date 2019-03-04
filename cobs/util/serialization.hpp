@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_SERIALIZATION_HEADER
 #define COBS_UTIL_SERIALIZATION_HEADER
-#pragma once
 
 #include <cobs/util/fs.hpp>
 

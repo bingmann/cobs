@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_FILE_HEADER
 #define COBS_UTIL_FILE_HEADER
-#pragma once
 
 #include <algorithm>
 #include <fstream>

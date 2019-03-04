@@ -8,7 +8,6 @@
 
 #ifndef COBS_QUERY_CLASSIC_INDEX_MMAP_HEADER
 #define COBS_QUERY_CLASSIC_INDEX_MMAP_HEADER
-#pragma once
 
 #include <cobs/query/classic_index/base.hpp>
 

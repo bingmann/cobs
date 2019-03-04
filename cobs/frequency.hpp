@@ -8,7 +8,6 @@
 
 #ifndef COBS_FREQUENCY_HEADER
 #define COBS_FREQUENCY_HEADER
-#pragma once
 
 #include <cobs/file/document_header.hpp>
 #include <cobs/file/frequency_header.hpp>

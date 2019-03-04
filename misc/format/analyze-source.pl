@@ -5,9 +5,6 @@
 #
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
-#
-# All rights reserved. Published under the Boost Software License, Version 1.0
-################################################################################
 
 # uncrustify executable
 my $uncrustify = "uncrustify-0.66";

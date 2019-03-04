@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_TIMER_HEADER
 #define COBS_UTIL_TIMER_HEADER
-#pragma once
 
 #include <chrono>
 #include <cobs/util/misc.hpp>

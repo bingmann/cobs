@@ -8,7 +8,6 @@
 
 #ifndef COBS_CONSTRUCTION_COMPACT_INDEX_HEADER
 #define COBS_CONSTRUCTION_COMPACT_INDEX_HEADER
-#pragma once
 
 #include <cobs/util/fs.hpp>
 #include <cobs/util/misc.hpp>

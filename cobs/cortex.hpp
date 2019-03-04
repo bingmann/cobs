@@ -9,7 +9,6 @@
 
 #ifndef COBS_CORTEX_HEADER
 #define COBS_CORTEX_HEADER
-#pragma once
 
 #include <string>
 #include <vector>

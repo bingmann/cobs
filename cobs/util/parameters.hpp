@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_PARAMETERS_HEADER
 #define COBS_UTIL_PARAMETERS_HEADER
-#pragma once
 
 #include <cstdint>
 

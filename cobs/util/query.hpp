@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_QUERY_HEADER
 #define COBS_UTIL_QUERY_HEADER
-#pragma once
 
 #include <cobs/util/fs.hpp>
 #include <cobs/util/serialization.hpp>

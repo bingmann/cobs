@@ -8,7 +8,6 @@
 
 #ifndef COBS_QUERY_COMPACT_INDEX_MMAP_HEADER
 #define COBS_QUERY_COMPACT_INDEX_MMAP_HEADER
-#pragma once
 
 #include <cobs/query/compact_index/base.hpp>
 

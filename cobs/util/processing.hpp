@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_PROCESSING_HEADER
 #define COBS_UTIL_PROCESSING_HEADER
-#pragma once
 
 #include <algorithm>
 #include <cmath>

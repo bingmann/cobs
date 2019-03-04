@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_ERROR_HANDLING_HEADER
 #define COBS_UTIL_ERROR_HANDLING_HEADER
-#pragma once
 
 #include <string>
 

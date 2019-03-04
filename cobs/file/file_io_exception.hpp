@@ -8,7 +8,6 @@
 
 #ifndef COBS_FILE_FILE_IO_EXCEPTION_HEADER
 #define COBS_FILE_FILE_IO_EXCEPTION_HEADER
-#pragma once
 
 #include <stdexcept>
 

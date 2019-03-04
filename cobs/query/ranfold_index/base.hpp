@@ -8,7 +8,6 @@
 
 #ifndef COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
 #define COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
-#pragma once
 
 #include <cobs/file/ranfold_index_header.hpp>
 #include <cobs/query/classic_base.hpp>

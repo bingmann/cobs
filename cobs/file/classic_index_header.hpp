@@ -8,7 +8,6 @@
 
 #ifndef COBS_FILE_CLASSIC_INDEX_HEADER_HEADER
 #define COBS_FILE_CLASSIC_INDEX_HEADER_HEADER
-#pragma once
 
 #include <cobs/file/header.hpp>
 

@@ -9,7 +9,6 @@
 
 #ifndef COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
 #define COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
-#pragma once
 
 #include <cobs/util/fs.hpp>
 
@@ -19,7 +18,7 @@
  *  This namespace provides methods for creation of this index. It can either be constructed from existing documents or
  *  with random dummy data for performance testing purposes.
  */
-namespace cobs::classic_index  {
+namespace cobs::classic_index {
 
 /** Constructs the index by executing all necessary steps.
  *  First calls cobs::classic_index::construct_from_documents to construct multiple small indices.

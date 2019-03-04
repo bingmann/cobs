@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_AIO_HEADER
 #define COBS_UTIL_AIO_HEADER
-#pragma once
 
 #include <linux/aio_abi.h>
 #include <time.h>

@@ -8,7 +8,6 @@
 
 #ifndef COBS_UTIL_MISC_HEADER
 #define COBS_UTIL_MISC_HEADER
-#pragma once
 
 #include <array>
 #include <cstdlib>

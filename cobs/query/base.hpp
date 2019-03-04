@@ -9,7 +9,6 @@
 
 #ifndef COBS_QUERY_BASE_HEADER
 #define COBS_QUERY_BASE_HEADER
-#pragma once
 
 #include <cobs/util/timer.hpp>
 

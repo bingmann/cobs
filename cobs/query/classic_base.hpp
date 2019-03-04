@@ -9,7 +9,6 @@
 
 #ifndef COBS_QUERY_CLASSIC_BASE_HEADER
 #define COBS_QUERY_CLASSIC_BASE_HEADER
-#pragma once
 
 #include <cobs/query/base.hpp>
 #include <cobs/util/query.hpp>
