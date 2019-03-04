@@ -1,4 +1,4 @@
-# Travis-CI build script for isi
+# Travis-CI build script for cobs
 
 language: cpp
 

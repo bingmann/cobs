@@ -7,8 +7,8 @@
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
 
-cmake_minimum_required(VERSION 3.9.6)
-cmake_policy(VERSION 3.9.6)
+cmake_minimum_required(VERSION 3.9.2)
+cmake_policy(VERSION 3.9.2)
 
 project(cobs)
 
@@ -129,7 +129,7 @@ add_subdirectory(extlib/xxhash/cmake_unofficial)
 
 ### use Boost filesystem ###
 
-find_package(Boost 1.42.0 REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.42.0 COMPONENTS system filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 ### use TLX ###
