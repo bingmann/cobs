@@ -119,6 +119,11 @@ MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 ################################################################################
 
+### find pthreads ###
+
+find_package(Threads REQUIRED)
+set(COBS_LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${COBS_LINK_LIBRARIES})
+
 ### use Google Test ###
 
 add_subdirectory(extlib/googletest)
@@ -126,15 +131,22 @@ add_subdirectory(extlib/googletest)
 ### use xxHash ###
 
 add_subdirectory(extlib/xxhash/cmake_unofficial)
+set(COBS_LINK_LIBRARIES xxhash ${COBS_LINK_LIBRARIES})
 
 ### use Boost filesystem ###
 
 find_package(Boost 1.42.0 COMPONENTS system filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
+if(${Boost_FOUND})
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(COBS_LINK_LIBRARIES ${Boost_LIBRARIES} ${COBS_LINK_LIBRARIES})
+endif()
+
+set(COBS_LINK_LIBRARIES stdc++fs ${COBS_LINK_LIBRARIES})
 
 ### use TLX ###
 
 add_subdirectory(extlib/tlx)
+set(COBS_LINK_LIBRARIES tlx ${COBS_LINK_LIBRARIES})
 
 ################################################################################
 
@@ -143,8 +155,7 @@ include_directories(${PROJECT_SOURCE_DIR}
 
 add_library(cobs_static STATIC ${SOURCE_FILES})
 
-target_link_libraries(cobs_static
-  stdc++fs xxhash tlx ${Boost_LIBRARIES})
+target_link_libraries(cobs_static ${COBS_LINK_LIBRARIES})
 
 ################################################################################
 
