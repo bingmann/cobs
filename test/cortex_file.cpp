@@ -18,8 +18,8 @@ namespace fs = cobs::fs;
 static std::string in_dir = "test/resources/cortex/input/";
 static std::string out_dir = "test/out/cortex/";
 static std::string in_path = in_dir + "document.ctx";
-static std::string out_path = out_dir + "document.doc.isi";
-static std::string out_path_rec = out_dir + "document_rec.doc.isi";
+static std::string out_path = out_dir + "document.doc.cobs";
+static std::string out_path_rec = out_dir + "document_rec.doc.cobs";
 static std::string document_path = "test/resources/cortex/result/document_sorted.txt";
 static std::string document_name = "DRR030535";
 

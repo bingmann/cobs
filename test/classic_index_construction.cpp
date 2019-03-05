@@ -16,8 +16,8 @@ namespace fs = cobs::fs;
 
 static fs::path in_dir("test/out/classic_index_construction/input");
 static fs::path documents_dir(in_dir.string() + "/documents");
-static fs::path isi_2_dir(in_dir.string() + "/isi_2");
-static fs::path classic_index_path(in_dir.string() + "/index.cla_idx.isi");
+static fs::path cobs_2_dir(in_dir.string() + "/cobs_2");
+static fs::path classic_index_path(in_dir.string() + "/index.cla_idx.cobs");
 static fs::path tmp_dir("test/out/classic_index_construction/tmp");
 
 static std::string query = cobs::random_sequence(10000, 1);

@@ -16,8 +16,8 @@ namespace fs = cobs::fs;
 
 static fs::path in_dir("test/out/compact_index_construction/input");
 static fs::path documents_dir(in_dir.string() + "/documents");
-static fs::path isi_2_dir(in_dir.string() + "/isi_2");
-static fs::path compact_index_path(in_dir.string() + "/index.com_idx.isi");
+static fs::path cobs_2_dir(in_dir.string() + "/cobs_2");
+static fs::path compact_index_path(in_dir.string() + "/index.com_idx.cobs");
 static fs::path tmp_dir("test/out/compact_index_construction/tmp");
 
 static std::string query = cobs::random_sequence(10000, 1);
@@ -118,7 +118,7 @@ TEST_F(compact_index_construction, parameters) {
 TEST_F(compact_index_construction, num_kmers_calculation) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, tmp_dir.string());
-    fs::path path_document(tmp_dir.string() + "/document_00.doc.isi");
+    fs::path path_document(tmp_dir.string() + "/document_00.doc.cobs");
     cobs::Document<31> doc;
     cobs::DocumentHeader hdoc;
     doc.deserialize(path_document, hdoc);
@@ -167,18 +167,18 @@ TEST_F(compact_index_construction, content) {
     generate_test_case(documents, tmp_dir.string());
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
-    std::vector<std::vector<uint8_t> > cisi_data;
+    std::vector<std::vector<uint8_t> > ccobs_data;
     cobs::CompactIndexHeader h;
-    h.read_file(compact_index_path, cisi_data);
+    h.read_file(compact_index_path, ccobs_data);
 
     std::vector<std::vector<uint8_t> > indices;
-    for (auto& p : fs::directory_iterator(isi_2_dir)) {
+    for (auto& p : fs::directory_iterator(cobs_2_dir)) {
         if (fs::is_directory(p)) {
-            for (const fs::path& isi_p : fs::directory_iterator(p)) {
-                if (cobs::file_has_header<cobs::ClassicIndexHeader>(isi_p)) {
+            for (const fs::path& cobs_p : fs::directory_iterator(p)) {
+                if (cobs::file_has_header<cobs::ClassicIndexHeader>(cobs_p)) {
                     cobs::ClassicIndexHeader cih;
                     std::vector<uint8_t> data;
-                    cih.read_file(isi_p, data);
+                    cih.read_file(cobs_p, data);
                     indices.push_back(data);
                 }
             }
@@ -189,11 +189,11 @@ TEST_F(compact_index_construction, content) {
                   return i1.size() < i2.size();
               });
 
-    ASSERT_EQ(indices.size(), cisi_data.size());
+    ASSERT_EQ(indices.size(), ccobs_data.size());
     for (size_t i = 0; i < indices.size() - 1; i++) {
-        ASSERT_EQ(indices[i].size(), cisi_data[i].size());
+        ASSERT_EQ(indices[i].size(), ccobs_data[i].size());
         for (size_t j = 0; j < indices[i].size(); j++) {
-            ASSERT_EQ(indices[i].data()[j], cisi_data[i][j]);
+            ASSERT_EQ(indices[i].data()[j], ccobs_data[i][j]);
         }
     }
 }

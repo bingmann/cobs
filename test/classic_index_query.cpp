@@ -16,7 +16,7 @@ namespace fs = cobs::fs;
 
 static fs::path in_dir("test/out/classic_index_query/input");
 static fs::path tmp_dir("test/out/classic_index_query/tmp");
-static fs::path index_path(in_dir.string() + "/index.cla_idx.isi");
+static fs::path index_path(in_dir.string() + "/index.cla_idx.cobs");
 static std::string query = cobs::random_sequence(50000, 2);
 
 class classic_index_query : public ::testing::Test

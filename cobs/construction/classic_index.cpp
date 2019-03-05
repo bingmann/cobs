@@ -57,7 +57,7 @@ void process(const std::vector<fs::path>& paths,
                                });
             }
         }
-        else if (paths[i].extension() == ".isi") {
+        else if (paths[i].extension() == ".cobs") {
             t.active("read");
             doc.deserialize(paths[i], dh);
             cih.file_names()[i] = dh.name();
@@ -113,7 +113,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
     process_file_batches(
         in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
         [](const fs::path& path) {
-            return path.extension() == ".ctx" || path.extension() == ".isi";
+            return path.extension() == ".ctx" || path.extension() == ".cobs";
         },
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
             cih.file_names().resize(paths.size());
@@ -172,7 +172,7 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
     process_file_batches(
         in_dir, out_dir, UINT64_MAX, DocumentHeader::file_extension,
         [](const fs::path& path) {
-            return path.extension() == ".ctx" || path.extension() == ".isi";
+            return path.extension() == ".ctx" || path.extension() == ".cobs";
         },
         [&](std::vector<fs::path>& paths, const fs::path& /* out_file */) {
             std::sort(paths.begin(), paths.end(),
@@ -186,13 +186,13 @@ uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
                 signature_size = calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
             }
-            else if (paths[0].extension() == ".isi") {
+            else if (paths[0].extension() == ".cobs") {
                 DocumentHeader dh;
                 Document<31> doc;
                 doc.deserialize(paths[0], dh);
 
                 size_t max_num_elements = doc.data().size();
-                sLOG1 << "ISI: max_num_elements" << max_num_elements;
+                sLOG1 << "COBS: max_num_elements" << max_num_elements;
                 signature_size = calc_signature_size(
                     max_num_elements, num_hashes, false_positive_probability);
             }

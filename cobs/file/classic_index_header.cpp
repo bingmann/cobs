@@ -13,7 +13,7 @@ namespace cobs {
 
 const std::string ClassicIndexHeader::magic_word = "CLASSIC_INDEX";
 const uint32_t ClassicIndexHeader::version = 1;
-const std::string ClassicIndexHeader::file_extension = ".cla_idx.isi";
+const std::string ClassicIndexHeader::file_extension = ".cla_idx.cobs";
 
 ClassicIndexHeader::ClassicIndexHeader(uint64_t signature_size, uint64_t num_hashes, const std::vector<std::string>& file_names)
     : m_signature_size(signature_size), m_num_hashes(num_hashes), m_file_names(file_names) { }

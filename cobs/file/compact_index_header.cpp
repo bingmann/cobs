@@ -12,7 +12,7 @@ namespace cobs {
 
 const std::string CompactIndexHeader::magic_word = "COMPACT_INDEX";
 const uint32_t CompactIndexHeader::version = 1;
-const std::string CompactIndexHeader::file_extension = ".com_idx.isi";
+const std::string CompactIndexHeader::file_extension = ".com_idx.cobs";
 
 CompactIndexHeader::CompactIndexHeader(uint64_t page_size) : m_page_size(page_size) { }
 

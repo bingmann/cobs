@@ -9,7 +9,7 @@
 // #include <fcntl.h>
 // #include <sys/mman.h>
 // #include <fstream>
-// #include <isi/util/timer.hpp>
+// #include <cobs/util/timer.hpp>
 // #include <iostream>
 // #include <omp.h>
 // #include <stxxl/aligned_alloc>
@@ -24,7 +24,7 @@
 //    ofs << "3" << std::endl;
 // }
 //
-// char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
+// char test(stxxl::syscall_file& file, uint64_t page_size, size_t num_access, size_t file_size, cobs::timer& t) {
 //    auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 ////    std::vector<char> data(num_access * page_size);
 //    std::srand(std::time(nullptr));
@@ -52,7 +52,7 @@
 //    return sum;
 // }
 //
-// char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, isi::timer& t) {
+// char test(char* file, uint64_t page_size, size_t num_access, size_t file_size, cobs::timer& t) {
 //    auto* data = reinterpret_cast<char*>(stxxl::aligned_alloc<4096>(num_access * page_size));
 ////    std::vector<char> data(num_access * page_size);
 //    std::srand(std::time(nullptr));
@@ -81,7 +81,7 @@
 // }
 //
 // void test(char* file_mmap, stxxl::syscall_file& file_asio, size_t file_size) {
-//    isi::timer t;
+//    cobs::timer t;
 //    char sum;
 //    size_t max = std::pow(2, 14);
 //    for (size_t i = 1; i <= max; i*=2) {
@@ -94,7 +94,7 @@
 // }
 //
 int main() {
-//    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.isi");
+//    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.cobs");
 //
 //    uint64_t end_pos;
 //    {

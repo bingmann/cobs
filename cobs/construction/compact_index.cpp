@@ -160,7 +160,7 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
 void construct_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
                             double false_positive_probability, uint64_t page_size) {
     fs::path documents_dir = in_dir / fs::path("documents/");
-    std::string bloom_dir = in_dir.string() + "/isi_";
+    std::string bloom_dir = in_dir.string() + "/cobs_";
     size_t iteration = 1;
     construct_classic_index_from_documents(documents_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
     while (!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {

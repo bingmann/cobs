@@ -14,7 +14,7 @@ namespace cobs {
 
 const std::string RanfoldIndexHeader::magic_word = "RANFOLD_INDEX";
 const uint32_t RanfoldIndexHeader::version = 1;
-const std::string RanfoldIndexHeader::file_extension = ".rfd_idx.isi";
+const std::string RanfoldIndexHeader::file_extension = ".rfd_idx.cobs";
 
 void RanfoldIndexHeader::serialize(std::ofstream& ofs) const {
     serialize_magic_begin(ofs, magic_word, version);

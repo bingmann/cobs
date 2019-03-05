@@ -12,7 +12,7 @@ namespace cobs {
 
 const std::string FrequencyHeader::magic_word = "FREQUENCY";
 const uint32_t FrequencyHeader::version = 1;
-const std::string FrequencyHeader::file_extension = ".freq.isi";
+const std::string FrequencyHeader::file_extension = ".freq.cobs";
 
 void FrequencyHeader::serialize(std::ofstream& ofs) const {
     serialize_magic_begin(ofs, magic_word, version);
