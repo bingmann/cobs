@@ -56,7 +56,6 @@ set(SOURCE_FILES
         cobs/query/ranfold_index/mmap.hpp
         cobs/util/error_handling.cpp
         cobs/util/error_handling.hpp
-        cobs/util/file.cpp
         cobs/util/file.hpp
         cobs/util/misc.cpp
         cobs/util/misc.hpp

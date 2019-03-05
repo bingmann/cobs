@@ -52,7 +52,7 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
     std::vector<fs::path> paths;
     for (size_t i = 0; i < sorted_paths.size(); i++) {
         if (selector(sorted_paths[i])) {
-            std::string filename = cobs::file::file_name(sorted_paths[i]);
+            std::string filename = cobs::base_name(sorted_paths[i]);
             if (first_filename.empty()) {
                 first_filename = filename;
             }

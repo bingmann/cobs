@@ -53,16 +53,16 @@ TEST_F(classic_index_construction, file_names) {
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(tmp_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file::file_is<cobs::DocumentHeader>(p);
+                     return cobs::file_has_header<cobs::DocumentHeader>(p);
                  });
     std::sort(paths.begin(), paths.end());
 
     cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
     std::vector<uint8_t> data;
-    auto h = cobs::file::deserialize_header<cobs::ClassicIndexHeader>(classic_index_path);
+    auto h = cobs::deserialize_header<cobs::ClassicIndexHeader>(classic_index_path);
     h.read_file(classic_index_path, data);
     for (size_t i = 0; i < h.file_names().size(); i++) {
-        ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
+        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));
     }
 }
 

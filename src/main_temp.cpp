@@ -23,7 +23,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     }
     cobs::ClassicIndexHeader h(signature_size, num_hashes, file_names);
     std::ofstream ofs;
-    cobs::file::serialize_header(ofs, p, h);
+    cobs::serialize_header(ofs, p, h);
 
     for (size_t i = 0; i < signature_size * block_size; i++) {
         char rnd = std::rand();

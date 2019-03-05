@@ -33,6 +33,10 @@ protected:
     }
 };
 
+TEST_F(file, base_name) {
+    ASSERT_EQ("classic_index", cobs::base_name(out_path_s));
+}
+
 TEST_F(file, document) {
     cobs::Document<31> s_out;
     s_out.serialize(out_path_s, "document");
@@ -67,9 +71,9 @@ TEST_F(file, classic_index) {
 TEST_F(file, classic_index_header) {
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
     cobs::ClassicIndexHeader h_out(321, 21, file_names);
-    cobs::file::serialize_header(out_path_isi, h_out);
+    cobs::serialize_header(out_path_isi, h_out);
 
-    auto h_in = cobs::file::deserialize_header<cobs::ClassicIndexHeader>(out_path_isi);
+    auto h_in = cobs::deserialize_header<cobs::ClassicIndexHeader>(out_path_isi);
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
     ASSERT_EQ(h_out.block_size(), h_in.block_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
@@ -87,9 +91,9 @@ TEST_F(file, compact_index_header_values) {
     };
     std::vector<std::string> file_names = { "file_1", "file_2", "file_3" };
     cobs::CompactIndexHeader h(parameters, file_names, 4096);
-    cobs::file::serialize_header(out_path_cisi, h);
+    cobs::serialize_header(out_path_cisi, h);
 
-    auto h_2 = cobs::file::deserialize_header<cobs::CompactIndexHeader>(out_path_cisi);
+    auto h_2 = cobs::deserialize_header<cobs::CompactIndexHeader>(out_path_cisi);
 
     for (size_t i = 0; i < parameters.size(); i++) {
         ASSERT_EQ(parameters[i].num_hashes, h_2.parameters()[i].num_hashes);
@@ -105,11 +109,11 @@ TEST_F(file, compact_index_header_padding) {
     std::vector<std::string> file_names = { };
     uint64_t page_size = 4096;
     cobs::CompactIndexHeader h(parameters, file_names, page_size);
-    cobs::file::serialize_header(out_path_cisi, h);
+    cobs::serialize_header(out_path_cisi, h);
 
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::CompactIndexHeader>(ifs, out_path_cisi);
-    cobs::stream_metadata smd = cobs::get_stream_metadata(ifs);
+    cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, out_path_cisi);
+    cobs::StreamMetadata smd = cobs::get_stream_metadata(ifs);
     ASSERT_EQ(smd.curr_pos % page_size, 0U);
 }
 

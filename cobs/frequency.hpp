@@ -65,12 +65,12 @@ pq_element<H>::pq_element(std::ifstream* ifs) : m_ifs(ifs) {
 
 template <typename H>
 void pq_element<H>::serialize_header(std::ofstream& ofs, const fs::path& p) {
-    file::serialize_header<H>(ofs, p);
+    cobs::serialize_header<H>(ofs, p);
 }
 
 template <typename H>
 void pq_element<H>::deserialize_header(std::ifstream& ifs, const fs::path& p) {
-    file::deserialize_header<H>(ifs, p);
+    cobs::deserialize_header<H>(ifs, p);
 }
 
 template <typename H>
@@ -108,7 +108,7 @@ template <typename PqElement>
 void process(std::vector<std::ifstream>& ifstreams, const fs::path& out_file) {
     std::priority_queue<PqElement> pq;
     std::ofstream ofs;
-    file::serialize_header<FrequencyHeader>(ofs, out_file, FrequencyHeader());
+    serialize_header<FrequencyHeader>(ofs, out_file, FrequencyHeader());
 
     for (auto& ifs : ifstreams) {
         add_pq_element(pq, &ifs);
@@ -146,7 +146,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, s
     process_file_batches(
         in_dir, out_dir, batch_size, cobs::FrequencyHeader::file_extension,
         [](const fs::path& path) {
-            return file::file_is<H>(path);
+            return file_has_header<H>(path);
         },
         [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
             for (const auto& p : paths) {
@@ -163,7 +163,7 @@ void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir, s
 
 inline void combine(const fs::path& in_file, const fs::path& out_file) {
     std::ifstream ifs;
-    file::deserialize_header<FrequencyHeader>(ifs, in_file);
+    deserialize_header<FrequencyHeader>(ifs, in_file);
     std::unordered_map<uint32_t, uint32_t> counts;
 
     std::array<char, 12> data;

@@ -16,73 +16,66 @@
 #include <cobs/file/header.hpp>
 #include <cobs/util/fs.hpp>
 
-namespace cobs::file {
+namespace cobs {
 
-template <class T>
-void serialize_header(std::ofstream& ofs, const fs::path& p, const T& h);
-
-template <class T>
-void serialize_header(const fs::path& p, const T& h);
-
-template <class T>
-T deserialize_header(std::ifstream& ifs, const fs::path& p);
-
-template <class T>
-T deserialize_header(const fs::path& p);
-
-template <class T>
-bool file_is(const fs::path& p);
-
-std::string file_name(const fs::path& p);
-
-} // namespace cobs::file
-
-namespace cobs::file {
-
-template <class T>
-void serialize_header(std::ofstream& ofs, const fs::path& p, const T& h) {
+template <class Header>
+void serialize_header(std::ofstream& ofs, const fs::path& p, const Header& h) {
     ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ofs.open(p.string(), std::ios::out | std::ios::binary);
-    Header<T>::serialize(ofs, h);
+    cobs::Header<Header>::serialize(ofs, h);
 }
 
-template <class T>
-void serialize_header(const fs::path& p, const T& h) {
+template <class Header>
+void serialize_header(const fs::path& p, const Header& h) {
     std::ofstream ofs;
-    serialize_header<T>(ofs, p, h);
+    serialize_header<Header>(ofs, p, h);
 }
 
-template <class T>
-T deserialize_header(std::ifstream& ifs, const fs::path& p) {
+template <class Header>
+Header deserialize_header(std::ifstream& ifs, const fs::path& p) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ifs.open(p.string(), std::ios::in | std::ios::binary);
-    T h;
-    Header<T>::deserialize(ifs, h);
+    Header h;
+    cobs::Header<Header>::deserialize(ifs, h);
     return h;
 }
 
-template <class T>
-T deserialize_header(const fs::path& p) {
+template <class Header>
+Header deserialize_header(const fs::path& p) {
     std::ifstream ifs;
-    return deserialize_header<T>(ifs, p);
+    return deserialize_header<Header>(ifs, p);
 }
 
-template <class T>
-bool file_is(const fs::path& p) {
-    bool result = fs::is_regular_file(p);
-    if (result) {
-        try {
-            deserialize_header<T>(p);
-        } catch (...) {
-            std::cout << p.string() << " is not a " << typeid(T).name() << std::endl;
-            result = false;
-        }
+//! check if file has given header
+template <class Header>
+bool file_has_header(const fs::path& p) {
+    if (!fs::is_regular_file(p))
+        return false;
+
+    try {
+        deserialize_header<Header>(p);
+    }
+    catch (...) {
+        std::cout << p.string() << " is not a " << typeid(Header).name() << std::endl;
+        return false;
     }
 
-    return result;
+    return true;
 }
 
-} // namespace cobs::file
+//! for a path, return the base file name without any extensions
+static inline
+std::string base_name(const fs::path& p) {
+    std::string result = p.filename().string();
+    auto comp = [](char c) {
+                    return c == '.';
+                };
+    auto iter = std::find_if(result.rbegin(), result.rend(), comp) + 1;
+    iter = std::find_if(iter, result.rend(), comp) + 1;
+    return result.substr(0, std::distance(iter, result.rend()));
+}
+
+} // namespace cobs
 
 #endif // !COBS_UTIL_FILE_HEADER
 

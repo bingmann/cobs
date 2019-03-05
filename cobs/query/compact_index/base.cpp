@@ -16,7 +16,7 @@ namespace cobs::query::compact_index {
 
 base::base(const fs::path& path) : query::classic_base() {
     std::ifstream ifs;
-    m_header = file::deserialize_header<CompactIndexHeader>(ifs, path);
+    m_header = deserialize_header<CompactIndexHeader>(ifs, path);
     m_smd = get_stream_metadata(ifs);
 
     // todo assertions that all the data in the Header is correct

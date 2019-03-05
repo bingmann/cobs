@@ -41,8 +41,8 @@ TEST_F(compact_index_construction, padding) {
     cobs::compact_index::create_folders(tmp_dir, in_dir, page_size);
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, page_size);
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::CompactIndexHeader>(ifs, compact_index_path);
-    cobs::stream_metadata smd = cobs::get_stream_metadata(ifs);
+    cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, compact_index_path);
+    cobs::StreamMetadata smd = cobs::get_stream_metadata(ifs);
     ASSERT_EQ(smd.curr_pos % page_size, 0U);
 }
 
@@ -67,7 +67,7 @@ TEST_F(compact_index_construction, file_names) {
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(tmp_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file::file_is<cobs::DocumentHeader>(p);
+                     return cobs::file_has_header<cobs::DocumentHeader>(p);
                  });
     std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
                   return fs::file_size(p1) < fs::file_size(p2);
@@ -80,10 +80,10 @@ TEST_F(compact_index_construction, file_names) {
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
-    auto h = cobs::file::deserialize_header<cobs::CompactIndexHeader>(compact_index_path);
+    auto h = cobs::deserialize_header<cobs::CompactIndexHeader>(compact_index_path);
     h.read_file(compact_index_path, data);
     for (size_t i = 0; i < h.file_names().size(); i++) {
-        ASSERT_EQ(h.file_names()[i], cobs::file::file_name(paths[i]));
+        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));
     }
 }
 
@@ -94,12 +94,12 @@ TEST_F(compact_index_construction, parameters) {
     cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
     cobs::compact_index::construct_from_folders(in_dir, 8, num_hashes, 0.1, 2);
     std::vector<std::vector<uint8_t> > data;
-    auto h = cobs::file::deserialize_header<cobs::CompactIndexHeader>(compact_index_path);
+    auto h = cobs::deserialize_header<cobs::CompactIndexHeader>(compact_index_path);
 
     std::vector<uint64_t> document_sizes;
     std::vector<cobs::CompactIndexHeader::parameter> parameters;
     for (const fs::path& p : fs::recursive_directory_iterator(documents_dir)) {
-        if (cobs::file::file_is<cobs::ClassicIndexHeader>(p)) {
+        if (cobs::file_has_header<cobs::ClassicIndexHeader>(p)) {
             document_sizes.push_back(fs::file_size(p));
         }
     }
@@ -175,7 +175,7 @@ TEST_F(compact_index_construction, content) {
     for (auto& p : fs::directory_iterator(isi_2_dir)) {
         if (fs::is_directory(p)) {
             for (const fs::path& isi_p : fs::directory_iterator(p)) {
-                if (cobs::file::file_is<cobs::ClassicIndexHeader>(isi_p)) {
+                if (cobs::file_has_header<cobs::ClassicIndexHeader>(isi_p)) {
                     cobs::ClassicIndexHeader cih;
                     std::vector<uint8_t> data;
                     cih.read_file(isi_p, data);

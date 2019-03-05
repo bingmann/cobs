@@ -88,7 +88,7 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
              Timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
     ClassicIndexHeader cih(signature_size, num_hash, file_names);
-    file::serialize_header(ofs, out_file, cih);
+    serialize_header(ofs, out_file, cih);
 
     std::vector<char> block(block_size);
     for (uint64_t i = 0; i < signature_size; i++) {
@@ -134,13 +134,13 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
         process_file_batches(
             in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
             [](const fs::path& path) {
-                return file::file_is<ClassicIndexHeader>(path);
+                return file_has_header<ClassicIndexHeader>(path);
             },
             [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
                 uint64_t new_block_size = 0;
                 for (size_t i = 0; i < paths.size(); i++) {
                     ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                    auto cih = file::deserialize_header<ClassicIndexHeader>(ifstreams.back().first, paths[i]);
+                    auto cih = deserialize_header<ClassicIndexHeader>(ifstreams.back().first, paths[i]);
                     if (signature_size == 0) {
                         signature_size = cih.signature_size();
                         num_hashes = cih.num_hashes();
@@ -217,7 +217,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
 
     fs::path index;
     for (fs::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
-        if (file::file_is<ClassicIndexHeader>(sub_it->path())) {
+        if (file_has_header<ClassicIndexHeader>(sub_it->path())) {
             index = sub_it->path();
         }
     }

@@ -31,16 +31,16 @@ void generate_result_bin() {
     fs::create_directories(out_dir);
     std::vector<uint64_t> v;
     Document<31> s;
-    file::deserialize(document_1, s);
+    deserialize(document_1, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
-    file::deserialize(document_2, s);
+    deserialize(document_2, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
-    file::deserialize(document_3, s);
+    deserialize(document_3, s);
     v.insert(v.end(), reinterpret_cast<uint64_t*>(&(*s.data().begin())), reinterpret_cast<uint64_t*>(&(*s.data().end())));
     std::sort(v.begin(), v.end());
 
     std::ofstream ofs;
-    file::serialize_header<file::FrequencyHeader>(ofs, "bin" + file::FrequencyHeader::file_extension, file::FrequencyHeader());
+    serialize_header<FrequencyHeader>(ofs, "bin" + FrequencyHeader::file_extension, FrequencyHeader());
     uint64_t kmer = v[0];
     uint32_t count = 1;
     for(size_t i = 1; i < v.size(); i++) {
@@ -60,7 +60,7 @@ void generate_result_bin() {
 template<class OutputIteratorKmer, class OutputIteratorCount>
 void read_document(const std::string& file, OutputIteratorKmer& iter_kmer, OutputIteratorCount& iter_count) {
     std::ifstream ifs;
-    file::deserialize_header<file::FrequencyHeader>(ifs, file);
+    deserialize_header<FrequencyHeader>(ifs, file);
     while(ifs && ifs.peek() != EOF) {
         uint64_t kmer;
         uint32_t count;
@@ -88,7 +88,7 @@ void generate_result_fre() {
     });
 
     std::ofstream ofs;
-    file::serialize_header<file::FrequencyHeader>(ofs, "freq" + file::FrequencyHeader::file_extension, file::FrequencyHeader());
+    serialize_header<FrequencyHeader>(ofs, "freq" + FrequencyHeader::file_extension, FrequencyHeader());
     uint64_t kmer = kmers[indices[0]];
     uint32_t count = counts[indices[0]];
     for(size_t i = 1; i < kmers.size(); i++) {
@@ -113,7 +113,7 @@ TEST(frequency, generate_results) {
 
 size_t get_count_document(const fs::path& file) {
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::DocumentHeader>(ifs, file);
+    cobs::deserialize_header<cobs::DocumentHeader>(ifs, file);
     ifs.exceptions(std::ios::failbit | std::ios::badbit);
     size_t total_count = 0;
     uint64_t kmer;
@@ -126,7 +126,7 @@ size_t get_count_document(const fs::path& file) {
 
 size_t get_count_frequency(const fs::path& file) {
     std::ifstream ifs;
-    cobs::file::deserialize_header<cobs::FrequencyHeader>(ifs, file);
+    cobs::deserialize_header<cobs::FrequencyHeader>(ifs, file);
     ifs.exceptions(std::ios::failbit | std::ios::badbit);
     size_t total_count = 0;
     uint64_t kmer;

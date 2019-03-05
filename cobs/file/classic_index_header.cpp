@@ -72,7 +72,7 @@ void ClassicIndexHeader::read_file(std::ifstream& ifs,
                                    std::vector<uint8_t>& data) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     Header<ClassicIndexHeader>::deserialize(ifs, *this);
-    stream_metadata smd = get_stream_metadata(ifs);
+    StreamMetadata smd = get_stream_metadata(ifs);
     size_t size = smd.end_pos - smd.curr_pos;
     data.resize(size);
     ifs.read(reinterpret_cast<char*>(data.data()), size);

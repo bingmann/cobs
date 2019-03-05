@@ -59,7 +59,7 @@ public:
         Header<DocumentHeader>::deserialize(ifs, h);
         die_unless(N == h.kmer_size());
 
-        stream_metadata smd = get_stream_metadata(ifs);
+        StreamMetadata smd = get_stream_metadata(ifs);
         size_t size = smd.end_pos - smd.curr_pos;
         m_data.resize(size / KMer<N>::size);
         ifs.read(reinterpret_cast<char*>(m_data.data()), size);
