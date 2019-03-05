@@ -8,6 +8,7 @@
  ******************************************************************************/
 
 #include <cobs/query/classic_base.hpp>
+#include <cobs/util/error_handling.hpp>
 
 #include <algorithm>
 #include <cobs/kmer.hpp>

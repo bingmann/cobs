@@ -13,7 +13,6 @@
 #include <fstream>
 #include <iostream>
 
-#include <cobs/file/header.hpp>
 #include <cobs/util/fs.hpp>
 
 namespace cobs {
@@ -67,12 +66,10 @@ bool file_has_header(const fs::path& p) {
 static inline
 std::string base_name(const fs::path& p) {
     std::string result = p.filename().string();
-    auto comp = [](char c) {
-                    return c == '.';
-                };
-    auto iter = std::find_if(result.rbegin(), result.rend(), comp) + 1;
-    iter = std::find_if(iter, result.rend(), comp) + 1;
-    return result.substr(0, std::distance(iter, result.rend()));
+    std::string::size_type pos = result.find('.');
+    if (pos == std::string::npos)
+        return result;
+    return result.substr(0, pos);
 }
 
 } // namespace cobs
