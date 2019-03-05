@@ -30,7 +30,7 @@ private:
     void calculate_counts(const std::vector<size_t>& hashes, uint16_t* counts);
 
 protected:
-    StreamMetadata m_smd;
+    StreamPos stream_pos_;
 
     virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows) = 0;
     virtual uint64_t block_size() const = 0;

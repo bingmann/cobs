@@ -29,7 +29,7 @@ void close_file(int fd) {
     }
 }
 
-std::pair<int, uint8_t*> initialize_mmap(const fs::path& path, const StreamMetadata& smd) {
+std::pair<int, uint8_t*> initialize_mmap(const fs::path& path, const StreamPos& smd) {
     int fd = open_file(path, O_RDONLY);
     void* mmap_ptr = mmap(nullptr, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0);
     if (mmap_ptr == MAP_FAILED) {
@@ -43,7 +43,7 @@ std::pair<int, uint8_t*> initialize_mmap(const fs::path& path, const StreamMetad
     };
 }
 
-void destroy_mmap(int fd, uint8_t* mmap_ptr, const StreamMetadata& smd) {
+void destroy_mmap(int fd, uint8_t* mmap_ptr, const StreamPos& smd) {
     if (munmap(mmap_ptr - smd.curr_pos, smd.end_pos)) {
         print_errno("could not unmap index file");
     }

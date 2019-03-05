@@ -18,13 +18,15 @@
 
 namespace cobs {
 
-struct StreamMetadata {
+struct StreamPos {
     uint64_t curr_pos;
     uint64_t end_pos;
+    size_t size() const { return end_pos - curr_pos; }
 };
 
+//! return StreamPos object
 static inline
-StreamMetadata get_stream_metadata(std::ifstream& is) {
+StreamPos get_stream_pos(std::istream& is) {
     std::streamoff curr_pos = is.tellg();
     is.seekg(0, std::ios::end);
     std::streamoff end_pos = is.tellg();
@@ -33,17 +35,32 @@ StreamMetadata get_stream_metadata(std::ifstream& is) {
     die_unless(curr_pos >= 0);
     die_unless(end_pos >= 0);
     die_unless(end_pos >= curr_pos);
-    return StreamMetadata { (uint64_t)curr_pos, (uint64_t)end_pos };
+    return StreamPos { (uint64_t)curr_pos, (uint64_t)end_pos };
 }
 
+//! return remaining bytes in stream and rewind to the current position.
+static inline
+size_t get_stream_size(std::istream& is) {
+    std::streamoff curr_pos = is.tellg();
+    is.seekg(0, std::ios::end);
+    std::streamoff end_pos = is.tellg();
+    is.seekg(curr_pos, std::ios::beg);
+    die_unless(is.good());
+    die_unless(curr_pos >= 0);
+    die_unless(end_pos >= 0);
+    die_unless(end_pos >= curr_pos);
+    return (uint64_t)end_pos - (uint64_t)curr_pos;
+}
+
+//! read complete file of PODs
 template <typename T>
-void read_file(const fs::path& path, std::vector<T>& v) {
+void read_complete_file(const fs::path& path, std::vector<T>& v) {
     std::ifstream is(path.string(), std::ios::in | std::ios::binary);
     is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-    StreamMetadata smd = get_stream_metadata(is);
-    die_unless(smd.end_pos % sizeof(T) == 0);
-    v.resize(smd.end_pos / sizeof(T));
-    is.read(reinterpret_cast<char*>(v.data()), smd.end_pos);
+    StreamPos sp = get_stream_pos(is);
+    die_unless(sp.end_pos % sizeof(T) == 0);
+    v.resize(sp.end_pos / sizeof(T));
+    is.read(reinterpret_cast<char*>(v.data()), sp.end_pos);
 }
 
 /******************************************************************************/

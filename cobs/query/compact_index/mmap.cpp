@@ -13,7 +13,7 @@ namespace cobs::query::compact_index {
 
 mmap::mmap(const fs::path& path) : compact_index::base(path) {
     m_data.resize(m_header.parameters().size());
-    std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
+    std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
     m_fd = handles.first;
     m_data[0] = handles.second;
     for (size_t i = 1; i < m_header.parameters().size(); i++) {
@@ -22,7 +22,7 @@ mmap::mmap(const fs::path& path) : compact_index::base(path) {
 }
 
 mmap::~mmap() {
-    destroy_mmap(m_fd, m_data[0], m_smd);
+    destroy_mmap(m_fd, m_data[0], stream_pos_);
 }
 
 void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {

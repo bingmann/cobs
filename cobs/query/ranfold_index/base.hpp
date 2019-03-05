@@ -20,7 +20,7 @@ protected:
     explicit base(const fs::path& path);
 
     RanfoldIndexHeader m_header;
-    StreamMetadata m_smd;
+    StreamPos m_smd;
 
 public:
     virtual ~base() = default;

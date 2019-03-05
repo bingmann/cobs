@@ -15,13 +15,13 @@
 namespace cobs::query::classic_index {
 
 mmap::mmap(const fs::path& path) : classic_index::base(path) {
-    std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
+    std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
     m_fd = handles.first;
     m_data = handles.second;
 }
 
 mmap::~mmap() {
-    destroy_mmap(m_fd, m_data, m_smd);
+    destroy_mmap(m_fd, m_data, stream_pos_);
 }
 
 void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {

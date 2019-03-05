@@ -113,8 +113,8 @@ TEST_F(file, compact_index_header_padding) {
 
     std::ifstream ifs;
     cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, out_path_cisi);
-    cobs::StreamMetadata smd = cobs::get_stream_metadata(ifs);
-    ASSERT_EQ(smd.curr_pos % page_size, 0U);
+    cobs::StreamPos sp = cobs::get_stream_pos(ifs);
+    ASSERT_EQ(sp.curr_pos % page_size, 0U);
 }
 
 /******************************************************************************/

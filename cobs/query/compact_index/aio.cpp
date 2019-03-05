@@ -24,7 +24,7 @@ aio::aio(const fs::path& path)
     assert_exit(m_header.page_size() % cobs::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
 
     m_offsets.resize(m_header.parameters().size());
-    m_offsets[0] = m_smd.curr_pos;
+    m_offsets[0] = stream_pos_.curr_pos;
     for (size_t i = 1; i < m_header.parameters().size(); i++) {
         m_offsets[i] = m_offsets[i - 1] + m_header.page_size() * m_header.parameters()[i - 1].signature_size;
     }

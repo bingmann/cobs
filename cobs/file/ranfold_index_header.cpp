@@ -63,8 +63,7 @@ void RanfoldIndexHeader::read_file(std::ifstream& ifs,
                                    std::vector<uint8_t>& data) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     Header<RanfoldIndexHeader>::deserialize(ifs, *this);
-    StreamMetadata smd = get_stream_metadata(ifs);
-    size_t size = smd.end_pos - smd.curr_pos;
+    size_t size = get_stream_size(ifs);
     data.resize(size);
     ifs.read(reinterpret_cast<char*>(data.data()), size);
 }

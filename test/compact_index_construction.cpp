@@ -42,8 +42,8 @@ TEST_F(compact_index_construction, padding) {
     cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, page_size);
     std::ifstream ifs;
     cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, compact_index_path);
-    cobs::StreamMetadata smd = cobs::get_stream_metadata(ifs);
-    ASSERT_EQ(smd.curr_pos % page_size, 0U);
+    cobs::StreamPos sp = cobs::get_stream_pos(ifs);
+    ASSERT_EQ(sp.curr_pos % page_size, 0U);
 }
 
 TEST_F(compact_index_construction, deserialization) {

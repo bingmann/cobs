@@ -45,8 +45,8 @@ void CompactIndexHeader::deserialize(std::ifstream& ifs) {
         std::getline(ifs, file_name);
     }
 
-    StreamMetadata smd = get_stream_metadata(ifs);
-    ifs.seekg(smd.curr_pos + padding_size(smd.curr_pos), std::ios::beg);
+    StreamPos sp = get_stream_pos(ifs);
+    ifs.seekg(sp.curr_pos + padding_size(sp.curr_pos), std::ios::beg);
 }
 
 CompactIndexHeader::CompactIndexHeader(uint64_t page_size) : m_page_size(page_size) { }

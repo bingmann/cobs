@@ -142,8 +142,7 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
             ofs << ifs.rdbuf();
         }
         else {
-            StreamMetadata smd = get_stream_metadata(ifs);
-            uint64_t data_size = smd.end_pos - smd.curr_pos;
+            uint64_t data_size = get_stream_size(ifs);
             std::vector<char> padding(page_size - block_size, 0);
             while (data_size > 0) {
                 size_t num_uint8_ts = std::min(1024 * block_size, data_size);
