@@ -18,102 +18,102 @@
 
 namespace fs = cobs::fs;
 
-static fs::path out_dir("test/out/file");
-static fs::path out_path_s(out_dir.string() + "/classic_index.doc.isi");
-static fs::path out_path_isi(out_dir.string() + "/classic_index.cla_idx.isi");
-static fs::path out_path_cisi(out_dir.string() + "/compact_index.com_idx.isi");
-
-class file : public ::testing::Test
-{
-protected:
-    void SetUp() final {
-        cobs::error_code ec;
-        fs::remove_all(out_dir, ec);
-        fs::create_directories(out_dir);
-    }
-};
-
-TEST_F(file, base_name) {
-    ASSERT_EQ("classic_index", cobs::base_name(out_path_s));
+TEST(file, base_name) {
+    fs::path out_path("test/out/file/classic_index.doc.isi");
+    ASSERT_EQ("classic_index", cobs::base_name(out_path));
 }
 
-TEST_F(file, document) {
-    cobs::Document<31> s_out;
-    s_out.serialize(out_path_s, "document");
+TEST(file, document) {
+    std::stringstream buffer;
+
+    cobs::Document<31> d_out;
+    d_out.serialize(buffer, "document");
 
     cobs::DocumentHeader hdoc;
-    cobs::Document<31> s_in;
-    s_in.deserialize(out_path_s, hdoc);
+    cobs::Document<31> d_in;
+    d_in.deserialize(buffer, hdoc);
 }
 
-TEST_F(file, classic_index) {
+TEST(file, classic_index_header) {
+    std::stringstream buffer;
+
+    // write classic index header
+    std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
+    cobs::ClassicIndexHeader h_out(321, 21, file_names);
+    h_out.serialize(buffer);
+
+    // read classic index header
+    cobs::ClassicIndexHeader h_in;
+    h_in.deserialize(buffer);
+
+    // compare results
+    ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
+    ASSERT_EQ(h_out.block_size(), h_in.block_size());
+    ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
+    ASSERT_EQ(file_names, h_in.file_names());
+}
+
+TEST(file, classic_index) {
+    std::stringstream buffer;
+
+    // write classic index file
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
     cobs::ClassicIndexHeader h_out(123, 12, file_names);
     std::vector<uint8_t> v_out(h_out.block_size() * h_out.signature_size(), 7);
-    h_out.write_file(out_path_isi, v_out);
+    h_out.write_file(buffer, v_out);
 
+    // read classic index file
     cobs::ClassicIndexHeader h_in;
     std::vector<uint8_t> v_in;
-    h_in.read_file(out_path_isi, v_in);
+    h_in.read_file(buffer, v_in);
+
+    // compare results
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
     ASSERT_EQ(h_out.block_size(), h_in.block_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
-    ASSERT_EQ(v_out.size(), v_in.size());
-    for (size_t i = 0; i < v_out.size(); i++) {
-        ASSERT_EQ(v_out[i], v_in[i]);
-    }
-    ASSERT_EQ(file_names.size(), h_in.file_names().size());
-    for (size_t i = 0; i < file_names.size(); i++) {
-        ASSERT_EQ(file_names[i], h_in.file_names()[i]);
-    }
+    ASSERT_EQ(v_out, v_in);
+    ASSERT_EQ(file_names, h_in.file_names());
 }
 
-TEST_F(file, classic_index_header) {
-    std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
-    cobs::ClassicIndexHeader h_out(321, 21, file_names);
-    cobs::serialize_header(out_path_isi, h_out);
+TEST(file, compact_index_header_values) {
+    std::stringstream buffer;
 
-    auto h_in = cobs::deserialize_header<cobs::ClassicIndexHeader>(out_path_isi);
-    ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
-    ASSERT_EQ(h_out.block_size(), h_in.block_size());
-    ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
-    ASSERT_EQ(file_names.size(), h_in.file_names().size());
-    for (size_t i = 0; i < file_names.size(); i++) {
-        ASSERT_EQ(file_names[i], h_in.file_names()[i]);
-    }
-}
-
-TEST_F(file, compact_index_header_values) {
+    // write compact file header
     std::vector<cobs::CompactIndexHeader::parameter> parameters = {
         { 100, 1 },
         { 200, 1 },
         { 3000, 1 },
     };
     std::vector<std::string> file_names = { "file_1", "file_2", "file_3" };
-    cobs::CompactIndexHeader h(parameters, file_names, 4096);
-    cobs::serialize_header(out_path_cisi, h);
+    cobs::CompactIndexHeader h_out(parameters, file_names, 4096);
+    h_out.serialize(buffer);
 
-    auto h_2 = cobs::deserialize_header<cobs::CompactIndexHeader>(out_path_cisi);
+    // read compact file header
+    cobs::CompactIndexHeader h_in;
+    h_in.deserialize(buffer);
 
+    // compare results
     for (size_t i = 0; i < parameters.size(); i++) {
-        ASSERT_EQ(parameters[i].num_hashes, h_2.parameters()[i].num_hashes);
-        ASSERT_EQ(parameters[i].signature_size, h_2.parameters()[i].signature_size);
+        ASSERT_EQ(parameters[i].num_hashes, h_in.parameters()[i].num_hashes);
+        ASSERT_EQ(parameters[i].signature_size, h_in.parameters()[i].signature_size);
     }
-    for (size_t i = 0; i < file_names.size(); i++) {
-        ASSERT_EQ(file_names[i], h_2.file_names()[i]);
-    }
+    ASSERT_EQ(file_names, h_in.file_names());
 }
 
-TEST_F(file, compact_index_header_padding) {
+TEST(file, compact_index_header_padding) {
+    std::stringstream buffer;
+
+    // write compact file header
     std::vector<cobs::CompactIndexHeader::parameter> parameters = { };
     std::vector<std::string> file_names = { };
     uint64_t page_size = 4096;
-    cobs::CompactIndexHeader h(parameters, file_names, page_size);
-    cobs::serialize_header(out_path_cisi, h);
+    cobs::CompactIndexHeader h_out(parameters, file_names, page_size);
+    h_out.serialize(buffer);
 
-    std::ifstream ifs;
-    cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, out_path_cisi);
-    cobs::StreamPos sp = cobs::get_stream_pos(ifs);
+    // read compact file header
+    cobs::CompactIndexHeader h_in;
+    h_in.deserialize(buffer);
+    cobs::StreamPos sp = cobs::get_stream_pos(buffer);
     ASSERT_EQ(sp.curr_pos % page_size, 0U);
 }
 

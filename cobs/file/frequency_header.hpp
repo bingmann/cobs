@@ -13,15 +13,15 @@
 
 namespace cobs {
 
-class FrequencyHeader : public Header<FrequencyHeader>
+class FrequencyHeader
 {
-protected:
-    void serialize(std::ofstream& ost) const override;
-    void deserialize(std::ifstream& ifs) override;
-
 public:
     static const std::string magic_word;
+    static const uint32_t version;
     static const std::string file_extension;
+
+    void serialize(std::ofstream& ofs) const;
+    void deserialize(std::ifstream& ifs);
 };
 
 } // namespace cobs

@@ -22,7 +22,7 @@ template <class Header>
 void serialize_header(std::ofstream& ofs, const fs::path& p, const Header& h) {
     ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ofs.open(p.string(), std::ios::out | std::ios::binary);
-    cobs::Header<Header>::serialize(ofs, h);
+    h.serialize(ofs);
 }
 
 template <class Header>
@@ -36,7 +36,7 @@ Header deserialize_header(std::ifstream& ifs, const fs::path& p) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ifs.open(p.string(), std::ios::in | std::ios::binary);
     Header h;
-    cobs::Header<Header>::deserialize(ifs, h);
+    h.deserialize(ifs);
     return h;
 }
 

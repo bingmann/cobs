@@ -14,7 +14,7 @@
 
 namespace cobs {
 
-class RanfoldIndexHeader : public Header<RanfoldIndexHeader>
+class RanfoldIndexHeader
 {
 public:
     uint64_t m_term_space;
@@ -27,14 +27,15 @@ public:
     static const uint32_t mark = 0x80000000;
     static const uint32_t mark_mask = ~mark;
 
-protected:
-    void serialize(std::ofstream& ofs) const override;
-    void deserialize(std::ifstream& ifs) override;
-
 public:
     static const std::string magic_word;
+    static const uint32_t version;
     static const std::string file_extension;
+
     RanfoldIndexHeader() = default;
+
+    void serialize(std::ofstream& ofs) const;
+    void deserialize(std::ifstream& ifs);
 
     void write_file(std::ofstream& ofs, const std::vector<uint8_t>& data);
     void write_file(const fs::path& p, const std::vector<uint8_t>& data);

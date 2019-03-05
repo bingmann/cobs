@@ -11,9 +11,20 @@
 namespace cobs {
 
 const std::string FrequencyHeader::magic_word = "FREQUENCY";
+const uint32_t FrequencyHeader::version = 1;
 const std::string FrequencyHeader::file_extension = ".freq.isi";
-void FrequencyHeader::serialize(std::ofstream& /*ost*/) const { }
-void FrequencyHeader::deserialize(std::ifstream& /*ifs*/) { }
+
+void FrequencyHeader::serialize(std::ofstream& ofs) const {
+    serialize_magic_begin(ofs, magic_word, version);
+
+    serialize_magic_end(ofs, magic_word);
+}
+
+void FrequencyHeader::deserialize(std::ifstream& ifs) {
+    deserialize_magic_begin(ifs, magic_word, version);
+
+    deserialize_magic_end(ifs, magic_word);
+}
 
 } // namespace cobs
 

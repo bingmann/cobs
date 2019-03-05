@@ -124,7 +124,7 @@ TEST_F(compact_index_construction, num_kmers_calculation) {
     doc.deserialize(path_document, hdoc);
 
     size_t file_size = fs::file_size(path_document);
-    ASSERT_EQ(doc.data().size(), file_size / 8 - 4);
+    ASSERT_EQ(doc.data().size(), file_size / 8 - 5);
 }
 
 TEST_F(compact_index_construction, num_ones) {

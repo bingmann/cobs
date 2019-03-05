@@ -13,21 +13,23 @@
 
 namespace cobs {
 
-class DocumentHeader : public Header<DocumentHeader>
+class DocumentHeader
 {
 private:
     std::string m_name;
     uint32_t m_kmer_size;
 
-protected:
-    void serialize(std::ofstream& ofs) const override;
-    void deserialize(std::ifstream& ifs) override;
-
 public:
     static const std::string magic_word;
+    static const uint32_t version;
     static const std::string file_extension;
+
     DocumentHeader() = default;
     DocumentHeader(std::string name, uint32_t kmer_size);
+
+    void serialize(std::ostream& os) const;
+    void deserialize(std::istream& is);
+
     std::string name() const;
     uint32_t kmer_size() const;
 };

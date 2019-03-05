@@ -135,8 +135,8 @@ private:
 };
 
 template <unsigned int N>
-void process_file(const fs::path& in_path, const fs::path& out_path, Document<N>& document,
-                  Timer& t) {
+void process_file(const fs::path& in_path, const fs::path& out_path,
+                  Document<N>& document, Timer& t) {
     t.active("read");
     CortexFile ctx(in_path);
 

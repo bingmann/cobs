@@ -40,12 +40,12 @@ public:
         std::sort(m_data.begin(), m_data.end());
     }
 
-    void serialize(std::ofstream& ofs, const std::string& name) const {
-        ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    void serialize(std::ostream& os, const std::string& name) const {
+        os.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         DocumentHeader sh(name, N);
-        Header<DocumentHeader>::serialize(ofs, sh);
-        ofs.write(reinterpret_cast<const char*>(m_data.data()),
-                  KMer<N>::size* m_data.size());
+        sh.serialize(os);
+        os.write(reinterpret_cast<const char*>(m_data.data()),
+                 KMer<N>::size* m_data.size());
     }
 
     void serialize(const fs::path& p, const std::string& name) const {
@@ -54,14 +54,14 @@ public:
         serialize(ofs, name);
     }
 
-    void deserialize(std::ifstream& ifs, DocumentHeader& h) {
-        ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-        Header<DocumentHeader>::deserialize(ifs, h);
+    void deserialize(std::istream& is, DocumentHeader& h) {
+        is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+        h.deserialize(is);
         die_unless(N == h.kmer_size());
 
-        size_t size = get_stream_size(ifs);
+        size_t size = get_stream_size(is);
         m_data.resize(size / KMer<N>::size);
-        ifs.read(reinterpret_cast<char*>(m_data.data()), size);
+        is.read(reinterpret_cast<char*>(m_data.data()), size);
     }
 
     void deserialize(const fs::path& p, DocumentHeader& h) {

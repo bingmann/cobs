@@ -12,23 +12,8 @@
 namespace cobs {
 
 const std::string ClassicIndexHeader::magic_word = "CLASSIC_INDEX";
+const uint32_t ClassicIndexHeader::version = 1;
 const std::string ClassicIndexHeader::file_extension = ".cla_idx.isi";
-
-void ClassicIndexHeader::serialize(std::ofstream& ofs) const {
-    stream_put(ofs, (uint32_t)m_file_names.size(), m_signature_size, m_num_hashes);
-    for (const auto& file_name : m_file_names) {
-        ofs << file_name << std::endl;
-    }
-}
-
-void ClassicIndexHeader::deserialize(std::ifstream& ifs) {
-    uint32_t file_names_size;
-    stream_get(ifs, file_names_size, m_signature_size, m_num_hashes);
-    m_file_names.resize(file_names_size);
-    for (auto& file_name : m_file_names) {
-        std::getline(ifs, file_name);
-    }
-}
 
 ClassicIndexHeader::ClassicIndexHeader(uint64_t signature_size, uint64_t num_hashes, const std::vector<std::string>& file_names)
     : m_signature_size(signature_size), m_num_hashes(num_hashes), m_file_names(file_names) { }
@@ -53,11 +38,35 @@ std::vector<std::string>& ClassicIndexHeader::file_names() {
     return m_file_names;
 }
 
-void ClassicIndexHeader::write_file(std::ofstream& ofs,
+void ClassicIndexHeader::serialize(std::ostream& os) const {
+    serialize_magic_begin(os, magic_word, version);
+
+    stream_put(os, (uint32_t)m_file_names.size(), m_signature_size, m_num_hashes);
+    for (const auto& file_name : m_file_names) {
+        os << file_name << std::endl;
+    }
+
+    serialize_magic_end(os, magic_word);
+}
+
+void ClassicIndexHeader::deserialize(std::istream& is) {
+    deserialize_magic_begin(is, magic_word, version);
+
+    uint32_t file_names_size;
+    stream_get(is, file_names_size, m_signature_size, m_num_hashes);
+    m_file_names.resize(file_names_size);
+    for (auto& file_name : m_file_names) {
+        std::getline(is, file_name);
+    }
+
+    deserialize_magic_end(is, magic_word);
+}
+
+void ClassicIndexHeader::write_file(std::ostream& os,
                                     const std::vector<uint8_t>& data) {
-    ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-    Header<ClassicIndexHeader>::serialize(ofs, *this);
-    ofs.write(reinterpret_cast<const char*>(data.data()), data.size());
+    os.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    serialize(os);
+    os.write(reinterpret_cast<const char*>(data.data()), data.size());
 }
 
 void ClassicIndexHeader::write_file(const fs::path& p,
@@ -68,13 +77,13 @@ void ClassicIndexHeader::write_file(const fs::path& p,
     write_file(ofs, data);
 }
 
-void ClassicIndexHeader::read_file(std::ifstream& ifs,
+void ClassicIndexHeader::read_file(std::istream& is,
                                    std::vector<uint8_t>& data) {
-    ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-    Header<ClassicIndexHeader>::deserialize(ifs, *this);
-    size_t size = get_stream_size(ifs);
+    is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    deserialize(is);
+    size_t size = get_stream_size(is);
     data.resize(size);
-    ifs.read(reinterpret_cast<char*>(data.data()), size);
+    is.read(reinterpret_cast<char*>(data.data()), size);
 }
 
 void ClassicIndexHeader::read_file(const fs::path& p,

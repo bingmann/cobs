@@ -13,7 +13,7 @@
 
 namespace cobs {
 
-class CompactIndexHeader : public Header<CompactIndexHeader>
+class CompactIndexHeader
 {
 public:
     struct parameter {
@@ -27,20 +27,22 @@ private:
     uint64_t m_page_size;
     size_t padding_size(uint64_t curr_stream_pos) const;
 
-protected:
-    void serialize(std::ofstream& ofs) const override;
-    void deserialize(std::ifstream& ifs) override;
-
 public:
     static const std::string magic_word;
+    static const uint32_t version;
     static const std::string file_extension;
+
     explicit CompactIndexHeader(uint64_t page_size = 4096);
     CompactIndexHeader(const std::vector<parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size = 4096);
+
     const std::vector<parameter>& parameters() const;
     const std::vector<std::string>& file_names() const;
     uint64_t page_size() const;
 
-    void read_file(std::ifstream& ifs, std::vector<std::vector<uint8_t> >& data);
+    void serialize(std::ostream& os) const;
+    void deserialize(std::istream& is);
+
+    void read_file(std::istream& is, std::vector<std::vector<uint8_t> >& data);
     void read_file(const fs::path& p, std::vector<std::vector<uint8_t> >& data);
 };
 

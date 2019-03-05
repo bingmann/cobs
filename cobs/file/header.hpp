@@ -19,52 +19,43 @@
 
 namespace cobs {
 
-template <class T>
-class Header
-{
-private:
-    static const uint32_t m_version;
-
-protected:
-    virtual void serialize(std::ofstream& ofs) const = 0;
-    virtual void deserialize(std::ifstream& ifs) = 0;
-
-public:
-    static const std::string magic_word;
-    static void serialize(std::ofstream& ofs, const Header& h);
-    static void deserialize(std::ifstream& ifs, Header& h);
-};
-
-template <class T>
-const std::string Header<T>::magic_word = "INSIIN";
-template <class T>
-const uint32_t Header<T>::m_version = 1;
-
 static inline
-void check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
+void check_magic_word(std::istream& is, const std::string& magic_word) {
     std::vector<char> mw_v(magic_word.size(), ' ');
-    ifs.read(mw_v.data(), magic_word.size());
+    is.read(mw_v.data(), magic_word.size());
     std::string mw(mw_v.data(), mw_v.size());
     assert_throw<FileIOException>(mw == magic_word, "invalid file type");
-    assert_throw<FileIOException>(ifs.good(), "input filestream broken");
+    assert_throw<FileIOException>(is.good(), "input filestream broken");
 }
 
-template <class T>
-void Header<T>::serialize(std::ofstream& ofs, const Header& h) {
-    ofs << magic_word;
-    stream_put(ofs, m_version);
-    h.serialize(ofs);
-    ofs << T::magic_word;
+static inline
+void serialize_magic_begin(
+    std::ostream& os, const std::string& magic_word, const uint32_t& version) {
+    os << "COBS:";
+    os << magic_word;
+    stream_put(os, version);
 }
 
-template <class T>
-void Header<T>::deserialize(std::ifstream& ifs, Header& h) {
-    check_magic_word(ifs, magic_word);
+static inline
+void serialize_magic_end(
+    std::ostream& os, const std::string& magic_word) {
+    os << magic_word;
+}
+
+static inline
+void deserialize_magic_begin(
+    std::istream& is, const std::string& magic_word, const uint32_t& version) {
+    check_magic_word(is, "COBS:");
+    check_magic_word(is, magic_word);
     uint32_t v;
-    stream_get(ifs, v);
-    assert_throw<FileIOException>(v == m_version, "invalid file version");
-    h.deserialize(ifs);
-    check_magic_word(ifs, T::magic_word);
+    stream_get(is, v);
+    assert_throw<FileIOException>(v == version, "invalid file version");
+}
+
+static inline
+void deserialize_magic_end(
+    std::istream& is, const std::string& magic_word) {
+    check_magic_word(is, magic_word);
 }
 
 } // namespace cobs

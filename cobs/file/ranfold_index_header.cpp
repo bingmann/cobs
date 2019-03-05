@@ -13,9 +13,12 @@
 namespace cobs {
 
 const std::string RanfoldIndexHeader::magic_word = "RANFOLD_INDEX";
+const uint32_t RanfoldIndexHeader::version = 1;
 const std::string RanfoldIndexHeader::file_extension = ".rfd_idx.isi";
 
 void RanfoldIndexHeader::serialize(std::ofstream& ofs) const {
+    serialize_magic_begin(ofs, magic_word, version);
+
     stream_put(ofs,
                m_term_space, m_term_hashes,
                m_doc_space_bytes, m_doc_hashes,
@@ -26,9 +29,13 @@ void RanfoldIndexHeader::serialize(std::ofstream& ofs) const {
     // for (const auto& d : m_doc_array) {
     //     cobs::serialize(ofs, d);
     // }
+
+    serialize_magic_begin(ofs, magic_word, version);
 }
 
 void RanfoldIndexHeader::deserialize(std::ifstream& ifs) {
+    deserialize_magic_begin(ifs, magic_word, version);
+
     uint32_t file_names_size, doc_array_size;
     stream_get(ifs,
                m_term_space, m_term_hashes,
@@ -42,12 +49,14 @@ void RanfoldIndexHeader::deserialize(std::ifstream& ifs) {
     for (auto& d : m_doc_array) {
         stream_get(ifs, d);
     }
+
+    deserialize_magic_end(ifs, magic_word);
 }
 
 void RanfoldIndexHeader::write_file(std::ofstream& ofs,
                                     const std::vector<uint8_t>& data) {
     ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-    Header<RanfoldIndexHeader>::serialize(ofs, *this);
+    serialize(ofs);
     ofs.write(reinterpret_cast<const char*>(data.data()), data.size());
 }
 
@@ -62,7 +71,7 @@ void RanfoldIndexHeader::write_file(const fs::path& p,
 void RanfoldIndexHeader::read_file(std::ifstream& ifs,
                                    std::vector<uint8_t>& data) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-    Header<RanfoldIndexHeader>::deserialize(ifs, *this);
+    deserialize(ifs);
     size_t size = get_stream_size(ifs);
     data.resize(size);
     ifs.read(reinterpret_cast<char*>(data.data()), size);
