@@ -18,10 +18,10 @@ size_t CompactIndexHeader::padding_size(uint64_t curr_stream_pos) const {
 }
 
 void CompactIndexHeader::serialize(std::ofstream& ofs) const {
-    cobs::serialize(ofs, (uint32_t)m_parameters.size(), (uint32_t)m_file_names.size(), m_page_size);
+    stream_put(ofs, (uint32_t)m_parameters.size(), (uint32_t)m_file_names.size(), m_page_size);
     ofs.flush();
     for (const auto& p : m_parameters) {
-        cobs::serialize(ofs, p.signature_size, p.num_hashes);
+        cobs::stream_put(ofs, p.signature_size, p.num_hashes);
     }
     for (const auto& file_name : m_file_names) {
         ofs << file_name << std::endl;
@@ -34,10 +34,10 @@ void CompactIndexHeader::serialize(std::ofstream& ofs) const {
 void CompactIndexHeader::deserialize(std::ifstream& ifs) {
     uint32_t parameters_size;
     uint32_t file_names_size;
-    cobs::deserialize(ifs, parameters_size, file_names_size, m_page_size);
+    stream_get(ifs, parameters_size, file_names_size, m_page_size);
     m_parameters.resize(parameters_size);
     for (auto& p : m_parameters) {
-        cobs::deserialize(ifs, p.signature_size, p.num_hashes);
+        stream_get(ifs, p.signature_size, p.num_hashes);
     }
 
     m_file_names.resize(file_names_size);

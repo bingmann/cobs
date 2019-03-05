@@ -46,34 +46,42 @@ void read_file(const fs::path& path, std::vector<T>& v) {
     is.read(reinterpret_cast<char*>(v.data()), smd.end_pos);
 }
 
+/******************************************************************************/
+
+//! append a POD to an ostream
 template <typename T>
-void write_pod(std::ostream& os, const T& t) {
+void stream_put_pod(std::ostream& os, const T& t) {
     static_assert(std::is_pod<T>::value, "T must be POD");
     os.write(reinterpret_cast<const char*>(&t), sizeof(T));
 }
 
+//! append a list of PODs to an ostream
 static inline
-void serialize(std::ostream& /* os */) { }
+void stream_put(std::ostream& /* os */) { }
 
+//! append a list of PODs to an ostream
 template <typename T, typename... Args>
-void serialize(std::ostream& os, const T& t, const Args& ... args) {
-    write_pod(os, t);
-    serialize(os, args...);
+void stream_put(std::ostream& os, const T& t, const Args& ... args) {
+    stream_put_pod(os, t);
+    stream_put(os, args...);
 }
 
+//! read a POD from an istream
 template <typename T>
-void read_pod(std::istream& is, T& t) {
+void stream_get_pod(std::istream& is, T& t) {
     static_assert(std::is_pod<T>::value, "T must be POD");
     is.read(reinterpret_cast<char*>(&t), sizeof(T));
 }
 
+//! read a list of PODs from an istream
 static inline
-void deserialize(std::istream& /* is */) { }
+void stream_get(std::istream& /* is */) { }
 
+//! read a list of PODs from an istream
 template <typename T, typename... Args>
-void deserialize(std::istream& is, T& t, Args& ... args) {
-    read_pod(is, t);
-    deserialize(is, args...);
+void stream_get(std::istream& is, T& t, Args& ... args) {
+    stream_get_pod(is, t);
+    stream_get(is, args...);
 }
 
 } // namespace cobs

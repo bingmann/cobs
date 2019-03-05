@@ -15,7 +15,7 @@ const std::string ClassicIndexHeader::magic_word = "CLASSIC_INDEX";
 const std::string ClassicIndexHeader::file_extension = ".cla_idx.isi";
 
 void ClassicIndexHeader::serialize(std::ofstream& ofs) const {
-    cobs::serialize(ofs, (uint32_t)m_file_names.size(), m_signature_size, m_num_hashes);
+    stream_put(ofs, (uint32_t)m_file_names.size(), m_signature_size, m_num_hashes);
     for (const auto& file_name : m_file_names) {
         ofs << file_name << std::endl;
     }
@@ -23,7 +23,7 @@ void ClassicIndexHeader::serialize(std::ofstream& ofs) const {
 
 void ClassicIndexHeader::deserialize(std::ifstream& ifs) {
     uint32_t file_names_size;
-    cobs::deserialize(ifs, file_names_size, m_signature_size, m_num_hashes);
+    stream_get(ifs, file_names_size, m_signature_size, m_num_hashes);
     m_file_names.resize(file_names_size);
     for (auto& file_name : m_file_names) {
         std::getline(ifs, file_name);

@@ -52,7 +52,7 @@ void check_magic_word(std::ifstream& ifs, const std::string& magic_word) {
 template <class T>
 void Header<T>::serialize(std::ofstream& ofs, const Header& h) {
     ofs << magic_word;
-    cobs::serialize(ofs, m_version);
+    stream_put(ofs, m_version);
     h.serialize(ofs);
     ofs << T::magic_word;
 }
@@ -61,7 +61,7 @@ template <class T>
 void Header<T>::deserialize(std::ifstream& ifs, Header& h) {
     check_magic_word(ifs, magic_word);
     uint32_t v;
-    cobs::deserialize(ifs, v);
+    stream_get(ifs, v);
     assert_throw<FileIOException>(v == m_version, "invalid file version");
     h.deserialize(ifs);
     check_magic_word(ifs, T::magic_word);

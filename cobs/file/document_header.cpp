@@ -15,12 +15,12 @@ const std::string DocumentHeader::magic_word = "DOCUMENT";
 const std::string DocumentHeader::file_extension = ".doc.isi";
 
 void DocumentHeader::serialize(std::ofstream& ofs) const {
-    cobs::serialize(ofs, m_kmer_size);
+    stream_put(ofs, m_kmer_size);
     ofs << m_name << std::endl;
 }
 
 void DocumentHeader::deserialize(std::ifstream& ifs) {
-    cobs::deserialize(ifs, m_kmer_size);
+    stream_get(ifs, m_kmer_size);
     std::getline(ifs, m_name);
 }
 

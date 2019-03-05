@@ -16,10 +16,10 @@ const std::string RanfoldIndexHeader::magic_word = "RANFOLD_INDEX";
 const std::string RanfoldIndexHeader::file_extension = ".rfd_idx.isi";
 
 void RanfoldIndexHeader::serialize(std::ofstream& ofs) const {
-    cobs::serialize(ofs,
-                    m_term_space, m_term_hashes,
-                    m_doc_space_bytes, m_doc_hashes,
-                    (uint32_t)m_file_names.size(), (uint32_t)m_doc_array.size());
+    stream_put(ofs,
+               m_term_space, m_term_hashes,
+               m_doc_space_bytes, m_doc_hashes,
+               (uint32_t)m_file_names.size(), (uint32_t)m_doc_array.size());
     for (const auto& file_name : m_file_names) {
         ofs << file_name << std::endl;
     }
@@ -30,17 +30,17 @@ void RanfoldIndexHeader::serialize(std::ofstream& ofs) const {
 
 void RanfoldIndexHeader::deserialize(std::ifstream& ifs) {
     uint32_t file_names_size, doc_array_size;
-    cobs::deserialize(ifs,
-                      m_term_space, m_term_hashes,
-                      m_doc_space_bytes, m_doc_hashes,
-                      file_names_size, doc_array_size);
+    stream_get(ifs,
+               m_term_space, m_term_hashes,
+               m_doc_space_bytes, m_doc_hashes,
+               file_names_size, doc_array_size);
     m_file_names.resize(file_names_size);
     for (auto& file_name : m_file_names) {
         std::getline(ifs, file_name);
     }
     m_doc_array.resize(doc_array_size);
     for (auto& d : m_doc_array) {
-        cobs::deserialize(ifs, d);
+        stream_get(ifs, d);
     }
 }
 
