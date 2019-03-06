@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/addressable_priority_queue_test.cpp
+ * tests/addressable_priority_queue_test.cpp
  *
  * Copyright (c) 2018 Timo Bingmann <tb@panthema.net>
  *

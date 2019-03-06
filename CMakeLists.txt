@@ -108,7 +108,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17 -march=native")
 MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 file(GLOB_RECURSE TEST_FILES
-  "${PROJECT_SOURCE_DIR}/test/*.hpp" "${PROJECT_SOURCE_DIR}/test/*.cpp")
+  "${PROJECT_SOURCE_DIR}/tests/*.hpp" "${PROJECT_SOURCE_DIR}/tests/*.cpp")
 file(GLOB_RECURSE EXECUTABLE_FILES
   "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
@@ -158,7 +158,7 @@ target_link_libraries(cobs_static ${COBS_LINK_LIBRARIES})
 
 ################################################################################
 
-file(COPY test/resources DESTINATION test)
+file(COPY tests/resources DESTINATION test)
 
 foreach(target ${EXECUTABLE_FILES})
   get_filename_component(target_name ${target} NAME_WE)

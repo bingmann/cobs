@@ -1,5 +1,5 @@
 /*******************************************************************************
- * test/parameters.cpp
+ * tests/parameters.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
