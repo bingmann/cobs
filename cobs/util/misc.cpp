@@ -23,18 +23,8 @@ uint64_t get_page_size() {
 }
 
 std::string random_sequence(size_t size, size_t seed) {
-    std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };
-    std::string result;
-    std::srand(seed);
-    for (size_t i = 0; i < size; i++) {
-        result += basepairs[std::rand() % 4];
-    }
-    return result;
-}
-
-std::string random_sequence_new(size_t size) {
-    std::default_random_engine rng(123456);
-    return random_sequence_new(size, rng);
+    std::default_random_engine rng(seed);
+    return random_sequence_rng(size, rng);
 }
 
 void initialize_map() {

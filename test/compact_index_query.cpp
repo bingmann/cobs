@@ -14,9 +14,9 @@
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir("test/out/compact_index_query/input");
-static fs::path index_path(in_dir.string() + "/index.com_idx.cobs");
-static fs::path tmp_dir("test/out/compact_index_query/tmp");
+static fs::path input_dir("test/compact_index_query/input");
+static fs::path index_dir("test/compact_index_query/index");
+static fs::path index_path(index_dir.string() + "/index.com_idx.cobs");
 static std::string query = cobs::random_sequence(21000, 1);
 
 class compact_index_query : public ::testing::Test
@@ -24,26 +24,27 @@ class compact_index_query : public ::testing::Test
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(in_dir, ec);
-        if (ec) {
-            std::cout << ec.message() << std::endl;
-        }
-        fs::remove_all(tmp_dir, ec);
-        if (ec) {
-            std::cout << ec.message() << std::endl;
-        }
-        fs::create_directories(in_dir);
-        fs::create_directories(tmp_dir);
+        fs::remove_all(index_dir, ec);
+        fs::remove_all(input_dir, ec);
+    }
+    void TearDown() final {
+        cobs::error_code ec;
+        fs::remove_all(index_dir, ec);
+        fs::remove_all(input_dir, ec);
     }
 };
 
 TEST_F(compact_index_query, all_included_mmap) {
+    // generate
     auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
+    generate_test_case(documents, input_dir.string());
+
+    // construct compact index and mmap query
+    cobs::compact_index::create_folders(input_dir, index_dir, 2);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
+    // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
     ASSERT_EQ(documents.size(), result.size());
@@ -54,12 +55,16 @@ TEST_F(compact_index_query, all_included_mmap) {
 }
 
 TEST_F(compact_index_query, one_included_mmap) {
+    // generate
     auto documents = generate_documents_one(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
+    generate_test_case(documents, input_dir.string());
+
+    // construct compact index and mmap query
+    cobs::compact_index::create_folders(input_dir, index_dir, 2);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
+    // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, 31, result);
     ASSERT_EQ(documents.size(), result.size());
@@ -69,12 +74,16 @@ TEST_F(compact_index_query, one_included_mmap) {
 }
 
 TEST_F(compact_index_query, false_positive_mmap) {
+    // generate
     auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 2);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 2);
+    generate_test_case(documents, input_dir.string());
+
+    // construct compact index and mmap query
+    cobs::compact_index::create_folders(input_dir, index_dir, 2);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
+    // execute query and check results
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -93,12 +102,13 @@ TEST_F(compact_index_query, false_positive_mmap) {
     }
 }
 
-#if USE_AIO
+#if COBS_USE_AIO_CURRENTLY_DISABLED
+
 TEST_F(compact_index_query, all_included_aio) {
     auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 4096);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 4096);
+    generate_test_case(documents, input_dir.string());
+    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::aio s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -112,9 +122,9 @@ TEST_F(compact_index_query, all_included_aio) {
 
 TEST_F(compact_index_query, one_included_aio) {
     auto documents = generate_documents_one(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 4096);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 4096);
+    generate_test_case(documents, input_dir.string());
+    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -127,9 +137,9 @@ TEST_F(compact_index_query, one_included_aio) {
 
 TEST_F(compact_index_query, false_positive_aio) {
     auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::compact_index::create_folders(tmp_dir, in_dir, 4096);
-    cobs::compact_index::construct_from_folders(in_dir, 8, 3, 0.1, 4096);
+    generate_test_case(documents, input_dir.string());
+    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
+    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     size_t num_tests = 10000;
@@ -149,6 +159,7 @@ TEST_F(compact_index_query, false_positive_aio) {
         ASSERT_LE(np.second, 1070U);
     }
 }
-#endif
+
+#endif // COBS_USE_AIO_CURRENTLY_DISABLED
 
 /******************************************************************************/

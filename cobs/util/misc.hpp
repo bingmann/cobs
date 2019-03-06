@@ -22,10 +22,8 @@ uint64_t get_page_size();
 template <class T>
 auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os);
 
-std::string random_sequence(size_t size, size_t seed = std::time(0));
-
 template <typename RandomGenerator>
-std::string random_sequence_new(size_t size, RandomGenerator& rng) {
+std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
     static const std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };
     std::string result;
     for (size_t i = 0; i < size; i++) {
@@ -34,7 +32,7 @@ std::string random_sequence_new(size_t size, RandomGenerator& rng) {
     return result;
 }
 
-std::string random_sequence_new(size_t size);
+std::string random_sequence(size_t size, size_t seed);
 
 void initialize_map();
 void initialize_map_server();

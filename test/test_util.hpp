@@ -57,6 +57,8 @@ generate_documents_all(const std::string& query,
     return documents;
 }
 
+//! Generate documents from a (random) query sequence with each query term
+//! contained in exactly one document.
 static inline
 std::vector<cobs::Document<31> > generate_documents_one(const std::string& query) {
     std::vector<cobs::Document<31> > documents(33);

@@ -659,11 +659,11 @@ int benchmark_fpr(int argc, char** argv) {
     std::vector<std::string> queries;
     for (size_t i = 0; i < num_warmup; i++) {
         warmup_queries.push_back(
-            cobs::random_sequence_new(num_kmers + 30, rng));
+            cobs::random_sequence_rng(num_kmers + 30, rng));
     }
     for (size_t i = 0; i < num_queries; i++) {
         queries.push_back(
-            cobs::random_sequence_new(num_kmers + 30, rng));
+            cobs::random_sequence_rng(num_kmers + 30, rng));
     }
 
     if (fpr_dist)

@@ -35,7 +35,7 @@ protected:
 
 TEST_F(classic_index_construction, deserialization) {
     // generate
-    std::string query = cobs::random_sequence_new(10000);
+    std::string query = cobs::random_sequence(10000, 1);
     auto documents = generate_documents_all(query, /* num_documents */ 33);
     generate_test_case(documents, input_dir.string());
 
