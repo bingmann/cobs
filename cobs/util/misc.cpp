@@ -32,6 +32,11 @@ std::string random_sequence(size_t size, size_t seed) {
     return result;
 }
 
+std::string random_sequence_new(size_t size) {
+    std::default_random_engine rng(123456);
+    return random_sequence_new(size, rng);
+}
+
 void initialize_map() {
 //    std::array<char, 4> chars = {'A', 'C', 'G', 'T'};
 //    int b = 0;

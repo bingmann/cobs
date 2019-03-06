@@ -14,66 +14,56 @@
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir("test/out/classic_index_construction/input");
-static fs::path documents_dir(in_dir.string() + "/documents");
-static fs::path cobs_2_dir(in_dir.string() + "/cobs_2");
-static fs::path classic_index_path(in_dir.string() + "/index.cla_idx.cobs");
-static fs::path tmp_dir("test/out/classic_index_construction/tmp");
-
-static std::string query = cobs::random_sequence(10000, 1);
+static fs::path input_dir("test/classic_index_construction/input");
+static fs::path index_dir("test/classic_index_construction/index");
+static fs::path classic_index_path(index_dir.string() + "/index.cla_idx.cobs");
 
 class classic_index_construction : public ::testing::Test
 {
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(in_dir, ec);
-        fs::remove_all(tmp_dir, ec);
-        fs::create_directories(in_dir);
-        fs::create_directories(tmp_dir);
+        fs::remove_all(index_dir, ec);
+        fs::remove_all(input_dir, ec);
+    }
+    void TearDown() final {
+        cobs::error_code ec;
+        fs::remove_all(input_dir, ec);
+        fs::remove_all(index_dir, ec);
     }
 };
 
 TEST_F(classic_index_construction, deserialization) {
-    auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
+    // generate
+    std::string query = cobs::random_sequence_new(10000);
+    auto documents = generate_documents_all(query, /* num_documents */ 33);
+    generate_test_case(documents, input_dir.string());
 
-    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
+    // get file names
+    std::vector<fs::path> paths;
+    std::copy_if(fs::recursive_directory_iterator(input_dir),
+                 fs::recursive_directory_iterator(),
+                 std::back_inserter(paths),
+                 [](const auto& p) {
+                     return cobs::file_has_header<cobs::DocumentHeader>(p);
+                 });
+    std::sort(paths.begin(), paths.end());
+
+    // construct classic index
+    cobs::classic_index::construct(input_dir, index_dir, 8, 3, 0.1);
+
+    // read classic index and check header fields
     std::vector<uint8_t> data;
     cobs::ClassicIndexHeader h;
     h.read_file(classic_index_path, data);
     ASSERT_EQ(h.file_names().size(), 33U);
     ASSERT_EQ(h.num_hashes(), 3U);
-}
-
-TEST_F(classic_index_construction, file_names) {
-    auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-
-    std::vector<fs::path> paths;
-    fs::recursive_directory_iterator it(tmp_dir), end;
-    std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return cobs::file_has_header<cobs::DocumentHeader>(p);
-                 });
-    std::sort(paths.begin(), paths.end());
-
-    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
-    std::vector<uint8_t> data;
-    auto h = cobs::deserialize_header<cobs::ClassicIndexHeader>(classic_index_path);
-    h.read_file(classic_index_path, data);
+    ASSERT_EQ(h.file_names().size(), paths.size());
     for (size_t i = 0; i < h.file_names().size(); i++) {
         ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));
     }
-}
 
-TEST_F(classic_index_construction, num_ones) {
-    auto documents = generate_documents_all(query);
-    generate_test_case(documents, tmp_dir.string());
-    cobs::classic_index::construct(tmp_dir, in_dir, 8, 3, 0.1);
-    std::vector<uint8_t> data;
-    cobs::ClassicIndexHeader h;
-    h.read_file(classic_index_path, data);
-
+    // check ratio of zeros/ones
     std::map<std::string, size_t> num_ones;
     for (size_t j = 0; j < h.signature_size(); j++) {
         for (size_t k = 0; k < h.block_size(); k++) {
@@ -88,7 +78,8 @@ TEST_F(classic_index_construction, num_ones) {
         }
     }
 
-    double set_bit_ratio = cobs::calc_average_set_bit_ratio(h.signature_size(), 3, 0.1);
+    double set_bit_ratio =
+        cobs::calc_average_set_bit_ratio(h.signature_size(), 3, 0.1);
     double num_ones_average = set_bit_ratio * h.signature_size();
     for (auto& no : num_ones) {
         ASSERT_LE(no.second, num_ones_average * 1.01);

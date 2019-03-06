@@ -36,12 +36,15 @@ void assert_equals_files(const std::string& f1, const std::string& f2) {
     }
 }
 
+//! Generate documents from a (random) query sequence
 static inline
-std::vector<cobs::Document<31> > generate_documents_all(const std::string& query) {
-    std::vector<cobs::Document<31> > documents(33);
+std::vector<cobs::Document<31> >
+generate_documents_all(const std::string& query,
+                       size_t num_documents = 33, size_t num_terms = 1000000) {
+    std::vector<cobs::Document<31> > documents(num_documents);
     cobs::KMer<31> k;
     char kmer_buffer[31];
-    for (size_t i = 0; i < query.size() - 31; i++) {
+    for (size_t i = 0; i < num_terms && i < query.size() - 31; i++) {
         const char* normalized_kmer =
             cobs::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
         k.init(normalized_kmer);

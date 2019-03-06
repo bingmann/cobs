@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <random>
 
 namespace cobs {
 
@@ -32,6 +33,8 @@ std::string random_sequence_new(size_t size, RandomGenerator& rng) {
     }
     return result;
 }
+
+std::string random_sequence_new(size_t size);
 
 void initialize_map();
 void initialize_map_server();
