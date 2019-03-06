@@ -13,7 +13,6 @@
 #include <cobs/util/processing.hpp>
 #include <cobs/util/query.hpp>
 #include <gtest/gtest.h>
-#include <xxhash.h>
 
 #include <unordered_map>
 
@@ -51,7 +50,7 @@ size_t get_num_positives_hash(uint64_t num_hashes, double false_positive_probabi
     std::vector<bool> signature(signature_size);
     cobs::KMer<31> k;
     for (size_t i = 0; i < num_elements; i++) {
-        cobs::classic_index::process_hashes(
+        cobs::process_hashes(
             query.data() + i, 31, signature_size, num_hashes,
             [&](size_t index) {
                 signature[index] = true;

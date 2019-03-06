@@ -15,12 +15,17 @@
 #include <fstream>
 #include <random>
 
+#include <xxhash.h>
+
 namespace cobs {
 
 uint64_t get_page_size();
 
 template <class T>
-auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os);
+auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os) {
+    t.print(os);
+    return os;
+}
 
 template <typename RandomGenerator>
 std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
@@ -35,20 +40,6 @@ std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
 std::string random_sequence(size_t size, size_t seed);
 
 template <typename T>
-T * allocate_aligned(uint64_t size, size_t alignment);
-void deallocate_aligned(void* ptr);
-
-} // namespace cobs
-
-namespace cobs {
-
-template <class T>
-auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os) {
-    t.print(os);
-    return os;
-}
-
-template <typename T>
 T * allocate_aligned(uint64_t size, size_t alignment) {
     T* ptr;
     int r = posix_memalign(reinterpret_cast<void**>(&ptr), alignment, sizeof(T) * size);
@@ -56,6 +47,23 @@ T * allocate_aligned(uint64_t size, size_t alignment) {
         throw std::runtime_error("Out of memory");
     std::fill(ptr, ptr + size, 0);
     return ptr;
+}
+
+static inline
+void deallocate_aligned(void* ptr) {
+    free(ptr);
+}
+
+/*!
+ * Constructs the hash used by the signatures.
+ */
+template <typename Callback>
+void process_hashes(const void* input, size_t size, uint64_t signature_size,
+                    uint64_t num_hashes, Callback callback) {
+    for (unsigned int i = 0; i < num_hashes; i++) {
+        uint64_t hash = XXH64(input, size, i);
+        callback(hash % signature_size);
+    }
 }
 
 } // namespace cobs

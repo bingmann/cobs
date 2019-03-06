@@ -64,7 +64,7 @@ void mark_document(const Document<31>& doc,
                    size_t document_index) {
     for (size_t j = 0; j < doc.data().size(); ++j) {
         // process term hashes
-        classic_index::process_hashes(
+        process_hashes(
             doc.data().data() + j, 8,
             rih.m_term_space, rih.m_term_hashes,
             [&](uint64_t hash) {
@@ -239,7 +239,7 @@ void sketch_document(const Document<31>& doc,
 
     for (size_t j = 0; j < doc.data().size(); ++j) {
         // process term hashes
-        classic_index::process_hashes(
+        process_hashes(
             doc.data().data() + j, 8,
             rih.m_term_space, rih.m_term_hashes,
             [&](uint64_t hash) {

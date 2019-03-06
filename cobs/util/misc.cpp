@@ -27,10 +27,6 @@ std::string random_sequence(size_t size, size_t seed) {
     return random_sequence_rng(size, rng);
 }
 
-void deallocate_aligned(void* counts) {
-    free(counts);
-}
-
 } // namespace cobs
 
 /******************************************************************************/
