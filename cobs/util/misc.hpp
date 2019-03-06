@@ -34,9 +34,6 @@ std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
 
 std::string random_sequence(size_t size, size_t seed);
 
-void initialize_map();
-void initialize_map_server();
-
 template <typename T>
 T * allocate_aligned(uint64_t size, size_t alignment);
 void deallocate_aligned(void* ptr);
