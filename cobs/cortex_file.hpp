@@ -88,7 +88,7 @@ public:
         pos_data_end_ = is.tellg();
     }
 
-    size_t num_documents() const {
+    size_t num_kmers() const {
         return (pos_data_end_ - pos_data_begin_)
                / (8 * num_words_per_kmer_ + 5 * num_colors_);
     }
@@ -104,7 +104,7 @@ public:
         is_.clear();
         is_.seekg(pos_data_begin_, std::ios::beg);
 
-        size_t r = num_documents();
+        size_t r = num_kmers();
         while (r != 0) {
             --r;
             if (!is_.good())
@@ -115,12 +115,6 @@ public:
 
             callback(kmer);
         }
-
-        // t.active("sort");
-        // std::sort(reinterpret_cast<uint64_t*>(&(*document.data().begin())),
-        //           reinterpret_cast<uint64_t*>(&(*document.data().end())));
-        // disabled sorting -tb 2018-09-17 (is this only needed for frequency counting?)
-        // std::sort(document.data().begin(), document.data().end());
     }
 
     uint32_t version_;
@@ -141,7 +135,7 @@ void process_file(const fs::path& in_path, const fs::path& out_path,
     CortexFile ctx(in_path);
 
     document.data().clear();
-    document.data().reserve(ctx.num_documents());
+    document.data().reserve(ctx.num_kmers());
     ctx.process_kmers<N>(
         [&](const KMer<N>& m) { document.data().push_back(m); });
 

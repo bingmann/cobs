@@ -179,7 +179,7 @@ uint64_t get_max_file_size(FileList& filelist) {
     // look into largest file and return number of elements
     if (paths[0].extension() == ".ctx") {
         CortexFile ctx(paths[0].string());
-        size_t max_num_elements = ctx.num_documents();
+        size_t max_num_elements = ctx.num_kmers();
         sLOG1 << "CTX: max_num_elements" << max_num_elements;
         return max_num_elements;
     }

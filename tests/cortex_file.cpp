@@ -23,6 +23,19 @@ static std::string out_path_rec = out_dir + "document_rec.cobs_doc";
 static std::string document_path = "test/resources/cortex/result/document_sorted.txt";
 static std::string document_name = "DRR030535";
 
+class cortex : public ::testing::Test
+{
+protected:
+    void SetUp() final {
+        cobs::error_code ec;
+        fs::remove_all(out_dir, ec);
+    }
+    void TearDown() final {
+        cobs::error_code ec;
+        fs::remove_all(out_dir, ec);
+    }
+};
+
 template <unsigned int N>
 void assert_equals_document(cobs::Document<N> document) {
     std::ifstream ifs(document_path);
@@ -35,7 +48,7 @@ void assert_equals_document(cobs::Document<N> document) {
     ASSERT_EQ(document.data().size(), i);
 }
 
-TEST(cortex, file_name) {
+TEST_F(cortex, file_name) {
     cobs::Document<31> document1;
     cobs::Document<31> document2;
     cobs::Timer t;
@@ -45,8 +58,7 @@ TEST(cortex, file_name) {
     ASSERT_EQ(h.name(), document_name);
 }
 
-TEST(cortex, process_file) {
-    fs::remove_all(out_dir);
+TEST_F(cortex, process_file) {
     cobs::Document<31> document;
     cobs::Timer t;
     cobs::process_file(in_path, out_path, document, t);
@@ -54,8 +66,7 @@ TEST(cortex, process_file) {
     assert_equals_document(document);
 }
 
-TEST(cortex, file_serialization) {
-    fs::remove_all(out_dir);
+TEST_F(cortex, file_serialization) {
     cobs::Document<31> document1;
     cobs::Document<31> document2;
     cobs::Timer t;
@@ -68,14 +79,32 @@ TEST(cortex, file_serialization) {
     assert_equals_document(document2);
 }
 
-TEST(cortex, process_all_in_directory) {
-    fs::remove_all(out_dir);
+TEST_F(cortex, process_all_in_directory) {
     cobs::process_all_in_directory<31>(in_dir, out_dir);
     cobs::DocumentHeader hdoc;
     cobs::Document<31> document;
     document.deserialize(out_path_rec, hdoc);
     document.sort_kmers();
     assert_equals_document(document);
+}
+
+TEST_F(cortex, process_kmers) {
+    cobs::CortexFile ctx(in_path);
+
+    // check contents
+    die_unequal(ctx.version_, 6u);
+    die_unequal(ctx.kmer_size_, 31u);
+    die_unequal(ctx.num_words_per_kmer_, 1u);
+    die_unequal(ctx.num_colors_, 1u);
+    die_unequal(ctx.name_, "DRR030535");
+
+    die_unequal(ctx.num_kmers(), 24158u);
+
+    // process kmers
+    size_t count = 0;
+    ctx.process_kmers<31>([&](cobs::KMer<31>&) { ++count; });
+
+    die_unequal(ctx.num_kmers(), count);
 }
 
 /******************************************************************************/
