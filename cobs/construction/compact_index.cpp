@@ -17,91 +17,20 @@
 #include <iomanip>
 
 #include <tlx/die.hpp>
+#include <tlx/string/ssprintf.hpp>
 
 namespace cobs::compact_index {
 
-std::string pad_directory_number(size_t index) {
-    std::stringstream ss;
-    ss << std::setw(6) << std::setfill('0') << index;
-    return ss.str();
-}
-
-void create_folders(const fs::path& in_dir, const fs::path& out_dir, uint64_t page_size) {
-    std::vector<fs::path> paths;
-    fs::recursive_directory_iterator it(in_dir), end;
-    std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
-                     return file_has_header<DocumentHeader>(p);
-                 });
-    std::sort(paths.begin(), paths.end(), [](const auto& p1, const auto& p2) {
-                  return fs::file_size(p1) < fs::file_size(p2);
-              });
-
-    size_t batch = 1;
-    size_t i = 0;
-    fs::path sub_out_dir;
-    for (const auto& p : paths) {
-        if (i % (8 * page_size) == 0) {
-            sub_out_dir = out_dir / fs::path("/documents/" + pad_directory_number(batch));
-            fs::create_directories(sub_out_dir);
-            batch++;
-        }
-        fs::rename(p, sub_out_dir / p.filename());
-        i++;
-    }
-}
-
-//    void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
-//                             size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-//        size_t num_files = 0;
-//        size_t max_file_size = 0;
-//        for (fs::directory_iterator sub_it(in_dir), end; sub_it != end; sub_it++) {
-//            if (file::file_has_header<DocumentHeader>(sub_it->path())) {
-//                max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
-//                num_files++;
-//            }
-//        }
-//        size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-//        classic_index::construct_from_documents(in_dir, out_dir / in_dir.filename(), signature_size, num_hashes, batch_size);
-//
-//        if (num_files != 8 * page_size) {
-//            die_unless(num_files < 8 * page_size);
-//            die_unless(in_dir == paths.back());
-//        }
-//    }
-
-void construct_classic_index_from_documents(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size,
-                                            size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-    die_unless(batch_size % 8 == 0);
-    std::vector<fs::path> paths;
-    std::copy_if(fs::directory_iterator(in_dir), fs::directory_iterator(), std::back_inserter(paths), [](const auto& p) {
-                     return fs::is_directory(p);
-                 });
-    std::sort(paths.begin(), paths.end());
-
-    for (const auto& p : paths) {
-        size_t num_files = 0;
-        size_t max_file_size = 0;
-        for (fs::directory_iterator sub_it(p), end; sub_it != end; sub_it++) {
-            if (file_has_header<DocumentHeader>(sub_it->path())) {
-                max_file_size = std::max(max_file_size, fs::file_size(sub_it->path()));
-                num_files++;
-            }
-        }
-        size_t signature_size = calc_signature_size(max_file_size / 8, num_hashes, false_positive_probability);
-        classic_index::construct_from_documents(p, out_dir / p.filename(), signature_size, num_hashes, batch_size);
-
-        if (num_files != 8 * page_size) {
-            die_unless(num_files < 8 * page_size);
-            die_unless(p == paths.back());
-        }
-    }
+std::string pad_index(unsigned index) {
+    return tlx::ssprintf("%06u", index);
 }
 
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size) {
     bool all_combined = false;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
         if (fs::is_directory(it->path())) {
-            all_combined = classic_index::combine(in_dir / it->path().filename(), out_dir / it->path().filename(), batch_size);
+            all_combined = classic_index::combine(
+                in_dir / it->path().filename(), out_dir / it->path().filename(), batch_size);
         }
     }
     return all_combined;
@@ -157,22 +86,51 @@ void combine(const fs::path& in_dir, const fs::path& out_file, uint64_t page_siz
     }
 }
 
-void construct_from_folders(const fs::path& in_dir, size_t batch_size, size_t num_hashes,
+void construct_from_folders(const fs::path& in_dir, const fs::path& index_dir,
+                            size_t batch_size, size_t num_hashes,
                             double false_positive_probability, uint64_t page_size) {
-    fs::path documents_dir = in_dir / fs::path("documents/");
-    std::string bloom_dir = in_dir.string() + "/cobs_";
+    std::string bloom_dir = index_dir.string() + "/cobs_";
     size_t iteration = 1;
-    construct_classic_index_from_documents(documents_dir, bloom_dir + std::to_string(iteration), batch_size, num_hashes, false_positive_probability, page_size);
-    while (!combine_classic_index(bloom_dir + std::to_string(iteration), bloom_dir + std::to_string(iteration + 1), batch_size)) {
+
+    die_unless(batch_size % 8 == 0);
+
+    // read file list, sort by size
+    FileList filelist(in_dir, FileType::Document);
+    filelist.sort_by_size();
+
+    // process batches and create classic indexes for each batch
+    size_t batch_num = 1;
+    filelist.process_batches(
+        8 * page_size,
+        [&](const std::vector<fs::path>& batch_files, fs::path /* out_file */) {
+
+            size_t max_file_size = 0;
+            for (const fs::path& p : batch_files)
+                max_file_size = std::max(max_file_size, fs::file_size(p));
+
+            FileList batch_list(batch_files);
+            fs::path classic_dir = bloom_dir + pad_index(iteration);
+
+            size_t signature_size = calc_signature_size(
+                max_file_size / 8, num_hashes, false_positive_probability);
+            classic_index::construct_from_documents(
+                batch_list, classic_dir / pad_index(batch_num),
+                signature_size, num_hashes, batch_size);
+
+            batch_num++;
+        });
+
+    // combine classic indexes
+    while (!combine_classic_index(bloom_dir + pad_index(iteration),
+                                  bloom_dir + pad_index(iteration + 1),
+                                  batch_size)) {
         iteration++;
     }
-    combine(bloom_dir + std::to_string(iteration + 1), in_dir / ("index" + CompactIndexHeader::file_extension), page_size);
-}
 
-void construct(const fs::path& in_dir, fs::path out_dir,
-               size_t batch_size, size_t num_hashes, double false_positive_probability, uint64_t page_size) {
-    create_folders(in_dir, out_dir / fs::path("/documents"), page_size);
-    construct_from_folders(out_dir, batch_size, num_hashes, false_positive_probability, page_size);
+    // combine classic indexes into one compact index
+    combine(bloom_dir + pad_index(iteration + 1),
+            index_dir / ("index" + CompactIndexHeader::file_extension),
+            page_size);
 }
 
 } // namespace cobs::compact_index

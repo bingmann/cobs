@@ -18,6 +18,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
+#include <tlx/string/ssprintf.hpp>
 #include <vector>
 
 static inline
@@ -76,10 +77,9 @@ std::vector<cobs::Document<31> > generate_documents_one(const std::string& query
 }
 
 static inline
-std::string get_file_stem(size_t index) {
-    assert(index < 100);
-    std::string num = (index < 10 ? "0" : "") + std::to_string(index);
-    return "document_" + num;
+std::string get_file_stem(unsigned index) {
+    die_unless(index < 1000);
+    return tlx::ssprintf("document_%03u", index);
 }
 
 static inline

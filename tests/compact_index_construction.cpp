@@ -16,11 +16,10 @@ namespace fs = cobs::fs;
 
 static fs::path input_dir("test/compact_index_construction/input");
 static fs::path index_dir("test/compact_index_construction/index");
-static fs::path documents_dir(index_dir.string() + "/documents");
-static fs::path cobs_2_dir(index_dir.string() + "/cobs_2");
+static fs::path cobs_2_dir(index_dir.string() + "/cobs_000002");
 static fs::path compact_index_path(index_dir.string() + "/index.com_idx.cobs");
 
-static std::string query = cobs::random_sequence(10000, 1);
+static std::string query = cobs::random_sequence(100000, 1);
 
 class compact_index_construction : public ::testing::Test
 {
@@ -39,13 +38,14 @@ protected:
 
 TEST_F(compact_index_construction, padding) {
     // generate
-    auto documents = generate_documents_all(query);
+    auto documents = generate_documents_all(query, /* num_documents */ 200);
     generate_test_case(documents, input_dir.string());
 
     // construct compact index
-    size_t page_size = cobs::get_page_size();
-    cobs::compact_index::create_folders(input_dir, index_dir, page_size);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, page_size);
+    size_t page_size = 16;
+    cobs::compact_index::construct_from_folders(
+        input_dir, index_dir,
+        /* batch_size */ 8, /* num_hashes */ 3, /* fpr */ 0.1, page_size);
 
     // read compact index header, check page_size alignment of data
     std::ifstream ifs;
@@ -60,18 +60,10 @@ TEST_F(compact_index_construction, deserialization) {
     generate_test_case(documents, input_dir.string());
 
     // get file names
-    std::vector<fs::path> paths;
+    cobs::FileList filelist(input_dir, cobs::FileType::Document);
+    filelist.sort_by_size();
 
-    std::copy_if(fs::recursive_directory_iterator(input_dir),
-                 fs::recursive_directory_iterator(),
-                 std::back_inserter(paths),
-                 [](const auto& p) {
-                     return cobs::file_has_header<cobs::DocumentHeader>(p);
-                 });
-    std::sort(paths.begin(), paths.end(),
-              [](const auto& p1, const auto& p2) {
-                  return fs::file_size(p1) < fs::file_size(p2);
-              });
+    std::vector<fs::path> paths = filelist.paths();
     for (size_t i = 0; i < documents.size(); i += 2 * 8) {
         size_t middle_index = std::min(i + 16, paths.size());
         std::sort(paths.begin() + i, paths.begin() + middle_index);
@@ -79,8 +71,9 @@ TEST_F(compact_index_construction, deserialization) {
 
     // construct compact index
     uint64_t num_hashes = 3;
-    cobs::compact_index::create_folders(input_dir, index_dir, 2);
-    cobs::compact_index::construct_from_folders(index_dir, 8, num_hashes, 0.1, 2);
+    cobs::compact_index::construct_from_folders(
+        input_dir, index_dir,
+        /* batch_size */ 8, num_hashes, /* fpr */ 0.1, /* page_size */ 2);
 
     // read compact index header and check fields
     std::vector<std::vector<uint8_t> > data;
@@ -96,8 +89,10 @@ TEST_F(compact_index_construction, deserialization) {
     // check compact index parameters
     std::vector<uint64_t> document_sizes;
     std::vector<cobs::CompactIndexHeader::parameter> parameters;
-    for (const fs::path& p : fs::recursive_directory_iterator(documents_dir)) {
+    for (const fs::path& p : fs::recursive_directory_iterator(input_dir)) {
+        // TODO: this test does nothing, because DocumentHeader should be below!
         if (cobs::file_has_header<cobs::ClassicIndexHeader>(p)) {
+            std::cout << "doc: " << p.string() << std::endl;
             document_sizes.push_back(fs::file_size(p));
         }
     }

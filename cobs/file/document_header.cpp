@@ -13,7 +13,7 @@ namespace cobs {
 
 const std::string DocumentHeader::magic_word = "DOCUMENT";
 const uint32_t DocumentHeader::version = 1;
-const std::string DocumentHeader::file_extension = ".doc.cobs";
+const std::string DocumentHeader::file_extension = ".cobs_doc";
 
 DocumentHeader::DocumentHeader(std::string name, uint32_t kmer_size)
     : m_name(name), m_kmer_size(kmer_size) { }

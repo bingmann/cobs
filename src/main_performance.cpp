@@ -17,7 +17,7 @@ void document() {
 }
 
 void classic_index() {
-    cobs::classic_index::construct_from_documents("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
+    // cobs::classic_index::construct_from_documents("/users/flo/projects/thesis/data/performance_out", "/users/flo/projects/thesis/data/performance_blo", 25000000, 4, 3);
 }
 
 void classic_index_2() {

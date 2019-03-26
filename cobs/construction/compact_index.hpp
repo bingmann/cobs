@@ -22,31 +22,13 @@
 namespace cobs::compact_index {
 
 /*!
- * Constructs the index by executing all necessary steps.  First calls
- * cobs::compact_index::create_folders to sort the documents by size and then
- * split them into multiple batches. Afterwards combines these indices with a
- * call to cobs::compact_index::construct_from_folders.
- */
-void construct(const fs::path& in_dir, fs::path out_dir,
-               size_t batch_size, size_t num_hashes,
-               double false_positive_probability,
-               uint64_t page_size = get_page_size());
-
-/*!
- * Creates the folders used by the cobs::compact_index::create_from_folders.
- * Sorts the documents by file size and then splits them into several
- * directories.
- */
-void create_folders(const fs::path& in_dir, const fs::path& out_dir,
-                    uint64_t page_size = get_page_size());
-
-/*!
  * Constructs the folders used by the
  * cobs::compact_index::construct_from_documents.  Sorts the documents by file
  * size and then splits them into several directories.
  */
 void construct_from_folders(
-    const fs::path& in_dir, size_t batch_size, size_t num_hashes,
+    const fs::path& in_dir, const fs::path& index_dir,
+    size_t batch_size, size_t num_hashes,
     double false_positive_probability, uint64_t page_size = get_page_size());
 
 void combine(const fs::path& in_dir, const fs::path& out_file,

@@ -40,8 +40,7 @@ TEST_F(compact_index_query, all_included_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::create_folders(input_dir, index_dir, 2);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -60,8 +59,7 @@ TEST_F(compact_index_query, one_included_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::create_folders(input_dir, index_dir, 2);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -79,8 +77,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::create_folders(input_dir, index_dir, 2);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 2);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 2);
     cobs::query::compact_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -107,8 +104,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
 TEST_F(compact_index_query, all_included_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::aio s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -123,8 +119,7 @@ TEST_F(compact_index_query, all_included_aio) {
 TEST_F(compact_index_query, one_included_aio) {
     auto documents = generate_documents_one(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -138,8 +133,7 @@ TEST_F(compact_index_query, one_included_aio) {
 TEST_F(compact_index_query, false_positive_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::create_folders(input_dir, index_dir, 4096);
-    cobs::compact_index::construct_from_folders(index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_index::construct_from_folders(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     size_t num_tests = 10000;

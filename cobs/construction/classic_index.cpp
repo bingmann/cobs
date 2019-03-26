@@ -16,6 +16,7 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/file.hpp>
+#include <cobs/util/filelist.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
 #include <cobs/util/processing.hpp>
@@ -33,9 +34,9 @@ void set_bit(std::vector<uint8_t>& data,
     data[cih.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
 }
 
-void process(const std::vector<fs::path>& paths,
-             const fs::path& out_file, std::vector<uint8_t>& data,
-             ClassicIndexHeader& cih, Timer& t) {
+void process_batch(const std::vector<fs::path>& paths,
+                   const fs::path& out_file, std::vector<uint8_t>& data,
+                   ClassicIndexHeader& cih, Timer& t) {
 
     Document<31> doc;
     DocumentHeader dh;
@@ -57,7 +58,7 @@ void process(const std::vector<fs::path>& paths,
                                });
             }
         }
-        else if (paths[i].extension() == ".cobs") {
+        else if (paths[i].extension() == ".cobs_doc") {
             t.active("read");
             doc.deserialize(paths[i], dh);
             cih.file_names()[i] = dh.name();
@@ -104,22 +105,23 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
     t.stop();
 }
 
-void construct_from_documents(const fs::path& in_dir, const fs::path& out_dir,
+void construct_from_documents(FileList& filelist, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     Timer t;
     ClassicIndexHeader cih(signature_size, num_hashes);
+    fs::create_directories(out_dir);
+
     std::vector<uint8_t> data;
-    process_file_batches(
-        in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
-        [](const fs::path& path) {
-            return path.extension() == ".ctx" || path.extension() == ".cobs";
-        },
-        [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
+    filelist.process_batches(
+        batch_size,
+        [&](const std::vector<fs::path>& paths, std::string out_file) {
+            fs::path out_path =
+                out_dir / (out_file + ClassicIndexHeader::file_extension);
             cih.file_names().resize(paths.size());
             data.resize(signature_size * cih.block_size());
             std::fill(data.begin(), data.end(), 0);
-            process(paths, out_file, data, cih, t);
+            process_batch(paths, out_path, data, cih, t);
         });
     std::cout << t;
 }
@@ -166,38 +168,31 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
     return all_combined;
 }
 
-uint64_t get_signature_size(const fs::path& in_dir, const fs::path& out_dir,
-                            uint64_t num_hashes, double false_positive_probability) {
-    uint64_t signature_size;
-    process_file_batches(
-        in_dir, out_dir, UINT64_MAX, DocumentHeader::file_extension,
-        [](const fs::path& path) {
-            return path.extension() == ".ctx" || path.extension() == ".cobs";
-        },
-        [&](std::vector<fs::path>& paths, const fs::path& /* out_file */) {
-            std::sort(paths.begin(), paths.end(),
-                      [](const auto& p1, const auto& p2) {
-                          return fs::file_size(p1) > fs::file_size(p2);
-                      });
-            if (paths[0].extension() == ".ctx") {
-                CortexFile ctx(paths[0].string());
-                size_t max_num_elements = ctx.num_documents();
-                sLOG1 << "CTX: max_num_elements" << max_num_elements;
-                signature_size = calc_signature_size(
-                    max_num_elements, num_hashes, false_positive_probability);
-            }
-            else if (paths[0].extension() == ".cobs") {
-                DocumentHeader dh;
-                Document<31> doc;
-                doc.deserialize(paths[0], dh);
+uint64_t get_max_file_size(FileList& filelist) {
+    // sort document by file size (as approximation to the number of kmers)
+    std::vector<fs::path> paths = filelist.paths();
+    std::sort(paths.begin(), paths.end(),
+              [](const auto& p1, const auto& p2) {
+                  return fs::file_size(p1) > fs::file_size(p2);
+              });
 
-                size_t max_num_elements = doc.data().size();
-                sLOG1 << "COBS: max_num_elements" << max_num_elements;
-                signature_size = calc_signature_size(
-                    max_num_elements, num_hashes, false_positive_probability);
-            }
-        });
-    return signature_size;
+    // look into largest file and return number of elements
+    if (paths[0].extension() == ".ctx") {
+        CortexFile ctx(paths[0].string());
+        size_t max_num_elements = ctx.num_documents();
+        sLOG1 << "CTX: max_num_elements" << max_num_elements;
+        return max_num_elements;
+    }
+    else if (paths[0].extension() == ".cobs_doc") {
+        DocumentHeader dh;
+        Document<31> doc;
+        doc.deserialize(paths[0], dh);
+
+        size_t max_num_elements = doc.data().size();
+        sLOG1 << "COBS_DOC: max_num_elements" << max_num_elements;
+        return max_num_elements;
+    }
+    die("Unknown file type");
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir,
@@ -205,10 +200,17 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
                double false_positive_probability) {
     if (batch_size % 8 != 0)
         die("batch size must be divisible by 8");
-    uint64_t signature_size =
-        get_signature_size(in_dir, out_dir, num_hashes, false_positive_probability);
+
+    FileList in_filelist(in_dir, FileType::Document);
+
+    // estimate signature size by finding number of elements in the largest file
+    uint64_t max_num_elements = get_max_file_size(in_filelist);
+    uint64_t signature_size = calc_signature_size(
+        max_num_elements, num_hashes, false_positive_probability);
+
+    // construct one classic index
     construct_from_documents(
-        in_dir, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
+        in_filelist, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
     size_t i = 1;
     while (!combine(out_dir / fs::path(std::to_string(i)),
                     out_dir / fs::path(std::to_string(i + 1)), batch_size)) {

@@ -20,9 +20,9 @@ static fs::path in_dir("test/resources/frequency/input/");
 static fs::path out_dir("test/out/frequency/");
 static fs::path result_bin("test/resources/frequency/result/bin.freq.cobs");
 static fs::path result_freq("test/resources/frequency/result/freq.freq.cobs");
-static fs::path document_1(in_dir.string() + "document_1.doc.cobs");
-static fs::path document_2(in_dir.string() + "document_2.doc.cobs");
-static fs::path document_3(in_dir.string() + "document_3.doc.cobs");
+static fs::path document_1(in_dir.string() + "document_1.cobs_doc");
+static fs::path document_2(in_dir.string() + "document_2.cobs_doc");
+static fs::path document_3(in_dir.string() + "document_3.cobs_doc");
 
 /*
 std::string document_4 = in_dir + "document_4.freq.cobs";
