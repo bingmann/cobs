@@ -45,14 +45,14 @@ void process_term(const std::string& term,
                    });
 }
 
-void process_batch(const std::vector<fs::path>& paths,
+void process_batch(const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file, std::vector<uint8_t>& data,
                    ClassicIndexHeader& cih, Timer& t) {
 
     for (uint64_t i = 0; i < paths.size(); i++) {
-        if (paths[i].extension() == ".ctx") {
+        if (paths[i].path_.extension() == ".ctx") {
             t.active("read");
-            CortexFile ctx(paths[i].string());
+            CortexFile ctx(paths[i].path_.string());
             cih.file_names()[i] = ctx.name_;
             t.active("process");
 
@@ -62,11 +62,11 @@ void process_batch(const std::vector<fs::path>& paths,
                     process_term(term, data, cih, i);
                 });
         }
-        else if (paths[i].extension() == ".cobs_doc") {
+        else if (paths[i].path_.extension() == ".cobs_doc") {
             t.active("read");
             KMerBuffer<31> doc;
             KMerBufferHeader dh;
-            doc.deserialize(paths[i], dh);
+            doc.deserialize(paths[i].path_, dh);
             cih.file_names()[i] = dh.name();
             t.active("process");
 
@@ -122,7 +122,7 @@ void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
     std::vector<uint8_t> data;
     doc_list.process_batches(
         batch_size,
-        [&](const std::vector<fs::path>& paths, std::string out_file) {
+        [&](const std::vector<DocumentEntry>& paths, std::string out_file) {
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
             cih.file_names().resize(paths.size());
@@ -177,23 +177,24 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
 
 uint64_t get_max_file_size(DocumentList& doc_list) {
     // sort document by file size (as approximation to the number of kmers)
-    std::vector<fs::path> paths = doc_list.paths();
+    std::vector<DocumentEntry> paths = doc_list.list();
     std::sort(paths.begin(), paths.end(),
-              [](const auto& p1, const auto& p2) {
-                  return fs::file_size(p1) > fs::file_size(p2);
+              [](const DocumentEntry& p1, const DocumentEntry& p2) {
+                  return (std::tie(p1.size_, p1.path_) >
+                          std::tie(p2.size_, p2.path_));
               });
 
     // look into largest file and return number of elements
-    if (paths[0].extension() == ".ctx") {
-        CortexFile ctx(paths[0].string());
+    if (paths[0].path_.extension() == ".ctx") {
+        CortexFile ctx(paths[0].path_.string());
         size_t max_num_elements = ctx.num_kmers();
         sLOG1 << "CTX: max_num_elements" << max_num_elements;
         return max_num_elements;
     }
-    else if (paths[0].extension() == ".cobs_doc") {
+    else if (paths[0].path_.extension() == ".cobs_doc") {
         KMerBufferHeader dh;
         KMerBuffer<31> doc;
-        doc.deserialize(paths[0], dh);
+        doc.deserialize(paths[0].path_, dh);
 
         size_t max_num_elements = doc.data().size();
         sLOG1 << "COBS_DOC: max_num_elements" << max_num_elements;

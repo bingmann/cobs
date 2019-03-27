@@ -20,6 +20,21 @@ namespace cobs {
 enum class FileType {
     Any,
     Document,
+    Cortex,
+    Fasta,
+    Fastq,
+    Text
+};
+
+struct DocumentEntry {
+    fs::path path_;
+    FileType type_;
+    size_t size_;
+    size_t subdoc_index_;
+
+    bool operator < (const DocumentEntry& b) const {
+        return path_ < b.path_;
+    }
 };
 
 /*!
@@ -30,9 +45,9 @@ class DocumentList
 {
 public:
     //! accept a file list, sort by name
-    DocumentList(const std::vector<fs::path>& paths)
-        : paths_(paths) {
-        std::sort(paths_.begin(), paths_.end());
+    DocumentList(const std::vector<DocumentEntry>& list)
+        : list_(list) {
+        std::sort(list_.begin(), list_.end());
     }
 
     //! read a directory, filter files
@@ -40,43 +55,54 @@ public:
         fs::recursive_directory_iterator it(dir), end;
         while (it != end) {
             if (accept(*it, filter)) {
-                paths_.emplace_back(*it);
+                DocumentEntry de;
+                de.path_ = *it;
+                de.size_ = fs::file_size(de.path_);
+                list_.emplace_back(de);
             }
             ++it;
         }
-        std::sort(paths_.begin(), paths_.end());
+        std::sort(list_.begin(), list_.end());
     }
 
     //! filter method to match file specifications
-    bool accept(const fs::path& path, FileType filter) {
+    static bool accept(const fs::path& path, FileType filter) {
         switch (filter) {
         case FileType::Any:
             return true;
         case FileType::Document:
             return path.extension() == ".ctx" ||
                    path.extension() == ".fasta" ||
+                   path.extension() == ".fastq" ||
                    path.extension() == ".cobs_doc";
+        case FileType::Cortex:
+            return path.extension() == ".ctx";
+        case FileType::Fasta:
+            return path.extension() == ".fasta";
+        case FileType::Fastq:
+            return path.extension() == ".fastq";
+        case FileType::Text:
+            return path.extension() == ".txt";
         }
         return false;
     }
 
     //! return list of paths
-    std::vector<fs::path> paths() const { return paths_; }
+    std::vector<DocumentEntry> list() const { return list_; }
 
     //! sort files by size
     void sort_by_size() {
-        std::sort(paths_.begin(), paths_.end(),
-                  [](const fs::path& p1, const fs::path& p2) {
-                      auto s1 = fs::file_size(p1), s2 = fs::file_size(p2);
-                      std::string f1 = p1.string(), f2 = p2.string();
-                      return std::tie(s1, f1) < std::tie(s2, f2);
+        std::sort(list_.begin(), list_.end(),
+                  [](const DocumentEntry& d1, const DocumentEntry& d2) {
+                      return (std::tie(d1.size_, d1.path_) <
+                              std::tie(d2.size_, d2.path_));
                   });
     }
 
     //! process each file
-    void process_each(void (*func)(const fs::path&)) const {
-        for (size_t i = 0; i < paths_.size(); i++) {
-            func(paths_[i]);
+    void process_each(void (*func)(const DocumentEntry&)) const {
+        for (size_t i = 0; i < list_.size(); i++) {
+            func(list_[i]);
         }
     }
 
@@ -85,17 +111,17 @@ public:
     void process_batches(size_t batch_size, Functor func) const {
         std::string first_filename, last_filename;
         size_t j = 1;
-        std::vector<fs::path> batch;
-        for (size_t i = 0; i < paths_.size(); i++) {
-            std::string filename = cobs::base_name(paths_[i]);
+        std::vector<DocumentEntry> batch;
+        for (size_t i = 0; i < list_.size(); i++) {
+            std::string filename = cobs::base_name(list_[i].path_);
             if (first_filename.empty()) {
                 first_filename = filename;
             }
             last_filename = filename;
-            batch.push_back(paths_[i]);
+            batch.push_back(list_[i]);
 
             if (batch.size() == batch_size ||
-                (!batch.empty() && i + 1 == paths_.size()))
+                (!batch.empty() && i + 1 == list_.size()))
             {
                 std::string out_file = "[" + first_filename + "-" + last_filename + "]";
                 std::cout << "IN"
@@ -115,7 +141,7 @@ public:
     }
 
 private:
-    std::vector<fs::path> paths_;
+    std::vector<DocumentEntry> list_;
 };
 
 } // namespace cobs

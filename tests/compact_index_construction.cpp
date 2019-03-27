@@ -63,7 +63,7 @@ TEST_F(compact_index_construction, deserialization) {
     cobs::DocumentList doc_list(input_dir, cobs::FileType::Document);
     doc_list.sort_by_size();
 
-    std::vector<fs::path> paths = doc_list.paths();
+    std::vector<cobs::DocumentEntry> paths = doc_list.list();
     for (size_t i = 0; i < documents.size(); i += 2 * 8) {
         size_t middle_index = std::min(i + 16, paths.size());
         std::sort(paths.begin() + i, paths.begin() + middle_index);
@@ -83,7 +83,7 @@ TEST_F(compact_index_construction, deserialization) {
     ASSERT_EQ(h.parameters().size(), 3U);
     ASSERT_EQ(data.size(), 3U);
     for (size_t i = 0; i < h.file_names().size(); i++) {
-        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));
+        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i].path_));
     }
 
     // check compact index parameters

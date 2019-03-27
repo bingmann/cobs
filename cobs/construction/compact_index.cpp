@@ -102,11 +102,11 @@ void construct_from_folders(const fs::path& in_dir, const fs::path& index_dir,
     size_t batch_num = 1;
     doc_list.process_batches(
         8 * page_size,
-        [&](const std::vector<fs::path>& files, fs::path /* out_file */) {
+        [&](const std::vector<DocumentEntry>& files, fs::path /* out_file */) {
 
             size_t max_file_size = 0;
-            for (const fs::path& p : files)
-                max_file_size = std::max(max_file_size, fs::file_size(p));
+            for (const DocumentEntry& de : files)
+                max_file_size = std::max(max_file_size, de.size_);
 
             DocumentList batch_list(files);
             fs::path classic_dir = bloom_dir + pad_index(iteration);
