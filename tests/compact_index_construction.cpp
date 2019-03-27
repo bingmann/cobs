@@ -60,10 +60,10 @@ TEST_F(compact_index_construction, deserialization) {
     generate_test_case(documents, input_dir.string());
 
     // get file names
-    cobs::FileList filelist(input_dir, cobs::FileType::Document);
-    filelist.sort_by_size();
+    cobs::DocumentList doc_list(input_dir, cobs::FileType::Document);
+    doc_list.sort_by_size();
 
-    std::vector<fs::path> paths = filelist.paths();
+    std::vector<fs::path> paths = doc_list.paths();
     for (size_t i = 0; i < documents.size(); i += 2 * 8) {
         size_t middle_index = std::min(i + 16, paths.size());
         std::sort(paths.begin() + i, paths.begin() + middle_index);

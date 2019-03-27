@@ -1,13 +1,13 @@
 /*******************************************************************************
- * cobs/util/filelist.hpp
+ * cobs/document_list.hpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_UTIL_FILELIST_HEADER
-#define COBS_UTIL_FILELIST_HEADER
+#ifndef COBS_DOCUMENT_LIST_HEADER
+#define COBS_DOCUMENT_LIST_HEADER
 
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -23,20 +23,20 @@ enum class FileType {
 };
 
 /*!
- * FileList is used to scan a directory, filter the files for specific types,
- * and then run batch processing methods on them.
+ * DocumentList is used to scan a directory, filter the files for specific
+ * document types, and then run batch processing methods on them.
  */
-class FileList
+class DocumentList
 {
 public:
     //! accept a file list, sort by name
-    FileList(const std::vector<fs::path>& paths)
+    DocumentList(const std::vector<fs::path>& paths)
         : paths_(paths) {
         std::sort(paths_.begin(), paths_.end());
     }
 
     //! read a directory, filter files
-    FileList(const fs::path& dir, FileType filter = FileType::Any) {
+    DocumentList(const fs::path& dir, FileType filter = FileType::Any) {
         fs::recursive_directory_iterator it(dir), end;
         while (it != end) {
             if (accept(*it, filter)) {
@@ -120,6 +120,6 @@ private:
 
 } // namespace cobs
 
-#endif // !COBS_UTIL_FILELIST_HEADER
+#endif // !COBS_DOCUMENT_LIST_HEADER
 
 /******************************************************************************/

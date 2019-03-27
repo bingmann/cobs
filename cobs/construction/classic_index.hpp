@@ -10,7 +10,7 @@
 #ifndef COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
 #define COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
 
-#include <cobs/util/filelist.hpp>
+#include <cobs/document_list.hpp>
 #include <cobs/util/fs.hpp>
 
 /*!
@@ -37,7 +37,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
  * Constructs multiple small indices from document files.
  */
 void construct_from_documents(
-    FileList& filelist, const fs::path& out_dir,
+    DocumentList& doc_list, const fs::path& out_dir,
     uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
 
 /*!

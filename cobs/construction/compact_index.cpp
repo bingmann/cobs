@@ -95,20 +95,20 @@ void construct_from_folders(const fs::path& in_dir, const fs::path& index_dir,
     die_unless(batch_size % 8 == 0);
 
     // read file list, sort by size
-    FileList filelist(in_dir, FileType::Document);
-    filelist.sort_by_size();
+    DocumentList doc_list(in_dir, FileType::Document);
+    doc_list.sort_by_size();
 
     // process batches and create classic indexes for each batch
     size_t batch_num = 1;
-    filelist.process_batches(
+    doc_list.process_batches(
         8 * page_size,
-        [&](const std::vector<fs::path>& batch_files, fs::path /* out_file */) {
+        [&](const std::vector<fs::path>& files, fs::path /* out_file */) {
 
             size_t max_file_size = 0;
-            for (const fs::path& p : batch_files)
+            for (const fs::path& p : files)
                 max_file_size = std::max(max_file_size, fs::file_size(p));
 
-            FileList batch_list(batch_files);
+            DocumentList batch_list(files);
             fs::path classic_dir = bloom_dir + pad_index(iteration);
 
             size_t signature_size = calc_signature_size(

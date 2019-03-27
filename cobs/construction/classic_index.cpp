@@ -13,10 +13,10 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/cortex_file.hpp>
+#include <cobs/document_list.hpp>
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/util/file.hpp>
-#include <cobs/util/filelist.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
 #include <cobs/util/processing.hpp>
@@ -112,7 +112,7 @@ void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
     t.stop();
 }
 
-void construct_from_documents(FileList& filelist, const fs::path& out_dir,
+void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     Timer t;
@@ -120,7 +120,7 @@ void construct_from_documents(FileList& filelist, const fs::path& out_dir,
     fs::create_directories(out_dir);
 
     std::vector<uint8_t> data;
-    filelist.process_batches(
+    doc_list.process_batches(
         batch_size,
         [&](const std::vector<fs::path>& paths, std::string out_file) {
             fs::path out_path =
@@ -175,9 +175,9 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
     return all_combined;
 }
 
-uint64_t get_max_file_size(FileList& filelist) {
+uint64_t get_max_file_size(DocumentList& doc_list) {
     // sort document by file size (as approximation to the number of kmers)
-    std::vector<fs::path> paths = filelist.paths();
+    std::vector<fs::path> paths = doc_list.paths();
     std::sort(paths.begin(), paths.end(),
               [](const auto& p1, const auto& p2) {
                   return fs::file_size(p1) > fs::file_size(p2);
@@ -208,7 +208,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     if (batch_size % 8 != 0)
         die("batch size must be divisible by 8");
 
-    FileList in_filelist(in_dir, FileType::Document);
+    DocumentList in_filelist(in_dir, FileType::Document);
 
     // estimate signature size by finding number of elements in the largest file
     uint64_t max_num_elements = get_max_file_size(in_filelist);
