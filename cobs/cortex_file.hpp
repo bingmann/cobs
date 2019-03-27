@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <cobs/document.hpp>
+#include <cobs/kmer_buffer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/timer.hpp>
@@ -130,7 +130,7 @@ private:
 
 template <unsigned int N>
 void process_file(const fs::path& in_path, const fs::path& out_path,
-                  Document<N>& document, Timer& t) {
+                  KMerBuffer<N>& document, Timer& t) {
     t.active("read");
     CortexFile ctx(in_path);
 
@@ -147,13 +147,13 @@ void process_file(const fs::path& in_path, const fs::path& out_path,
 
 template <unsigned int N>
 void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
-    Document<N> document;
+    KMerBuffer<N> document;
     Timer t;
     t.reset();
     size_t i = 0;
     for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
         fs::path out_path =
-            out_dir / it->path().stem().concat(DocumentHeader::file_extension);
+            out_dir / it->path().stem().concat(KMerBufferHeader::file_extension);
         if (fs::is_regular_file(*it) &&
             it->path().extension().string() == ".ctx" &&
             it->path().string().find("uncleaned") == std::string::npos &&

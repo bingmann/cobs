@@ -1,24 +1,24 @@
 /*******************************************************************************
- * cobs/file/document_header.cpp
+ * cobs/file/kmer_buffer_header.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/file/document_header.hpp>
+#include <cobs/file/kmer_buffer_header.hpp>
 #include <cobs/util/file.hpp>
 
 namespace cobs {
 
-const std::string DocumentHeader::magic_word = "DOCUMENT";
-const uint32_t DocumentHeader::version = 1;
-const std::string DocumentHeader::file_extension = ".cobs_doc";
+const std::string KMerBufferHeader::magic_word = "DOCUMENT";
+const uint32_t KMerBufferHeader::version = 1;
+const std::string KMerBufferHeader::file_extension = ".cobs_doc";
 
-DocumentHeader::DocumentHeader(std::string name, uint32_t kmer_size)
+KMerBufferHeader::KMerBufferHeader(std::string name, uint32_t kmer_size)
     : m_name(name), m_kmer_size(kmer_size) { }
 
-void DocumentHeader::serialize(std::ostream& os) const {
+void KMerBufferHeader::serialize(std::ostream& os) const {
     serialize_magic_begin(os, magic_word, version);
 
     stream_put(os, m_kmer_size);
@@ -27,7 +27,7 @@ void DocumentHeader::serialize(std::ostream& os) const {
     serialize_magic_end(os, magic_word);
 }
 
-void DocumentHeader::deserialize(std::istream& is) {
+void KMerBufferHeader::deserialize(std::istream& is) {
     deserialize_magic_begin(is, magic_word, version);
 
     stream_get(is, m_kmer_size);
@@ -36,11 +36,11 @@ void DocumentHeader::deserialize(std::istream& is) {
     deserialize_magic_end(is, magic_word);
 }
 
-std::string DocumentHeader::name() const {
+std::string KMerBufferHeader::name() const {
     return m_name;
 }
 
-uint32_t DocumentHeader::kmer_size() const {
+uint32_t KMerBufferHeader::kmer_size() const {
     return m_kmer_size;
 }
 

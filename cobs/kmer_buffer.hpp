@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/document.hpp
+ * cobs/kmer_buffer.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,10 +7,10 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_DOCUMENT_HEADER
-#define COBS_DOCUMENT_HEADER
+#ifndef COBS_KMER_BUFFER_HEADER
+#define COBS_KMER_BUFFER_HEADER
 
-#include <cobs/file/document_header.hpp>
+#include <cobs/file/kmer_buffer_header.hpp>
 #include <cobs/kmer.hpp>
 
 #include <algorithm>
@@ -22,7 +22,7 @@
 namespace cobs {
 
 template <unsigned int N>
-class Document
+class KMerBuffer
 {
 private:
     std::vector<KMer<N> > m_data;
@@ -42,7 +42,7 @@ public:
 
     void serialize(std::ostream& os, const std::string& name) const {
         os.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
-        DocumentHeader sh(name, N);
+        KMerBufferHeader sh(name, N);
         sh.serialize(os);
         os.write(reinterpret_cast<const char*>(m_data.data()),
                  KMer<N>::size* m_data.size());
@@ -54,7 +54,7 @@ public:
         serialize(ofs, name);
     }
 
-    void deserialize(std::istream& is, DocumentHeader& h) {
+    void deserialize(std::istream& is, KMerBufferHeader& h) {
         is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
         h.deserialize(is);
         die_unless(N == h.kmer_size());
@@ -64,14 +64,14 @@ public:
         is.read(reinterpret_cast<char*>(m_data.data()), size);
     }
 
-    void deserialize(const fs::path& p, DocumentHeader& h) {
+    void deserialize(const fs::path& p, KMerBufferHeader& h) {
         std::ifstream ifs(p.string(), std::ios::in | std::ios::binary);
         deserialize(ifs, h);
     }
 };
 
 template <unsigned int N>
-void Document<N>::print(std::ostream& ostream) const {
+void KMerBuffer<N>::print(std::ostream& ostream) const {
     for (size_t i = 0; i < m_data.size(); i++) {
         ostream << m_data[i] << std::endl;
     }
@@ -79,6 +79,6 @@ void Document<N>::print(std::ostream& ostream) const {
 
 } // namespace cobs
 
-#endif // !COBS_DOCUMENT_HEADER
+#endif // !COBS_KMER_BUFFER_HEADER
 
 /******************************************************************************/

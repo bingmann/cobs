@@ -45,7 +45,7 @@ TEST_F(classic_index_construction, deserialization) {
                  fs::recursive_directory_iterator(),
                  std::back_inserter(paths),
                  [](const auto& p) {
-                     return cobs::file_has_header<cobs::DocumentHeader>(p);
+                     return cobs::file_has_header<cobs::KMerBufferHeader>(p);
                  });
     std::sort(paths.begin(), paths.end());
 

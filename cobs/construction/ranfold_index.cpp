@@ -17,9 +17,9 @@
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/ranfold_index.hpp>
 #include <cobs/cortex_file.hpp>
-#include <cobs/document.hpp>
 #include <cobs/file/ranfold_index_header.hpp>
 #include <cobs/kmer.hpp>
+#include <cobs/kmer_buffer.hpp>
 #include <cobs/util/addressable_priority_queue.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -42,8 +42,8 @@ void set_bit(std::vector<uint8_t>& data,
 }
 
 template <typename RandomGenerator>
-Document<31>& document_generator(
-    Document<31>& doc, size_t document_size, RandomGenerator& rng) {
+KMerBuffer<31>& document_generator(
+    KMerBuffer<31>& doc, size_t document_size, RandomGenerator& rng) {
 
     // create random document
     doc.data().clear();
@@ -58,7 +58,7 @@ Document<31>& document_generator(
     return doc;
 }
 
-void mark_document(const Document<31>& doc,
+void mark_document(const KMerBuffer<31>& doc,
                    const RanfoldIndexHeader& rih,
                    std::vector<uint8_t>& data,
                    size_t document_index) {
@@ -229,7 +229,7 @@ struct CollectSketch {
     }
 };
 
-void sketch_document(const Document<31>& doc,
+void sketch_document(const KMerBuffer<31>& doc,
                      const RanfoldIndexHeader& rih,
                      size_t num_hashes,
                      Sketch* min_hash) {
@@ -295,7 +295,7 @@ void sketch_path(const fs::path& path,
 
     LOG1 << "Sketching " << path.string();
     CortexFile ctx(path.string());
-    Document<31> doc;
+    KMerBuffer<31> doc;
     ctx.process_kmers<31>(
         [&](KMer<31>& m) {
             m.canonicalize();
@@ -627,7 +627,7 @@ void construct_random(const fs::path& out_file,
 
         static const size_t num_hashes = 1024;
         std::vector<Sketch> min_hashes;
-        Document<31> doc;
+        KMerBuffer<31> doc;
 
         for (size_t doc_id = 0; doc_id < num_documents; ++doc_id) {
             document_generator(doc, document_size, rng);
@@ -646,8 +646,8 @@ void construct_random(const fs::path& out_file,
 
     t.active("generate");
 
-    std::vector<Document<31> > docset;
-    Document<31> doc;
+    std::vector<KMerBuffer<31> > docset;
+    KMerBuffer<31> doc;
 
     for (size_t doc_id = 0; doc_id < num_documents / 2; ++doc_id) {
 

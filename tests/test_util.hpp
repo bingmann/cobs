@@ -11,7 +11,7 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
-#include <cobs/document.hpp>
+#include <cobs/kmer_buffer.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/query.hpp>
@@ -39,10 +39,10 @@ void assert_equals_files(const std::string& f1, const std::string& f2) {
 
 //! Generate documents from a (random) query sequence
 static inline
-std::vector<cobs::Document<31> >
+std::vector<cobs::KMerBuffer<31> >
 generate_documents_all(const std::string& query,
                        size_t num_documents = 33, size_t num_terms = 1000000) {
-    std::vector<cobs::Document<31> > documents(num_documents);
+    std::vector<cobs::KMerBuffer<31> > documents(num_documents);
     cobs::KMer<31> k;
     char kmer_buffer[31];
     for (size_t i = 0; i < num_terms && i < query.size() - 31; i++) {
@@ -61,8 +61,8 @@ generate_documents_all(const std::string& query,
 //! Generate documents from a (random) query sequence with each query term
 //! contained in exactly one document.
 static inline
-std::vector<cobs::Document<31> > generate_documents_one(const std::string& query) {
-    std::vector<cobs::Document<31> > documents(33);
+std::vector<cobs::KMerBuffer<31> > generate_documents_one(const std::string& query) {
+    std::vector<cobs::KMerBuffer<31> > documents(33);
     cobs::KMer<31> k;
     char kmer_buffer[31];
     const char* normalized_kmer =
@@ -83,12 +83,12 @@ std::string get_file_stem(unsigned index) {
 }
 
 static inline
-void generate_test_case(std::vector<cobs::Document<31> > documents,
+void generate_test_case(std::vector<cobs::KMerBuffer<31> > documents,
                         const std::string& out_dir) {
     for (size_t i = 0; i < documents.size(); i++) {
         std::string file_name = get_file_stem(i);
         documents[i].serialize(
-            out_dir + "/" + file_name + cobs::DocumentHeader::file_extension,
+            out_dir + "/" + file_name + cobs::KMerBufferHeader::file_extension,
             file_name);
     }
 }

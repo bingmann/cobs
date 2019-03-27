@@ -1,19 +1,19 @@
 /*******************************************************************************
- * cobs/file/document_header.hpp
+ * cobs/file/kmer_buffer_header.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_FILE_DOCUMENT_HEADER_HEADER
-#define COBS_FILE_DOCUMENT_HEADER_HEADER
+#ifndef COBS_FILE_KMER_BUFFER_HEADER_HEADER
+#define COBS_FILE_KMER_BUFFER_HEADER_HEADER
 
 #include <cobs/file/header.hpp>
 
 namespace cobs {
 
-class DocumentHeader
+class KMerBufferHeader
 {
 private:
     std::string m_name;
@@ -24,8 +24,8 @@ public:
     static const uint32_t version;
     static const std::string file_extension;
 
-    DocumentHeader() = default;
-    DocumentHeader(std::string name, uint32_t kmer_size);
+    KMerBufferHeader() = default;
+    KMerBufferHeader(std::string name, uint32_t kmer_size);
 
     void serialize(std::ostream& os) const;
     void deserialize(std::istream& is);
@@ -36,6 +36,6 @@ public:
 
 } // namespace cobs
 
-#endif // !COBS_FILE_DOCUMENT_HEADER_HEADER
+#endif // !COBS_FILE_KMER_BUFFER_HEADER_HEADER
 
 /******************************************************************************/

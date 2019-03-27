@@ -38,8 +38,8 @@ void process_batch(const std::vector<fs::path>& paths,
                    const fs::path& out_file, std::vector<uint8_t>& data,
                    ClassicIndexHeader& cih, Timer& t) {
 
-    Document<31> doc;
-    DocumentHeader dh;
+    KMerBuffer<31> doc;
+    KMerBufferHeader dh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
@@ -184,8 +184,8 @@ uint64_t get_max_file_size(FileList& filelist) {
         return max_num_elements;
     }
     else if (paths[0].extension() == ".cobs_doc") {
-        DocumentHeader dh;
-        Document<31> doc;
+        KMerBufferHeader dh;
+        KMerBuffer<31> doc;
         doc.deserialize(paths[0], dh);
 
         size_t max_num_elements = doc.data().size();
@@ -242,7 +242,7 @@ void construct_random(const fs::path& out_file,
     data.resize(signature_size * cih.block_size());
 
     std::mt19937 rng(seed);
-    Document<31> doc;
+    KMerBuffer<31> doc;
 
     t.active("generate");
     for (size_t i = 0; i < num_documents; ++i) {

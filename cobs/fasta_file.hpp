@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-#include <cobs/document.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 

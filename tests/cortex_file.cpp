@@ -37,7 +37,7 @@ protected:
 };
 
 template <unsigned int N>
-void assert_equals_document(cobs::Document<N> document) {
+void assert_equals_document(cobs::KMerBuffer<N> document) {
     std::ifstream ifs(document_path);
     std::string line;
     size_t i = 0;
@@ -49,17 +49,17 @@ void assert_equals_document(cobs::Document<N> document) {
 }
 
 TEST_F(cortex, file_name) {
-    cobs::Document<31> document1;
-    cobs::Document<31> document2;
+    cobs::KMerBuffer<31> document1;
+    cobs::KMerBuffer<31> document2;
     cobs::Timer t;
     cobs::process_file(in_path, out_path, document1, t);
-    cobs::DocumentHeader h;
+    cobs::KMerBufferHeader h;
     document2.deserialize(out_path, h);
     ASSERT_EQ(h.name(), document_name);
 }
 
 TEST_F(cortex, process_file) {
-    cobs::Document<31> document;
+    cobs::KMerBuffer<31> document;
     cobs::Timer t;
     cobs::process_file(in_path, out_path, document, t);
     document.sort_kmers();
@@ -67,11 +67,11 @@ TEST_F(cortex, process_file) {
 }
 
 TEST_F(cortex, file_serialization) {
-    cobs::Document<31> document1;
-    cobs::Document<31> document2;
+    cobs::KMerBuffer<31> document1;
+    cobs::KMerBuffer<31> document2;
     cobs::Timer t;
     cobs::process_file(in_path, out_path, document1, t);
-    cobs::DocumentHeader hdoc;
+    cobs::KMerBufferHeader hdoc;
     document2.deserialize(out_path, hdoc);
     document1.sort_kmers();
     document2.sort_kmers();
@@ -81,8 +81,8 @@ TEST_F(cortex, file_serialization) {
 
 TEST_F(cortex, process_all_in_directory) {
     cobs::process_all_in_directory<31>(in_dir, out_dir);
-    cobs::DocumentHeader hdoc;
-    cobs::Document<31> document;
+    cobs::KMerBufferHeader hdoc;
+    cobs::KMerBuffer<31> document;
     document.deserialize(out_path_rec, hdoc);
     document.sort_kmers();
     assert_equals_document(document);

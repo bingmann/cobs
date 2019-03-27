@@ -9,10 +9,10 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include <cobs/document.hpp>
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/file/header.hpp>
+#include <cobs/kmer_buffer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 
@@ -26,12 +26,12 @@ TEST(file, base_name) {
 TEST(file, document) {
     std::stringstream buffer;
 
-    cobs::Document<31> d_out;
-    d_out.serialize(buffer, "document");
+    cobs::KMerBuffer<31> doc_out;
+    doc_out.serialize(buffer, "document");
 
-    cobs::DocumentHeader hdoc;
-    cobs::Document<31> d_in;
-    d_in.deserialize(buffer, hdoc);
+    cobs::KMerBufferHeader hdoc;
+    cobs::KMerBuffer<31> doc_in;
+    doc_in.deserialize(buffer, hdoc);
 }
 
 TEST(file, classic_index_header) {

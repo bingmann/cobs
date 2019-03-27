@@ -24,18 +24,18 @@ set(SOURCE_FILES
         cobs/construction/ranfold_index.cpp
         cobs/construction/ranfold_index.hpp
         cobs/cortex_file.hpp
-        cobs/document.hpp
         cobs/file/classic_index_header.cpp
         cobs/file/classic_index_header.hpp
         cobs/file/compact_index_header.cpp
         cobs/file/compact_index_header.hpp
-        cobs/file/document_header.cpp
-        cobs/file/document_header.hpp
+        cobs/file/kmer_buffer_header.cpp
+        cobs/file/kmer_buffer_header.hpp
         cobs/file/file_io_exception.hpp
         cobs/file/header.hpp
         cobs/file/ranfold_index_header.cpp
         cobs/file/ranfold_index_header.hpp
         cobs/kmer.hpp
+        cobs/kmer_buffer.hpp
         cobs/query/base.hpp
         cobs/query/classic_base.cpp
         cobs/query/classic_base.hpp
