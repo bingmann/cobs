@@ -30,47 +30,54 @@ namespace cobs::classic_index {
 
 void set_bit(std::vector<uint8_t>& data,
              const ClassicIndexHeader& cih,
-             uint64_t pos, uint64_t bit_in_block) {
-    data[cih.block_size() * pos + bit_in_block / 8] |= 1 << (bit_in_block % 8);
+             uint64_t pos, uint64_t doc_index) {
+    data[cih.block_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
+}
+
+void process_term(const std::string& term,
+                  std::vector<uint8_t>& data,
+                  const ClassicIndexHeader& cih,
+                  size_t doc_index) {
+    process_hashes(term.data(), term.size(),
+                   cih.signature_size(), cih.num_hashes(),
+                   [&](uint64_t hash) {
+                       set_bit(data, cih, hash, doc_index);
+                   });
 }
 
 void process_batch(const std::vector<fs::path>& paths,
                    const fs::path& out_file, std::vector<uint8_t>& data,
                    ClassicIndexHeader& cih, Timer& t) {
 
-    KMerBuffer<31> doc;
-    KMerBufferHeader dh;
     for (uint64_t i = 0; i < paths.size(); i++) {
         if (paths[i].extension() == ".ctx") {
             t.active("read");
             CortexFile ctx(paths[i].string());
             cih.file_names()[i] = ctx.name_;
-            doc.data().clear();
-            ctx.process_kmers<31>(
-                [&](const KMer<31>& m) { doc.data().push_back(m); });
+            t.active("process");
 
-#pragma omp parallel for
-            for (uint64_t j = 0; j < doc.data().size(); j++) {
-                process_hashes(doc.data().data() + j, 8,
-                               cih.signature_size(), cih.num_hashes(),
-                               [&](uint64_t hash) {
-                                   set_bit(data, cih, hash, i);
-                               });
-            }
+            // TODO: parallel for over setting of bits of the SAME document
+            ctx.process_terms<31>(
+                [&](const std::string& term) {
+                    process_term(term, data, cih, i);
+                });
         }
         else if (paths[i].extension() == ".cobs_doc") {
             t.active("read");
+            KMerBuffer<31> doc;
+            KMerBufferHeader dh;
             doc.deserialize(paths[i], dh);
             cih.file_names()[i] = dh.name();
             t.active("process");
 
-#pragma omp parallel for
+            std::string term;
+            term.reserve(32);
+
+            // TODO: parallel for over setting of bits of the SAME document
             for (uint64_t j = 0; j < doc.data().size(); j++) {
-                process_hashes(doc.data().data() + j, 8,
-                               cih.signature_size(), cih.num_hashes(),
-                               [&](uint64_t hash) {
-                                   set_bit(data, cih, hash, i);
-                               });
+                doc.data()[j].canonicalize();
+                doc.data()[j].to_string(&term);
+                process_term(term, data, cih, i);
             }
         }
     }
@@ -256,13 +263,14 @@ void construct_random(const fs::path& out_file,
             doc.data().push_back(m);
         }
 
-#pragma omp parallel for
-        for (size_t j = 0; j < doc.data().size(); ++j) {
-            process_hashes(doc.data().data() + j, 8,
-                           cih.signature_size(), cih.num_hashes(),
-                           [&](uint64_t hash) {
-                               set_bit(data, cih, hash, i);
-                           });
+        std::string term;
+        term.reserve(32);
+
+        // TODO: parallel for over setting of bits of the SAME document
+        for (uint64_t j = 0; j < doc.data().size(); j++) {
+            doc.data()[j].canonicalize();
+            doc.data()[j].to_string(&term);
+            process_term(term, data, cih, i);
         }
     }
 

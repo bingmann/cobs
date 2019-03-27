@@ -81,6 +81,19 @@ public:
         return result;
     }
 
+    std::string& to_string(std::string* out) const {
+        out->clear();
+        for (size_t i = 0; i < size; ++i) {
+            if (TLX_UNLIKELY(i == 0 && N % 4 != 0)) {
+                *out += to_base_pairs_[data()[size - 1 - i]] + (4 - N % 4);
+            }
+            else {
+                *out += to_base_pairs_[data()[size - 1 - i]];
+            }
+        }
+        return *out;
+    }
+
     void print(std::ostream& ostream) const {
         ostream << string();
     }

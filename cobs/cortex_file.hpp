@@ -102,7 +102,7 @@ public:
         die_unequal(num_uint8_ts_per_kmer, kmer.size);
 
         is_.clear();
-        is_.seekg(pos_data_begin_, std::ios::beg);
+        is_.seekg(pos_data_begin_);
 
         size_t r = num_kmers();
         while (r != 0) {
@@ -115,6 +115,16 @@ public:
 
             callback(kmer);
         }
+    }
+
+    template <unsigned N, typename Callback>
+    void process_terms(Callback callback) {
+        std::string term(N, 0);
+        process_kmers<N>([&](KMer<N>& m) {
+                             m.canonicalize();
+                             m.to_string(&term);
+                             callback(term);
+                         });
     }
 
     uint32_t version_;

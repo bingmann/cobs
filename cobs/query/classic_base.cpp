@@ -26,23 +26,17 @@ namespace cobs::query {
 
 void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
                    uint32_t kmer_size, size_t num_hashes) {
-    size_t kmer_data_size = KMer<31>::data_size(kmer_size);
     size_t num_kmers = query.size() - kmer_size + 1;
     hashes.resize(num_hashes * num_kmers);
 
     const char* query_8 = query.data();
-#pragma omp parallel
-    {
-        char kmer_data[kmer_data_size];
-        char kmer_raw[kmer_size];
-#pragma omp for
-        for (size_t i = 0; i < num_kmers; i++) {
-            const char* normalized_kmer =
-                canonicalize_kmer(query_8 + i, kmer_raw, kmer_size);
-            KMer<31>::init(normalized_kmer, kmer_data, kmer_size);
-            for (size_t j = 0; j < num_hashes; j++) {
-                hashes[i * num_hashes + j] = XXH64(kmer_data, kmer_data_size, j);
-            }
+    char canonicalize_buffer[kmer_size];
+
+    for (size_t i = 0; i < num_kmers; i++) {
+        const char* normalized_kmer =
+            canonicalize_kmer(query_8 + i, canonicalize_buffer, kmer_size);
+        for (size_t j = 0; j < num_hashes; j++) {
+            hashes[i * num_hashes + j] = XXH64(normalized_kmer, kmer_size, j);
         }
     }
 }
