@@ -6,6 +6,7 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
+#include <cobs/document_list.hpp>
 #include <cobs/fasta_file.hpp>
 #include <gtest/gtest.h>
 
@@ -32,6 +33,12 @@ TEST(fasta, process_kmers2) {
     size_t count = 0;
     fasta.process_terms(0, 31, [&](const std::string&) { ++count; });
     die_unequal(fasta.num_terms(0, 31), count);
+}
+
+TEST(fasta, document_list) {
+    cobs::DocumentList doc_list(in_dir);
+
+    die_unequal(doc_list.list().size(), 6u);
 }
 
 /******************************************************************************/

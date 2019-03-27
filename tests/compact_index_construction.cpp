@@ -60,7 +60,7 @@ TEST_F(compact_index_construction, deserialization) {
     generate_test_case(documents, input_dir.string());
 
     // get file names
-    cobs::DocumentList doc_list(input_dir, cobs::FileType::Document);
+    cobs::DocumentList doc_list(input_dir, cobs::FileType::Any);
     doc_list.sort_by_size();
 
     std::vector<cobs::DocumentEntry> paths = doc_list.list();

@@ -129,6 +129,13 @@ public:
         return index_.size();
     }
 
+    //! return size of a sub-document
+    size_t size(size_t doc_index) const {
+        if (doc_index >= index_.size())
+            return 0;
+        return index_[doc_index].size();
+    }
+
     //! return number of terms in a sub-document
     size_t num_terms(size_t doc_index, size_t term_size) const {
         if (doc_index >= index_.size())

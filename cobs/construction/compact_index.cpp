@@ -95,7 +95,7 @@ void construct_from_folders(const fs::path& in_dir, const fs::path& index_dir,
     die_unless(batch_size % 8 == 0);
 
     // read file list, sort by size
-    DocumentList doc_list(in_dir, FileType::Document);
+    DocumentList doc_list(in_dir, FileType::Any);
     doc_list.sort_by_size();
 
     // process batches and create classic indexes for each batch

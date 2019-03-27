@@ -9,6 +9,7 @@
 #ifndef COBS_DOCUMENT_LIST_HEADER
 #define COBS_DOCUMENT_LIST_HEADER
 
+#include <cobs/fasta_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 
@@ -19,19 +20,28 @@ namespace cobs {
 
 enum class FileType {
     Any,
-    Document,
+    Text,
     Cortex,
+    KMerBuffer,
     Fasta,
     Fastq,
-    Text
 };
 
+/*!
+ * DocumentEntry specifies a document or subdocument which can deliver a set of
+ * q-grams for indexing.
+ */
 struct DocumentEntry {
+    //! file system path to document
     fs::path path_;
+    //! type of document
     FileType type_;
+    //! size of the document in bytes
     size_t size_;
-    size_t subdoc_index_;
+    //! subdocument index (for FASTA, FASTQ, etc)
+    size_t subdoc_index_ = 0;
 
+    //! default sort operator
     bool operator < (const DocumentEntry& b) const {
         return path_ < b.path_;
     }
@@ -55,10 +65,7 @@ public:
         fs::recursive_directory_iterator it(dir), end;
         while (it != end) {
             if (accept(*it, filter)) {
-                DocumentEntry de;
-                de.path_ = *it;
-                de.size_ = fs::file_size(de.path_);
-                list_.emplace_back(de);
+                add(*it);
             }
             ++it;
         }
@@ -69,26 +76,63 @@ public:
     static bool accept(const fs::path& path, FileType filter) {
         switch (filter) {
         case FileType::Any:
-            return true;
-        case FileType::Document:
-            return path.extension() == ".ctx" ||
+            return path.extension() == ".txt" ||
+                   path.extension() == ".ctx" ||
+                   path.extension() == ".cobs_doc" ||
                    path.extension() == ".fasta" ||
-                   path.extension() == ".fastq" ||
-                   path.extension() == ".cobs_doc";
+                   path.extension() == ".fastq";
+        case FileType::Text:
+            return path.extension() == ".txt";
         case FileType::Cortex:
             return path.extension() == ".ctx";
+        case FileType::KMerBuffer:
+            return path.extension() == ".cobs_doc";
         case FileType::Fasta:
             return path.extension() == ".fasta";
         case FileType::Fastq:
             return path.extension() == ".fastq";
-        case FileType::Text:
-            return path.extension() == ".txt";
         }
         return false;
     }
 
+    //! add DocumentEntry for given file
+    void add(const fs::path& path) {
+        if (path.extension() == ".txt") {
+            DocumentEntry de;
+            de.path_ = path;
+            de.type_ = FileType::Text;
+            de.size_ = fs::file_size(path);
+            list_.emplace_back(de);
+        }
+        else if (path.extension() == ".ctx") {
+            DocumentEntry de;
+            de.path_ = path;
+            de.type_ = FileType::Cortex;
+            de.size_ = fs::file_size(path);
+            list_.emplace_back(de);
+        }
+        else if (path.extension() == ".cobs_doc") {
+            DocumentEntry de;
+            de.path_ = path;
+            de.type_ = FileType::KMerBuffer;
+            de.size_ = fs::file_size(path);
+            list_.emplace_back(de);
+        }
+        else if (path.extension() == ".fasta") {
+            FastaFile fasta(path);
+            for (size_t i = 0; i < fasta.num_documents(); ++i) {
+                DocumentEntry de;
+                de.path_ = path;
+                de.type_ = FileType::Fasta;
+                de.size_ = fasta.size(i);
+                de.subdoc_index_ = i;
+                list_.emplace_back(de);
+            }
+        }
+    }
+
     //! return list of paths
-    std::vector<DocumentEntry> list() const { return list_; }
+    const std::vector<DocumentEntry>& list() const { return list_; }
 
     //! sort files by size
     void sort_by_size() {

@@ -209,7 +209,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     if (batch_size % 8 != 0)
         die("batch size must be divisible by 8");
 
-    DocumentList in_filelist(in_dir, FileType::Document);
+    DocumentList in_filelist(in_dir, FileType::Any);
 
     // estimate signature size by finding number of elements in the largest file
     uint64_t max_num_elements = get_max_file_size(in_filelist);
