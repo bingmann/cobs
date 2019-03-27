@@ -7,11 +7,12 @@
  ******************************************************************************/
 
 #include <cobs/cortex_file.hpp>
-#include <cobs/frequency.hpp>
 #include <cobs/query/classic_index/base.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <experimental/filesystem>
+
 #include <omp.h>
+#include <unistd.h>
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;

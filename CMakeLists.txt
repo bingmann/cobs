@@ -32,12 +32,9 @@ set(SOURCE_FILES
         cobs/file/document_header.cpp
         cobs/file/document_header.hpp
         cobs/file/file_io_exception.hpp
-        cobs/file/frequency_header.cpp
-        cobs/file/frequency_header.hpp
         cobs/file/header.hpp
         cobs/file/ranfold_index_header.cpp
         cobs/file/ranfold_index_header.hpp
-        cobs/frequency.hpp
         cobs/kmer.hpp
         cobs/query/base.hpp
         cobs/query/classic_base.cpp
