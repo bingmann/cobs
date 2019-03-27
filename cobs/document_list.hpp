@@ -9,6 +9,7 @@
 #ifndef COBS_DOCUMENT_LIST_HEADER
 #define COBS_DOCUMENT_LIST_HEADER
 
+#include <cobs/cortex_file.hpp>
 #include <cobs/fasta_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -36,6 +37,8 @@ struct DocumentEntry {
     fs::path path_;
     //! type of document
     FileType type_;
+    //! name of the document
+    std::string name_;
     //! size of the document in bytes
     size_t size_;
     //! subdocument index (for FASTA, FASTQ, etc)
@@ -101,20 +104,25 @@ public:
             DocumentEntry de;
             de.path_ = path;
             de.type_ = FileType::Text;
+            de.name_ = base_name(path);
             de.size_ = fs::file_size(path);
             list_.emplace_back(de);
         }
         else if (path.extension() == ".ctx") {
+            CortexFile ctx(path);
             DocumentEntry de;
             de.path_ = path;
             de.type_ = FileType::Cortex;
+            de.name_ = ctx.name_;
             de.size_ = fs::file_size(path);
             list_.emplace_back(de);
         }
         else if (path.extension() == ".cobs_doc") {
+            KMerBufferHeader dh = deserialize_header<KMerBufferHeader>(path);
             DocumentEntry de;
             de.path_ = path;
             de.type_ = FileType::KMerBuffer;
+            de.name_ = dh.name();
             de.size_ = fs::file_size(path);
             list_.emplace_back(de);
         }

@@ -136,15 +136,6 @@ public:
         return index_[doc_index].size();
     }
 
-    //! return number of terms in a sub-document
-    size_t num_terms(size_t doc_index, size_t term_size) const {
-        if (doc_index >= index_.size())
-            return 0;
-        if (index_[doc_index].size() < term_size)
-            return 0;
-        return index_[doc_index].size() - term_size + 1;
-    }
-
     template <typename Callback>
     void process_terms(size_t doc_index, size_t term_size, Callback callback) {
         if (doc_index >= index_.size())

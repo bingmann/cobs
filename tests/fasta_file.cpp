@@ -25,14 +25,12 @@ TEST(fasta, process_kmers2) {
 
     die_unequal(fasta.num_documents(), 5u);
 
-    die_unequal(fasta.index_[0].size(), 256u);
-    die_unequal(fasta.index_[4].size(), 438u);
-
-    die_unequal(fasta.num_terms(0, 31), 256u - 31u + 1u);
+    die_unequal(fasta.size(0), 256u);
+    die_unequal(fasta.size(4), 438u);
 
     size_t count = 0;
     fasta.process_terms(0, 31, [&](const std::string&) { ++count; });
-    die_unequal(fasta.num_terms(0, 31), count);
+    die_unequal(fasta.size(0) - 30, count);
 }
 
 TEST(fasta, document_list) {

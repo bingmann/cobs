@@ -12,10 +12,10 @@
 #include <random>
 
 #include <cobs/construction/classic_index.hpp>
-#include <cobs/cortex_file.hpp>
 #include <cobs/document_list.hpp>
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
+#include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
@@ -45,41 +45,50 @@ void process_term(const std::string& term,
                    });
 }
 
+template <typename Callback>
+void process_document(const DocumentEntry& doc_entry,
+                      Callback callback) {
+    if (doc_entry.type_ == FileType::Text) {
+        TextFile text(doc_entry.path_);
+        text.process_terms(31, callback);
+    }
+    else if (doc_entry.type_ == FileType::Cortex) {
+        CortexFile ctx(doc_entry.path_);
+        ctx.process_terms<31>(callback);
+    }
+    else if (doc_entry.type_ == FileType::KMerBuffer) {
+        KMerBuffer<31> doc;
+        KMerBufferHeader dh;
+        doc.deserialize(doc_entry.path_, dh);
+
+        std::string term;
+        term.reserve(32);
+
+        for (uint64_t j = 0; j < doc.data().size(); j++) {
+            doc.data()[j].canonicalize();
+            doc.data()[j].to_string(&term);
+            callback(term);
+        }
+    }
+    else if (doc_entry.type_ == FileType::Fasta) {
+        FastaFile fasta(doc_entry.path_);
+        fasta.process_terms(doc_entry.subdoc_index_, 31, callback);
+    }
+}
+
 void process_batch(const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file, std::vector<uint8_t>& data,
                    ClassicIndexHeader& cih, Timer& t) {
 
     for (uint64_t i = 0; i < paths.size(); i++) {
-        if (paths[i].path_.extension() == ".ctx") {
-            t.active("read");
-            CortexFile ctx(paths[i].path_.string());
-            cih.file_names()[i] = ctx.name_;
-            t.active("process");
+        t.active("read");
+        cih.file_names()[i] = paths[i].name_;
 
-            // TODO: parallel for over setting of bits of the SAME document
-            ctx.process_terms<31>(
-                [&](const std::string& term) {
-                    process_term(term, data, cih, i);
-                });
-        }
-        else if (paths[i].path_.extension() == ".cobs_doc") {
-            t.active("read");
-            KMerBuffer<31> doc;
-            KMerBufferHeader dh;
-            doc.deserialize(paths[i].path_, dh);
-            cih.file_names()[i] = dh.name();
-            t.active("process");
-
-            std::string term;
-            term.reserve(32);
-
-            // TODO: parallel for over setting of bits of the SAME document
-            for (uint64_t j = 0; j < doc.data().size(); j++) {
-                doc.data()[j].canonicalize();
-                doc.data()[j].to_string(&term);
-                process_term(term, data, cih, i);
-            }
-        }
+        // TODO: parallel for over setting of bits of the SAME document
+        process_document(paths[i],
+                         [&](const std::string& term) {
+                             process_term(term, data, cih, i);
+                         });
     }
     size_t bit_count = tlx::popcount(data.data(), data.size());
     LOG1 << "ratio of ones: "
