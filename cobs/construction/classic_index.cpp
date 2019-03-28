@@ -34,7 +34,7 @@ void set_bit(std::vector<uint8_t>& data,
     data[cih.block_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
 }
 
-void process_term(const std::string& term,
+void process_term(const string_view& term,
                   std::vector<uint8_t>& data,
                   const ClassicIndexHeader& cih,
                   size_t doc_index) {
@@ -86,7 +86,7 @@ void process_batch(const std::vector<DocumentEntry>& paths,
 
         // TODO: parallel for over setting of bits of the SAME document
         process_document(paths[i],
-                         [&](const std::string& term) {
+                         [&](const string_view& term) {
                              process_term(term, data, cih, i);
                          });
     }

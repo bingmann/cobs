@@ -16,6 +16,7 @@
 #include <cobs/kmer_buffer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
+#include <cobs/util/string_view.hpp>
 #include <cobs/util/timer.hpp>
 #include <cstring>
 #include <iomanip>
@@ -123,7 +124,7 @@ public:
         process_kmers<N>([&](KMer<N>& m) {
                              m.canonicalize();
                              m.to_string(&term);
-                             callback(term);
+                             callback(string_view(term));
                          });
     }
 

@@ -15,6 +15,7 @@
 
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
+#include <cobs/util/string_view.hpp>
 
 #include <tlx/die.hpp>
 
@@ -48,9 +49,11 @@ public:
             size_t wb = is_.gcount();
 
             for (size_t i = 0; i + term_size <= pos + wb; ++i) {
-                std::string term(buffer + i, term_size);
-                callback(term);
+                callback(string_view(buffer + i, term_size));
             }
+
+            if (wb + 1 < term_size)
+                break;
 
             std::copy_backward(buffer + wb - term_size + 1, buffer + wb,
                                buffer);

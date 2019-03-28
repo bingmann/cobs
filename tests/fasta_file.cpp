@@ -29,7 +29,7 @@ TEST(fasta, process_kmers2) {
     die_unequal(fasta.size(4), 438u);
 
     size_t count = 0;
-    fasta.process_terms(0, 31, [&](const std::string&) { ++count; });
+    fasta.process_terms(0, 31, [&](const cobs::string_view&) { ++count; });
     die_unequal(fasta.size(0) - 30, count);
 }
 

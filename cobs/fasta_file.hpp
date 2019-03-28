@@ -47,9 +47,7 @@ public:
                 continue;
 
             for (size_t i = 0; i + term_size <= data.size(); ++i) {
-                // TODO: use std::string_view or similar
-                std::string term = data.substr(i, term_size);
-                callback(term);
+                callback(string_view(data.data() + i, term_size));
             }
             data.erase(0, data.size() - term_size + 1);
         }
