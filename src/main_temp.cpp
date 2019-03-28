@@ -48,7 +48,7 @@ void server() {
     std::vector<std::pair<uint16_t, std::string> > result_1;
     std::vector<std::pair<uint16_t, std::string> > result_2;
     std::vector<std::pair<uint16_t, std::string> > result_3;
-    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.cobs");
+    std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cobs_classic");
 
     cobs::query::classic_index::mmap s_mmap(p);
 //    cobs::query::classic_index::asio s_asio(p);
@@ -66,7 +66,7 @@ int main() {
 //    std::string in = "test/a";
 //    std::string out = "test/b";
 //    cobs::cortex::process_all_in_directory<31>(in, out);
-    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cla_idx.cobs");
+    generate_test_bloom("/users/flo/projects/thesis/data/performance_bloom/large.cobs_classic");
 //    std::ifstream ifs("/Users/flo/freq.txt");
 //    std::ofstream ofs("/Users/flo/freq_sum_2.txt");
 //    std::string line;

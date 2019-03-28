@@ -16,7 +16,7 @@ namespace fs = cobs::fs;
 
 static fs::path input_dir("test/classic_index_construction/input");
 static fs::path index_dir("test/classic_index_construction/index");
-static fs::path classic_index_path(index_dir.string() + "/index.cla_idx.cobs");
+static fs::path classic_index_path(index_dir.string() + "/index.cobs_classic");
 
 class classic_index_construction : public ::testing::Test
 {
