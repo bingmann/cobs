@@ -21,6 +21,8 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 
+#include <tlx/logger.hpp>
+
 namespace cobs {
 
 template <typename Callback>
@@ -38,9 +40,9 @@ void get_sorted_file_names(const fs::path& in_dir,
 }
 
 template <typename Selector, typename Callback>
-bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_t bulk_size,
-                          const std::string& file_extension_out,
-                          Selector selector, Callback callback) {
+size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
+                            size_t batch_size,
+                            Selector selector, Callback callback) {
     std::vector<fs::path> sorted_paths;
     get_sorted_file_names(
         in_dir, &sorted_paths, [](const fs::path&) { return true; });
@@ -48,7 +50,7 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
 
     std::string first_filename, last_filename;
 
-    size_t j = 1;
+    size_t batch_num = 0;
     std::vector<fs::path> paths;
     for (size_t i = 0; i < sorted_paths.size(); i++) {
         if (selector(sorted_paths[i])) {
@@ -59,23 +61,23 @@ bool process_file_batches(const fs::path& in_dir, const fs::path& out_dir, size_
             last_filename = filename;
             paths.push_back(sorted_paths[i]);
         }
-        if (paths.size() == bulk_size || (!paths.empty() && i + 1 == sorted_paths.size())) {
-            fs::path out_file = out_dir / ("[" + first_filename + "-" + last_filename + "]" + file_extension_out);
-            std::cout << "BE - " << std::setfill('0') << std::setw(7) << j
-                      << " - " << out_file << std::endl;
-            bool exists = fs::exists(out_file);
-            if (!exists || /* TODO: add command line parameter */ 1) {
-                callback(paths, out_file);
-            }
-            std::cout << (exists ? "EX" : "OK")
-                      << " - " << std::setfill('0') << std::setw(7) << j
-                      << " - " << out_file << std::endl;
+        if (paths.size() == batch_size ||
+            (!paths.empty() && i + 1 == sorted_paths.size()))
+        {
+            std::string out_file =
+                pad_index(batch_num) + '_' +
+                '[' + first_filename + '-' + last_filename + ']';
+
+            LOG1 << "IN - " << out_file;
+            callback(paths, out_file);
+            LOG1 << "OK - " << out_file;
+
             paths.clear();
             first_filename.clear();
-            j++;
+            batch_num++;
         }
     }
-    return j < 3;
+    return batch_num;
 }
 
 } // namespace cobs

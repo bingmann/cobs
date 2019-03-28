@@ -24,10 +24,13 @@
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
-#include <tlx/math/popcount.hpp>
 #include <tlx/math/div_ceil.hpp>
+#include <tlx/math/popcount.hpp>
 
 namespace cobs::classic_index {
+
+/******************************************************************************/
+// Construction of classic index from documents
 
 void set_bit(std::vector<uint8_t>& data,
              const ClassicIndexHeader& cih,
@@ -106,28 +109,6 @@ void process_batch(const std::vector<DocumentEntry>& paths,
     t.stop();
 }
 
-void combine(std::vector<std::pair<std::ifstream, uint64_t> >& ifstreams,
-             const fs::path& out_file,
-             uint64_t signature_size, uint64_t block_size, uint64_t num_hash,
-             Timer& t, const std::vector<std::string>& file_names) {
-    std::ofstream ofs;
-    ClassicIndexHeader cih(signature_size, num_hash, file_names);
-    serialize_header(ofs, out_file, cih);
-
-    std::vector<char> block(block_size);
-    for (uint64_t i = 0; i < signature_size; i++) {
-        uint64_t pos = 0;
-        t.active("read");
-        for (auto& ifs : ifstreams) {
-            ifs.first.read(block.data() + pos, ifs.second);
-            pos += ifs.second;
-        }
-        t.active("write");
-        ofs.write(block.data(), block_size);
-    }
-    t.stop();
-}
-
 void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
@@ -146,47 +127,83 @@ void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
     std::cout << t;
 }
 
+/******************************************************************************/
+// Combine multiple classic indexes
+
+void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
+                     const fs::path& out_file,
+                     uint64_t signature_size, uint64_t block_size,
+                     uint64_t num_hash,
+                     Timer& t, const std::vector<std::string>& file_names) {
+    std::ofstream ofs;
+    ClassicIndexHeader cih(signature_size, num_hash, file_names);
+    serialize_header(ofs, out_file, cih);
+
+    std::vector<char> block(block_size);
+    for (uint64_t i = 0; i < signature_size; i++) {
+        uint64_t pos = 0;
+        t.active("read");
+        for (auto& ifs : streams) {
+            ifs.first.read(block.data() + pos, ifs.second);
+            pos += ifs.second;
+        }
+        t.active("write");
+        ofs.write(block.data(), block_size);
+    }
+    t.stop();
+}
+
 bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size) {
     Timer t;
-    std::vector<std::pair<std::ifstream, uint64_t> > ifstreams;
-    std::vector<std::string> file_names;
-    uint64_t signature_size = 0;
-    uint64_t num_hashes = 0;
-    bool all_combined =
-        process_file_batches(
-            in_dir, out_dir, batch_size, ClassicIndexHeader::file_extension,
-            [](const fs::path& path) {
-                return file_has_header<ClassicIndexHeader>(path);
-            },
-            [&](const std::vector<fs::path>& paths, const fs::path& out_file) {
-                uint64_t new_block_size = 0;
-                for (size_t i = 0; i < paths.size(); i++) {
-                    ifstreams.emplace_back(std::make_pair(std::ifstream(), 0));
-                    auto cih = deserialize_header<ClassicIndexHeader>(ifstreams.back().first, paths[i]);
-                    if (signature_size == 0) {
-                        signature_size = cih.signature_size();
-                        num_hashes = cih.num_hashes();
-                    }
-                    die_unless(cih.signature_size() == signature_size);
-                    die_unless(cih.num_hashes() == num_hashes);
-#ifndef isi_test
-                    if (i < paths.size() - 2) {
-                        // todo doesnt work because of padding for compact, which means there could be two files with less file_names
-                        // todo quickfix with -2 to allow for paddding
-                        // die_unless(cih.file_names().size() == 8 * cih.block_size());
-                    }
-#endif
-                    ifstreams.back().second = cih.block_size();
-                    new_block_size += cih.block_size();
-                    std::copy(cih.file_names().begin(), cih.file_names().end(), std::back_inserter(file_names));
+    size_t batch_num = process_file_batches(
+        in_dir, out_dir, batch_size,
+        [](const fs::path& path) {
+            return file_has_header<ClassicIndexHeader>(path);
+        },
+        [&](const std::vector<fs::path>& paths, std::string out_file) {
+            fs::path out_path =
+                out_dir / (out_file + ClassicIndexHeader::file_extension);
+
+            std::vector<std::pair<std::ifstream, uint64_t> > streams;
+            std::vector<std::string> file_names;
+            uint64_t signature_size = 0;
+            uint64_t num_hashes = 0;
+
+            // collect new block size
+            uint64_t new_block_size = 0;
+            for (size_t i = 0; i < paths.size(); i++) {
+                // read header from classic index
+                streams.emplace_back(std::make_pair(std::ifstream(), 0));
+                auto cih = deserialize_header<ClassicIndexHeader>(
+                    streams.back().first, paths[i]);
+                // check parameters for compatibility
+                if (signature_size == 0) {
+                    signature_size = cih.signature_size();
+                    num_hashes = cih.num_hashes();
                 }
-                combine(ifstreams, out_file, signature_size, new_block_size, num_hashes, t, file_names);
-                ifstreams.clear();
-                file_names.clear();
-            });
+                die_unequal(cih.signature_size(), signature_size);
+                die_unequal(cih.num_hashes(), num_hashes);
+                // calculate new row length
+                streams.back().second = cih.block_size();
+                new_block_size += cih.block_size();
+                // append file names
+                std::copy(cih.file_names().begin(), cih.file_names().end(),
+                          std::back_inserter(file_names));
+                // append dummy file name entries
+                while (cih.file_names().size() % 8 != 0) {
+                    cih.file_names().push_back(std::string());
+                }
+            }
+            combine_streams(streams, out_path, signature_size, new_block_size,
+                            num_hashes, t, file_names);
+            streams.clear();
+            file_names.clear();
+        });
     std::cout << t;
-    return all_combined;
+    return (batch_num <= 1);
 }
+
+/******************************************************************************/
 
 uint64_t get_max_file_size(DocumentList& doc_list) {
     // sort document by file size (as approximation to the number of kmers)
@@ -241,7 +258,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     LOG1 << "Classic Index Parameters:";
     LOG1 << "  number of documents: " << in_filelist.size();
     LOG1 << "  maximum document size: " << max_num_elements;
-    LOG1 << "  num_hashes: "<< num_hashes;
+    LOG1 << "  num_hashes: " << num_hashes;
     LOG1 << "  false_positive_probability: " << false_positive_probability;
     LOG1 << "  signature_size: " << signature_size;
     LOG1 << "  index size: " << (docsize_roundup / 8 * signature_size);
