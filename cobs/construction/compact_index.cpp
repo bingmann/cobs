@@ -50,12 +50,12 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
         auto h = deserialize_header<ClassicIndexHeader>(paths[i]);
         parameters.push_back({ h.signature_size(), h.num_hashes() });
         file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
-        LOG1 << i << ": " << h.block_size() << " " << paths[i].string();
+        LOG1 << i << ": " << h.row_size() << " " << paths[i].string();
         if (i < paths.size() - 1) {
-            die_unless(h.block_size() == page_size);
+            die_unless(h.row_size() == page_size);
         }
         else {
-            die_unless(h.block_size() <= page_size);
+            die_unless(h.row_size() <= page_size);
         }
     }
 
@@ -66,19 +66,19 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
     std::vector<char> buffer(1024 * page_size);
     for (const auto& p : paths) {
         std::ifstream ifs;
-        uint64_t block_size = deserialize_header<ClassicIndexHeader>(ifs, p).block_size();
-        if (block_size == page_size) {
+        uint64_t row_size = deserialize_header<ClassicIndexHeader>(ifs, p).row_size();
+        if (row_size == page_size) {
             ofs << ifs.rdbuf();
         }
         else {
             uint64_t data_size = get_stream_size(ifs);
-            std::vector<char> padding(page_size - block_size, 0);
+            std::vector<char> padding(page_size - row_size, 0);
             while (data_size > 0) {
-                size_t num_uint8_ts = std::min(1024 * block_size, data_size);
+                size_t num_uint8_ts = std::min(1024 * row_size, data_size);
                 ifs.read(buffer.data(), num_uint8_ts);
                 data_size -= num_uint8_ts;
-                for (size_t i = 0; i < num_uint8_ts; i += block_size) {
-                    ofs.write(buffer.data() + i, block_size);
+                for (size_t i = 0; i < num_uint8_ts; i += row_size) {
+                    ofs.write(buffer.data() + i, row_size);
                     ofs.write(padding.data(), padding.size());
                 }
             }

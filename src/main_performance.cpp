@@ -288,7 +288,7 @@ const uint16_t expansion[] = {
 
 const auto expansion_128 = reinterpret_cast<const __m128i_u*>(expansion);
 
-void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uint8_t* rows, size_t block_size) {
+void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uint8_t* rows, size_t row_size) {
     #pragma omp declare reduction (merge : std::vector<uint16_t> :                                          \
     std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<uint16_t>())) \
     initializer(omp_priv = omp_orig)
@@ -298,8 +298,8 @@ void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uin
         auto counts_128 = reinterpret_cast<__m128i_u*>(counts.data());
         #pragma omp for
         for (uint64_t i = 0; i < hashes_size; i += 1) {
-            auto rows_8 = rows + i * block_size;
-            for (size_t k = 0; k < block_size; k++) {
+            auto rows_8 = rows + i * row_size;
+            for (size_t k = 0; k < row_size; k++) {
 //                counts_64[2 * k] += m_count_expansions[rows_8[k] & 0xF];
 //                counts_64[2 * k + 1] += m_count_expansions[rows_8[k] >> 4];
                 counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
@@ -309,15 +309,15 @@ void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uin
 }
 
 int main() {
-    size_t block_size = 50000;
+    size_t row_size = 50000;
     size_t hashes_size = 1000;
-    std::vector<uint16_t> counts(8 * block_size, 0);
-    std::vector<char> rows(hashes_size* block_size, 63);
+    std::vector<uint16_t> counts(8 * row_size, 0);
+    std::vector<char> rows(hashes_size* row_size, 63);
     cobs::Timer t;
     for (size_t i = 0; i < 1; i++) {
 //        std::iota(rows.begin(), rows.end(), i);
         t.active("counts");
-        compute_counts(hashes_size, counts, reinterpret_cast<uint8_t*>(rows.data()), block_size);
+        compute_counts(hashes_size, counts, reinterpret_cast<uint8_t*>(rows.data()), row_size);
         t.stop();
     }
     std::cout << t << std::endl;

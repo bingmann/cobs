@@ -33,7 +33,7 @@ protected:
     StreamPos stream_pos_;
 
     virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows) = 0;
-    virtual uint64_t block_size() const = 0;
+    virtual uint64_t row_size() const = 0;
     virtual uint64_t num_hashes() const = 0;
     virtual uint64_t counts_size() const = 0;
     virtual const std::vector<std::string>& file_names() const = 0;

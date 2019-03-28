@@ -18,10 +18,10 @@ class base : public query::classic_base
 {
 protected:
     size_t m_num_hashes;
-    size_t m_block_size;
+    size_t m_row_size;
     explicit base(const fs::path& path);
     uint64_t num_hashes() const override;
-    uint64_t block_size() const override;
+    uint64_t row_size() const override;
     uint64_t counts_size() const override;
     const std::vector<std::string>& file_names() const override;
 

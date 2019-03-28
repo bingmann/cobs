@@ -38,7 +38,7 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
  * Constructs a dummy index filled with random data.
  */
 void construct_dummy(const fs::path& p, size_t signature_size,
-                     size_t block_size, size_t num_hashes);
+                     size_t row_size, size_t num_hashes);
 
 } // namespace cobs::compact_index
 

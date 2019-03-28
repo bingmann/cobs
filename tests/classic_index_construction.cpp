@@ -66,8 +66,8 @@ TEST_F(classic_index_construction, deserialization) {
     // check ratio of zeros/ones
     std::map<std::string, size_t> num_ones;
     for (size_t j = 0; j < h.signature_size(); j++) {
-        for (size_t k = 0; k < h.block_size(); k++) {
-            uint8_t d = data[j * h.block_size() + k];
+        for (size_t k = 0; k < h.row_size(); k++) {
+            uint8_t d = data[j * h.row_size() + k];
             for (size_t o = 0; o < 8; o++) {
                 size_t file_names_index = k * 8 + o;
                 if (file_names_index < h.file_names().size()) {

@@ -66,7 +66,7 @@ void classic_base::compute_counts(size_t hashes_size, uint16_t* counts, const ch
 #endif
     auto rows_b = reinterpret_cast<const uint8_t*>(rows);
     uint64_t nh = num_hashes();
-    uint64_t bs = block_size();
+    uint64_t bs = row_size();
 
 #pragma omp parallel reduction(+:counts[:counts_size()])
     {
@@ -93,18 +93,18 @@ void classic_base::compute_counts(size_t hashes_size, uint16_t* counts, const ch
 void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
 #pragma omp parallel for
     for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
-        auto rows_8 = rows + i * block_size();
+        auto rows_8 = rows + i * row_size();
         auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
         for (size_t j = 1; j < num_hashes(); j++) {
-            auto rows_8_j = rows_8 + j * block_size();
+            auto rows_8_j = rows_8 + j * row_size();
             auto rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
             size_t k = 0;
-            while ((k + 1) * 8 <= block_size()) {
+            while ((k + 1) * 8 <= row_size()) {
                 rows_64[k] &= rows_64_j[k];
                 k++;
             }
             k = k * 8;
-            while (k < block_size()) {
+            while (k < row_size()) {
                 rows_8[k] &= rows_8_j[k];
                 k++;
             }
@@ -113,7 +113,7 @@ void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
 }
 
 void classic_base::calculate_counts(const std::vector<uint64_t>& hashes, uint16_t* counts) {
-    char* rows = allocate_aligned<char>(block_size() * hashes.size(), get_page_size());
+    char* rows = allocate_aligned<char>(row_size() * hashes.size(), get_page_size());
     m_timer.active("io");
     read_from_disk(hashes, rows);
     m_timer.active("and rows");

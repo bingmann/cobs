@@ -31,7 +31,7 @@ public:
         const std::vector<std::string>& file_names = std::vector<std::string>());
 
     uint64_t signature_size() const;
-    uint64_t block_size() const;
+    uint64_t row_size() const;
     uint64_t num_hashes() const;
     const std::vector<std::string>& file_names() const;
     std::vector<std::string>& file_names();

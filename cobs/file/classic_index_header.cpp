@@ -22,7 +22,7 @@ uint64_t ClassicIndexHeader::signature_size() const {
     return m_signature_size;
 }
 
-uint64_t ClassicIndexHeader::block_size() const {
+uint64_t ClassicIndexHeader::row_size() const {
     return (m_file_names.size() + 7) / 8;
 }
 

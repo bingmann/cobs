@@ -16,17 +16,17 @@
 
 void generate_test_bloom(std::experimental::filesystem::path p) {
     size_t signature_size = 10000000;
-    size_t block_size = 8000;
+    size_t row_size = 8000;
     size_t num_hashes = 3;
     std::vector<std::string> file_names;
-    for (size_t i = 0; i < 8 * block_size - 7; i++) {
+    for (size_t i = 0; i < 8 * row_size - 7; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
     cobs::ClassicIndexHeader h(signature_size, num_hashes, file_names);
     std::ofstream ofs;
     cobs::serialize_header(ofs, p, h);
 
-    for (size_t i = 0; i < signature_size * block_size; i++) {
+    for (size_t i = 0; i < signature_size * row_size; i++) {
         char rnd = std::rand();
         ofs.write(&rnd, 1);
     }

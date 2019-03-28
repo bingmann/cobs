@@ -22,12 +22,12 @@ uint64_t base::num_hashes() const {
     return m_header.num_hashes();
 }
 
-uint64_t base::block_size() const {
-    return m_header.block_size();
+uint64_t base::row_size() const {
+    return m_header.row_size();
 }
 
 uint64_t base::counts_size() const {
-    return 8 * m_header.block_size();
+    return 8 * m_header.row_size();
 }
 
 const std::vector<std::string>& base::file_names() const {

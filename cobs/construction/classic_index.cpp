@@ -35,7 +35,7 @@ namespace cobs::classic_index {
 void set_bit(std::vector<uint8_t>& data,
              const ClassicIndexHeader& cih,
              uint64_t pos, uint64_t doc_index) {
-    data[cih.block_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
+    data[cih.row_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
 }
 
 void process_term(const string_view& term, std::vector<uint8_t>& data,
@@ -82,11 +82,11 @@ void process_batch(const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
 
-    sLOG0 << "paths" << paths.size() << "block_size" << cih.block_size() * 8
-          << cih.signature_size() * cih.block_size();
+    sLOG0 << "paths" << paths.size() << "row_size" << cih.row_size() * 8
+          << cih.signature_size() * cih.row_size();
 
-    die_unless(paths.size() <= cih.block_size() * 8);
-    std::vector<uint8_t> data(cih.signature_size() * cih.block_size());
+    die_unless(paths.size() <= cih.row_size() * 8);
+    std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
 
     for (uint64_t i = 0; i < paths.size(); i++) {
         t.active("read");
@@ -132,14 +132,14 @@ void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
 
 void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
                      const fs::path& out_file,
-                     uint64_t signature_size, uint64_t block_size,
+                     uint64_t signature_size, uint64_t row_size,
                      uint64_t num_hash,
                      Timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
     ClassicIndexHeader cih(signature_size, num_hash, file_names);
     serialize_header(ofs, out_file, cih);
 
-    std::vector<char> block(block_size);
+    std::vector<char> block(row_size);
     for (uint64_t i = 0; i < signature_size; i++) {
         uint64_t pos = 0;
         t.active("read");
@@ -148,7 +148,7 @@ void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
             pos += ifs.second;
         }
         t.active("write");
-        ofs.write(block.data(), block_size);
+        ofs.write(block.data(), row_size);
     }
     t.stop();
 }
@@ -170,7 +170,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
             uint64_t num_hashes = 0;
 
             // collect new block size
-            uint64_t new_block_size = 0;
+            uint64_t new_row_size = 0;
             for (size_t i = 0; i < paths.size(); i++) {
                 // read header from classic index
                 streams.emplace_back(std::make_pair(std::ifstream(), 0));
@@ -184,8 +184,8 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
                 die_unequal(cih.signature_size(), signature_size);
                 die_unequal(cih.num_hashes(), num_hashes);
                 // calculate new row length
-                streams.back().second = cih.block_size();
-                new_block_size += cih.block_size();
+                streams.back().second = cih.row_size();
+                new_row_size += cih.row_size();
                 // append file names
                 std::copy(cih.file_names().begin(), cih.file_names().end(),
                           std::back_inserter(file_names));
@@ -194,7 +194,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
                     cih.file_names().push_back(std::string());
                 }
             }
-            combine_streams(streams, out_path, signature_size, new_block_size,
+            combine_streams(streams, out_path, signature_size, new_row_size,
                             num_hashes, t, file_names);
             streams.clear();
             file_names.clear();
@@ -298,7 +298,7 @@ void construct_random(const fs::path& out_file,
 
     ClassicIndexHeader cih(signature_size, num_hashes, file_names);
     std::vector<uint8_t> data;
-    data.resize(signature_size * cih.block_size());
+    data.resize(signature_size * cih.row_size());
 
     std::mt19937 rng(seed);
     KMerBuffer<31> doc;

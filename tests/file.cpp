@@ -48,7 +48,7 @@ TEST(file, classic_index_header) {
 
     // compare results
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
-    ASSERT_EQ(h_out.block_size(), h_in.block_size());
+    ASSERT_EQ(h_out.row_size(), h_in.row_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
     ASSERT_EQ(file_names, h_in.file_names());
 }
@@ -59,7 +59,7 @@ TEST(file, classic_index) {
     // write classic index file
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
     cobs::ClassicIndexHeader h_out(123, 12, file_names);
-    std::vector<uint8_t> v_out(h_out.block_size() * h_out.signature_size(), 7);
+    std::vector<uint8_t> v_out(h_out.row_size() * h_out.signature_size(), 7);
     h_out.write_file(buffer, v_out);
 
     // read classic index file
@@ -69,7 +69,7 @@ TEST(file, classic_index) {
 
     // compare results
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
-    ASSERT_EQ(h_out.block_size(), h_in.block_size());
+    ASSERT_EQ(h_out.row_size(), h_in.row_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
     ASSERT_EQ(v_out, v_in);
     ASSERT_EQ(file_names, h_in.file_names());
