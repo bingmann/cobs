@@ -24,14 +24,16 @@ set(SOURCE_FILES
         cobs/construction/ranfold_index.cpp
         cobs/construction/ranfold_index.hpp
         cobs/cortex_file.hpp
+        cobs/fasta_file.cpp
+        cobs/fasta_file.hpp
         cobs/file/classic_index_header.cpp
         cobs/file/classic_index_header.hpp
         cobs/file/compact_index_header.cpp
         cobs/file/compact_index_header.hpp
-        cobs/file/kmer_buffer_header.cpp
-        cobs/file/kmer_buffer_header.hpp
         cobs/file/file_io_exception.hpp
         cobs/file/header.hpp
+        cobs/file/kmer_buffer_header.cpp
+        cobs/file/kmer_buffer_header.hpp
         cobs/file/ranfold_index_header.cpp
         cobs/file/ranfold_index_header.hpp
         cobs/kmer.hpp
@@ -102,6 +104,8 @@ else()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17 -march=native")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
+
 MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
 
 file(GLOB_RECURSE TEST_FILES

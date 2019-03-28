@@ -93,10 +93,10 @@ int classic_construct(int argc, char** argv) {
     cp.add_param_string(
         "out_dir", out_dir, "path to the output directory");
 
-    unsigned batch_size = 32;
-    cp.add_unsigned(
+    uint64_t batch_size = 128 * 1024 * 1024llu;
+    cp.add_bytes(
         'b', "batch_size", batch_size,
-        "number of input files to be read at once, default: 32");
+        "batch size in bytes, default: 128MiB");
 
     unsigned num_hashes = 1;
     cp.add_unsigned(
@@ -130,10 +130,10 @@ int classic_construct_step1(int argc, char** argv) {
     cp.add_param_string(
         "out_dir", out_dir, "path to the output directory");
 
-    unsigned batch_size = 32;
-    cp.add_unsigned(
+    uint64_t batch_size = 128 * 1024 * 1024llu;
+    cp.add_bytes(
         'b', "batch_size", batch_size,
-        "number of input files to be read at once, default: 32");
+        "batch size in bytes, default: 128MiB");
 
     unsigned num_hashes = 1;
     cp.add_unsigned(

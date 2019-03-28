@@ -17,6 +17,8 @@
 
 #include <xxhash.h>
 
+#include <tlx/string/ssprintf.hpp>
+
 namespace cobs {
 
 uint64_t get_page_size();
@@ -52,6 +54,11 @@ T * allocate_aligned(uint64_t size, size_t alignment) {
 static inline
 void deallocate_aligned(void* ptr) {
     free(ptr);
+}
+
+static inline
+std::string pad_index(unsigned index) {
+    return tlx::ssprintf("%06u", index);
 }
 
 /*!

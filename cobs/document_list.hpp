@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <iomanip>
 
+#include <tlx/logger.hpp>
+
 namespace cobs {
 
 enum class FileType {
@@ -46,7 +48,8 @@ struct DocumentEntry {
 
     //! default sort operator
     bool operator < (const DocumentEntry& b) const {
-        return path_ < b.path_;
+        return (std::tie(path_, subdoc_index_) <
+                std::tie(b.path_, b.subdoc_index_));
     }
 };
 
@@ -65,14 +68,18 @@ public:
 
     //! read a directory, filter files
     DocumentList(const fs::path& dir, FileType filter = FileType::Any) {
+        std::vector<fs::path> paths;
         fs::recursive_directory_iterator it(dir), end;
         while (it != end) {
             if (accept(*it, filter)) {
-                add(*it);
+                paths.emplace_back(*it);
             }
             ++it;
         }
-        std::sort(list_.begin(), list_.end());
+        std::sort(paths.begin(), paths.end());
+        for (const fs::path& p : paths) {
+            add(p);
+        }
     }
 
     //! filter method to match file specifications
@@ -132,6 +139,7 @@ public:
                 DocumentEntry de;
                 de.path_ = path;
                 de.type_ = FileType::Fasta;
+                de.name_ = cobs::base_name(path) + '_' + pad_index(i);
                 de.size_ = fasta.size(i);
                 de.subdoc_index_ = i;
                 list_.emplace_back(de);
@@ -141,6 +149,14 @@ public:
 
     //! return list of paths
     const std::vector<DocumentEntry>& list() const { return list_; }
+
+    //! return length of list
+    size_t size() const { return list_.size(); }
+
+    //! return DocumentEntry index
+    const DocumentEntry& operator [] (size_t i) {
+        return list_.at(i);
+    }
 
     //! sort files by size
     void sort_by_size() {
@@ -162,10 +178,10 @@ public:
     template <typename Functor>
     void process_batches(size_t batch_size, Functor func) const {
         std::string first_filename, last_filename;
-        size_t j = 1;
+        size_t batch_num = 0;
         std::vector<DocumentEntry> batch;
         for (size_t i = 0; i < list_.size(); i++) {
-            std::string filename = cobs::base_name(list_[i].path_);
+            std::string filename = list_[i].name_;
             if (first_filename.empty()) {
                 first_filename = filename;
             }
@@ -175,20 +191,60 @@ public:
             if (batch.size() == batch_size ||
                 (!batch.empty() && i + 1 == list_.size()))
             {
-                std::string out_file = "[" + first_filename + "-" + last_filename + "]";
-                std::cout << "IN"
-                          << " - " << std::setfill('0') << std::setw(7) << j
-                          << " - " << out_file << std::endl;
+                std::string out_file =
+                    pad_index(batch_num) + '_' +
+                    '[' + first_filename + '-' + last_filename + ']';
 
+                LOG1 << "IN - " << out_file;
                 func(batch, out_file);
+                LOG1 << "OK - " << out_file;
 
-                std::cout << "OK"
-                          << " - " << std::setfill('0') << std::setw(7) << j
-                          << " - " << out_file << std::endl;
                 batch.clear();
                 first_filename.clear();
-                j++;
+                batch_num++;
             }
+        }
+    }
+
+    //! process files in batch with output file generation
+    template <typename Functor>
+    void process_batches_parallel(size_t batch_size, Functor func) const {
+        struct Batch {
+            std::vector<DocumentEntry> files;
+            std::string out_file;
+        };
+        std::vector<Batch> batch_list;
+
+        std::string first_filename, last_filename;
+        size_t batch_num = 0;
+        std::vector<DocumentEntry> batch;
+        for (size_t i = 0; i < list_.size(); i++) {
+            std::string filename = list_[i].name_;
+            if (first_filename.empty()) {
+                first_filename = filename;
+            }
+            last_filename = filename;
+            batch.push_back(list_[i]);
+
+            if (batch.size() == batch_size ||
+                (!batch.empty() && i + 1 == list_.size()))
+            {
+                std::string out_file =
+                    pad_index(batch_num) + '_' +
+                    '[' + first_filename + '-' + last_filename + ']';
+
+                batch_list.emplace_back(Batch { std::move(batch), out_file });
+
+                first_filename.clear();
+                batch_num++;
+            }
+        }
+
+#pragma omp parallel for schedule(dynamic)
+        for (size_t i = 0; i < batch_list.size(); ++i) {
+            LOG1 << "IN - " << batch_list[i].out_file;
+            func(batch_list[i].files, batch_list[i].out_file);
+            LOG1 << "OK - " << batch_list[i].out_file;
         }
     }
 

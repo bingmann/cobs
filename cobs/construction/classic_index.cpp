@@ -25,6 +25,7 @@
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/math/popcount.hpp>
+#include <tlx/math/div_ceil.hpp>
 
 namespace cobs::classic_index {
 
@@ -34,10 +35,8 @@ void set_bit(std::vector<uint8_t>& data,
     data[cih.block_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
 }
 
-void process_term(const string_view& term,
-                  std::vector<uint8_t>& data,
-                  const ClassicIndexHeader& cih,
-                  size_t doc_index) {
+void process_term(const string_view& term, std::vector<uint8_t>& data,
+                  const ClassicIndexHeader& cih, size_t doc_index) {
     process_hashes(term.data(), term.size(),
                    cih.signature_size(), cih.num_hashes(),
                    [&](uint64_t hash) {
@@ -77,18 +76,26 @@ void process_document(const DocumentEntry& doc_entry,
 }
 
 void process_batch(const std::vector<DocumentEntry>& paths,
-                   const fs::path& out_file, std::vector<uint8_t>& data,
+                   const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
+
+    sLOG0 << "paths" << paths.size() << "block_size" << cih.block_size() * 8
+          << cih.signature_size() * cih.block_size();
+
+    die_unless(paths.size() <= cih.block_size() * 8);
+    std::vector<uint8_t> data(cih.signature_size() * cih.block_size());
 
     for (uint64_t i = 0; i < paths.size(); i++) {
         t.active("read");
         cih.file_names()[i] = paths[i].name_;
 
-        // TODO: parallel for over setting of bits of the SAME document
+        size_t count = 0;
         process_document(paths[i],
                          [&](const string_view& term) {
                              process_term(term, data, cih, i);
+                             ++count;
                          });
+        sLOG0 << paths[i].name_ << count;
     }
     size_t bit_count = tlx::popcount(data.data(), data.size());
     LOG1 << "ratio of ones: "
@@ -125,19 +132,16 @@ void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
                               uint64_t signature_size, uint64_t num_hashes,
                               uint64_t batch_size) {
     Timer t;
-    ClassicIndexHeader cih(signature_size, num_hashes);
     fs::create_directories(out_dir);
 
-    std::vector<uint8_t> data;
     doc_list.process_batches(
         batch_size,
         [&](const std::vector<DocumentEntry>& paths, std::string out_file) {
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
+            ClassicIndexHeader cih(signature_size, num_hashes);
             cih.file_names().resize(paths.size());
-            data.resize(signature_size * cih.block_size());
-            std::fill(data.begin(), data.end(), 0);
-            process_batch(paths, out_path, data, cih, t);
+            process_batch(paths, out_path, cih, t);
         });
     std::cout << t;
 }
@@ -194,13 +198,13 @@ uint64_t get_max_file_size(DocumentList& doc_list) {
               });
 
     // look into largest file and return number of elements
-    if (paths[0].path_.extension() == ".ctx") {
-        CortexFile ctx(paths[0].path_.string());
+    if (paths[0].type_ == FileType::Cortex) {
+        CortexFile ctx(paths[0].path_);
         size_t max_num_elements = ctx.num_kmers();
         sLOG1 << "CTX: max_num_elements" << max_num_elements;
         return max_num_elements;
     }
-    else if (paths[0].path_.extension() == ".cobs_doc") {
+    else if (paths[0].type_ == FileType::KMerBuffer) {
         KMerBufferHeader dh;
         KMerBuffer<31> doc;
         doc.deserialize(paths[0].path_, dh);
@@ -209,14 +213,18 @@ uint64_t get_max_file_size(DocumentList& doc_list) {
         sLOG1 << "COBS_DOC: max_num_elements" << max_num_elements;
         return max_num_elements;
     }
+    else if (paths[0].type_ == FileType::Fasta) {
+        FastaFile fasta(paths[0].path_);
+        size_t max_num_elements = fasta.size(paths[0].subdoc_index_);
+        sLOG1 << "FASTA: max_num_elements" << max_num_elements;
+        return max_num_elements;
+    }
     die("Unknown file type");
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir,
                uint64_t batch_size, uint64_t num_hashes,
                double false_positive_probability) {
-    if (batch_size % 8 != 0)
-        die("batch size must be divisible by 8");
 
     DocumentList in_filelist(in_dir, FileType::Any);
 
@@ -225,17 +233,34 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     uint64_t signature_size = calc_signature_size(
         max_num_elements, num_hashes, false_positive_probability);
 
+    batch_size /= signature_size / 8;
+    batch_size = tlx::div_ceil(batch_size, 8) * 8;
+
+    size_t docsize_roundup = tlx::div_ceil(in_filelist.size(), 8) * 8;
+
+    LOG1 << "Classic Index Parameters:";
+    LOG1 << "  number of documents: " << in_filelist.size();
+    LOG1 << "  maximum document size: " << max_num_elements;
+    LOG1 << "  num_hashes: "<< num_hashes;
+    LOG1 << "  false_positive_probability: " << false_positive_probability;
+    LOG1 << "  signature_size: " << signature_size;
+    LOG1 << "  index size: " << (docsize_roundup / 8 * signature_size);
+    LOG1 << "  batch size: " << batch_size << " documents";
+
     // construct one classic index
     construct_from_documents(
-        in_filelist, out_dir / fs::path("1"), signature_size, num_hashes, batch_size);
+        in_filelist, out_dir / pad_index(1),
+        signature_size, num_hashes, batch_size);
+
     size_t i = 1;
-    while (!combine(out_dir / fs::path(std::to_string(i)),
-                    out_dir / fs::path(std::to_string(i + 1)), batch_size)) {
+    while (!combine(out_dir / pad_index(i),
+                    out_dir / pad_index(i + 1), batch_size)) {
         i++;
     }
 
     fs::path index;
-    for (fs::directory_iterator sub_it(out_dir.string() + "/" + std::to_string(i + 1)), end; sub_it != end; sub_it++) {
+    for (fs::directory_iterator sub_it(out_dir / pad_index(i + 1)), end;
+         sub_it != end; sub_it++) {
         if (file_has_header<ClassicIndexHeader>(sub_it->path())) {
             index = sub_it->path();
         }
@@ -251,7 +276,7 @@ void construct_random(const fs::path& out_file,
 
     std::vector<std::string> file_names;
     for (size_t i = 0; i < num_documents; ++i) {
-        file_names.push_back("file_" + std::to_string(i));
+        file_names.push_back("file_" + pad_index(i));
     }
 
     ClassicIndexHeader cih(signature_size, num_hashes, file_names);

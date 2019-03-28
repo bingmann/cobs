@@ -17,13 +17,8 @@
 #include <iomanip>
 
 #include <tlx/die.hpp>
-#include <tlx/string/ssprintf.hpp>
 
 namespace cobs::compact_index {
-
-std::string pad_index(unsigned index) {
-    return tlx::ssprintf("%06u", index);
-}
 
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir, size_t batch_size) {
     bool all_combined = false;
