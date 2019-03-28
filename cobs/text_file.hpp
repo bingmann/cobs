@@ -55,8 +55,8 @@ public:
             if (wb + 1 < term_size)
                 break;
 
-            std::copy_backward(buffer + wb - term_size + 1, buffer + wb,
-                               buffer);
+            std::copy(buffer + wb - term_size + 1, buffer + wb,
+                      buffer);
             pos = term_size - 1;
         }
     }
