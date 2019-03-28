@@ -9,7 +9,7 @@
 #include <cobs/cortex_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/processing.hpp>
+#include <cobs/util/process_file_batches.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 

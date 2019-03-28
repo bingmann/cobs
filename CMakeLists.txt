@@ -60,7 +60,7 @@ set(SOURCE_FILES
         cobs/util/misc.hpp
         cobs/util/parameters.cpp
         cobs/util/parameters.hpp
-        cobs/util/processing.hpp
+        cobs/util/process_file_batches.hpp
         cobs/util/query.cpp
         cobs/util/query.hpp
         cobs/util/serialization.hpp

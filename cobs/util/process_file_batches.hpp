@@ -1,13 +1,13 @@
 /*******************************************************************************
- * cobs/util/processing.hpp
+ * cobs/util/process_file_batches.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_UTIL_PROCESSING_HEADER
-#define COBS_UTIL_PROCESSING_HEADER
+#ifndef COBS_UTIL_PROCESS_FILE_BATCHES_HEADER
+#define COBS_UTIL_PROCESS_FILE_BATCHES_HEADER
 
 #include <algorithm>
 #include <cmath>
@@ -82,6 +82,6 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
 
 } // namespace cobs
 
-#endif // !COBS_UTIL_PROCESSING_HEADER
+#endif // !COBS_UTIL_PROCESS_FILE_BATCHES_HEADER
 
 /******************************************************************************/

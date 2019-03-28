@@ -24,7 +24,7 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/parameters.hpp>
-#include <cobs/util/processing.hpp>
+#include <cobs/util/process_file_batches.hpp>
 #include <cobs/util/timer.hpp>
 
 #include <tlx/die.hpp>
