@@ -16,8 +16,8 @@ namespace fs = cobs::fs;
 
 static fs::path input_dir("test/compact_index_construction/input");
 static fs::path index_dir("test/compact_index_construction/index");
-static fs::path cobs_2_dir(index_dir.string() + "/cobs_" + cobs::pad_index(2));
-static fs::path compact_index_path(index_dir.string() + "/index.com_idx.cobs");
+static fs::path cobs_2_dir(index_dir / cobs::pad_index(2));
+static fs::path compact_index_path(index_dir.string() + "/index.cobs_compact");
 
 static std::string query = cobs::random_sequence(100000, 1);
 

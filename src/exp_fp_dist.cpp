@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     std::vector<std::pair<uint16_t, std::string> > result;
 
     for (uint32_t in : indices) {
-        std::string index = "/well/iqbal/people/florian/indices/ena_" + std::to_string(in) + ".com_idx.cobs";
+        std::string index = "/well/iqbal/people/florian/indices/ena_" + std::to_string(in) + ".cobs_compact";
 
         std::map<size_t, size_t> counts;
         cobs::query::compact_index::mmap s(index);
