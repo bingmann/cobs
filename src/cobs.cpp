@@ -266,7 +266,7 @@ int classic_query(int argc, char** argv) {
 /******************************************************************************/
 // "Compact" Index Construction
 
-int compact_construct_step1(int argc, char** argv) {
+int compact_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
     std::string in_dir;
@@ -276,6 +276,21 @@ int compact_construct_step1(int argc, char** argv) {
     std::string out_dir;
     cp.add_param_string(
         "out_dir", out_dir, "path to the output directory");
+
+    uint64_t batch_size = 128 * 1024 * 1024llu;
+    cp.add_bytes(
+        'b', "batch_size", batch_size,
+        "batch size in bytes, default: 128MiB");
+
+    unsigned num_hashes = 1;
+    cp.add_unsigned(
+        'h', "num_hashes", num_hashes,
+        "number of hash functions, default: 1");
+
+    double false_positive_rate = 0.3;
+    cp.add_double(
+        'f', "false_positive_rate", false_positive_rate,
+        "false positive rate, default: 0.3");
 
     unsigned page_size = 8192;
     cp.add_unsigned(
@@ -287,8 +302,9 @@ int compact_construct_step1(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    die("FIXME: cobs::compact_index::create_folders");
-    // cobs::compact_index::create_folders(in_dir, out_dir, page_size);
+    cobs::compact_index::construct_from_documents(
+        in_dir, out_dir,
+        batch_size, num_hashes, false_positive_rate, page_size);
 
     return 0;
 }
@@ -314,7 +330,7 @@ int compact_construct_combine(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::compact_index::combine(in_dir, out_file, page_size);
+    cobs::compact_index::combine_into_compact(in_dir, out_file, page_size);
 
     return 0;
 }
@@ -717,7 +733,7 @@ struct SubTool subtools[] = {
         "queries the index"
     },
     {
-        "compact_construct_step1", &compact_construct_step1, true,
+        "compact_construct", &compact_construct, true,
         "creates the folders used for further construction"
     },
     {

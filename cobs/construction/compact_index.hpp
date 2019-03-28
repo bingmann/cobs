@@ -26,13 +26,13 @@ namespace cobs::compact_index {
  * cobs::compact_index::construct_from_documents.  Sorts the documents by file
  * size and then splits them into several directories.
  */
-void construct_from_folders(
+void construct_from_documents(
     const fs::path& in_dir, const fs::path& index_dir,
     size_t batch_size, size_t num_hashes,
     double false_positive_probability, uint64_t page_size = get_page_size());
 
-void combine(const fs::path& in_dir, const fs::path& out_file,
-             uint64_t page_size = get_page_size());
+void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
+                          uint64_t page_size = get_page_size());
 
 /*!
  * Constructs a dummy index filled with random data.

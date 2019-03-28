@@ -43,7 +43,7 @@ TEST_F(compact_index_construction, padding) {
 
     // construct compact index
     size_t page_size = 16;
-    cobs::compact_index::construct_from_folders(
+    cobs::compact_index::construct_from_documents(
         input_dir, index_dir,
         /* batch_size */ 8, /* num_hashes */ 3, /* fpr */ 0.1, page_size);
 
@@ -71,7 +71,7 @@ TEST_F(compact_index_construction, deserialization) {
 
     // construct compact index
     uint64_t num_hashes = 3;
-    cobs::compact_index::construct_from_folders(
+    cobs::compact_index::construct_from_documents(
         input_dir, index_dir,
         /* batch_size */ 8, num_hashes, /* fpr */ 0.1, /* page_size */ 2);
 
