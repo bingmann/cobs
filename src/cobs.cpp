@@ -47,7 +47,34 @@ cobs::FileType StringToFileType(std::string& s) {
 }
 
 /******************************************************************************/
-// Document Dump
+// Document List and Dump
+
+int doc_list(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string path;
+    cp.add_param_string(
+        "path", path,
+        "path to documents to dump");
+
+    std::string file_type = "any";
+    cp.add_string(
+        'T', "file-type", file_type,
+        "filter documents by file type (any, text, cortex, fasta, etc)");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cobs::DocumentList filelist(path, StringToFileType(file_type));
+
+    for (size_t i = 0; i < filelist.size(); ++i) {
+        std::cout << "document[" << i << "] size " << filelist[i].size_
+                  << " : " << filelist[i].path_
+                  << " : " << filelist[i].name_ << std::endl;
+    }
+
+    return 0;
+}
 
 int doc_dump(int argc, char** argv) {
     tlx::CmdlineParser cp;
@@ -716,6 +743,10 @@ struct SubTool {
 };
 
 struct SubTool subtools[] = {
+    {
+        "doc_list", &doc_list, true,
+        "read a list of documents and print the list"
+    },
     {
         "doc_dump", &doc_dump, true,
         "read a list of documents and dump their contents"
