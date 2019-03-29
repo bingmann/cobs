@@ -13,7 +13,7 @@
 #include <cobs/cortex_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
-#include <cobs/util/parameters.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #ifdef __linux__
     #include <cobs/query/compact_index/aio.hpp>
 #endif

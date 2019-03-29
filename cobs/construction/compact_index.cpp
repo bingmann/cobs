@@ -11,8 +11,8 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/file/kmer_buffer_header.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
-#include <cobs/util/parameters.hpp>
 
 #include <iomanip>
 

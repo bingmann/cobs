@@ -16,9 +16,9 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/kmer.hpp>
 #include <cobs/text_file.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/parameters.hpp>
 #include <cobs/util/process_file_batches.hpp>
 #include <cobs/util/timer.hpp>
 

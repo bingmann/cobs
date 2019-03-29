@@ -21,9 +21,9 @@
 #include <cobs/kmer.hpp>
 #include <cobs/kmer_buffer.hpp>
 #include <cobs/util/addressable_priority_queue.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/parameters.hpp>
 #include <cobs/util/process_file_batches.hpp>
 #include <cobs/util/timer.hpp>
 

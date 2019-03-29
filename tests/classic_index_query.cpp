@@ -8,7 +8,7 @@
 
 #include "test_util.hpp"
 #include <cobs/query/classic_index/mmap.hpp>
-#include <cobs/util/parameters.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 

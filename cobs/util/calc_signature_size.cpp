@@ -1,15 +1,16 @@
 /*******************************************************************************
- * cobs/util/parameters.cpp
+ * cobs/util/calc_signature_size.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cmath>
-#include <cobs/util/parameters.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 
 #include <tlx/die.hpp>
+
+#include <cmath>
 
 namespace cobs {
 
@@ -34,7 +35,8 @@ uint64_t calc_signature_size(uint64_t num_elements, double num_hashes,
 
 double calc_average_set_bit_ratio(uint64_t signature_size, double num_hashes,
                                   double false_positive_probability) {
-    double num_elements = signature_size /
+    double num_elements =
+        signature_size /
         calc_signature_size_ratio(num_hashes, false_positive_probability);
     double result =
         1 - std::pow(1 - 1 / (double)signature_size, num_hashes * num_elements);

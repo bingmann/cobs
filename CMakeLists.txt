@@ -53,13 +53,13 @@ set(SOURCE_FILES
         cobs/query/ranfold_index/base.hpp
         cobs/query/ranfold_index/mmap.cpp
         cobs/query/ranfold_index/mmap.hpp
+        cobs/util/calc_signature_size.cpp
+        cobs/util/calc_signature_size.hpp
         cobs/util/error_handling.cpp
         cobs/util/error_handling.hpp
         cobs/util/file.hpp
         cobs/util/misc.cpp
         cobs/util/misc.hpp
-        cobs/util/parameters.cpp
-        cobs/util/parameters.hpp
         cobs/util/process_file_batches.hpp
         cobs/util/query.cpp
         cobs/util/query.hpp

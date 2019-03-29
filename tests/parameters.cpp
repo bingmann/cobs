@@ -8,8 +8,8 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/kmer.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/misc.hpp>
-#include <cobs/util/parameters.hpp>
 #include <cobs/util/process_file_batches.hpp>
 #include <cobs/util/query.hpp>
 #include <gtest/gtest.h>
