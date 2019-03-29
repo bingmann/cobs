@@ -291,7 +291,7 @@ int compact_construct_combine(int argc, char** argv) {
 
 /******************************************************************************/
 
-int classic_query(int argc, char** argv) {
+int query(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
     std::string in_file;
@@ -310,63 +310,24 @@ int classic_query(int argc, char** argv) {
     if (!cp.process(argc, argv))
         return -1;
 
-    cobs::query::classic_index::mmap mmap(in_file);
     std::vector<std::pair<uint16_t, std::string> > result;
-    mmap.search(query, 31, result, num_results);
+    cobs::Timer timer;
+
+    if (cobs::file_has_header<cobs::ClassicIndexHeader>(in_file)) {
+        cobs::query::classic_index::mmap mmap(in_file);
+        mmap.search(query, 31, result, num_results);
+        timer = mmap.get_timer();
+    }
+    else if (cobs::file_has_header<cobs::CompactIndexHeader>(in_file)) {
+        cobs::query::compact_index::mmap mmap(in_file);
+        mmap.search(query, 31, result, num_results);
+        timer = mmap.get_timer();
+    }
+
     for (const auto& res : result) {
         std::cout << res.second << " - " << res.first << "\n";
     }
-    std::cout << mmap.get_timer() << std::endl;
-
-    return 0;
-}
-
-int compact_query(int argc, char** argv) {
-    tlx::CmdlineParser cp;
-
-    std::string in_file;
-    cp.add_param_string(
-        "in_file", in_file, "path to the input file");
-
-    std::string query;
-    cp.add_param_string(
-        "query", query, "the dna sequence to search for");
-
-    unsigned num_results = 100;
-    cp.add_unsigned(
-        'h', "num_results", num_results,
-        "number of results to return, default: 100");
-
-    bool use_aio = false;
-    cp.add_flag('a', "aio", use_aio,
-                "queries the index with async I/O operations");
-
-    if (!cp.process(argc, argv))
-        return -1;
-
-    if (use_aio) {
-#ifdef __linux__
-        cobs::query::compact_index::aio aio(in_file);
-        std::vector<std::pair<uint16_t, std::string> > result;
-        aio.search(query, 31, result, num_results);
-        for (const auto& res : result) {
-            std::cout << res.second << " - " << res.first << "\n";
-        }
-        std::cout << aio.get_timer() << std::endl;
-#else
-        std::cout << "AIO not supported." << std::endl;
-        return -1;
-#endif
-    }
-    else {
-        cobs::query::compact_index::mmap mmap(in_file);
-        std::vector<std::pair<uint16_t, std::string> > result;
-        mmap.search(query, 31, result, num_results);
-        for (const auto& res : result) {
-            std::cout << res.second << " - " << res.first << "\n";
-        }
-        std::cout << mmap.get_timer() << std::endl;
-    }
+    std::cout << timer << std::endl;
 
     return 0;
 }
@@ -707,10 +668,6 @@ struct SubTool subtools[] = {
         "constructs a classic index with random content"
     },
     {
-        "classic_query", &classic_query, true,
-        "queries the index"
-    },
-    {
         "compact_construct", &compact_construct, true,
         "creates the folders used for further construction"
     },
@@ -719,16 +676,16 @@ struct SubTool subtools[] = {
         "combines the classic indices in <in_dir> to form a compact index"
     },
     {
-        "compact_query", &compact_query, true,
-        "queries the index"
-    },
-    {
         "ranfold_construct", &ranfold_construct, true,
         "constructs a ranfold index from documents"
     },
     {
         "ranfold_construct_random", &ranfold_construct_random, true,
         "constructs a ranfold index with random content"
+    },
+    {
+        "query", &query, true,
+        "query an index"
     },
     {
         "print_parameters", &print_parameters, true,
