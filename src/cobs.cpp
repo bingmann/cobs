@@ -30,27 +30,6 @@
 /******************************************************************************/
 // Cortex File Tools
 
-int cortex_convert(int argc, char** argv) {
-    tlx::CmdlineParser cp;
-
-    std::string in_dir;
-    cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
-
-    std::string out_dir;
-    cp.add_param_string(
-        "out_dir", out_dir, "path to the output directory");
-
-    if (!cp.process(argc, argv))
-        return -1;
-
-    cp.print_result(std::cerr);
-
-    cobs::process_all_in_directory<31>(in_dir, out_dir);
-
-    return 0;
-}
-
 int cortex_dump(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
@@ -704,10 +683,6 @@ struct SubTool {
 };
 
 struct SubTool subtools[] = {
-    {
-        "cortex_convert", &cortex_convert, true,
-        "converts the cortex files in <in_dir> to the cobs document format"
-    },
     {
         "cortex_dump", &cortex_dump, true,
         "read a cortex file and dump its documents"

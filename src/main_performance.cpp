@@ -13,7 +13,7 @@
 #include <numeric>
 
 void document() {
-    cobs::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
+    // cobs::process_all_in_directory<31>("/users/flo/projects/thesis/data/performance", "/users/flo/projects/thesis/data/performance_out");
 }
 
 void classic_index() {
@@ -24,9 +24,12 @@ void classic_index_2() {
 //    cobs::classic_index::combine("/users/flo/projects/thesis/data/performance_blo", "/users/flo/projects/thesis/data/performance_blo_2", 25000000, 3, 7);
 }
 
-const uint64_t m_count_expansions[] = { 0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
-                                        281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
-                                        281479271743488, 281479271743489 };
+const uint64_t m_count_expansions[] = {
+    0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833, 281474976710656,
+    281474976710657, 281474976776192, 281474976776193, 281479271677952, 281479271677953,
+    281479271743488, 281479271743489
+};
+
 const uint16_t expansion[] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,

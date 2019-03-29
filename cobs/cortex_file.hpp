@@ -139,58 +139,6 @@ private:
     std::istream::pos_type pos_data_begin_, pos_data_end_;
 };
 
-template <unsigned int N>
-void process_file(const fs::path& in_path, const fs::path& out_path,
-                  KMerBuffer<N>& document, Timer& t) {
-    t.active("read");
-    CortexFile ctx(in_path);
-
-    document.data().clear();
-    document.data().reserve(ctx.num_kmers());
-    ctx.process_kmers<N>(
-        [&](const KMer<N>& m) { document.data().push_back(m); });
-
-    t.active("write");
-    document.serialize(out_path, ctx.name_);
-
-    t.stop();
-}
-
-template <unsigned int N>
-void process_all_in_directory(const fs::path& in_dir, const fs::path& out_dir) {
-    KMerBuffer<N> document;
-    Timer t;
-    t.reset();
-    size_t i = 0;
-    for (fs::recursive_directory_iterator end, it(in_dir); it != end; it++) {
-        fs::path out_path =
-            out_dir / it->path().stem().concat(KMerBufferHeader::file_extension);
-        if (fs::is_regular_file(*it) &&
-            it->path().extension().string() == ".ctx" &&
-            it->path().string().find("uncleaned") == std::string::npos &&
-            !fs::exists(out_path))
-        {
-            std::cout << "BE - " << std::setfill('0') << std::setw(7) << i
-                      << " - " << it->path().string() << std::endl;
-            bool success = true;
-            try {
-                process_file(it->path(), out_path, document, t);
-            }
-            catch (const std::exception& e) {
-                std::cerr << it->path().string() << " - " << e.what()
-                          << " - " << std::strerror(errno) << std::endl;
-                success = false;
-                t.stop();
-            }
-            std::cout << (success ? "OK" : "ER")
-                      << " - " << std::setfill('0') << std::setw(7) << i
-                      << " - " << it->path().string() << std::endl;
-            i++;
-        }
-    }
-    std::cout << t;
-}
-
 } // namespace cobs
 
 #endif // !COBS_CORTEX_FILE_HEADER
