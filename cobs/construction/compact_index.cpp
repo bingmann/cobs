@@ -109,7 +109,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
             size_t max_doc_size = 0;
             for (const DocumentEntry& de : files)
-                max_doc_size = std::max(max_doc_size, de.num_kmers(31));
+                max_doc_size = std::max(max_doc_size, de.num_terms(31));
 
             size_t signature_size = calc_signature_size(
                 max_doc_size, num_hashes, false_positive_probability);

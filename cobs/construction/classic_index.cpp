@@ -47,37 +47,6 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
                    });
 }
 
-template <typename Callback>
-void process_document(const DocumentEntry& doc_entry,
-                      Callback callback) {
-    if (doc_entry.type_ == FileType::Text) {
-        TextFile text(doc_entry.path_);
-        text.process_terms(31, callback);
-    }
-    else if (doc_entry.type_ == FileType::Cortex) {
-        CortexFile ctx(doc_entry.path_);
-        ctx.process_terms<31>(callback);
-    }
-    else if (doc_entry.type_ == FileType::KMerBuffer) {
-        KMerBuffer<31> doc;
-        KMerBufferHeader dh;
-        doc.deserialize(doc_entry.path_, dh);
-
-        std::string term;
-        term.reserve(32);
-
-        for (uint64_t j = 0; j < doc.data().size(); j++) {
-            doc.data()[j].canonicalize();
-            doc.data()[j].to_string(&term);
-            callback(term);
-        }
-    }
-    else if (doc_entry.type_ == FileType::Fasta) {
-        FastaFile fasta(doc_entry.path_);
-        fasta.process_terms(doc_entry.subdoc_index_, 31, callback);
-    }
-}
-
 void process_batch(const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
@@ -93,11 +62,11 @@ void process_batch(const std::vector<DocumentEntry>& paths,
         cih.file_names()[i] = paths[i].name_;
 
         size_t count = 0;
-        process_document(paths[i],
-                         [&](const string_view& term) {
-                             process_term(term, data, cih, i);
-                             ++count;
-                         });
+        paths[i].process_terms(
+            [&](const string_view& term) {
+                process_term(term, data, cih, i);
+                ++count;
+            });
         sLOG0 << paths[i].name_ << count;
     }
     size_t bit_count = tlx::popcount(data.data(), data.size());
@@ -153,7 +122,8 @@ void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
     t.stop();
 }
 
-bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size) {
+bool combine(const fs::path& in_dir, const fs::path& out_dir,
+             uint64_t batch_size) {
     Timer t;
     size_t batch_num = process_file_batches(
         in_dir, out_dir, batch_size,
@@ -220,20 +190,20 @@ uint64_t get_max_file_size(DocumentList& doc_list) {
 
     // look into largest file and return number of elements
     if (it->type_ == FileType::Text) {
-        sLOG1 << "TEXT: max_doc_size" << it->num_kmers(31);
-        return it->num_kmers(31);
+        sLOG1 << "TEXT: max_doc_size" << it->num_terms(31);
+        return it->num_terms(31);
     }
     else if (it->type_ == FileType::Cortex) {
-        sLOG1 << "CTX: max_doc_size" << it->num_kmers(31);
-        return it->num_kmers(31);
+        sLOG1 << "CTX: max_doc_size" << it->num_terms(31);
+        return it->num_terms(31);
     }
     else if (it->type_ == FileType::KMerBuffer) {
-        sLOG1 << "COBS_DOC: max_doc_size" << it->num_kmers(31);
-        return it->num_kmers(31);
+        sLOG1 << "COBS_DOC: max_doc_size" << it->num_terms(31);
+        return it->num_terms(31);
     }
     else if (it->type_ == FileType::Fasta) {
-        sLOG1 << "FASTA: max_doc_size" << it->num_kmers(31);
-        return it->num_kmers(31);
+        sLOG1 << "FASTA: max_doc_size" << it->num_terms(31);
+        return it->num_terms(31);
     }
     die("Unknown file type");
 }
@@ -281,7 +251,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
             index = sub_it->path();
         }
     }
-    fs::rename(index, out_dir.string() + "/index" + ClassicIndexHeader::file_extension);
+    fs::rename(index, out_dir / ("index" + ClassicIndexHeader::file_extension));
 }
 
 void construct_random(const fs::path& out_file,

@@ -33,6 +33,8 @@ void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
     char canonicalize_buffer[kmer_size];
 
     for (size_t i = 0; i < num_kmers; i++) {
+        // const char* normalized_kmer = query_8 + i;
+        // TODO: canonicalize
         const char* normalized_kmer =
             canonicalize_kmer(query_8 + i, canonicalize_buffer, kmer_size);
         for (size_t j = 0; j < num_hashes; j++) {

@@ -11,6 +11,7 @@
 
 #include <cobs/cortex_file.hpp>
 #include <cobs/fasta_file.hpp>
+#include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 
@@ -45,10 +46,10 @@ struct DocumentEntry {
     size_t size_;
     //! subdocument index (for FASTA, FASTQ, etc)
     size_t subdoc_index_ = 0;
-    //! fixed kmer size or zero
-    size_t kmer_size_ = 0;
-    //! number of kmers
-    size_t kmer_count_ = 0;
+    //! fixed term (term) size or zero
+    size_t term_size_ = 0;
+    //! number of terms
+    size_t term_count_ = 0;
 
     //! default sort operator
     bool operator < (const DocumentEntry& b) const {
@@ -56,14 +57,45 @@ struct DocumentEntry {
                 std::tie(b.path_, b.subdoc_index_));
     }
 
-    //! calculate number of kmers in file
-    size_t num_kmers(size_t k) const {
-        if (kmer_size_ == 0) {
+    //! calculate number of terms in file
+    size_t num_terms(size_t k) const {
+        if (term_size_ == 0) {
             return size_ < k ? 0 : size_ - k + 1;
         }
         die_verbose_unequal(
-            kmer_size_, k, "DocumentEntry kmer_size_ mismatches requested k");
-        return kmer_count_;
+            term_size_, k, "DocumentEntry term_size_ mismatches requested k");
+        return term_count_;
+    }
+
+    //! process terms
+    template <typename Callback>
+    void process_terms(Callback callback) const {
+        if (type_ == FileType::Text) {
+            TextFile text(path_);
+            text.process_terms(31, callback);
+        }
+        else if (type_ == FileType::Cortex) {
+            CortexFile ctx(path_);
+            ctx.process_terms<31>(callback);
+        }
+        else if (type_ == FileType::KMerBuffer) {
+            KMerBuffer<31> doc;
+            KMerBufferHeader dh;
+            doc.deserialize(path_, dh);
+
+            std::string term;
+            term.reserve(32);
+
+            for (uint64_t j = 0; j < doc.data().size(); j++) {
+                doc.data()[j].canonicalize();
+                doc.data()[j].to_string(&term);
+                callback(term);
+            }
+        }
+        else if (type_ == FileType::Fasta) {
+            FastaFile fasta(path_);
+            fasta.process_terms(subdoc_index_, 31, callback);
+        }
     }
 };
 
@@ -127,7 +159,7 @@ public:
             de.type_ = FileType::Text;
             de.name_ = base_name(path);
             de.size_ = fs::file_size(path);
-            de.kmer_size_ = 0, de.kmer_count_ = 0;
+            de.term_size_ = 0, de.term_count_ = 0;
             list_.emplace_back(de);
         }
         else if (path.extension() == ".ctx") {
@@ -137,8 +169,8 @@ public:
             de.type_ = FileType::Cortex;
             de.name_ = ctx.name_;
             de.size_ = fs::file_size(path);
-            de.kmer_size_ = ctx.kmer_size_;
-            de.kmer_count_ = ctx.num_kmers();
+            de.term_size_ = ctx.kmer_size_;
+            de.term_count_ = ctx.num_kmers();
             list_.emplace_back(de);
         }
         else if (path.extension() == ".cobs_doc") {
@@ -151,8 +183,8 @@ public:
             de.size_ = fs::file_size(path);
             // calculate number of k-mers from file size, k-mers are bit encoded
             size_t size = get_stream_size(is);
-            de.kmer_size_ = dh.kmer_size();
-            de.kmer_count_ = size / ((de.kmer_size_ + 3) / 4);
+            de.term_size_ = dh.kmer_size();
+            de.term_count_ = size / ((de.term_size_ + 3) / 4);
             list_.emplace_back(de);
         }
         else if (path.extension() == ".fasta") {
@@ -164,7 +196,7 @@ public:
                 de.name_ = cobs::base_name(path) + '_' + pad_index(i);
                 de.size_ = fasta.size(i);
                 de.subdoc_index_ = i;
-                de.kmer_size_ = 0, de.kmer_count_ = 0;
+                de.term_size_ = 0, de.term_count_ = 0;
                 list_.emplace_back(de);
             }
         }
