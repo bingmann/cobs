@@ -59,7 +59,7 @@ int doc_list(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file-type", file_type,
+        'T', "file_type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
     if (!cp.process(argc, argv))
@@ -91,7 +91,7 @@ int doc_dump(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file-type", file_type,
+        'T', "file_type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
     if (!cp.process(argc, argv))
@@ -138,7 +138,7 @@ int classic_construct(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file-type", file_type,
+        'T', "file_type", file_type,
         "filter input documents by file type (any, text, cortex, fasta, etc)");
 
     cp.add_bytes(
@@ -154,10 +154,24 @@ int classic_construct(int argc, char** argv) {
         'f', "false_positive_rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
+    bool clobber = false;
+    cp.add_flag(
+        'C', "clobber", clobber,
+        "erase output directory if it exists");
+
     if (!cp.process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
+
+    if (cobs::fs::exists(out_dir)) {
+        if (clobber) {
+            cobs::fs::remove_all(out_dir);
+        }
+        else {
+            die("Output directory exists, will not overwrite without --clobber");
+        }
+    }
 
     cobs::DocumentList filelist(in_dir, StringToFileType(file_type));
 
@@ -252,10 +266,24 @@ int compact_construct(int argc, char** argv) {
         "the page size of the SSD the index is constructed for, "
         "default: " + std::to_string(index_params.page_size));
 
+    bool clobber = false;
+    cp.add_flag(
+        'C', "clobber", clobber,
+        "erase output directory if it exists");
+
     if (!cp.process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
+
+    if (cobs::fs::exists(out_dir)) {
+        if (clobber) {
+            cobs::fs::remove_all(out_dir);
+        }
+        else {
+            die("Output directory exists, will not overwrite without --clobber");
+        }
+    }
 
     cobs::compact_index::construct_from_documents(
         in_dir, out_dir, index_params);
