@@ -69,16 +69,18 @@ struct DocumentEntry {
 
     //! process terms
     template <typename Callback>
-    void process_terms(Callback callback) const {
+    void process_terms(unsigned term_size, Callback callback) const {
         if (type_ == FileType::Text) {
             TextFile text(path_);
-            text.process_terms(31, callback);
+            text.process_terms(term_size, callback);
         }
         else if (type_ == FileType::Cortex) {
+            die_unequal(term_size, 31);
             CortexFile ctx(path_);
             ctx.process_terms<31>(callback);
         }
         else if (type_ == FileType::KMerBuffer) {
+            die_unequal(term_size, 31);
             KMerBuffer<31> doc;
             KMerBufferHeader dh;
             doc.deserialize(path_, dh);
@@ -94,7 +96,7 @@ struct DocumentEntry {
         }
         else if (type_ == FileType::Fasta) {
             FastaFile fasta(path_);
-            fasta.process_terms(subdoc_index_, 31, callback);
+            fasta.process_terms(subdoc_index_, term_size, callback);
         }
     }
 };
@@ -113,15 +115,21 @@ public:
     }
 
     //! read a directory, filter files
-    DocumentList(const fs::path& dir, FileType filter = FileType::Any) {
+    DocumentList(const fs::path& root, FileType filter = FileType::Any) {
         std::vector<fs::path> paths;
-        fs::recursive_directory_iterator it(dir), end;
-        while (it != end) {
-            if (accept(*it, filter)) {
-                paths.emplace_back(*it);
+        if (fs::is_directory(root)) {
+            fs::recursive_directory_iterator it(root), end;
+            while (it != end) {
+                if (accept(*it, filter)) {
+                    paths.emplace_back(*it);
+                }
+                ++it;
             }
-            ++it;
         }
+        else if (fs::is_regular_file(root)) {
+            paths.emplace_back(root);
+        }
+
         std::sort(paths.begin(), paths.end());
         for (const fs::path& p : paths) {
             add(p);

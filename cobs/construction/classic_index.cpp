@@ -63,6 +63,7 @@ void process_batch(const std::vector<DocumentEntry>& paths,
 
         size_t count = 0;
         paths[i].process_terms(
+            /* term_size */ 31,
             [&](const string_view& term) {
                 process_term(term, data, cih, i);
                 ++count;

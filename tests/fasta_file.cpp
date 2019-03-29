@@ -65,6 +65,7 @@ TEST_F(fasta, DISABLED_document_list) {
     for (const cobs::DocumentEntry& de : doc_list.list()) {
         LOG << de.name_;
         de.process_terms(
+            /* term_size */ 31,
             [&](const cobs::string_view& term) {
                 std::string query(term);
 

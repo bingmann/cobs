@@ -28,31 +28,40 @@
 #include <unistd.h>
 
 /******************************************************************************/
-// Cortex File Tools
+// Document Dump
 
-int cortex_dump(int argc, char** argv) {
+int doc_dump(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
-    std::vector<std::string> filelist;
-    cp.add_param_stringlist(
-        "filelist", filelist,
-        "List of cortex files to process");
+    std::string path;
+    cp.add_param_string(
+        "path", path,
+        "path to documents to dump");
+
+    unsigned term_size = 31;
+    cp.add_unsigned(
+        'k', "term_size", term_size,
+        "term size (k-mer size)");
 
     if (!cp.process(argc, argv))
         return -1;
 
-    for (const std::string& file : filelist) {
-        cobs::CortexFile cortex(file);
+    cobs::DocumentList filelist(path);
 
-        if (cortex.kmer_size_ == 31u) {
-            cortex.process_kmers<31>(
-                [&](const cobs::KMer<31>& m) {
-                    std::cout << m << '\n';
-                });
-        }
-        else {
-            die("cortex_dump: FIXME, add kmer_size " << cortex.kmer_size_);
-        }
+    std::cerr << "Found " << filelist.size() << " documents." << std::endl;
+
+    for (size_t i = 0; i < filelist.size(); ++i) {
+        std::cerr << "document[" << i << "] : " << filelist[i].path_
+                  << " : " << filelist[i].name_ << std::endl;
+        filelist[i].process_terms(
+            term_size,
+            [&](const cobs::string_view& t) {
+                std::cout << t << '\n';
+            });
+        std::cout.flush();
+        std::cerr << "document[" << i << "] : "
+                  << filelist[i].num_terms(term_size) << " terms."
+                  << std::endl;
     }
 
     return 0;
@@ -684,8 +693,8 @@ struct SubTool {
 
 struct SubTool subtools[] = {
     {
-        "cortex_dump", &cortex_dump, true,
-        "read a cortex file and dump its documents"
+        "doc_dump", &doc_dump, true,
+        "read a list of documents and dump their contents"
     },
     {
         "classic_construct", &classic_construct, true,

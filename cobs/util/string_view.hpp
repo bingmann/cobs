@@ -10,6 +10,7 @@
 #define COBS_UTIL_STRING_VIEW_HEADER
 
 #include <iterator>
+#include <ostream>
 #include <string>
 
 namespace cobs {
@@ -328,6 +329,12 @@ public:
     size_type find_last_not_of(const char* s,
                                size_type pos = npos) const noexcept {
         return find_last_not_of(string_view(s), pos);
+    }
+
+    // ostream
+    friend std ::ostream& operator << (std::ostream& os, const string_view& v) {
+        os.write(v.data(), v.size());
+        return os;
     }
 
 private:
