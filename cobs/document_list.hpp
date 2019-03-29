@@ -75,12 +75,12 @@ struct DocumentEntry {
             text.process_terms(term_size, callback);
         }
         else if (type_ == FileType::Cortex) {
-            die_unequal(term_size, 31);
+            die_unequal(term_size, 31u);
             CortexFile ctx(path_);
             ctx.process_terms<31>(callback);
         }
         else if (type_ == FileType::KMerBuffer) {
-            die_unequal(term_size, 31);
+            die_unequal(term_size, 31u);
             KMerBuffer<31> doc;
             KMerBufferHeader dh;
             doc.deserialize(path_, dh);
@@ -89,7 +89,6 @@ struct DocumentEntry {
             term.reserve(32);
 
             for (uint64_t j = 0; j < doc.data().size(); j++) {
-                doc.data()[j].canonicalize();
                 doc.data()[j].to_string(&term);
                 callback(term);
             }

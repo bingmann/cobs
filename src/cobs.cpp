@@ -28,6 +28,25 @@
 #include <unistd.h>
 
 /******************************************************************************/
+
+cobs::FileType StringToFileType(std::string& s) {
+    tlx::to_lower(&s);
+    if (s == "any" || s == "*")
+        return cobs::FileType::Any;
+    if (s == "text" || s == "txt")
+        return cobs::FileType::Text;
+    if (s == "cortex" || s == "ctx")
+        return cobs::FileType::Cortex;
+    if (s == "cobs" || s == "cobs_doc")
+        return cobs::FileType::KMerBuffer;
+    if (s == "fasta")
+        return cobs::FileType::Fasta;
+    if (s == "fastq")
+        return cobs::FileType::Fastq;
+    die("Unknown file type " << s);
+}
+
+/******************************************************************************/
 // Document Dump
 
 int doc_dump(int argc, char** argv) {
@@ -43,10 +62,15 @@ int doc_dump(int argc, char** argv) {
         'k', "term_size", term_size,
         "term size (k-mer size)");
 
+    std::string file_type = "any";
+    cp.add_string(
+        'T', "file-type", file_type,
+        "filter documents by file type (any, text, cortex, fasta, etc)");
+
     if (!cp.process(argc, argv))
         return -1;
 
-    cobs::DocumentList filelist(path);
+    cobs::DocumentList filelist(path, StringToFileType(file_type));
 
     std::cerr << "Found " << filelist.size() << " documents." << std::endl;
 
