@@ -44,6 +44,7 @@ TEST_F(compact_index_query, all_included_mmap) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
+    index_params.canonicalize = 1;
 
     cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);
@@ -68,6 +69,7 @@ TEST_F(compact_index_query, one_included_mmap) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
+    index_params.canonicalize = 1;
 
     cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);
@@ -91,6 +93,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
+    index_params.canonicalize = 1;
 
     cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);

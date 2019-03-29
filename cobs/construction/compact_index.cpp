@@ -136,6 +136,8 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             LOG1 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
 
             classic_index::IndexParameters classic_params;
+            classic_params.term_size = params.term_size;
+            classic_params.canonicalize = params.canonicalize;
             classic_params.num_hashes = params.num_hashes;
             classic_params.false_positive_rate = params.false_positive_rate;
             classic_params.signature_size = signature_size;

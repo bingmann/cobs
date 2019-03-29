@@ -43,6 +43,7 @@ TEST_F(classic_index_query, all_included_small_batch) {
     cobs::classic_index::IndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
@@ -66,6 +67,7 @@ TEST_F(classic_index_query, one_included_small_batch) {
     cobs::classic_index::IndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
@@ -88,6 +90,7 @@ TEST_F(classic_index_query, one_included_large_batch) {
     cobs::classic_index::IndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
@@ -110,6 +113,7 @@ TEST_F(classic_index_query, false_positive) {
     cobs::classic_index::IndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
