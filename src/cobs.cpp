@@ -87,7 +87,7 @@ int doc_dump(int argc, char** argv) {
     unsigned term_size = 31;
     cp.add_unsigned(
         'k', "term_size", term_size,
-        "term size (k-mer size)");
+        "term size (k-mer size), default: 31");
 
     std::string file_type = "any";
     cp.add_string(
@@ -153,6 +153,10 @@ int classic_construct(int argc, char** argv) {
     cp.add_double(
         'f', "false_positive_rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
+
+    cp.add_unsigned(
+        'k', "term_size", index_params.term_size,
+        "term size (k-mer size), default: 31");
 
     bool clobber = false;
     cp.add_flag(
@@ -271,6 +275,10 @@ int compact_construct(int argc, char** argv) {
         'C', "clobber", clobber,
         "erase output directory if it exists");
 
+    cp.add_unsigned(
+        'k', "term_size", index_params.term_size,
+        "term size (k-mer size), default: 31");
+
     if (!cp.process(argc, argv))
         return -1;
 
@@ -343,13 +351,16 @@ int query(int argc, char** argv) {
 
     if (cobs::file_has_header<cobs::ClassicIndexHeader>(in_file)) {
         cobs::query::classic_index::mmap mmap(in_file);
-        mmap.search(query, 31, result, num_results);
+        mmap.search(query, result, num_results);
         timer = mmap.get_timer();
     }
     else if (cobs::file_has_header<cobs::CompactIndexHeader>(in_file)) {
         cobs::query::compact_index::mmap mmap(in_file);
-        mmap.search(query, 31, result, num_results);
+        mmap.search(query, result, num_results);
         timer = mmap.get_timer();
+    }
+    else {
+        die("Could not open index path \"" << in_file << "\"");
     }
 
     for (const auto& res : result) {
@@ -551,14 +562,14 @@ void benchmark_fpr_run(const cobs::fs::path& p,
 
     std::vector<std::pair<uint16_t, std::string> > result;
     for (size_t i = 0; i < warmup_queries.size(); i++) {
-        s.search(warmup_queries[i], 31, result);
+        s.search(warmup_queries[i], result);
     }
     s.get_timer().reset();
 
     std::map<uint32_t, uint64_t> counts;
 
     for (size_t i = 0; i < queries.size(); i++) {
-        s.search(queries[i], 31, result);
+        s.search(queries[i], result);
 
         if (FalsePositiveDist) {
             for (const auto& r : result) {

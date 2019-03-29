@@ -24,21 +24,32 @@
 
 namespace cobs::query {
 
-void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
-                   uint32_t kmer_size, size_t num_hashes) {
-    size_t num_kmers = query.size() - kmer_size + 1;
+void classic_base::create_hashes(std::vector<uint64_t>& hashes,
+                                 const std::string& query) {
+
+    uint32_t term_size = this->term_size();
+    size_t num_hashes = this->num_hashes();
+
+    size_t num_kmers = query.size() - term_size + 1;
     hashes.resize(num_hashes * num_kmers);
 
     const char* query_8 = query.data();
-    char canonicalize_buffer[kmer_size];
 
-    for (size_t i = 0; i < num_kmers; i++) {
-        // const char* normalized_kmer = query_8 + i;
-        // TODO: canonicalize
-        const char* normalized_kmer =
-            canonicalize_kmer(query_8 + i, canonicalize_buffer, kmer_size);
-        for (size_t j = 0; j < num_hashes; j++) {
-            hashes[i * num_hashes + j] = XXH64(normalized_kmer, kmer_size, j);
+    if (canonicalize() == 0) {
+        for (size_t i = 0; i < num_kmers; i++) {
+            for (size_t j = 0; j < num_hashes; j++) {
+                hashes[i * num_hashes + j] = XXH64(query_8 + i, term_size, j);
+            }
+        }
+    }
+    else if (canonicalize() == 1) {
+        char canonicalize_buffer[term_size];
+        for (size_t i = 0; i < num_kmers; i++) {
+            const char* normalized_kmer =
+                canonicalize_kmer(query_8 + i, canonicalize_buffer, term_size);
+            for (size_t j = 0; j < num_hashes; j++) {
+                hashes[i * num_hashes + j] = XXH64(normalized_kmer, term_size, j);
+            }
         }
     }
 }
@@ -126,22 +137,22 @@ void classic_base::calculate_counts(const std::vector<uint64_t>& hashes, uint16_
     // todo test if it is faster to combine these functions for better cache locality
 }
 
-void classic_base::search(const std::string& query, uint32_t kmer_size,
+void classic_base::search(const std::string& query,
                           std::vector<std::pair<uint16_t, std::string> >& result,
                           size_t num_results) {
-    assert_exit(query.size() >= kmer_size,
-                "query to short, needs to be at least "
-                + std::to_string(kmer_size) + " characters long");
-    assert_exit(query.size() - kmer_size < UINT16_MAX,
-                "query to long, can not be longer than "
-                + std::to_string(UINT16_MAX + kmer_size - 1) + " characters");
+    assert_exit(query.size() >= term_size(),
+                "query too short, needs to be at least "
+                + std::to_string(term_size()) + " characters long");
+    assert_exit(query.size() - term_size() < UINT16_MAX,
+                "query too long, can not be longer than "
+                + std::to_string(UINT16_MAX + term_size() - 1) + " characters");
 
     m_timer.active("hashes");
     num_results = num_results == 0 ? file_names().size()
                   : std::min(num_results, file_names().size());
     uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
     std::vector<uint64_t> hashes;
-    create_hashes(hashes, query, kmer_size, num_hashes());
+    create_hashes(hashes, query);
     calculate_counts(hashes, counts);
     m_timer.active("sort results");
     counts_to_result(file_names(), counts, result, num_results);

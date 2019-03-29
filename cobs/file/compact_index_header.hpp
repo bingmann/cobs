@@ -22,9 +22,11 @@ public:
     };
 
 private:
-    std::vector<parameter> m_parameters;
-    std::vector<std::string> m_file_names;
-    uint64_t m_page_size;
+    uint32_t term_size_;
+    uint8_t canonicalize_;
+    std::vector<parameter> parameters_;
+    std::vector<std::string> file_names_;
+    uint64_t page_size_;
     size_t padding_size(uint64_t curr_stream_pos) const;
 
 public:
@@ -33,8 +35,13 @@ public:
     static const std::string file_extension;
 
     explicit CompactIndexHeader(uint64_t page_size = 4096);
-    CompactIndexHeader(const std::vector<parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size = 4096);
+    CompactIndexHeader(
+        uint32_t term_size, uint8_t canonicalize,
+        const std::vector<parameter>& parameters,
+        const std::vector<std::string>& file_names, uint64_t page_size = 4096);
 
+    uint32_t term_size() const;
+    uint8_t canonicalize() const;
     const std::vector<parameter>& parameters() const;
     const std::vector<std::string>& file_names() const;
     uint64_t page_size() const;

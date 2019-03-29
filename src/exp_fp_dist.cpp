@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         std::map<size_t, size_t> counts;
         cobs::query::compact_index::mmap s(index);
         for (size_t i = 0; i < queries.size(); i++) {
-            s.search(queries[i], 31, result);
+            s.search(queries[i], result);
             for (const auto& r : result) {
                 counts[r.first]++;
             }

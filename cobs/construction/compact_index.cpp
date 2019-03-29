@@ -44,13 +44,25 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
                  });
     std::sort(paths.begin(), paths.end());
 
+    unsigned term_size = 0;
+    uint8_t canonicalize = 0;
     std::vector<CompactIndexHeader::parameter> parameters;
     std::vector<std::string> file_names;
+
     for (size_t i = 0; i < paths.size(); i++) {
         auto h = deserialize_header<ClassicIndexHeader>(paths[i]);
         parameters.push_back({ h.signature_size(), h.num_hashes() });
         file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
+
+        if (term_size == 0) {
+            term_size = h.term_size();
+            canonicalize = h.canonicalize();
+        }
+        die_unequal(term_size, h.term_size());
+        die_unequal(canonicalize, h.canonicalize());
+
         LOG1 << i << ": " << h.row_size() << " " << paths[i].string();
+
         if (i < paths.size() - 1) {
             die_unless(h.row_size() == page_size);
         }
@@ -59,7 +71,7 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
         }
     }
 
-    CompactIndexHeader h(parameters, file_names, page_size);
+    CompactIndexHeader h(term_size, canonicalize, parameters, file_names, page_size);
     std::ofstream ofs;
     serialize_header(ofs, out_file, h);
 
@@ -95,6 +107,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
     doc_list.sort_by_size();
 
     LOG1 << "Compact Index Parameters:";
+    LOG1 << "  term_size: " << params.term_size;
     LOG1 << "  number of documents: " << doc_list.size();
     LOG1 << "  num_hashes: " << params.num_hashes;
     LOG1 << "  false_positive_rate: " << params.false_positive_rate;
@@ -106,8 +119,10 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
         [&](const std::vector<DocumentEntry>& files, fs::path /* out_file */) {
 
             size_t max_doc_size = 0;
-            for (const DocumentEntry& de : files)
-                max_doc_size = std::max(max_doc_size, de.num_terms(31));
+            for (const DocumentEntry& de : files) {
+                max_doc_size = std::max(
+                    max_doc_size, de.num_terms(params.term_size));
+            }
 
             size_t signature_size = calc_signature_size(
                 max_doc_size, params.num_hashes, params.false_positive_rate);

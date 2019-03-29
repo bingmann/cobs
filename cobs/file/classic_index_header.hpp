@@ -16,9 +16,11 @@ namespace cobs {
 class ClassicIndexHeader
 {
 private:
-    uint64_t m_signature_size;
-    uint64_t m_num_hashes;
-    std::vector<std::string> m_file_names;
+    uint32_t term_size_;
+    uint8_t canonicalize_;
+    uint64_t signature_size_;
+    uint64_t num_hashes_;
+    std::vector<std::string> file_names_;
 
 public:
     static const std::string magic_word;
@@ -27,9 +29,12 @@ public:
 
     ClassicIndexHeader() = default;
     ClassicIndexHeader(
+        uint32_t term_size, uint8_t canonicalize,
         uint64_t signature_size, uint64_t num_hashes,
         const std::vector<std::string>& file_names = std::vector<std::string>());
 
+    uint32_t term_size() const;
+    uint8_t canonicalize() const;
     uint64_t signature_size() const;
     uint64_t row_size() const;
     uint64_t num_hashes() const;

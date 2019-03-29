@@ -75,7 +75,7 @@ TEST_F(fasta, DISABLED_document_list) {
                 std::string query(term);
 
                 std::vector<std::pair<uint16_t, std::string> > result;
-                s_mmap.search(query, 31, result);
+                s_mmap.search(query, result);
                 ASSERT_EQ(6u, result.size());
 
                 for (size_t i = 0; i < result.size(); ++i) {

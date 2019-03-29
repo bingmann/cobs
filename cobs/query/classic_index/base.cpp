@@ -18,20 +18,8 @@ base::base(const fs::path& path) : query::classic_base() {
     stream_pos_ = get_stream_pos(ifs);
 }
 
-uint64_t base::num_hashes() const {
-    return header_.num_hashes();
-}
-
-uint64_t base::row_size() const {
-    return header_.row_size();
-}
-
 uint64_t base::counts_size() const {
     return 8 * header_.row_size();
-}
-
-const std::vector<std::string>& base::file_names() const {
-    return header_.file_names();
 }
 
 } // namespace cobs::query::classic_index

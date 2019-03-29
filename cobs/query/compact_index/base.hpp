@@ -17,15 +17,21 @@ namespace cobs::query::compact_index {
 class base : public query::classic_base
 {
 protected:
-    size_t m_num_hashes;
-    size_t m_row_size;
+    size_t num_hashes_;
+    size_t row_size_;
     explicit base(const fs::path& path);
-    uint64_t num_hashes() const override;
-    uint64_t row_size() const override;
-    uint64_t counts_size() const override;
-    const std::vector<std::string>& file_names() const override;
 
-    CompactIndexHeader m_header;
+    uint32_t term_size() const override { return header_.term_size(); }
+    uint8_t canonicalize() const override { return header_.canonicalize(); }
+    uint64_t num_hashes() const override { return num_hashes_; }
+    uint64_t row_size() const override { return row_size_; }
+    uint64_t counts_size() const override;
+
+    const std::vector<std::string>& file_names() const override {
+        return header_.file_names();
+    }
+
+    CompactIndexHeader header_;
 
 public:
     virtual ~base() = default;

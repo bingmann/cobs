@@ -15,34 +15,48 @@ const std::string ClassicIndexHeader::magic_word = "CLASSIC_INDEX";
 const uint32_t ClassicIndexHeader::version = 1;
 const std::string ClassicIndexHeader::file_extension = ".cobs_classic";
 
-ClassicIndexHeader::ClassicIndexHeader(uint64_t signature_size, uint64_t num_hashes, const std::vector<std::string>& file_names)
-    : m_signature_size(signature_size), m_num_hashes(num_hashes), m_file_names(file_names) { }
+ClassicIndexHeader::ClassicIndexHeader(
+    uint32_t term_size, uint8_t canonicalize,
+    uint64_t signature_size, uint64_t num_hashes,
+    const std::vector<std::string>& file_names)
+    : term_size_(term_size), canonicalize_(canonicalize),
+      signature_size_(signature_size), num_hashes_(num_hashes),
+      file_names_(file_names) { }
+
+uint32_t ClassicIndexHeader::term_size() const {
+    return term_size_;
+}
+
+uint8_t ClassicIndexHeader::canonicalize() const {
+    return canonicalize_;
+}
 
 uint64_t ClassicIndexHeader::signature_size() const {
-    return m_signature_size;
+    return signature_size_;
 }
 
 uint64_t ClassicIndexHeader::row_size() const {
-    return (m_file_names.size() + 7) / 8;
+    return (file_names_.size() + 7) / 8;
 }
 
 uint64_t ClassicIndexHeader::num_hashes() const {
-    return m_num_hashes;
+    return num_hashes_;
 }
 
 const std::vector<std::string>& ClassicIndexHeader::file_names() const {
-    return m_file_names;
+    return file_names_;
 }
 
 std::vector<std::string>& ClassicIndexHeader::file_names() {
-    return m_file_names;
+    return file_names_;
 }
 
 void ClassicIndexHeader::serialize(std::ostream& os) const {
     serialize_magic_begin(os, magic_word, version);
 
-    stream_put(os, (uint32_t)m_file_names.size(), m_signature_size, m_num_hashes);
-    for (const auto& file_name : m_file_names) {
+    stream_put(os, term_size_, canonicalize_,
+               (uint32_t)file_names_.size(), signature_size_, num_hashes_);
+    for (const auto& file_name : file_names_) {
         os << file_name << std::endl;
     }
 
@@ -53,9 +67,10 @@ void ClassicIndexHeader::deserialize(std::istream& is) {
     deserialize_magic_begin(is, magic_word, version);
 
     uint32_t file_names_size;
-    stream_get(is, file_names_size, m_signature_size, m_num_hashes);
-    m_file_names.resize(file_names_size);
-    for (auto& file_name : m_file_names) {
+    stream_get(is, term_size_, canonicalize_,
+               file_names_size, signature_size_, num_hashes_);
+    file_names_.resize(file_names_size);
+    for (auto& file_name : file_names_) {
         std::getline(is, file_name);
     }
 

@@ -50,7 +50,7 @@ TEST_F(compact_index_query, all_included_mmap) {
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_mmap.search(query, 31, result);
+    s_mmap.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -74,7 +74,7 @@ TEST_F(compact_index_query, one_included_mmap) {
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_mmap.search(query, 31, result);
+    s_mmap.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
@@ -101,7 +101,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
     std::vector<std::pair<uint16_t, std::string> > result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
-        s_mmap.search(query_2, 31, result);
+        s_mmap.search(query_2, result);
 
         for (auto& r : result) {
             num_positive[r.second] += r.first;
@@ -123,7 +123,7 @@ TEST_F(compact_index_query, all_included_aio) {
     cobs::query::compact_index::aio s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_aio.search(query, 31, result);
+    s_aio.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -138,7 +138,7 @@ TEST_F(compact_index_query, one_included_aio) {
     cobs::query::compact_index::mmap s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_aio.search(query, 31, result);
+    s_aio.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
@@ -156,7 +156,7 @@ TEST_F(compact_index_query, false_positive_aio) {
     std::vector<std::pair<uint16_t, std::string> > result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
-        s_aio.search(query_2, 31, result);
+        s_aio.search(query_2, result);
 
         for (auto& r : result) {
             num_positive[r.second] += r.first;

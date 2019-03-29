@@ -39,7 +39,7 @@ TEST(file, classic_index_header) {
 
     // write classic index header
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
-    cobs::ClassicIndexHeader h_out(321, 21, file_names);
+    cobs::ClassicIndexHeader h_out(31, 1, 321, 21, file_names);
     h_out.serialize(buffer);
 
     // read classic index header
@@ -47,6 +47,8 @@ TEST(file, classic_index_header) {
     h_in.deserialize(buffer);
 
     // compare results
+    ASSERT_EQ(h_out.term_size(), h_in.term_size());
+    ASSERT_EQ(h_out.canonicalize(), h_in.canonicalize());
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
     ASSERT_EQ(h_out.row_size(), h_in.row_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
@@ -58,7 +60,7 @@ TEST(file, classic_index) {
 
     // write classic index file
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
-    cobs::ClassicIndexHeader h_out(123, 12, file_names);
+    cobs::ClassicIndexHeader h_out(31, 1, 123, 12, file_names);
     std::vector<uint8_t> v_out(h_out.row_size() * h_out.signature_size(), 7);
     h_out.write_file(buffer, v_out);
 
@@ -68,6 +70,8 @@ TEST(file, classic_index) {
     h_in.read_file(buffer, v_in);
 
     // compare results
+    ASSERT_EQ(h_out.term_size(), h_in.term_size());
+    ASSERT_EQ(h_out.canonicalize(), h_in.canonicalize());
     ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
     ASSERT_EQ(h_out.row_size(), h_in.row_size());
     ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
@@ -85,7 +89,7 @@ TEST(file, compact_index_header_values) {
         { 3000, 1 },
     };
     std::vector<std::string> file_names = { "file_1", "file_2", "file_3" };
-    cobs::CompactIndexHeader h_out(parameters, file_names, 4096);
+    cobs::CompactIndexHeader h_out(31, 1, parameters, file_names, 4096);
     h_out.serialize(buffer);
 
     // read compact file header
@@ -107,7 +111,7 @@ TEST(file, compact_index_header_padding) {
     std::vector<cobs::CompactIndexHeader::parameter> parameters = { };
     std::vector<std::string> file_names = { };
     uint64_t page_size = 4096;
-    cobs::CompactIndexHeader h_out(parameters, file_names, page_size);
+    cobs::CompactIndexHeader h_out(31, 1, parameters, file_names, page_size);
     h_out.serialize(buffer);
 
     // read compact file header

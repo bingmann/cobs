@@ -24,7 +24,7 @@ mmap::~mmap() {
     destroy_mmap(m_fd, m_data, m_smd);
 }
 
-void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
+void mmap::read_from_disk(const std::vector<size_t>& /* hashes */, char* /* rows */) {
 // #pragma omp parallel for
 //     for (size_t i = 0; i < hashes.size(); i++) {
 //         auto data_8 = m_data + hashes[i] % m_header.signature_size() * m_header.row_size();

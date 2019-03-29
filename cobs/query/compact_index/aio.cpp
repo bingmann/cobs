@@ -18,15 +18,15 @@
 namespace cobs::query::compact_index {
 
 aio::aio(const fs::path& path)
-    : compact_index::base(path), m_max_nr_ios(65536 * m_header.parameters().size()),
+    : compact_index::base(path), m_max_nr_ios(65536 * header_.parameters().size()),
       m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios), m_io_events(m_max_nr_ios) {
     // todo use sysctl to check max-nr-io
-    assert_exit(m_header.page_size() % cobs::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
+    assert_exit(header_.page_size() % cobs::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
 
-    m_offsets.resize(m_header.parameters().size());
+    m_offsets.resize(header_.parameters().size());
     m_offsets[0] = stream_pos_.curr_pos;
-    for (size_t i = 1; i < m_header.parameters().size(); i++) {
-        m_offsets[i] = m_offsets[i - 1] + m_header.page_size() * m_header.parameters()[i - 1].signature_size;
+    for (size_t i = 1; i < header_.parameters().size(); i++) {
+        m_offsets[i] = m_offsets[i - 1] + header_.page_size() * header_.parameters()[i - 1].signature_size;
     }
 
     m_fd = open_file(path, O_RDONLY | O_DIRECT);
@@ -37,7 +37,7 @@ aio::aio(const fs::path& path)
     for (size_t i = 0; i < m_iocbs.size(); i++) {
         m_iocbs[i].aio_fildes = m_fd;
         m_iocbs[i].aio_lio_opcode = IOCB_CMD_PREAD;
-        m_iocbs[i].aio_nbytes = m_header.page_size();
+        m_iocbs[i].aio_nbytes = header_.page_size();
         m_iocbpp[i] = m_iocbs.data() + i;
     }
 }
@@ -50,16 +50,16 @@ aio::~aio() {
 }
 
 void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
-    int64_t num_requests = m_header.parameters().size() * hashes.size();
+    int64_t num_requests = header_.parameters().size() * hashes.size();
 
         #pragma omp parallel for collapse(2)
-    for (size_t i = 0; i < m_header.parameters().size(); i++) {
+    for (size_t i = 0; i < header_.parameters().size(); i++) {
         for (size_t j = 0; j < hashes.size(); j++) {
-            uint64_t index = i + j * m_header.parameters().size();
-            uint64_t hash = hashes[j] % m_header.parameters()[i].signature_size;
+            uint64_t index = i + j * header_.parameters().size();
+            uint64_t hash = hashes[j] % header_.parameters()[i].signature_size;
             // todo rows does not need to be reallocated each time
-            m_iocbs[index].aio_buf = (uint64_t)rows + index * m_header.page_size();
-            m_iocbs[index].aio_offset = m_offsets[i] + hash * m_header.page_size();
+            m_iocbs[index].aio_buf = (uint64_t)rows + index * header_.page_size();
+            m_iocbs[index].aio_offset = m_offsets[i] + hash * header_.page_size();
         }
     }
 
@@ -79,7 +79,7 @@ void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
     }
 
     for (int i = 0; i < num_requests; i++) {
-        if (m_io_events[i].res != (int64_t)m_header.page_size()) {
+        if (m_io_events[i].res != (int64_t)header_.page_size()) {
             std::cout << i << " " << std::strerror(-m_io_events[i].res) << std::endl;
         }
     }

@@ -14,24 +14,30 @@ const std::string CompactIndexHeader::magic_word = "COMPACT_INDEX";
 const uint32_t CompactIndexHeader::version = 1;
 const std::string CompactIndexHeader::file_extension = ".cobs_compact";
 
-CompactIndexHeader::CompactIndexHeader(uint64_t page_size) : m_page_size(page_size) { }
+CompactIndexHeader::CompactIndexHeader(uint64_t page_size) : page_size_(page_size) { }
 
-CompactIndexHeader::CompactIndexHeader(const std::vector<CompactIndexHeader::parameter>& parameters, const std::vector<std::string>& file_names, uint64_t page_size)
-    : m_parameters(parameters), m_file_names(file_names), m_page_size(page_size) { }
+CompactIndexHeader::CompactIndexHeader(
+    uint32_t term_size, uint8_t canonicalize,
+    const std::vector<CompactIndexHeader::parameter>& parameters,
+    const std::vector<std::string>& file_names, uint64_t page_size)
+    : term_size_(term_size), canonicalize_(canonicalize),
+      parameters_(parameters), file_names_(file_names), page_size_(page_size) { }
 
 size_t CompactIndexHeader::padding_size(uint64_t curr_stream_pos) const {
-    return (m_page_size - ((curr_stream_pos + CompactIndexHeader::magic_word.size()) % m_page_size)) % m_page_size;
+    return (page_size_ - ((curr_stream_pos + CompactIndexHeader::magic_word.size()) % page_size_)) % page_size_;
 }
 
 void CompactIndexHeader::serialize(std::ostream& os) const {
     serialize_magic_begin(os, magic_word, version);
 
-    stream_put(os, (uint32_t)m_parameters.size(), (uint32_t)m_file_names.size(), m_page_size);
+    stream_put(os, term_size_, canonicalize_,
+               (uint32_t)parameters_.size(), (uint32_t)file_names_.size(),
+               page_size_);
     os.flush();
-    for (const auto& p : m_parameters) {
+    for (const auto& p : parameters_) {
         cobs::stream_put(os, p.signature_size, p.num_hashes);
     }
-    for (const auto& file_name : m_file_names) {
+    for (const auto& file_name : file_names_) {
         os << file_name << std::endl;
     }
 
@@ -46,14 +52,15 @@ void CompactIndexHeader::deserialize(std::istream& is) {
 
     uint32_t parameters_size;
     uint32_t file_names_size;
-    stream_get(is, parameters_size, file_names_size, m_page_size);
-    m_parameters.resize(parameters_size);
-    for (auto& p : m_parameters) {
+    stream_get(is, term_size_, canonicalize_,
+               parameters_size, file_names_size, page_size_);
+    parameters_.resize(parameters_size);
+    for (auto& p : parameters_) {
         stream_get(is, p.signature_size, p.num_hashes);
     }
 
-    m_file_names.resize(file_names_size);
-    for (auto& file_name : m_file_names) {
+    file_names_.resize(file_names_size);
+    for (auto& file_name : file_names_) {
         std::getline(is, file_name);
     }
 
@@ -63,16 +70,24 @@ void CompactIndexHeader::deserialize(std::istream& is) {
     deserialize_magic_end(is, magic_word);
 }
 
+uint32_t CompactIndexHeader::term_size() const {
+    return term_size_;
+}
+
+uint8_t CompactIndexHeader::canonicalize() const {
+    return canonicalize_;
+}
+
 const std::vector<CompactIndexHeader::parameter>& CompactIndexHeader::parameters() const {
-    return m_parameters;
+    return parameters_;
 }
 
 const std::vector<std::string>& CompactIndexHeader::file_names() const {
-    return m_file_names;
+    return file_names_;
 }
 
 uint64_t CompactIndexHeader::page_size() const {
-    return m_page_size;
+    return page_size_;
 }
 
 void CompactIndexHeader::read_file(std::istream& is,

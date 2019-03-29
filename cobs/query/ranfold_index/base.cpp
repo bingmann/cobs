@@ -18,7 +18,7 @@ base::base(const fs::path& path) : query::base() {
     m_smd = get_stream_pos(ifs);
 }
 
-void base::search(const std::string& query, uint32_t kmer_size,
+void base::search(const std::string& query,
                   std::vector<std::pair<uint16_t, std::string> >& result,
                   size_t num_results)
 { }

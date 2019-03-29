@@ -22,6 +22,10 @@
 namespace cobs::compact_index {
 
 struct IndexParameters {
+    //! length of terms / k-mers
+    unsigned term_size = 31;
+    //! canonicalization flag for base pairs
+    uint8_t canonicalize = false;
     //! number of hash functions, provided by user
     unsigned num_hashes;
     //! false positive rate, provided by user

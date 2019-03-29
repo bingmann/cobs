@@ -63,7 +63,7 @@ void process_batch(const std::vector<DocumentEntry>& paths,
 
         size_t count = 0;
         paths[i].process_terms(
-            /* term_size */ 31,
+            cih.term_size(),
             [&](const string_view& term) {
                 process_term(term, data, cih, i);
                 ++count;
@@ -93,7 +93,9 @@ void construct_from_documents(const DocumentList& doc_list,
         [&](const std::vector<DocumentEntry>& paths, std::string out_file) {
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
-            ClassicIndexHeader cih(params.signature_size, params.num_hashes);
+            ClassicIndexHeader cih(
+                params.term_size, params.canonicalize,
+                params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
             process_batch(paths, out_path, cih, t);
         });
@@ -105,11 +107,13 @@ void construct_from_documents(const DocumentList& doc_list,
 
 void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
                      const fs::path& out_file,
+                     unsigned term_size, uint8_t canonicalize,
                      uint64_t signature_size, uint64_t row_size,
                      uint64_t num_hash,
                      Timer& t, const std::vector<std::string>& file_names) {
     std::ofstream ofs;
-    ClassicIndexHeader cih(signature_size, num_hash, file_names);
+    ClassicIndexHeader cih(term_size, canonicalize, signature_size,
+                           num_hash, file_names);
     serialize_header(ofs, out_file, cih);
 
     std::vector<char> block(row_size);
@@ -140,6 +144,8 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
 
             std::vector<std::pair<std::ifstream, uint64_t> > streams;
             std::vector<std::string> file_names;
+            unsigned term_size = 0;
+            uint8_t canonicalize = false;
             uint64_t signature_size = 0;
             uint64_t num_hashes = 0;
 
@@ -152,9 +158,13 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
                     streams.back().first, paths[i]);
                 // check parameters for compatibility
                 if (signature_size == 0) {
+                    term_size = cih.term_size();
+                    canonicalize = cih.canonicalize();
                     signature_size = cih.signature_size();
                     num_hashes = cih.num_hashes();
                 }
+                die_unequal(cih.term_size(), term_size);
+                die_unequal(cih.canonicalize(), canonicalize);
                 die_unequal(cih.signature_size(), signature_size);
                 die_unequal(cih.num_hashes(), num_hashes);
                 // calculate new row length
@@ -168,7 +178,8 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
                     cih.file_names().push_back(std::string());
                 }
             }
-            combine_streams(streams, out_path, signature_size, new_row_size,
+            combine_streams(streams, out_path, term_size, canonicalize,
+                            signature_size, new_row_size,
                             num_hashes, t, file_names);
             streams.clear();
             file_names.clear();
@@ -179,7 +190,8 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
 
 /******************************************************************************/
 
-uint64_t get_max_file_size(const DocumentList& doc_list) {
+uint64_t get_max_file_size(const DocumentList& doc_list,
+                           size_t term_size) {
     // sort document by file size (as approximation to the number of kmers)
     const std::vector<DocumentEntry>& paths = doc_list.list();
     auto it = std::max_element(
@@ -194,20 +206,20 @@ uint64_t get_max_file_size(const DocumentList& doc_list) {
 
     // look into largest file and return number of elements
     if (it->type_ == FileType::Text) {
-        sLOG1 << "TEXT: max_doc_size" << it->num_terms(31);
-        return it->num_terms(31);
+        sLOG1 << "TEXT: max_doc_size" << it->num_terms(term_size);
+        return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Cortex) {
-        sLOG1 << "CTX: max_doc_size" << it->num_terms(31);
-        return it->num_terms(31);
+        sLOG1 << "CTX: max_doc_size" << it->num_terms(term_size);
+        return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::KMerBuffer) {
-        sLOG1 << "COBS_DOC: max_doc_size" << it->num_terms(31);
-        return it->num_terms(31);
+        sLOG1 << "COBS_DOC: max_doc_size" << it->num_terms(term_size);
+        return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Fasta) {
-        sLOG1 << "FASTA: max_doc_size" << it->num_terms(31);
-        return it->num_terms(31);
+        sLOG1 << "FASTA: max_doc_size" << it->num_terms(term_size);
+        return it->num_terms(term_size);
     }
     die("Unknown file type");
 }
@@ -219,7 +231,7 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     die_unless(params.signature_size == 0);
 
     // estimate signature size by finding number of elements in the largest file
-    uint64_t max_doc_size = get_max_file_size(filelist);
+    uint64_t max_doc_size = get_max_file_size(filelist, params.term_size);
     params.signature_size = calc_signature_size(
         max_doc_size, params.num_hashes, params.false_positive_rate);
 
@@ -229,6 +241,8 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     size_t docsize_roundup = tlx::div_ceil(filelist.size(), 8) * 8;
 
     LOG1 << "Classic Index Parameters:";
+    LOG1 << "  term_size: " << params.term_size;
+    LOG1 << "  canonicalize: " << unsigned(params.canonicalize);
     LOG1 << "  number of documents: " << filelist.size();
     LOG1 << "  maximum document size: " << max_doc_size;
     LOG1 << "  num_hashes: " << params.num_hashes;
@@ -238,10 +252,9 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     LOG1 << "  batch size: " << batch_size << " documents";
 
     // construct one classic index
-    construct_from_documents(
-        filelist, out_dir / pad_index(1),
-        params);
+    construct_from_documents(filelist, out_dir / pad_index(1), params);
 
+    // combine batches
     size_t i = 1;
     while (!combine(out_dir / pad_index(i),
                     out_dir / pad_index(i + 1), batch_size)) {
@@ -269,7 +282,11 @@ void construct_random(const fs::path& out_file,
         file_names.push_back("file_" + pad_index(i));
     }
 
-    ClassicIndexHeader cih(signature_size, num_hashes, file_names);
+    unsigned term_size = 31;
+    uint8_t canonicalize = 1;
+
+    ClassicIndexHeader cih(term_size, canonicalize, signature_size,
+                           num_hashes, file_names);
     std::vector<uint8_t> data;
     data.resize(signature_size * cih.row_size());
 

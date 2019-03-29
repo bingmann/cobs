@@ -18,10 +18,14 @@ class base : public query::classic_base
 {
 protected:
     explicit base(const fs::path& path);
-    uint64_t num_hashes() const override;
-    uint64_t row_size() const override;
+    uint32_t term_size() const override { return header_.term_size(); }
+    uint8_t canonicalize() const override { return header_.canonicalize(); }
+    uint64_t num_hashes() const override { return header_.num_hashes(); }
+    uint64_t row_size() const override { return header_.row_size(); }
     uint64_t counts_size() const override;
-    const std::vector<std::string>& file_names() const override;
+    const std::vector<std::string>& file_names() const override {
+        return header_.file_names();
+    }
 
     ClassicIndexHeader header_;
 

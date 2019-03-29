@@ -22,7 +22,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     for (size_t i = 0; i < 8 * row_size - 7; i++) {
         file_names.push_back("file_" + std::to_string(i));
     }
-    cobs::ClassicIndexHeader h(signature_size, num_hashes, file_names);
+    cobs::ClassicIndexHeader h(31, true, signature_size, num_hashes, file_names);
     std::ofstream ofs;
     cobs::serialize_header(ofs, p, h);
 
@@ -37,7 +37,7 @@ void run(cobs::query::classic_index::base& s, size_t query_len, std::vector<std:
     cobs::Timer t;
     t.active("total");
 //    for (size_t i = 0; i < 100; i++) {
-    s.search(cobs::random_sequence(query_len, 1234), 31, result, 10);
+    s.search(cobs::random_sequence(query_len, 1234), result, 10);
 //    }
     t.stop();
     std::cout << s.get_timer() << std::endl;

@@ -23,6 +23,10 @@
 namespace cobs::classic_index {
 
 struct IndexParameters {
+    //! length of terms / k-mers
+    unsigned term_size = 31;
+    //! canonicalization flag for base pairs
+    uint8_t canonicalize = 0;
     //! number of hash functions, provided by user
     unsigned num_hashes;
     //! false positive rate, provided by user

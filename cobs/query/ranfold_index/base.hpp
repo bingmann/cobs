@@ -25,7 +25,7 @@ protected:
 public:
     virtual ~base() = default;
 
-    void search(const std::string& query, uint32_t kmer_size,
+    void search(const std::string& query,
                 std::vector<std::pair<uint16_t, std::string> >& result,
                 size_t num_results = 0) final;
 };
