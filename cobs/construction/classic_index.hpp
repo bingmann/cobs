@@ -22,6 +22,17 @@
  */
 namespace cobs::classic_index {
 
+struct IndexParameters {
+    //! number of hash functions, provided by user
+    unsigned num_hashes;
+    //! false positive rate, provided by user
+    double false_positive_rate = 0;
+    //! signature size, either provided by user or calculated from FPR
+    uint64_t signature_size = 0;
+    //! batch size in bytes to process per thread
+    uint64_t batch_bytes = 128 * 1024 * 1024llu;
+};
+
 /*!
  * Constructs the index by executing all necessary steps.
  *
@@ -29,16 +40,16 @@ namespace cobs::classic_index {
  * multiple small indices.  Afterwards combines these indices with calls to
  * cobs::classic_index::combine until only one index remains.
  */
-void construct(const fs::path& in_dir, const fs::path& out_dir,
-               uint64_t batch_size, uint64_t num_hashes,
-               double false_positive_probability);
+void construct(
+    const DocumentList& filelist, const fs::path& out_dir,
+    IndexParameters index_params);
 
 /*!
  * Constructs multiple small indices from document files.
  */
 void construct_from_documents(
-    DocumentList& doc_list, const fs::path& out_dir,
-    uint64_t signature_size, uint64_t num_hashes, uint64_t batch_size);
+    const DocumentList& doc_list, const fs::path& out_dir,
+    IndexParameters index_params);
 
 /*!
  * Combines multiple indices into one or more bigger indices.

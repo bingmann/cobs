@@ -87,9 +87,7 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
 }
 
 void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
-                              size_t batch_size, size_t num_hashes,
-                              double false_positive_probability,
-                              uint64_t page_size) {
+                              IndexParameters params) {
     size_t iteration = 1;
 
     // read file list, sort by size
@@ -98,13 +96,13 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
     LOG1 << "Compact Index Parameters:";
     LOG1 << "  number of documents: " << doc_list.size();
-    LOG1 << "  num_hashes: " << num_hashes;
-    LOG1 << "  false_positive_probability: " << false_positive_probability;
+    LOG1 << "  num_hashes: " << params.num_hashes;
+    LOG1 << "  false_positive_rate: " << params.false_positive_rate;
 
     // process batches and create classic indexes for each batch
     size_t batch_num = 0;
     doc_list.process_batches(
-        8 * page_size,
+        8 * params.page_size,
         [&](const std::vector<DocumentEntry>& files, fs::path /* out_file */) {
 
             size_t max_doc_size = 0;
@@ -112,7 +110,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
                 max_doc_size = std::max(max_doc_size, de.num_terms(31));
 
             size_t signature_size = calc_signature_size(
-                max_doc_size, num_hashes, false_positive_probability);
+                max_doc_size, params.num_hashes, params.false_positive_rate);
 
             size_t docsize_roundup = tlx::div_ceil(files.size(), 8) * 8;
 
@@ -122,12 +120,17 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             LOG1 << "  signature_size: " << signature_size;
             LOG1 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
 
+            classic_index::IndexParameters classic_params;
+            classic_params.num_hashes = params.num_hashes;
+            classic_params.false_positive_rate = params.false_positive_rate;
+            classic_params.signature_size = signature_size;
+            classic_params.batch_bytes = params.batch_bytes;
+
             DocumentList batch_list(files);
             fs::path classic_dir = index_dir / pad_index(iteration);
 
             classic_index::construct_from_documents(
-                batch_list, classic_dir / pad_index(batch_num),
-                signature_size, num_hashes, batch_size);
+                batch_list, classic_dir / pad_index(batch_num), classic_params);
 
             batch_num++;
         });
@@ -135,7 +138,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
     // combine classic indexes
     while (!combine_classic_index(index_dir / pad_index(iteration),
                                   index_dir / pad_index(iteration + 1),
-                                  batch_size)) {
+                                  params.batch_bytes)) {
         iteration++;
     }
 
@@ -143,7 +146,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
     combine_into_compact(
         index_dir / pad_index(iteration + 1),
         index_dir / ("index" + CompactIndexHeader::file_extension),
-        page_size);
+        params.page_size);
 }
 
 } // namespace cobs::compact_index

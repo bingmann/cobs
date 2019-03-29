@@ -22,8 +22,8 @@ static std::unordered_map<char, char> basepairs = {
     { 'A', 'T' }, { 'C', 'G' }, { 'G', 'C' }, { 'T', 'A' }
 };
 
-size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
-    uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double false_positive_rate, size_t num_tests) {
+    uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
 
     std::vector<bool> signature(signature_size);
     std::srand(1);
@@ -42,10 +42,10 @@ size_t get_num_positives(uint64_t num_elements, uint64_t num_hashes, double fals
     return num_positives;
 }
 
-size_t get_num_positives_hash(uint64_t num_hashes, double false_positive_probability, size_t num_tests) {
+size_t get_num_positives_hash(uint64_t num_hashes, double false_positive_rate, size_t num_tests) {
     std::string query = cobs::random_sequence(10000, 1);
     uint64_t num_elements = query.size() - 30;
-    uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_probability);
+    uint64_t signature_size = cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
 
     std::vector<bool> signature(signature_size);
     cobs::KMer<31> k;

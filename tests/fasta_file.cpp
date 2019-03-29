@@ -58,7 +58,12 @@ TEST_F(fasta, DISABLED_document_list) {
     die_unequal(doc_list.list().size(), 6u);
 
     // construct classic index
-    cobs::classic_index::construct(in_dir, index_dir, 8, 1, 0.3);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.batch_bytes = 0;
+
+    cobs::classic_index::construct(in_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     // run queries for each kmer in the documents

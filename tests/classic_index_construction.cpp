@@ -50,7 +50,11 @@ TEST_F(classic_index_construction, deserialization) {
     std::sort(paths.begin(), paths.end());
 
     // construct classic index
-    cobs::classic_index::construct(input_dir, index_dir, 8, 3, 0.1);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+
+    cobs::classic_index::construct(input_dir, index_dir, index_params);
 
     // read classic index and check header fields
     std::vector<uint8_t> data;

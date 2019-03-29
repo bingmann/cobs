@@ -40,7 +40,11 @@ TEST_F(classic_index_query, all_included_small_batch) {
     generate_test_case(documents, input_dir.string());
 
     // construct classic index and mmap query
-    cobs::classic_index::construct(input_dir, index_dir, 16, 3, 0.1);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+
+    cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -59,7 +63,11 @@ TEST_F(classic_index_query, one_included_small_batch) {
     generate_test_case(documents, input_dir.string());
 
     // construct classic index and mmap query
-    cobs::classic_index::construct(input_dir, index_dir, 32, 3, 0.1);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+
+    cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -77,7 +85,11 @@ TEST_F(classic_index_query, one_included_large_batch) {
     generate_test_case(documents, input_dir.string());
 
     // construct classic index and mmap query
-    cobs::classic_index::construct(input_dir, index_dir, 8, 3, 0.1);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+
+    cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     // execute query and check results
@@ -95,7 +107,11 @@ TEST_F(classic_index_query, false_positive) {
     generate_test_case(documents, input_dir.string());
 
     // construct classic index and mmap query
-    cobs::classic_index::construct(input_dir, index_dir, 32, 3, 0.1);
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+
+    cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
 
     // execute query and check results

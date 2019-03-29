@@ -79,18 +79,21 @@ void process_batch(const std::vector<DocumentEntry>& paths,
     t.stop();
 }
 
-void construct_from_documents(DocumentList& doc_list, const fs::path& out_dir,
-                              uint64_t signature_size, uint64_t num_hashes,
-                              uint64_t batch_size) {
+void construct_from_documents(const DocumentList& doc_list,
+                              const fs::path& out_dir,
+                              IndexParameters params) {
     Timer t;
     fs::create_directories(out_dir);
 
+    die_unless(params.num_hashes != 0);
+    die_unless(params.signature_size != 0);
+
     doc_list.process_batches(
-        batch_size,
+        params.batch_bytes,
         [&](const std::vector<DocumentEntry>& paths, std::string out_file) {
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
-            ClassicIndexHeader cih(signature_size, num_hashes);
+            ClassicIndexHeader cih(params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
             process_batch(paths, out_path, cih, t);
         });
@@ -176,7 +179,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
 
 /******************************************************************************/
 
-uint64_t get_max_file_size(DocumentList& doc_list) {
+uint64_t get_max_file_size(const DocumentList& doc_list) {
     // sort document by file size (as approximation to the number of kmers)
     const std::vector<DocumentEntry>& paths = doc_list.list();
     auto it = std::max_element(
@@ -209,35 +212,35 @@ uint64_t get_max_file_size(DocumentList& doc_list) {
     die("Unknown file type");
 }
 
-void construct(const fs::path& in_dir, const fs::path& out_dir,
-               uint64_t batch_size, uint64_t num_hashes,
-               double false_positive_probability) {
+void construct(const DocumentList& filelist, const fs::path& out_dir,
+               IndexParameters params) {
 
-    DocumentList in_filelist(in_dir, FileType::Any);
+    die_unless(params.num_hashes != 0);
+    die_unless(params.signature_size == 0);
 
     // estimate signature size by finding number of elements in the largest file
-    uint64_t max_doc_size = get_max_file_size(in_filelist);
-    uint64_t signature_size = calc_signature_size(
-        max_doc_size, num_hashes, false_positive_probability);
+    uint64_t max_doc_size = get_max_file_size(filelist);
+    params.signature_size = calc_signature_size(
+        max_doc_size, params.num_hashes, params.false_positive_rate);
 
-    batch_size /= signature_size / 8;
+    size_t batch_size = params.batch_bytes / (params.signature_size / 8);
     batch_size = tlx::div_ceil(batch_size, 8) * 8;
 
-    size_t docsize_roundup = tlx::div_ceil(in_filelist.size(), 8) * 8;
+    size_t docsize_roundup = tlx::div_ceil(filelist.size(), 8) * 8;
 
     LOG1 << "Classic Index Parameters:";
-    LOG1 << "  number of documents: " << in_filelist.size();
+    LOG1 << "  number of documents: " << filelist.size();
     LOG1 << "  maximum document size: " << max_doc_size;
-    LOG1 << "  num_hashes: " << num_hashes;
-    LOG1 << "  false_positive_probability: " << false_positive_probability;
-    LOG1 << "  signature_size: " << signature_size;
-    LOG1 << "  index size: " << (docsize_roundup / 8 * signature_size);
+    LOG1 << "  num_hashes: " << params.num_hashes;
+    LOG1 << "  false_positive_rate: " << params.false_positive_rate;
+    LOG1 << "  signature_size: " << params.signature_size;
+    LOG1 << "  index size: " << (docsize_roundup / 8 * params.signature_size);
     LOG1 << "  batch size: " << batch_size << " documents";
 
     // construct one classic index
     construct_from_documents(
-        in_filelist, out_dir / pad_index(1),
-        signature_size, num_hashes, batch_size);
+        filelist, out_dir / pad_index(1),
+        params);
 
     size_t i = 1;
     while (!combine(out_dir / pad_index(i),

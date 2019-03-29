@@ -21,6 +21,17 @@
  */
 namespace cobs::compact_index {
 
+struct IndexParameters {
+    //! number of hash functions, provided by user
+    unsigned num_hashes;
+    //! false positive rate, provided by user
+    double false_positive_rate = 0;
+    //! batch size in bytes to process per thread
+    uint64_t batch_bytes = 128 * 1024 * 1024llu;
+    //! page or block size of filters with common fpr
+    uint64_t page_size = get_page_size();
+};
+
 /*!
  * Constructs the folders used by the
  * cobs::compact_index::construct_from_documents.  Sorts the documents by file
@@ -28,17 +39,11 @@ namespace cobs::compact_index {
  */
 void construct_from_documents(
     const fs::path& in_dir, const fs::path& index_dir,
-    size_t batch_size, size_t num_hashes,
-    double false_positive_probability, uint64_t page_size = get_page_size());
+    IndexParameters index_params);
 
-void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
-                          uint64_t page_size = get_page_size());
-
-/*!
- * Constructs a dummy index filled with random data.
- */
-void construct_dummy(const fs::path& p, size_t signature_size,
-                     size_t row_size, size_t num_hashes);
+void combine_into_compact(
+    const fs::path& in_dir, const fs::path& out_file,
+    uint64_t page_size = get_page_size());
 
 } // namespace cobs::compact_index
 

@@ -42,16 +42,19 @@ TEST_F(compact_index_construction, padding) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index
-    size_t page_size = 16;
+    cobs::compact_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.page_size = 16;
+
     cobs::compact_index::construct_from_documents(
-        input_dir, index_dir,
-        /* batch_size */ 8, /* num_hashes */ 3, /* fpr */ 0.1, page_size);
+        input_dir, index_dir, index_params);
 
     // read compact index header, check page_size alignment of data
     std::ifstream ifs;
     cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, compact_index_path);
     cobs::StreamPos sp = cobs::get_stream_pos(ifs);
-    ASSERT_EQ(sp.curr_pos % page_size, 0U);
+    ASSERT_EQ(sp.curr_pos % index_params.page_size, 0U);
 }
 
 TEST_F(compact_index_construction, deserialization) {
@@ -70,10 +73,13 @@ TEST_F(compact_index_construction, deserialization) {
     }
 
     // construct compact index
-    uint64_t num_hashes = 3;
+    cobs::compact_index::IndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.page_size = 2;
+
     cobs::compact_index::construct_from_documents(
-        input_dir, index_dir,
-        /* batch_size */ 8, num_hashes, /* fpr */ 0.1, /* page_size */ 2);
+        input_dir, index_dir, index_params);
 
     // read compact index header and check fields
     std::vector<std::vector<uint8_t> > data;
@@ -101,9 +107,9 @@ TEST_F(compact_index_construction, deserialization) {
     for (size_t i = 0; i < document_sizes.size(); i++) {
         if (i % 8 == 7) {
             uint64_t signature_size = cobs::calc_signature_size(
-                document_sizes[i] / 8, num_hashes, 0.1);
+                document_sizes[i] / 8, index_params.num_hashes, 0.1);
             ASSERT_EQ(h.parameters()[i / 8].signature_size, signature_size);
-            ASSERT_EQ(h.parameters()[i / 8].num_hashes, num_hashes);
+            ASSERT_EQ(h.parameters()[i / 8].num_hashes, index_params.num_hashes);
         }
     }
 

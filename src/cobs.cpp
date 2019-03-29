@@ -124,6 +124,10 @@ int doc_dump(int argc, char** argv) {
 int classic_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
+    cobs::classic_index::IndexParameters index_params;
+    index_params.num_hashes = 1;
+    index_params.false_positive_rate = 0.3;
+
     std::string in_dir;
     cp.add_param_string(
         "in_dir", in_dir, "path to the input directory");
@@ -132,19 +136,22 @@ int classic_construct(int argc, char** argv) {
     cp.add_param_string(
         "out_dir", out_dir, "path to the output directory");
 
-    uint64_t batch_size = 128 * 1024 * 1024llu;
-    cp.add_bytes(
-        'b', "batch_size", batch_size,
-        "batch size in bytes, default: 128MiB");
+    std::string file_type = "any";
+    cp.add_string(
+        'T', "file-type", file_type,
+        "filter input documents by file type (any, text, cortex, fasta, etc)");
 
-    unsigned num_hashes = 1;
+    cp.add_bytes(
+        'b', "batch_size", index_params.batch_bytes,
+        "batch size in bytes, default: " +
+        tlx::format_iec_units(index_params.batch_bytes));
+
     cp.add_unsigned(
-        'h', "num_hashes", num_hashes,
+        'h', "num_hashes", index_params.num_hashes,
         "number of hash functions, default: 1");
 
-    double false_positive_rate = 0.3;
     cp.add_double(
-        'f', "false_positive_rate", false_positive_rate,
+        'f', "false_positive_rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
     if (!cp.process(argc, argv))
@@ -152,72 +159,9 @@ int classic_construct(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::classic_index::construct(
-        in_dir, out_dir, batch_size, num_hashes, false_positive_rate);
+    cobs::DocumentList filelist(in_dir, StringToFileType(file_type));
 
-    return 0;
-}
-
-int classic_construct_step1(int argc, char** argv) {
-    tlx::CmdlineParser cp;
-
-    std::string in_dir;
-    cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
-
-    std::string out_dir;
-    cp.add_param_string(
-        "out_dir", out_dir, "path to the output directory");
-
-    uint64_t batch_size = 128 * 1024 * 1024llu;
-    cp.add_bytes(
-        'b', "batch_size", batch_size,
-        "batch size in bytes, default: 128MiB");
-
-    unsigned num_hashes = 1;
-    cp.add_unsigned(
-        'h', "num_hashes", num_hashes,
-        "number of hash functions, default: 1");
-
-    size_t signature_size = 64 * 1024 * 1024;
-    cp.add_size_t(
-        's', "signature_size", signature_size,
-        "number of bits of the signatures (vertical size), default: 64 M");
-
-    if (!cp.process(argc, argv))
-        return -1;
-
-    cp.print_result(std::cerr);
-
-    die("FIXME: cobs::classic_index::construct_from_documents");
-    // cobs::classic_index::construct_from_documents(
-    //     in_dir, out_dir, signature_size, num_hashes, batch_size);
-
-    return 0;
-}
-
-int classic_construct_step2(int argc, char** argv) {
-    tlx::CmdlineParser cp;
-
-    std::string in_dir;
-    cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
-
-    std::string out_dir;
-    cp.add_param_string(
-        "out_dir", out_dir, "path to the output directory");
-
-    unsigned batch_size = 32;
-    cp.add_unsigned(
-        'b', "batch_size", batch_size,
-        "number of input files to be read at once, default: 32");
-
-    if (!cp.process(argc, argv))
-        return -1;
-
-    cp.print_result(std::cerr);
-
-    cobs::classic_index::combine(in_dir, out_dir, batch_size);
+    cobs::classic_index::construct(filelist, out_dir, index_params);
 
     return 0;
 }
@@ -272,41 +216,15 @@ int classic_construct_random(int argc, char** argv) {
     return 0;
 }
 
-int classic_query(int argc, char** argv) {
-    tlx::CmdlineParser cp;
-
-    std::string in_file;
-    cp.add_param_string(
-        "in_file", in_file, "path to the input file");
-
-    std::string query;
-    cp.add_param_string(
-        "query", query, "the dna sequence to search for");
-
-    unsigned num_results = 100;
-    cp.add_unsigned(
-        'h', "num_results", num_results,
-        "number of results to return, default: 100");
-
-    if (!cp.process(argc, argv))
-        return -1;
-
-    cobs::query::classic_index::mmap mmap(in_file);
-    std::vector<std::pair<uint16_t, std::string> > result;
-    mmap.search(query, 31, result, num_results);
-    for (const auto& res : result) {
-        std::cout << res.second << " - " << res.first << "\n";
-    }
-    std::cout << mmap.get_timer() << std::endl;
-
-    return 0;
-}
-
 /******************************************************************************/
 // "Compact" Index Construction
 
 int compact_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
+
+    cobs::compact_index::IndexParameters index_params;
+    index_params.num_hashes = 1;
+    index_params.false_positive_rate = 0.3;
 
     std::string in_dir;
     cp.add_param_string(
@@ -316,25 +234,23 @@ int compact_construct(int argc, char** argv) {
     cp.add_param_string(
         "out_dir", out_dir, "path to the output directory");
 
-    uint64_t batch_size = 128 * 1024 * 1024llu;
     cp.add_bytes(
-        'b', "batch_size", batch_size,
-        "batch size in bytes, default: 128MiB");
+        'b', "batch_size", index_params.batch_bytes,
+        "batch size in bytes, default: " +
+        tlx::format_iec_units(index_params.batch_bytes));
 
-    unsigned num_hashes = 1;
     cp.add_unsigned(
-        'h', "num_hashes", num_hashes,
+        'h', "num_hashes", index_params.num_hashes,
         "number of hash functions, default: 1");
 
-    double false_positive_rate = 0.3;
     cp.add_double(
-        'f', "false_positive_rate", false_positive_rate,
+        'f', "false_positive_rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
-    unsigned page_size = 8192;
-    cp.add_unsigned(
-        'p', "page_size", page_size,
-        "the page size of the SSD the index is constructed for, default: 8192");
+    cp.add_size_t(
+        'p', "page_size", index_params.page_size,
+        "the page size of the SSD the index is constructed for, "
+        "default: " + std::to_string(index_params.page_size));
 
     if (!cp.process(argc, argv))
         return -1;
@@ -342,8 +258,7 @@ int compact_construct(int argc, char** argv) {
     cp.print_result(std::cerr);
 
     cobs::compact_index::construct_from_documents(
-        in_dir, out_dir,
-        batch_size, num_hashes, false_positive_rate, page_size);
+        in_dir, out_dir, index_params);
 
     return 0;
 }
@@ -370,6 +285,38 @@ int compact_construct_combine(int argc, char** argv) {
     cp.print_result(std::cerr);
 
     cobs::compact_index::combine_into_compact(in_dir, out_file, page_size);
+
+    return 0;
+}
+
+/******************************************************************************/
+
+int classic_query(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string in_file;
+    cp.add_param_string(
+        "in_file", in_file, "path to the input file");
+
+    std::string query;
+    cp.add_param_string(
+        "query", query, "the dna sequence to search for");
+
+    unsigned num_results = 100;
+    cp.add_unsigned(
+        'h', "num_results", num_results,
+        "number of results to return, default: 100");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cobs::query::classic_index::mmap mmap(in_file);
+    std::vector<std::pair<uint16_t, std::string> > result;
+    mmap.search(query, 31, result, num_results);
+    for (const auto& res : result) {
+        std::cout << res.second << " - " << res.first << "\n";
+    }
+    std::cout << mmap.get_timer() << std::endl;
 
     return 0;
 }
@@ -756,16 +703,8 @@ struct SubTool subtools[] = {
         "constructs a classic index from the documents in <in_dir>"
     },
     {
-        "classic_construct_step1", &classic_construct_step1, true,
-        "constructs multiple small indices from the documents in <in_dir>"
-    },
-    {
-        "classic_construct_step2", &classic_construct_step2, true,
-        "combines the indices in <in_dir>"
-    },
-    {
         "classic_construct_random", &classic_construct_random, true,
-        "constructs an index with random content"
+        "constructs a classic index with random content"
     },
     {
         "classic_query", &classic_query, true,
