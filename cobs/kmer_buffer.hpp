@@ -29,11 +29,16 @@ private:
 
 public:
     void print(std::ostream& ostream) const;
+
     std::vector<KMer<N> >& data() {
         return m_data;
     }
     const std::vector<KMer<N> >& data() const {
         return m_data;
+    }
+
+    size_t num_kmers() const {
+        return m_data.size();
     }
 
     void sort_kmers() {

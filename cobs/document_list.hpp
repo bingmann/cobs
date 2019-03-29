@@ -45,11 +45,25 @@ struct DocumentEntry {
     size_t size_;
     //! subdocument index (for FASTA, FASTQ, etc)
     size_t subdoc_index_ = 0;
+    //! fixed kmer size or zero
+    size_t kmer_size_ = 0;
+    //! number of kmers
+    size_t kmer_count_ = 0;
 
     //! default sort operator
     bool operator < (const DocumentEntry& b) const {
         return (std::tie(path_, subdoc_index_) <
                 std::tie(b.path_, b.subdoc_index_));
+    }
+
+    //! calculate number of kmers in file
+    size_t num_kmers(size_t k) const {
+        if (kmer_size_ == 0) {
+            return size_ < k ? 0 : size_ - k + 1;
+        }
+        die_verbose_unequal(
+            kmer_size_, k, "DocumentEntry kmer_size_ mismatches requested k");
+        return kmer_count_;
     }
 };
 
@@ -113,6 +127,7 @@ public:
             de.type_ = FileType::Text;
             de.name_ = base_name(path);
             de.size_ = fs::file_size(path);
+            de.kmer_size_ = 0, de.kmer_count_ = 0;
             list_.emplace_back(de);
         }
         else if (path.extension() == ".ctx") {
@@ -122,15 +137,22 @@ public:
             de.type_ = FileType::Cortex;
             de.name_ = ctx.name_;
             de.size_ = fs::file_size(path);
+            de.kmer_size_ = ctx.kmer_size_;
+            de.kmer_count_ = ctx.num_kmers();
             list_.emplace_back(de);
         }
         else if (path.extension() == ".cobs_doc") {
-            KMerBufferHeader dh = deserialize_header<KMerBufferHeader>(path);
+            std::ifstream is;
+            KMerBufferHeader dh = deserialize_header<KMerBufferHeader>(is, path);
             DocumentEntry de;
             de.path_ = path;
             de.type_ = FileType::KMerBuffer;
             de.name_ = dh.name();
             de.size_ = fs::file_size(path);
+            // calculate number of k-mers from file size, k-mers are bit encoded
+            size_t size = get_stream_size(is);
+            de.kmer_size_ = dh.kmer_size();
+            de.kmer_count_ = size / ((de.kmer_size_ + 3) / 4);
             list_.emplace_back(de);
         }
         else if (path.extension() == ".fasta") {
@@ -142,6 +164,7 @@ public:
                 de.name_ = cobs::base_name(path) + '_' + pad_index(i);
                 de.size_ = fasta.size(i);
                 de.subdoc_index_ = i;
+                de.kmer_size_ = 0, de.kmer_count_ = 0;
                 list_.emplace_back(de);
             }
         }

@@ -56,8 +56,8 @@ TEST_F(classic_index_construction, deserialization) {
     std::vector<uint8_t> data;
     cobs::ClassicIndexHeader h;
     h.read_file(classic_index_path, data);
-    ASSERT_EQ(h.file_names().size(), 33U);
-    ASSERT_EQ(h.num_hashes(), 3U);
+    ASSERT_EQ(h.file_names().size(), 33u);
+    ASSERT_EQ(h.num_hashes(), 3u);
     ASSERT_EQ(h.file_names().size(), paths.size());
     for (size_t i = 0; i < h.file_names().size(); i++) {
         ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));

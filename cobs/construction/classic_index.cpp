@@ -207,34 +207,33 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_siz
 
 uint64_t get_max_file_size(DocumentList& doc_list) {
     // sort document by file size (as approximation to the number of kmers)
-    std::vector<DocumentEntry> paths = doc_list.list();
-    std::sort(paths.begin(), paths.end(),
-              [](const DocumentEntry& p1, const DocumentEntry& p2) {
-                  return (std::tie(p1.size_, p1.path_) >
-                          std::tie(p2.size_, p2.path_));
-              });
+    const std::vector<DocumentEntry>& paths = doc_list.list();
+    auto it = std::max_element(
+        paths.begin(), paths.end(),
+        [](const DocumentEntry& p1, const DocumentEntry& p2) {
+            return (std::tie(p1.size_, p1.path_) <
+                    std::tie(p2.size_, p2.path_));
+        });
+
+    if (it == paths.end())
+        return 0;
 
     // look into largest file and return number of elements
-    if (paths[0].type_ == FileType::Cortex) {
-        CortexFile ctx(paths[0].path_);
-        size_t max_num_elements = ctx.num_kmers();
-        sLOG1 << "CTX: max_num_elements" << max_num_elements;
-        return max_num_elements;
+    if (it->type_ == FileType::Text) {
+        sLOG1 << "TEXT: max_doc_size" << it->num_kmers(31);
+        return it->num_kmers(31);
     }
-    else if (paths[0].type_ == FileType::KMerBuffer) {
-        KMerBufferHeader dh;
-        KMerBuffer<31> doc;
-        doc.deserialize(paths[0].path_, dh);
-
-        size_t max_num_elements = doc.data().size();
-        sLOG1 << "COBS_DOC: max_num_elements" << max_num_elements;
-        return max_num_elements;
+    else if (it->type_ == FileType::Cortex) {
+        sLOG1 << "CTX: max_doc_size" << it->num_kmers(31);
+        return it->num_kmers(31);
     }
-    else if (paths[0].type_ == FileType::Fasta) {
-        FastaFile fasta(paths[0].path_);
-        size_t max_num_elements = fasta.size(paths[0].subdoc_index_);
-        sLOG1 << "FASTA: max_num_elements" << max_num_elements;
-        return max_num_elements;
+    else if (it->type_ == FileType::KMerBuffer) {
+        sLOG1 << "COBS_DOC: max_doc_size" << it->num_kmers(31);
+        return it->num_kmers(31);
+    }
+    else if (it->type_ == FileType::Fasta) {
+        sLOG1 << "FASTA: max_doc_size" << it->num_kmers(31);
+        return it->num_kmers(31);
     }
     die("Unknown file type");
 }
@@ -246,9 +245,9 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
     DocumentList in_filelist(in_dir, FileType::Any);
 
     // estimate signature size by finding number of elements in the largest file
-    uint64_t max_num_elements = get_max_file_size(in_filelist);
+    uint64_t max_doc_size = get_max_file_size(in_filelist);
     uint64_t signature_size = calc_signature_size(
-        max_num_elements, num_hashes, false_positive_probability);
+        max_doc_size, num_hashes, false_positive_probability);
 
     batch_size /= signature_size / 8;
     batch_size = tlx::div_ceil(batch_size, 8) * 8;
@@ -257,7 +256,7 @@ void construct(const fs::path& in_dir, const fs::path& out_dir,
 
     LOG1 << "Classic Index Parameters:";
     LOG1 << "  number of documents: " << in_filelist.size();
-    LOG1 << "  maximum document size: " << max_num_elements;
+    LOG1 << "  maximum document size: " << max_doc_size;
     LOG1 << "  num_hashes: " << num_hashes;
     LOG1 << "  false_positive_probability: " << false_positive_probability;
     LOG1 << "  signature_size: " << signature_size;

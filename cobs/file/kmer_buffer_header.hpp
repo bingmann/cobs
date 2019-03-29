@@ -16,8 +16,8 @@ namespace cobs {
 class KMerBufferHeader
 {
 private:
-    std::string m_name;
-    uint32_t m_kmer_size;
+    std::string name_;
+    uint32_t kmer_size_;
 
 public:
     static const std::string magic_word;

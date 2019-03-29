@@ -107,18 +107,18 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
         8 * page_size,
         [&](const std::vector<DocumentEntry>& files, fs::path /* out_file */) {
 
-            size_t max_file_size = 0;
+            size_t max_doc_size = 0;
             for (const DocumentEntry& de : files)
-                max_file_size = std::max(max_file_size, de.size_);
+                max_doc_size = std::max(max_doc_size, de.num_kmers(31));
 
             size_t signature_size = calc_signature_size(
-                max_file_size, num_hashes, false_positive_probability);
+                max_doc_size, num_hashes, false_positive_probability);
 
             size_t docsize_roundup = tlx::div_ceil(files.size(), 8) * 8;
 
             LOG1 << "Classic Sub-Index Parameters:";
             LOG1 << "  number of documents: " << files.size();
-            LOG1 << "  maximum document size: " << max_file_size;
+            LOG1 << "  maximum document size: " << max_doc_size;
             LOG1 << "  signature_size: " << signature_size;
             LOG1 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
 
