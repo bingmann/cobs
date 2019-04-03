@@ -18,6 +18,8 @@
 
 #include <tlx/die.hpp>
 #include <tlx/math/div_ceil.hpp>
+#include <tlx/math/round_up.hpp>
+#include <tlx/string/format_iec_units.hpp>
 
 namespace cobs::compact_index {
 
@@ -106,17 +108,21 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
     DocumentList doc_list(in_dir);
     doc_list.sort_by_size();
 
+    size_t num_pages = tlx::div_ceil(doc_list.size(), 8 * params.page_size);
+
     LOG1 << "Compact Index Parameters:";
     LOG1 << "  term_size: " << params.term_size;
     LOG1 << "  number of documents: " << doc_list.size();
     LOG1 << "  num_hashes: " << params.num_hashes;
     LOG1 << "  false_positive_rate: " << params.false_positive_rate;
+    LOG1 << "  num_pages: " << num_pages;
 
-    // process batches and create classic indexes for each batch
-    size_t batch_num = 0;
+    size_t total_size = 0;
+
     doc_list.process_batches(
         8 * params.page_size,
-        [&](const std::vector<DocumentEntry>& files, fs::path /* out_file */) {
+        [&](size_t /* batch_num */, const std::vector<DocumentEntry>& files,
+            fs::path /* out_file */) {
 
             size_t max_doc_size = 0;
             for (const DocumentEntry& de : files) {
@@ -127,13 +133,39 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             size_t signature_size = calc_signature_size(
                 max_doc_size, params.num_hashes, params.false_positive_rate);
 
-            size_t docsize_roundup = tlx::div_ceil(files.size(), 8) * 8;
+            size_t docsize_roundup = tlx::round_up(files.size(), 8);
 
-            LOG1 << "Classic Sub-Index Parameters:";
-            LOG1 << "  number of documents: " << files.size();
-            LOG1 << "  maximum document size: " << max_doc_size;
-            LOG1 << "  signature_size: " << signature_size;
-            LOG1 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
+            total_size += docsize_roundup / 8 * signature_size;
+        });
+
+    LOG1 << "  total_size: " << tlx::format_iec_units(total_size);
+
+    // process batches and create classic indexes for each batch
+    doc_list.process_batches_parallel(
+        8 * params.page_size,
+        [&](size_t batch_num, const std::vector<DocumentEntry>& files,
+            fs::path /* out_file */) {
+
+            size_t max_doc_size = 0;
+            for (const DocumentEntry& de : files) {
+                max_doc_size = std::max(
+                    max_doc_size, de.num_terms(params.term_size));
+            }
+
+            size_t signature_size = calc_signature_size(
+                max_doc_size, params.num_hashes, params.false_positive_rate);
+
+            size_t docsize_roundup = tlx::round_up(files.size(), 8);
+
+            LOG1 << "Classic Sub-Index Parameters: "
+                 << "[" << batch_num << '/' << num_pages << ']' << '\n'
+                 << "  number of documents: " << files.size() << '\n'
+                 << "  maximum document size: " << max_doc_size << '\n'
+                 << "  signature_size: " << signature_size << '\n'
+                 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
+
+            if (max_doc_size == 0)
+                return;
 
             classic_index::IndexParameters classic_params;
             classic_params.term_size = params.term_size;
@@ -148,8 +180,6 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
             classic_index::construct_from_documents(
                 batch_list, classic_dir / pad_index(batch_num), classic_params);
-
-            batch_num++;
         });
 
     // combine classic indexes

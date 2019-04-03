@@ -258,7 +258,7 @@ public:
                     '[' + first_filename + '-' + last_filename + ']';
 
                 LOG1 << "IN - " << out_file;
-                func(batch, out_file);
+                func(batch_num, batch, out_file);
                 LOG1 << "OK - " << out_file;
 
                 batch.clear();
@@ -305,7 +305,7 @@ public:
 #pragma omp parallel for schedule(dynamic)
         for (size_t i = 0; i < batch_list.size(); ++i) {
             LOG1 << "IN - " << batch_list[i].out_file;
-            func(batch_list[i].files, batch_list[i].out_file);
+            func(i, batch_list[i].files, batch_list[i].out_file);
             LOG1 << "OK - " << batch_list[i].out_file;
         }
     }

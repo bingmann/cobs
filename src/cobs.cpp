@@ -275,6 +275,11 @@ int compact_construct(int argc, char** argv) {
         'C', "clobber", clobber,
         "erase output directory if it exists");
 
+    bool continue_ = false;
+    cp.add_flag(
+        "continue", continue_,
+        "continue in existing output directory");
+
     cp.add_unsigned(
         'k', "term_size", index_params.term_size,
         "term size (k-mer size), default: 31");
@@ -287,6 +292,9 @@ int compact_construct(int argc, char** argv) {
     if (cobs::fs::exists(out_dir)) {
         if (clobber) {
             cobs::fs::remove_all(out_dir);
+        }
+        else if (continue_) {
+            // fall through
         }
         else {
             die("Output directory exists, will not overwrite without --clobber");

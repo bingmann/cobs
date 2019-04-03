@@ -24,8 +24,9 @@
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
-#include <tlx/math/div_ceil.hpp>
 #include <tlx/math/popcount.hpp>
+#include <tlx/math/round_up.hpp>
+#include <tlx/string/format_iec_units.hpp>
 
 namespace cobs::classic_index {
 
@@ -90,9 +91,12 @@ void construct_from_documents(const DocumentList& doc_list,
 
     doc_list.process_batches(
         params.batch_bytes,
-        [&](const std::vector<DocumentEntry>& paths, std::string out_file) {
+        [&](size_t /* batch_num */, const std::vector<DocumentEntry>& paths,
+            std::string out_file) {
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
+            if (fs::exists(out_path))
+                return;
             ClassicIndexHeader cih(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
@@ -236,9 +240,9 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
         max_doc_size, params.num_hashes, params.false_positive_rate);
 
     size_t batch_size = params.batch_bytes / (params.signature_size / 8);
-    batch_size = tlx::div_ceil(batch_size, 8) * 8;
+    batch_size = tlx::round_up(batch_size, 8);
 
-    size_t docsize_roundup = tlx::div_ceil(filelist.size(), 8) * 8;
+    size_t docsize_roundup = tlx::round_up(filelist.size(), 8);
 
     LOG1 << "Classic Index Parameters:";
     LOG1 << "  term_size: " << params.term_size;
@@ -248,7 +252,8 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     LOG1 << "  num_hashes: " << params.num_hashes;
     LOG1 << "  false_positive_rate: " << params.false_positive_rate;
     LOG1 << "  signature_size: " << params.signature_size;
-    LOG1 << "  index size: " << (docsize_roundup / 8 * params.signature_size);
+    LOG1 << "  index size: "
+         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size);
     LOG1 << "  batch size: " << batch_size << " documents";
 
     // construct one classic index

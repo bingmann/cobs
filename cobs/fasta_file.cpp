@@ -8,7 +8,13 @@
 
 #include <cobs/fasta_file.hpp>
 
+#include <thread>
+
 namespace cobs {
+
+ThreadObjectLRUSet<std::ifstream> FastaFile::lru_set_ {
+    std::thread::hardware_concurrency()* 4
+};
 
 FastaIndexCache FastaFile::cache_;
 

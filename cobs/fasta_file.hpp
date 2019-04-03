@@ -18,6 +18,7 @@
 #include <cobs/util/fs.hpp>
 #include <cobs/util/serialization.hpp>
 #include <cobs/util/string_view.hpp>
+#include <cobs/util/thread_object_array.hpp>
 
 #include <tlx/container/lru_cache.hpp>
 #include <tlx/die.hpp>
@@ -29,21 +30,24 @@ namespace cobs {
 class FastaSubfile
 {
 public:
-    FastaSubfile(const std::shared_ptr<std::ifstream>& is,
-                 std::string name,
+    FastaSubfile(std::string path, std::string name,
                  std::istream::pos_type pos_begin,
-                 size_t size)
-        : is_(is), name_(name), pos_begin_(pos_begin), size_(size) { }
+                 size_t size,
+                 const ThreadObjectArrayPtr<std::ifstream>& ifstream_array)
+        : path_(path), name_(name), pos_begin_(pos_begin), size_(size),
+          ifstream_array_(ifstream_array) { }
 
     template <typename Callback>
     void process_terms(size_t term_size, Callback callback) {
-        is_->clear();
-        is_->seekg(pos_begin_);
-        die_unless(is_->good());
+        auto is = ifstream_array_->get(path_);
+
+        is->clear();
+        is->seekg(pos_begin_);
+        die_unless(is->good());
 
         std::string data, line;
 
-        while (std::getline(*is_, line)) {
+        while (std::getline(*is, line)) {
             if (line[0] == '>' || line[0] == ';')
                 break;
 
@@ -68,14 +72,16 @@ public:
     size_t size() const { return size_; }
 
 private:
-    //! file stream
-    std::shared_ptr<std::ifstream> is_;
+    //! file path
+    std::string path_;
     //! description from > header
     std::string name_;
     //! start position in fasta file
     std::istream::pos_type pos_begin_;
     //! length of the sequence
     size_t size_;
+    //! file handle thread array
+    ThreadObjectArrayPtr<std::ifstream> ifstream_array_;
 };
 
 using FastaSubfileList = std::vector<FastaSubfile>;
@@ -108,15 +114,18 @@ class FastaFile
 {
 public:
     FastaFile(std::string path, bool use_cache = true) {
-        is_ = std::make_shared<std::ifstream>(path);
-        die_unless(is_->good());
+        std::ifstream is(path);
+        die_unless(is.good());
 
-        char first = is_->get();
+        char first = is.get();
         if (first != '>' && first != ';')
             die("FastaFile: file does not start with > or ;");
 
+        ifstream_array_ =
+            std::make_shared<ThreadObjectArray<std::ifstream> >(lru_set_);
+
         if (!use_cache) {
-            compute_index();
+            compute_index(path, is);
         }
         else if (cache_.lookup(path, index_)) {
             // all good.
@@ -125,52 +134,59 @@ public:
             cache_.put(path, index_);
         }
         else {
-            compute_index();
+            compute_index(path, is);
             write_cache_file(path);
             cache_.put(path, index_);
         }
     }
 
     //! read complete FASTA file for sub-documents
-    void compute_index() {
-        is_->clear();
-        is_->seekg(0);
+    void compute_index(std::string path, std::ifstream& is) {
+        LOG1 << "FastaFile: computing index for " << path;
+
+        is.clear();
+        is.seekg(0);
         index_ = std::make_shared<FastaSubfileList>();
 
         std::string line;
         // read first line
-        std::getline(*is_, line);
+        std::getline(is, line);
 
         do {
             if (line.size() == 0 || line[0] == ';') {
                 // ; comment header
-                std::getline(*is_, line);
+                std::getline(is, line);
             }
             else if (line[0] == '>') {
                 // > document header
-                std::istream::pos_type pos_begin = is_->tellg();
+                std::string name = line;
+                std::istream::pos_type pos_begin = is.tellg();
                 size_t size = 0;
 
-                while (std::getline(*is_, line)) {
+                if (name.size() > 16)
+                    name.resize(16);
+
+                while (std::getline(is, line)) {
                     if (line[0] == '>' || line[0] == ';')
                         break;
 
                     size += line.size();
                 }
                 index_->emplace_back(
-                    FastaSubfile(is_, line, pos_begin, size));
+                    FastaSubfile(path, name, pos_begin, size,
+                                 ifstream_array_));
                 // next line is already read
             }
             else if (line[0] == '\r') {
                 // skip newline
-                std::getline(*is_, line);
+                std::getline(is, line);
             }
             else {
                 std::cout << "fasta: invalid line " << line << std::endl;
-                std::getline(*is_, line);
+                std::getline(is, line);
             }
         }
-        while (is_->good());
+        while (is.good());
     }
 
     //! return index cache file path
@@ -180,13 +196,16 @@ public:
 
     //! write cache file
     void write_cache_file(std::string path) {
-        std::ofstream os(cache_path(path));
+        std::ofstream os(cache_path(path) + ".tmp");
         stream_put_pod(os, index_->size());
         for (size_t i = 0; i < index_->size(); ++i) {
             stream_put_pod(os, (*index_)[i].size());
             stream_put_pod(os, (*index_)[i].pos_begin());
             os << (*index_)[i].name() << '\0';
         }
+        fs::rename(cache_path(path) + ".tmp",
+                   cache_path(path));
+        LOG1 << "FastaFile: saved index as " << cache_path(path);
     }
 
     //! read cache file
@@ -195,6 +214,8 @@ public:
         if (!is.good()) return false;
         size_t list_size;
         stream_get_pod(is, list_size);
+        LOG1 << "FastaFile: loading index " << cache_path(path)
+             << " [" << list_size << " documents]";
         index_ = std::make_shared<FastaSubfileList>();
         for (size_t i = 0; i < list_size; ++i) {
             size_t size;
@@ -205,7 +226,8 @@ public:
             stream_get_pod(is, pos_begin);
             std::getline(is, name, '\0');
 
-            index_->emplace_back(is_, name, pos_begin, size);
+            index_->emplace_back(path, name, pos_begin, size,
+                                 ifstream_array_);
         }
         return is.good() && (is.get() == EOF);
     }
@@ -233,10 +255,12 @@ public:
     FastaSubfileListPtr index_;
 
 private:
-    //! file stream
-    std::shared_ptr<std::ifstream> is_;
+    //! file stream array
+    ThreadObjectArrayPtr<std::ifstream> ifstream_array_;
     //! global index cache
     static FastaIndexCache cache_;
+    //! file handle LRU
+    static ThreadObjectLRUSet<std::ifstream> lru_set_;
 };
 
 } // namespace cobs
