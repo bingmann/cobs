@@ -61,8 +61,9 @@ generate_documents_all(const std::string& query,
 //! Generate documents from a (random) query sequence with each query term
 //! contained in exactly one document.
 static inline
-std::vector<cobs::KMerBuffer<31> > generate_documents_one(const std::string& query) {
-    std::vector<cobs::KMerBuffer<31> > documents(33);
+std::vector<cobs::KMerBuffer<31> >
+generate_documents_one(const std::string& query, size_t num_documents = 33) {
+    std::vector<cobs::KMerBuffer<31> > documents(num_documents);
     cobs::KMer<31> k;
     char kmer_buffer[31];
     const char* normalized_kmer =
@@ -78,8 +79,8 @@ std::vector<cobs::KMerBuffer<31> > generate_documents_one(const std::string& que
 
 static inline
 std::string get_file_stem(unsigned index) {
-    die_unless(index < 1000);
-    return tlx::ssprintf("document_%03u", index);
+    die_unless(index < 100000);
+    return tlx::ssprintf("document_%05u", index);
 }
 
 static inline

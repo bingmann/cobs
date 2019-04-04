@@ -20,7 +20,8 @@ private:
     std::vector<uint8_t*> m_data;
 
 protected:
-    void read_from_disk(const std::vector<size_t>& hashes, char* rows) override;
+    void read_from_disk(const std::vector<size_t>& hashes, char* rows,
+                        size_t begin, size_t size) override;
 
 public:
     explicit mmap(const fs::path& path);

@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include <tlx/math/div_ceil.hpp>
+
 #include <xxhash.h>
 
 namespace cobs::query {
@@ -54,7 +56,7 @@ void classic_base::create_hashes(std::vector<uint64_t>& hashes,
     }
 }
 
-void counts_to_result(const std::vector<std::string>& file_names, const uint16_t* counts,
+void counts_to_result(const std::vector<std::string>& file_names, const uint16_t* scores,
                       std::vector<std::pair<uint16_t, std::string> >& result,
                       size_t num_results) {
     std::vector<uint32_t> sorted_indices(file_names.size());
@@ -63,78 +65,62 @@ void counts_to_result(const std::vector<std::string>& file_names, const uint16_t
         sorted_indices.begin(), sorted_indices.begin() + num_results,
         sorted_indices.end(),
         [&](auto v1, auto v2) {
-            return counts[v1] > counts[v2];
+            return scores[v1] > scores[v2];
         });
 
     result.resize(num_results);
 #pragma omp parallel for
     for (size_t i = 0; i < num_results; i++) {
-        result[i] = std::make_pair(counts[sorted_indices[i]], file_names[sorted_indices[i]]);
+        result[i] = std::make_pair(scores[sorted_indices[i]], file_names[sorted_indices[i]]);
     }
 }
 
-void classic_base::compute_counts(size_t hashes_size, uint16_t* counts, const char* rows) {
+void classic_base::compute_counts(size_t hashes_size, uint16_t* scores,
+                                  const char* rows, size_t size) {
 #ifndef NO_SIMD
     auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
 #endif
     auto rows_b = reinterpret_cast<const uint8_t*>(rows);
     uint64_t nh = num_hashes();
-    uint64_t bs = row_size();
+    uint64_t bs = size;
 
-#pragma omp parallel reduction(+:counts[:counts_size()])
-    {
 #ifdef NO_SIMD
-        auto counts_64 = reinterpret_cast<uint64_t*>(counts);
+    auto counts_64 = reinterpret_cast<uint64_t*>(scores);
 #else
-        auto counts_128 = reinterpret_cast<__m128i_u*>(counts);
+    auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
 #endif
-#pragma omp for
-        for (uint64_t i = 0; i < hashes_size; i += nh) {
-            auto rows_8 = rows_b + i * bs;
-            for (size_t k = 0; k < bs; k++) {
+    for (uint64_t i = 0; i < hashes_size; i += nh) {
+        auto rows_8 = rows_b + i * bs;
+        for (size_t k = 0; k < bs; k++) {
 #ifdef NO_SIMD
-                counts_64[2 * k] += m_expansions[rows_8[k] & 0xF];
-                counts_64[2 * k + 1] += m_expansions[rows_8[k] >> 4];
+            counts_64[2 * k] += m_expansions[rows_8[k] & 0xF];
+            counts_64[2 * k + 1] += m_expansions[rows_8[k] >> 4];
 #else
-                counts_128[k] = _mm_add_epi16(counts_128[k], m_expansion_128[rows_8[k]]);
+            counts_128[k] = _mm_add_epi16(counts_128[k], m_expansion_128[rows_8[k]]);
 #endif
-            }
         }
     }
 }
 
-void classic_base::aggregate_rows(size_t hashes_size, char* rows) {
-#pragma omp parallel for
+void classic_base::aggregate_rows(size_t hashes_size, char* rows, size_t size) {
     for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
-        auto rows_8 = rows + i * row_size();
+        auto rows_8 = rows + i * size;
         auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
         for (size_t j = 1; j < num_hashes(); j++) {
-            auto rows_8_j = rows_8 + j * row_size();
+            auto rows_8_j = rows_8 + j * size;
             auto rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
             size_t k = 0;
-            while ((k + 1) * 8 <= row_size()) {
+            while ((k + 1) * 8 <= size) {
                 rows_64[k] &= rows_64_j[k];
                 k++;
             }
             k = k * 8;
-            while (k < row_size()) {
+            while (k < size) {
                 rows_8[k] &= rows_8_j[k];
                 k++;
             }
         }
     }
-}
-
-void classic_base::calculate_counts(const std::vector<uint64_t>& hashes, uint16_t* counts) {
-    char* rows = allocate_aligned<char>(row_size() * hashes.size(), get_page_size());
-    m_timer.active("io");
-    read_from_disk(hashes, rows);
-    m_timer.active("and rows");
-    aggregate_rows(hashes.size(), rows);
-    m_timer.active("add rows");
-    compute_counts(hashes.size(), counts, rows);
-    deallocate_aligned(rows);
-    // todo test if it is faster to combine these functions for better cache locality
 }
 
 void classic_base::search(const std::string& query,
@@ -147,16 +133,59 @@ void classic_base::search(const std::string& query,
                 "query too long, can not be longer than "
                 + std::to_string(UINT16_MAX + term_size() - 1) + " characters");
 
+    static constexpr bool debug = false;
+
     m_timer.active("hashes");
     num_results = num_results == 0 ? file_names().size()
                   : std::min(num_results, file_names().size());
-    uint16_t* counts = allocate_aligned<uint16_t>(counts_size(), 16);
+    size_t sources_size = this->counts_size();
+    uint16_t* scores = allocate_aligned<uint16_t>(sources_size, 16);
     std::vector<uint64_t> hashes;
     create_hashes(hashes, query);
-    calculate_counts(hashes, counts);
+
+    size_t score_batch_size = 128;
+    score_batch_size = std::max(score_batch_size, 8 * page_size());
+    size_t score_batch_num = tlx::div_ceil(sources_size, score_batch_size);
+
+#pragma omp parallel for
+    for (size_t b = 0; b < score_batch_num; ++b) {
+        Timer thr_timer;
+        size_t score_begin = b * score_batch_size;
+        size_t score_end = std::min((b + 1) * score_batch_size, sources_size);
+        size_t score_size = score_end - score_begin;
+        LOG << "search() score_begin=" << score_begin
+             << " score_end=" << score_end
+             << " score_size=" << score_size
+             << " rows buffer=" << score_size * hashes.size();
+
+        die_unless(score_begin % 8 == 0);
+        score_begin = tlx::div_ceil(score_begin, 8);
+        score_size = tlx::div_ceil(score_size, 8);
+
+        // rows array: interleaved as
+        // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
+        char* rows = allocate_aligned<char>(score_size * hashes.size(), get_page_size());
+
+        LOG << "read_from_disk";
+        thr_timer.active("io");
+        read_from_disk(hashes, rows, score_begin, score_size);
+
+        LOG << "aggregate_rows";
+        thr_timer.active("and rows");
+        aggregate_rows(hashes.size(), rows, score_size);
+
+        LOG << "compute_counts";
+        thr_timer.active("add rows");
+        compute_counts(hashes.size(), scores + 8 * score_begin, rows, score_size);
+
+        deallocate_aligned(rows);
+
+        // TODO: add thr_timer to main timer
+    }
+
     m_timer.active("sort results");
-    counts_to_result(file_names(), counts, result, num_results);
-    deallocate_aligned(counts);
+    counts_to_result(file_names(), scores, result, num_results);
+    deallocate_aligned(scores);
     m_timer.stop();
 }
 

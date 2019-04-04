@@ -12,6 +12,8 @@
 
 #include <cobs/util/timer.hpp>
 
+#include <tlx/logger.hpp>
+
 namespace cobs::query {
 
 class base

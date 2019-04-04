@@ -24,6 +24,7 @@ protected:
     uint32_t term_size() const override { return header_.term_size(); }
     uint8_t canonicalize() const override { return header_.canonicalize(); }
     uint64_t num_hashes() const override { return num_hashes_; }
+    uint64_t page_size() const override { return header_.page_size(); }
     uint64_t row_size() const override { return row_size_; }
     uint64_t counts_size() const override;
 

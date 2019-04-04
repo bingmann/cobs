@@ -61,7 +61,7 @@ TEST_F(compact_index_query, all_included_mmap) {
 
 TEST_F(compact_index_query, one_included_mmap) {
     // generate
-    auto documents = generate_documents_one(query);
+    auto documents = generate_documents_one(query, /* num_documents */ 2000);
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
@@ -78,8 +78,8 @@ TEST_F(compact_index_query, one_included_mmap) {
     std::vector<std::pair<uint16_t, std::string> > result;
     s_mmap.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
-    for (auto& r : result) {
-        ASSERT_EQ(r.first, 1);
+    for (size_t i = 0; i < result.size(); ++i) {
+        ASSERT_EQ(result[i].first, 1);
     }
 }
 

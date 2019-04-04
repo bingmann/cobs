@@ -22,6 +22,7 @@ protected:
     uint8_t canonicalize() const override { return header_.canonicalize(); }
     uint64_t num_hashes() const override { return header_.num_hashes(); }
     uint64_t row_size() const override { return header_.row_size(); }
+    uint64_t page_size() const override { return 1; }
     uint64_t counts_size() const override;
     const std::vector<std::string>& file_names() const override {
         return header_.file_names();

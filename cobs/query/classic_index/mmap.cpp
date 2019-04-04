@@ -24,12 +24,15 @@ mmap::~mmap() {
     destroy_mmap(m_fd, m_data, stream_pos_);
 }
 
-void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
-#pragma omp parallel for
+void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
+                          size_t begin, size_t size) {
+    die_unless(begin + size <= header_.row_size());
     for (size_t i = 0; i < hashes.size(); i++) {
-        auto data_8 = m_data + (hashes[i] % header_.signature_size()) * header_.row_size();
-        auto rows_8 = rows + i * header_.row_size();
-        std::memcpy(rows_8, data_8, header_.row_size());
+        auto data_8 =
+            m_data + begin
+            + (hashes[i] % header_.signature_size()) * header_.row_size();
+        auto rows_8 = rows + i * size;
+        std::memcpy(rows_8, data_8, size);
     }
 }
 

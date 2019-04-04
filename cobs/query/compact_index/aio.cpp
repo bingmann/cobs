@@ -49,7 +49,8 @@ aio::~aio() {
     }
 }
 
-void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows) {
+void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows,
+                         size_t begin, size_t size) {
     int64_t num_requests = header_.parameters().size() * hashes.size();
 
         #pragma omp parallel for collapse(2)
