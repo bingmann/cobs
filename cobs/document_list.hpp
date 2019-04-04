@@ -37,7 +37,7 @@ enum class FileType {
  */
 struct DocumentEntry {
     //! file system path to document
-    fs::path path_;
+    std::string path_;
     //! type of document
     FileType type_;
     //! name of the document
