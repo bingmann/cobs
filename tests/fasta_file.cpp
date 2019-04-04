@@ -50,7 +50,7 @@ TEST_F(fasta, process_kmers2) {
     die_unequal(fasta.size(0) - 30, count);
 }
 
-TEST_F(fasta, DISABLED_document_list) {
+TEST_F(fasta, document_list) {
     static constexpr bool debug = false;
 
     cobs::DocumentList doc_list(in_dir);

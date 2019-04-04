@@ -55,7 +55,6 @@ bool file_has_header(const fs::path& p) {
         deserialize_header<Header>(p);
     }
     catch (...) {
-        std::cout << p.string() << " is not a " << typeid(Header).name() << std::endl;
         return false;
     }
 
