@@ -58,8 +58,8 @@ void process_batch(const std::vector<DocumentEntry>& paths,
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
 
+    t.active("process");
     for (uint64_t i = 0; i < paths.size(); i++) {
-        t.active("read");
         cih.file_names()[i] = paths[i].name_;
 
         size_t count = 0;

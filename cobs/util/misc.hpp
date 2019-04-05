@@ -23,12 +23,6 @@ namespace cobs {
 
 uint64_t get_page_size();
 
-template <class T>
-auto operator << (std::ostream& os, const T& t)->decltype(t.print(os), os) {
-    t.print(os);
-    return os;
-}
-
 template <typename RandomGenerator>
 std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
     static const std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };

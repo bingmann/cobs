@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/util/misc.hpp>
 
 #include <cstddef>
 #include <cstdint>

@@ -10,6 +10,7 @@
 #include <cobs/util/aio.hpp>
 #include <cobs/util/error_handling.hpp>
 #include <cobs/util/file.hpp>
+#include <cobs/util/misc.hpp>
 #include <cobs/util/query.hpp>
 
 #include <cstring>

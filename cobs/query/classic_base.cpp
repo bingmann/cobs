@@ -135,7 +135,7 @@ void classic_base::search(const std::string& query,
 
     static constexpr bool debug = false;
 
-    m_timer.active("hashes");
+    timer_.active("hashes");
     num_results = num_results == 0 ? file_names().size()
                   : std::min(num_results, file_names().size());
     size_t sources_size = this->counts_size();
@@ -154,9 +154,9 @@ void classic_base::search(const std::string& query,
         size_t score_end = std::min((b + 1) * score_batch_size, sources_size);
         size_t score_size = score_end - score_begin;
         LOG << "search() score_begin=" << score_begin
-             << " score_end=" << score_end
-             << " score_size=" << score_size
-             << " rows buffer=" << score_size * hashes.size();
+            << " score_end=" << score_end
+            << " score_size=" << score_size
+            << " rows buffer=" << score_size * hashes.size();
 
         die_unless(score_begin % 8 == 0);
         score_begin = tlx::div_ceil(score_begin, 8);
@@ -180,13 +180,14 @@ void classic_base::search(const std::string& query,
 
         deallocate_aligned(rows);
 
-        // TODO: add thr_timer to main timer
+#pragma omp critical
+        timer_ += thr_timer;
     }
 
-    m_timer.active("sort results");
+    timer_.active("sort results");
     counts_to_result(file_names(), scores, result, num_results);
     deallocate_aligned(scores);
-    m_timer.stop();
+    timer_.stop();
 }
 
 #ifdef NO_SIMD
