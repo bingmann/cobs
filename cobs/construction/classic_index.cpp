@@ -90,7 +90,7 @@ void construct_from_documents(const DocumentList& doc_list,
     die_unless(params.signature_size != 0);
 
     doc_list.process_batches(
-        params.batch_bytes,
+        params.batch_bytes, /* verbose */ true,
         [&](size_t /* batch_num */, const std::vector<DocumentEntry>& paths,
             std::string out_file) {
             fs::path out_path =
