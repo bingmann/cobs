@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/query/classic_base.hpp
+ * cobs/query/classic_search.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,51 +7,43 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_CLASSIC_BASE_HEADER
-#define COBS_QUERY_CLASSIC_BASE_HEADER
+#ifndef COBS_QUERY_CLASSIC_SEARCH_HEADER
+#define COBS_QUERY_CLASSIC_SEARCH_HEADER
 
-#include <cobs/query/base.hpp>
+#include <cobs/query/index_file.hpp>
+#include <cobs/query/search.hpp>
 #include <cobs/util/query.hpp>
 
 #include <immintrin.h>
 
 namespace cobs::query {
 
-class classic_base : public base
+class ClassicSearch : public Search
 {
 private:
-#ifdef NO_SIMD
-    static const uint64_t m_expansions[16];
-#else
-    alignas(__m128i_u) static const uint16_t m_expansion[2048];
-#endif
+    static const uint64_t s_expansion[16];
+    alignas(16) static const uint16_t s_expansion_128[2048];
+
     void compute_counts(size_t hashes_size, uint16_t* counts, const char* rows,
                         size_t size);
     void aggregate_rows(size_t hashes_size, char* rows, size_t size);
     void create_hashes(std::vector<uint64_t>& hashes, const std::string& query);
 
-protected:
-    StreamPos stream_pos_;
-
-    virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows,
-                                size_t begin, size_t size) = 0;
-
-    virtual uint32_t term_size() const = 0;
-    virtual uint8_t canonicalize() const = 0;
-    virtual uint64_t row_size() const = 0;
-    virtual uint64_t page_size() const = 0;
-    virtual uint64_t num_hashes() const = 0;
-    virtual uint64_t counts_size() const = 0;
-    virtual const std::vector<std::string>& file_names() const = 0;
-
 public:
+    ClassicSearch(IndexFile& index_file)
+        : index_file_(index_file) { }
+
     void search(const std::string& query,
                 std::vector<std::pair<uint16_t, std::string> >& result,
                 size_t num_results = 0) final;
+
+protected:
+    //! reference to index file query object to retrieve data
+    IndexFile& index_file_;
 };
 
 } // namespace cobs::query
 
-#endif // !COBS_QUERY_CLASSIC_BASE_HEADER
+#endif // !COBS_QUERY_CLASSIC_SEARCH_HEADER
 
 /******************************************************************************/

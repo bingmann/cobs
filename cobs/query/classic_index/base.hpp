@@ -10,14 +10,15 @@
 #define COBS_QUERY_CLASSIC_INDEX_BASE_HEADER
 
 #include <cobs/file/classic_index_header.hpp>
-#include <cobs/query/classic_base.hpp>
+#include <cobs/query/index_file.hpp>
 
 namespace cobs::query::classic_index {
 
-class base : public query::classic_base
+class base : public query::IndexFile
 {
 protected:
     explicit base(const fs::path& path);
+
     uint32_t term_size() const override { return header_.term_size(); }
     uint8_t canonicalize() const override { return header_.canonicalize(); }
     uint64_t num_hashes() const override { return header_.num_hashes(); }

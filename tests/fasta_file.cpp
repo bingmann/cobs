@@ -10,6 +10,7 @@
 #include <cobs/document_list.hpp>
 #include <cobs/fasta_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_search.hpp>
 #include <gtest/gtest.h>
 
 namespace fs = cobs::fs;
@@ -65,6 +66,7 @@ TEST_F(fasta, document_list) {
 
     cobs::classic_index::construct(in_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
+    cobs::query::ClassicSearch s_base(s_mmap);
 
     // run queries for each kmer in the documents
     for (const cobs::DocumentEntry& de : doc_list.list()) {
@@ -75,7 +77,7 @@ TEST_F(fasta, document_list) {
                 std::string query(term);
 
                 std::vector<std::pair<uint16_t, std::string> > result;
-                s_mmap.search(query, result);
+                s_base.search(query, result);
                 ASSERT_EQ(6u, result.size());
 
                 for (size_t i = 0; i < result.size(); ++i) {

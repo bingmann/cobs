@@ -1,5 +1,5 @@
 /*******************************************************************************
- * cobs/query/classic_base.cpp
+ * cobs/query/classic_search.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  * Copyright (c) 2018 Timo Bingmann
@@ -7,7 +7,7 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/query/classic_base.hpp>
+#include <cobs/query/classic_search.hpp>
 #include <cobs/util/error_handling.hpp>
 
 #include <algorithm>
@@ -20,33 +20,35 @@
 #include <string>
 #include <vector>
 
+#include <tlx/logger.hpp>
 #include <tlx/math/div_ceil.hpp>
 
 #include <xxhash.h>
 
 namespace cobs::query {
 
-void classic_base::create_hashes(std::vector<uint64_t>& hashes,
-                                 const std::string& query) {
+void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
+                                  const std::string& query) {
 
-    uint32_t term_size = this->term_size();
-    size_t num_hashes = this->num_hashes();
+    uint32_t term_size = index_file_.term_size();
+    size_t num_hashes = index_file_.num_hashes();
+    uint8_t canonicalize = index_file_.canonicalize();
 
-    size_t num_kmers = query.size() - term_size + 1;
-    hashes.resize(num_hashes * num_kmers);
+    size_t num_terms = query.size() - term_size + 1;
+    hashes.resize(num_hashes * num_terms);
 
     const char* query_8 = query.data();
 
-    if (canonicalize() == 0) {
-        for (size_t i = 0; i < num_kmers; i++) {
+    if (canonicalize == 0) {
+        for (size_t i = 0; i < num_terms; i++) {
             for (size_t j = 0; j < num_hashes; j++) {
                 hashes[i * num_hashes + j] = XXH64(query_8 + i, term_size, j);
             }
         }
     }
-    else if (canonicalize() == 1) {
+    else if (canonicalize == 1) {
         char canonicalize_buffer[term_size];
-        for (size_t i = 0; i < num_kmers; i++) {
+        for (size_t i = 0; i < num_terms; i++) {
             const char* normalized_kmer =
                 canonicalize_kmer(query_8 + i, canonicalize_buffer, term_size);
             for (size_t j = 0; j < num_hashes; j++) {
@@ -56,7 +58,8 @@ void classic_base::create_hashes(std::vector<uint64_t>& hashes,
     }
 }
 
-void counts_to_result(const std::vector<std::string>& file_names, const uint16_t* scores,
+void counts_to_result(const std::vector<std::string>& file_names,
+                      const uint16_t* scores,
                       std::vector<std::pair<uint16_t, std::string> >& result,
                       size_t num_results) {
     std::vector<uint32_t> sorted_indices(file_names.size());
@@ -71,17 +74,18 @@ void counts_to_result(const std::vector<std::string>& file_names, const uint16_t
     result.resize(num_results);
 #pragma omp parallel for
     for (size_t i = 0; i < num_results; i++) {
-        result[i] = std::make_pair(scores[sorted_indices[i]], file_names[sorted_indices[i]]);
+        result[i] = std::make_pair(
+            scores[sorted_indices[i]], file_names[sorted_indices[i]]);
     }
 }
 
-void classic_base::compute_counts(size_t hashes_size, uint16_t* scores,
-                                  const char* rows, size_t size) {
+void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
+                                   const char* rows, size_t size) {
 #ifndef NO_SIMD
-    auto m_expansion_128 = reinterpret_cast<const __m128i_u*>(m_expansion);
+    auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
 #endif
     auto rows_b = reinterpret_cast<const uint8_t*>(rows);
-    uint64_t nh = num_hashes();
+    uint64_t num_hashes = index_file_.num_hashes();
     uint64_t bs = size;
 
 #ifdef NO_SIMD
@@ -89,24 +93,25 @@ void classic_base::compute_counts(size_t hashes_size, uint16_t* scores,
 #else
     auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
 #endif
-    for (uint64_t i = 0; i < hashes_size; i += nh) {
+    for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         auto rows_8 = rows_b + i * bs;
         for (size_t k = 0; k < bs; k++) {
 #ifdef NO_SIMD
-            counts_64[2 * k] += m_expansions[rows_8[k] & 0xF];
-            counts_64[2 * k + 1] += m_expansions[rows_8[k] >> 4];
+            counts_64[2 * k] += s_expansion[rows_8[k] & 0xF];
+            counts_64[2 * k + 1] += s_expansion[rows_8[k] >> 4];
 #else
-            counts_128[k] = _mm_add_epi16(counts_128[k], m_expansion_128[rows_8[k]]);
+            counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
 #endif
         }
     }
 }
 
-void classic_base::aggregate_rows(size_t hashes_size, char* rows, size_t size) {
-    for (uint64_t i = 0; i < hashes_size; i += num_hashes()) {
+void ClassicSearch::aggregate_rows(size_t hashes_size, char* rows, size_t size) {
+    uint64_t num_hashes = index_file_.num_hashes();
+    for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         auto rows_8 = rows + i * size;
         auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
-        for (size_t j = 1; j < num_hashes(); j++) {
+        for (size_t j = 1; j < num_hashes; j++) {
             auto rows_8_j = rows_8 + j * size;
             auto rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
             size_t k = 0;
@@ -123,35 +128,40 @@ void classic_base::aggregate_rows(size_t hashes_size, char* rows, size_t size) {
     }
 }
 
-void classic_base::search(const std::string& query,
-                          std::vector<std::pair<uint16_t, std::string> >& result,
-                          size_t num_results) {
-    assert_exit(query.size() >= term_size(),
-                "query too short, needs to be at least "
-                + std::to_string(term_size()) + " characters long");
-    assert_exit(query.size() - term_size() < UINT16_MAX,
-                "query too long, can not be longer than "
-                + std::to_string(UINT16_MAX + term_size() - 1) + " characters");
-
+void ClassicSearch::search(const std::string& query,
+                           std::vector<std::pair<uint16_t, std::string> >& result,
+                           size_t num_results) {
     static constexpr bool debug = false;
 
+    uint32_t term_size = index_file_.term_size();
+    uint64_t page_size = index_file_.page_size();
+    size_t counts_size = index_file_.counts_size();
+    const std::vector<std::string>& file_names = index_file_.file_names();
+
+    assert_exit(query.size() >= term_size,
+                "query too short, needs to be at least "
+                + std::to_string(term_size) + " characters long");
+    assert_exit(query.size() - term_size < UINT16_MAX,
+                "query too long, can not be longer than "
+                + std::to_string(UINT16_MAX + term_size - 1) + " characters");
+
     timer_.active("hashes");
-    num_results = num_results == 0 ? file_names().size()
-                  : std::min(num_results, file_names().size());
-    size_t sources_size = this->counts_size();
-    uint16_t* scores = allocate_aligned<uint16_t>(sources_size, 16);
+    num_results = num_results == 0 ? file_names.size()
+                  : std::min(num_results, file_names.size());
+    size_t scores_size = counts_size;
+    uint16_t* scores = allocate_aligned<uint16_t>(scores_size, 16);
     std::vector<uint64_t> hashes;
     create_hashes(hashes, query);
 
     size_t score_batch_size = 128;
-    score_batch_size = std::max(score_batch_size, 8 * page_size());
-    size_t score_batch_num = tlx::div_ceil(sources_size, score_batch_size);
+    score_batch_size = std::max(score_batch_size, 8 * page_size);
+    size_t score_batch_num = tlx::div_ceil(scores_size, score_batch_size);
 
 #pragma omp parallel for
     for (size_t b = 0; b < score_batch_num; ++b) {
         Timer thr_timer;
         size_t score_begin = b * score_batch_size;
-        size_t score_end = std::min((b + 1) * score_batch_size, sources_size);
+        size_t score_end = std::min((b + 1) * score_batch_size, scores_size);
         size_t score_size = score_end - score_begin;
         LOG << "search() score_begin=" << score_begin
             << " score_end=" << score_end
@@ -168,7 +178,7 @@ void classic_base::search(const std::string& query,
 
         LOG << "read_from_disk";
         thr_timer.active("io");
-        read_from_disk(hashes, rows, score_begin, score_size);
+        index_file_.read_from_disk(hashes, rows, score_begin, score_size);
 
         LOG << "aggregate_rows";
         thr_timer.active("and rows");
@@ -185,19 +195,18 @@ void classic_base::search(const std::string& query,
     }
 
     timer_.active("sort results");
-    counts_to_result(file_names(), scores, result, num_results);
+    counts_to_result(file_names, scores, result, num_results);
     deallocate_aligned(scores);
     timer_.stop();
 }
 
-#ifdef NO_SIMD
-const uint64_t classic_base::m_expansions[] = {
+const uint64_t ClassicSearch::s_expansion[] = {
     0, 1, 65536, 65537, 4294967296, 4294967297, 4295032832, 4295032833,
     281474976710656, 281474976710657, 281474976776192, 281474976776193,
     281479271677952, 281479271677953, 281479271743488, 281479271743489
 };
-#else
-const uint16_t classic_base::m_expansion[] = {
+
+const uint16_t ClassicSearch::s_expansion_128[] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -455,7 +464,6 @@ const uint16_t classic_base::m_expansion[] = {
     0, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1
 };
-#endif
 
 } // namespace cobs::query
 

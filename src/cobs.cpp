@@ -12,6 +12,7 @@
 #include <cobs/construction/ranfold_index.hpp>
 #include <cobs/cortex_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_search.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #ifdef __linux__
@@ -359,13 +360,15 @@ int query(int argc, char** argv) {
 
     if (cobs::file_has_header<cobs::ClassicIndexHeader>(in_file)) {
         cobs::query::classic_index::mmap mmap(in_file);
-        mmap.search(query, result, num_results);
-        timer = mmap.get_timer();
+        cobs::query::ClassicSearch s(mmap);
+        s.search(query, result, num_results);
+        timer = s.timer();
     }
     else if (cobs::file_has_header<cobs::CompactIndexHeader>(in_file)) {
         cobs::query::compact_index::mmap mmap(in_file);
-        mmap.search(query, result, num_results);
-        timer = mmap.get_timer();
+        cobs::query::ClassicSearch s(mmap);
+        s.search(query, result, num_results);
+        timer = s.timer();
     }
     else {
         die("Could not open index path \"" << in_file << "\"");
@@ -561,7 +564,8 @@ void benchmark_fpr_run(const cobs::fs::path& p,
                        const std::vector<std::string>& queries,
                        const std::vector<std::string>& warmup_queries) {
 
-    cobs::query::classic_index::mmap s(p);
+    cobs::query::classic_index::mmap sf(p);
+    cobs::query::ClassicSearch s(sf);
 
     sync();
     std::ofstream ofs("/proc/sys/vm/drop_caches");
@@ -572,7 +576,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     for (size_t i = 0; i < warmup_queries.size(); i++) {
         s.search(warmup_queries[i], result);
     }
-    s.get_timer().reset();
+    s.timer().reset();
 
     std::map<uint32_t, uint64_t> counts;
 
@@ -602,7 +606,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     aio = "off";
 #endif
 
-    cobs::Timer t = s.get_timer();
+    cobs::Timer t = s.timer();
     std::cout << "RESULT"
               << " name=benchmark "
               << " index=" << p.string()

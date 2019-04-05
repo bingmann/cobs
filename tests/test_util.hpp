@@ -13,6 +13,7 @@
 #include <cobs/construction/compact_index.hpp>
 #include <cobs/kmer_buffer.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_search.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
 #include <cobs/util/query.hpp>
 #include <fstream>

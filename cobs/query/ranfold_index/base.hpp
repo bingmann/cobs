@@ -10,11 +10,11 @@
 #define COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
 
 #include <cobs/file/ranfold_index_header.hpp>
-#include <cobs/query/classic_base.hpp>
+#include <cobs/query/classic_search.hpp>
 
 namespace cobs::query::ranfold_index {
 
-class base : public query::base
+class base : public query::Search
 {
 protected:
     explicit base(const fs::path& path);

@@ -10,11 +10,11 @@
 #define COBS_QUERY_COMPACT_INDEX_BASE_HEADER
 
 #include <cobs/file/compact_index_header.hpp>
-#include <cobs/query/classic_base.hpp>
+#include <cobs/query/index_file.hpp>
 
 namespace cobs::query::compact_index {
 
-class base : public query::classic_base
+class base : public query::IndexFile
 {
 protected:
     size_t num_hashes_;

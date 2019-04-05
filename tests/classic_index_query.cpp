@@ -47,10 +47,11 @@ TEST_F(classic_index_query, all_included_small_batch) {
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
+    cobs::query::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_mmap.search(query, result);
+    s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         int index = std::stoi(r.second.substr(r.second.size() - 2));
@@ -71,10 +72,11 @@ TEST_F(classic_index_query, one_included_small_batch) {
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
+    cobs::query::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_mmap.search(query, result);
+    s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (size_t i = 0; i < result.size(); ++i) {
         ASSERT_EQ(result[i].first, 1);
@@ -94,10 +96,11 @@ TEST_F(classic_index_query, one_included_large_batch) {
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
+    cobs::query::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
-    s_mmap.search(query, result);
+    s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
         ASSERT_EQ(r.first, 1);
@@ -117,6 +120,7 @@ TEST_F(classic_index_query, false_positive) {
 
     cobs::classic_index::construct(input_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);
+    cobs::query::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     size_t num_tests = 10000;
@@ -124,7 +128,7 @@ TEST_F(classic_index_query, false_positive) {
     std::vector<std::pair<uint16_t, std::string> > result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
-        s_mmap.search(query_2, result);
+        s_base.search(query_2, result);
 
         for (auto& r : result) {
             num_positive[r.second] += r.first;

@@ -38,13 +38,12 @@ set(SOURCE_FILES
         cobs/file/ranfold_index_header.hpp
         cobs/kmer.hpp
         cobs/kmer_buffer.hpp
-        cobs/query/base.hpp
-        cobs/query/classic_base.cpp
-        cobs/query/classic_base.hpp
         cobs/query/classic_index/base.cpp
         cobs/query/classic_index/base.hpp
         cobs/query/classic_index/mmap.cpp
         cobs/query/classic_index/mmap.hpp
+        cobs/query/classic_search.cpp
+        cobs/query/classic_search.hpp
         cobs/query/compact_index/base.cpp
         cobs/query/compact_index/base.hpp
         cobs/query/compact_index/mmap.cpp
@@ -53,6 +52,7 @@ set(SOURCE_FILES
         cobs/query/ranfold_index/base.hpp
         cobs/query/ranfold_index/mmap.cpp
         cobs/query/ranfold_index/mmap.hpp
+        cobs/query/search.hpp
         cobs/util/calc_signature_size.cpp
         cobs/util/calc_signature_size.hpp
         cobs/util/error_handling.cpp

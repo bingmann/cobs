@@ -9,6 +9,7 @@
 #include <cobs/cortex_file.hpp>
 #include <cobs/query/classic_index/base.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_search.hpp>
 #include <experimental/filesystem>
 
 #include <omp.h>
@@ -32,7 +33,7 @@ void generate_test_bloom(std::experimental::filesystem::path p) {
     }
 }
 
-void run(cobs::query::classic_index::base& s, size_t query_len, std::vector<std::pair<uint16_t, std::string> >& result) {
+void run(cobs::query::ClassicSearch& s, size_t query_len, std::vector<std::pair<uint16_t, std::string> >& result) {
     sync();
     cobs::Timer t;
     t.active("total");
@@ -40,7 +41,7 @@ void run(cobs::query::classic_index::base& s, size_t query_len, std::vector<std:
     s.search(cobs::random_sequence(query_len, 1234), result, 10);
 //    }
     t.stop();
-    std::cout << s.get_timer() << std::endl;
+    std::cout << s.timer_ << std::endl;
     std::cout << t << std::endl;
 }
 
@@ -51,9 +52,10 @@ void server() {
     std::experimental::filesystem::path p("/users/flo/projects/thesis/data/performance_bloom/large.cobs_classic");
 
     cobs::query::classic_index::mmap s_mmap(p);
+    cobs::query::ClassicSearch s(s_mmap);
 //    cobs::query::classic_index::asio s_asio(p);
     size_t query_len = 1000;
-    run(s_mmap, query_len, result_1);
+    run(s, query_len, result_1);
 //    run(s_stxxl, query_len, result_3);
 }
 
