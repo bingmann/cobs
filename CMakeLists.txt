@@ -24,8 +24,8 @@ set(SOURCE_FILES
         cobs/construction/ranfold_index.cpp
         cobs/construction/ranfold_index.hpp
         cobs/cortex_file.hpp
-        cobs/fasta_file.cpp
-        cobs/fasta_file.hpp
+        cobs/fasta_multifile.cpp
+        cobs/fasta_multifile.hpp
         cobs/file/classic_index_header.cpp
         cobs/file/classic_index_header.hpp
         cobs/file/compact_index_header.cpp

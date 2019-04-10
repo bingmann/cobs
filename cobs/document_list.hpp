@@ -10,7 +10,7 @@
 #define COBS_DOCUMENT_LIST_HEADER
 
 #include <cobs/cortex_file.hpp>
-#include <cobs/fasta_file.hpp>
+#include <cobs/fasta_multifile.hpp>
 #include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -29,6 +29,8 @@ enum class FileType {
     KMerBuffer,
     Fasta,
     Fastq,
+    FastaMulti,
+    FastqMulti,
 };
 
 /*!
@@ -44,7 +46,7 @@ struct DocumentEntry {
     std::string name_;
     //! size of the document in bytes
     size_t size_;
-    //! subdocument index (for FASTA, FASTQ, etc)
+    //! subdocument index (for Multifile FASTA, FASTQ, etc)
     size_t subdoc_index_ = 0;
     //! fixed term (term) size or zero
     size_t term_size_ = 0;
@@ -93,8 +95,8 @@ struct DocumentEntry {
                 callback(term);
             }
         }
-        else if (type_ == FileType::Fasta) {
-            FastaFile fasta(path_);
+        else if (type_ == FileType::FastaMulti) {
+            FastaMultifile fasta(path_);
             fasta.process_terms(subdoc_index_, term_size, callback);
         }
     }
@@ -143,7 +145,9 @@ public:
                    path.extension() == ".ctx" ||
                    path.extension() == ".cobs_doc" ||
                    path.extension() == ".fasta" ||
-                   path.extension() == ".fastq";
+                   path.extension() == ".fastq" ||
+                   path.extension() == ".mfasta" ||
+                   path.extension() == ".mfastq";
         case FileType::Text:
             return path.extension() == ".txt";
         case FileType::Cortex:
@@ -154,6 +158,10 @@ public:
             return path.extension() == ".fasta";
         case FileType::Fastq:
             return path.extension() == ".fastq";
+        case FileType::FastaMulti:
+            return path.extension() == ".mfasta";
+        case FileType::FastqMulti:
+            return path.extension() == ".mfastq";
         }
         return false;
     }
@@ -194,8 +202,8 @@ public:
             de.term_count_ = size / ((de.term_size_ + 3) / 4);
             list_.emplace_back(de);
         }
-        else if (path.extension() == ".fasta") {
-            FastaFile fasta(path);
+        else if (path.extension() == ".mfasta") {
+            FastaMultifile fasta(path);
             for (size_t i = 0; i < fasta.num_documents(); ++i) {
                 DocumentEntry de;
                 de.path_ = path;

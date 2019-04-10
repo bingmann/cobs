@@ -1,13 +1,13 @@
 /*******************************************************************************
- * cobs/fasta_file.hpp
+ * cobs/fasta_multifile.hpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_FASTA_FILE_HEADER
-#define COBS_FASTA_FILE_HEADER
+#ifndef COBS_FASTA_MULTIFILE_HEADER
+#define COBS_FASTA_MULTIFILE_HEADER
 
 #include <cstring>
 #include <mutex>
@@ -110,16 +110,16 @@ private:
     std::mutex mutex_;
 };
 
-class FastaFile
+class FastaMultifile
 {
 public:
-    FastaFile(std::string path, bool use_cache = true) {
+    FastaMultifile(std::string path, bool use_cache = true) {
         std::ifstream is(path);
         die_unless(is.good());
 
         char first = is.get();
         if (first != '>' && first != ';')
-            die("FastaFile: file does not start with > or ;");
+            die("FastaMultifile: file does not start with > or ;");
 
         ifstream_array_ =
             std::make_shared<ThreadObjectArray<std::ifstream> >(lru_set_);
@@ -142,7 +142,7 @@ public:
 
     //! read complete FASTA file for sub-documents
     void compute_index(std::string path, std::ifstream& is) {
-        LOG1 << "FastaFile: computing index for " << path;
+        LOG1 << "FastaMultifile: computing index for " << path;
 
         is.clear();
         is.seekg(0);
@@ -205,7 +205,7 @@ public:
         }
         fs::rename(cache_path(path) + ".tmp",
                    cache_path(path));
-        LOG1 << "FastaFile: saved index as " << cache_path(path);
+        LOG1 << "FastaMultifile: saved index as " << cache_path(path);
     }
 
     //! read cache file
@@ -214,7 +214,7 @@ public:
         if (!is.good()) return false;
         size_t list_size;
         stream_get_pod(is, list_size);
-        LOG1 << "FastaFile: loading index " << cache_path(path)
+        LOG1 << "FastaMultifile: loading index " << cache_path(path)
              << " [" << list_size << " documents]";
         index_ = std::make_shared<FastaSubfileList>();
         for (size_t i = 0; i < list_size; ++i) {
@@ -265,6 +265,6 @@ private:
 
 } // namespace cobs
 
-#endif // !COBS_FASTA_FILE_HEADER
+#endif // !COBS_FASTA_MULTIFILE_HEADER
 
 /******************************************************************************/
