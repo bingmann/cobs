@@ -10,6 +10,7 @@
 #define COBS_DOCUMENT_LIST_HEADER
 
 #include <cobs/cortex_file.hpp>
+#include <cobs/fasta_file.hpp>
 #include <cobs/fasta_multifile.hpp>
 #include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
@@ -95,9 +96,13 @@ struct DocumentEntry {
                 callback(term);
             }
         }
+        else if (type_ == FileType::Fasta) {
+            FastaFile fasta(path_);
+            fasta.process_terms(term_size, callback);
+        }
         else if (type_ == FileType::FastaMulti) {
-            FastaMultifile fasta(path_);
-            fasta.process_terms(subdoc_index_, term_size, callback);
+            FastaMultifile mfasta(path_);
+            mfasta.process_terms(subdoc_index_, term_size, callback);
         }
     }
 };
@@ -202,14 +207,24 @@ public:
             de.term_count_ = size / ((de.term_size_ + 3) / 4);
             list_.emplace_back(de);
         }
+        else if (path.extension() == ".fasta") {
+            FastaFile fasta(path);
+            DocumentEntry de;
+            de.path_ = path;
+            de.type_ = FileType::Fasta;
+            de.name_ = cobs::base_name(path);
+            de.size_ = fasta.size();
+            de.term_size_ = 0, de.term_count_ = 0;
+            list_.emplace_back(de);
+        }
         else if (path.extension() == ".mfasta") {
-            FastaMultifile fasta(path);
-            for (size_t i = 0; i < fasta.num_documents(); ++i) {
+            FastaMultifile mfasta(path);
+            for (size_t i = 0; i < mfasta.num_documents(); ++i) {
                 DocumentEntry de;
                 de.path_ = path;
-                de.type_ = FileType::Fasta;
+                de.type_ = FileType::FastaMulti;
                 de.name_ = cobs::base_name(path) + '_' + pad_index(i);
-                de.size_ = fasta.size(i);
+                de.size_ = mfasta.size(i);
                 de.subdoc_index_ = i;
                 de.term_size_ = 0, de.term_count_ = 0;
                 list_.emplace_back(de);

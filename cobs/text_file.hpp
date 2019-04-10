@@ -29,7 +29,7 @@ public:
         die_unless(is_.good());
     }
 
-    //! return size of a sub-document
+    //! return size of a text document
     size_t size() {
         is_.clear();
         is_.seekg(0, std::ios::end);

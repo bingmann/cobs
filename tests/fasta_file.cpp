@@ -1,5 +1,5 @@
 /*******************************************************************************
- * tests/fasta_multifile.cpp
+ * tests/fasta_file.cpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
@@ -8,18 +8,18 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/document_list.hpp>
-#include <cobs/fasta_multifile.hpp>
+#include <cobs/fasta_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/classic_search.hpp>
 #include <gtest/gtest.h>
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir = "test/resources/fasta_multi/";
-static fs::path index_dir = "test/fasta_multi_index/index";
+static fs::path in_dir = "test/resources/fasta/";
+static fs::path index_dir = "test/fasta_index/index";
 static fs::path index_path = index_dir / "index.cobs_classic";
 
-class fasta_multi : public ::testing::Test
+class fasta : public ::testing::Test
 {
 protected:
     void SetUp() final {
@@ -32,26 +32,13 @@ protected:
     }
 };
 
-TEST_F(fasta_multi, process_kmers1) {
-    cobs::FastaMultifile fasta_multi(in_dir / "sample1.mfasta");
+TEST_F(fasta, process_kmers1) {
+    cobs::FastaFile fasta(in_dir / "sample1.fasta");
 
-    die_unequal(fasta_multi.num_documents(), 1u);
+    die_unequal(fasta.size(), 3213u);
 }
 
-TEST_F(fasta_multi, process_kmers2) {
-    cobs::FastaMultifile fasta_multi(in_dir / "sample2.mfasta");
-
-    die_unequal(fasta_multi.num_documents(), 5u);
-
-    die_unequal(fasta_multi.size(0), 256u);
-    die_unequal(fasta_multi.size(4), 438u);
-
-    size_t count = 0;
-    fasta_multi.process_terms(0, 31, [&](const cobs::string_view&) { ++count; });
-    die_unequal(fasta_multi.size(0) - 30, count);
-}
-
-TEST_F(fasta_multi, document_list) {
+TEST_F(fasta, document_list) {
     static constexpr bool debug = false;
 
     cobs::DocumentList doc_list(in_dir);
