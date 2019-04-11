@@ -119,7 +119,7 @@ public:
 
         char first = is.get();
         if (first != '>' && first != ';')
-            die("FastaMultifile: file does not start with > or ;");
+            die("FastaMultifile: file does not start with > or ; - " << path);
 
         ifstream_array_ =
             std::make_shared<ThreadObjectArray<std::ifstream> >(lru_set_);

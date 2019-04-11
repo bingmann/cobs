@@ -63,6 +63,11 @@ struct DocumentEntry {
     //! calculate number of terms in file
     size_t num_terms(size_t k) const {
         if (term_size_ == 0) {
+            if (type_ == FileType::Fasta) {
+                // read fasta index
+                FastaFile fasta(path_);
+                return fasta.num_terms(k);
+            }
             return size_ < k ? 0 : size_ - k + 1;
         }
         die_verbose_unequal(

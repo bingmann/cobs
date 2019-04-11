@@ -36,6 +36,12 @@ public:
         return is_.tellg();
     }
 
+    //! return number of q-grams in document
+    size_t num_terms(size_t q) {
+        size_t n = size();
+        return n < q ? 0 : n - q + 1;
+    }
+
     template <typename Callback>
     void process_terms(size_t term_size, Callback callback) {
         is_.clear();
