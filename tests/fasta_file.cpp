@@ -36,7 +36,7 @@ TEST_F(fasta, process_kmers) {
     cobs::FastaFile fasta1(in_dir / "sample1.fasta");
     die_unequal(fasta1.size(), 3219u);
 
-    cobs::FastaFile fasta7(in_dir / "sample7.fasta");
+    cobs::FastaFile fasta7(in_dir / "sample7.fasta.gz");
     die_unequal(fasta7.size(), 1659u);
 
     size_t nterms = fasta7.num_terms(31);

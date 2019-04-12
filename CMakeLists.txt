@@ -66,6 +66,9 @@ set(SOURCE_FILES
         cobs/util/serialization.hpp
         cobs/util/timer.cpp
         cobs/util/timer.hpp
+        cobs/util/zip_stream.cpp
+        cobs/util/zip_stream.hpp
+        cobs/util/zip_stream_fwd.hpp
         )
 
 if(NOT DEFINED SIMD)
@@ -132,6 +135,13 @@ add_subdirectory(extlib/googletest)
 
 add_subdirectory(extlib/xxhash/cmake_unofficial)
 set(COBS_LINK_LIBRARIES xxhash ${COBS_LINK_LIBRARIES})
+
+### use ZLIB ###
+
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+
+set(COBS_LINK_LIBRARIES ${ZLIB_LIBRARIES} ${COBS_LINK_LIBRARIES})
 
 ### use Boost filesystem ###
 

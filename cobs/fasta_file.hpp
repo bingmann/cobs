@@ -16,9 +16,11 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/string_view.hpp>
+#include <cobs/util/zip_stream.hpp>
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
+#include <tlx/string/ends_with.hpp>
 
 #include <map>
 
@@ -31,13 +33,7 @@ public:
         is_.open(path);
         die_unless(is_.good());
 
-        std::string line;
-        std::getline(is_, line);
-        die_unless(is_.good());
-
-        if (line.empty() || (line[0] != '>' && line[0] != ';'))
-            die("FastaFile: file does not start with > or ; - " << path);
-
+        use_cache = false;
         if (!use_cache) {
             compute_index();
         }
@@ -50,19 +46,30 @@ public:
         }
     }
 
-    //! read complete FASTA file for sub-documents
-    void compute_index() {
-        LOG1 << "FastaFile: computing index for " << path_;
+    //! return index cache file path
+    std::string cache_path() const {
+        return path_ + ".cobs_cache";
+    }
 
-        is_.clear();
-        is_.seekg(0);
+    //! read complete FASTA file for sub-documents
+    void compute_index(std::istream& is) {
+        LOG1 << "FastaFile: computing index for " << path_;
 
         char line[64 * 1024];
         size_t sequence_size = 0;
         sequence_count_ = 0;
+        size_ = 0;
 
-        while (is_.getline(line, sizeof(line))) {
-            if (is_.gcount() == 0 || line[0] == '>' || line[0] == ';') {
+        is.getline(line, sizeof(line));
+        die_unless(is.good());
+
+        if (is.gcount() == 0 || (line[0] != '>' && line[0] != ';'))
+            die("FastaFile: file does not start with > or ; - " << path_);
+        size_ += is.gcount();
+
+        while (is.getline(line, sizeof(line))) {
+            size_ += is.gcount();
+            if (is.gcount() == 0 || line[0] == '>' || line[0] == ';') {
                 // comment or empty line restart the term buffer
                 if (sequence_size != 0) {
                     sequence_size_hist_[sequence_size]++;
@@ -71,7 +78,7 @@ public:
                 sequence_size = 0;
                 continue;
             }
-            sequence_size += is_.gcount();
+            sequence_size += is.gcount();
         }
         if (sequence_size != 0) {
             sequence_size_hist_[sequence_size]++;
@@ -79,14 +86,24 @@ public:
         }
     }
 
-    //! return index cache file path
-    std::string cache_path() const {
-        return path_ + ".cobs_cache";
+    //! read complete FASTA file for sub-documents
+    void compute_index() {
+        is_.clear();
+        is_.seekg(0);
+
+        if (tlx::ends_with(path_, ".gz")) {
+            zip_istream zis(is_);
+            return compute_index(zis);
+        }
+        else {
+            return compute_index(is_);
+        }
     }
 
     //! write cache file
     void write_cache_file() {
         std::ofstream os(cache_path() + ".tmp");
+        stream_put_pod(os, size_);
         stream_put_pod(os, sequence_count_);
         stream_put_pod(os, sequence_size_hist_.size());
         for (auto it = sequence_size_hist_.begin();
@@ -104,6 +121,7 @@ public:
         std::ifstream is(cache_path());
         if (!is.good()) return false;
         size_t hist_size;
+        stream_get_pod(is, size_);
         stream_get_pod(is, sequence_count_);
         stream_get_pod(is, hist_size);
         LOG1 << "FastaFile: loading index " << cache_path()
@@ -119,9 +137,7 @@ public:
 
     //! return estimated size of a fasta document
     size_t size() {
-        is_.clear();
-        is_.seekg(0, std::ios::end);
-        return is_.tellg();
+        return size_;
     }
 
     //! return number of q-grams in document
@@ -134,27 +150,38 @@ public:
     }
 
     template <typename Callback>
-    void process_terms(size_t term_size, Callback callback) {
-        is_.clear();
-        is_.seekg(0);
-        die_unless(is_.good());
-
+    void process_terms(std::istream& is, size_t term_size, Callback callback) {
         char line[64 * 1024];
         std::string data;
 
-        while (is_.getline(line, sizeof(line))) {
-            if (is_.gcount() == 0 || line[0] == '>' || line[0] == ';') {
+        while (is.getline(line, sizeof(line))) {
+            if (is.gcount() == 0 || line[0] == '>' || line[0] == ';') {
                 // comment or empty line restart the term buffer
                 data.clear();
                 continue;
             }
 
             // process terms continued on next line
-            data.append(line, is_.gcount());
+            data.append(line, is.gcount());
             for (size_t i = 0; i + term_size <= data.size(); ++i) {
                 callback(string_view(data.data() + i, term_size));
             }
             data.erase(0, data.size() - term_size + 1);
+        }
+    }
+
+    template <typename Callback>
+    void process_terms(size_t term_size, Callback callback) {
+        is_.clear();
+        is_.seekg(0);
+        die_unless(is_.good());
+
+        if (tlx::ends_with(path_, ".gz")) {
+            zip_istream zis(is_);
+            return process_terms(zis, term_size, callback);
+        }
+        else {
+            return process_terms(is_, term_size, callback);
         }
     }
 
@@ -163,6 +190,8 @@ private:
     std::ifstream is_;
     //! path
     std::string path_;
+    //! size in bytes
+    size_t size_;
     //! number of sub-sequences
     size_t sequence_count_;
     //! histogram of sub-sequence sizes

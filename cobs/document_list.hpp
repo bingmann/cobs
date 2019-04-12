@@ -151,34 +151,38 @@ public:
     static bool accept(const fs::path& path, FileType filter) {
         switch (filter) {
         case FileType::Any:
-            return path.extension() == ".txt" ||
-                   path.extension() == ".ctx" ||
-                   path.extension() == ".cobs_doc" ||
-                   path.extension() == ".fasta" ||
-                   path.extension() == ".fastq" ||
-                   path.extension() == ".mfasta" ||
-                   path.extension() == ".mfastq";
+            return tlx::ends_with(path, ".txt") ||
+                   tlx::ends_with(path, ".ctx") ||
+                   tlx::ends_with(path, ".cobs_doc") ||
+                   tlx::ends_with(path, ".fasta") ||
+                   tlx::ends_with(path, ".fasta.gz") ||
+                   tlx::ends_with(path, ".fastq") ||
+                   tlx::ends_with(path, ".fastq.gz") ||
+                   tlx::ends_with(path, ".mfasta") ||
+                   tlx::ends_with(path, ".mfastq");
         case FileType::Text:
-            return path.extension() == ".txt";
+            return tlx::ends_with(path, ".txt");
         case FileType::Cortex:
-            return path.extension() == ".ctx";
+            return tlx::ends_with(path, ".ctx");
         case FileType::KMerBuffer:
-            return path.extension() == ".cobs_doc";
+            return tlx::ends_with(path, ".cobs_doc");
         case FileType::Fasta:
-            return path.extension() == ".fasta";
+            return tlx::ends_with(path, ".fasta") ||
+                   tlx::ends_with(path, ".fasta.gz");
         case FileType::Fastq:
-            return path.extension() == ".fastq";
+            return tlx::ends_with(path, ".fastq") ||
+                   tlx::ends_with(path, ".fastq.gz");
         case FileType::FastaMulti:
-            return path.extension() == ".mfasta";
+            return tlx::ends_with(path, ".mfasta");
         case FileType::FastqMulti:
-            return path.extension() == ".mfastq";
+            return tlx::ends_with(path, ".mfastq");
         }
         return false;
     }
 
     //! add DocumentEntry for given file
     void add(const fs::path& path) {
-        if (path.extension() == ".txt") {
+        if (tlx::ends_with(path, ".txt")) {
             DocumentEntry de;
             de.path_ = path;
             de.type_ = FileType::Text;
@@ -187,7 +191,7 @@ public:
             de.term_size_ = 0, de.term_count_ = 0;
             list_.emplace_back(de);
         }
-        else if (path.extension() == ".ctx") {
+        else if (tlx::ends_with(path, ".ctx")) {
             CortexFile ctx(path);
             DocumentEntry de;
             de.path_ = path;
@@ -198,7 +202,7 @@ public:
             de.term_count_ = ctx.num_kmers();
             list_.emplace_back(de);
         }
-        else if (path.extension() == ".cobs_doc") {
+        else if (tlx::ends_with(path, ".cobs_doc")) {
             std::ifstream is;
             KMerBufferHeader dh = deserialize_header<KMerBufferHeader>(is, path);
             DocumentEntry de;
@@ -212,7 +216,8 @@ public:
             de.term_count_ = size / ((de.term_size_ + 3) / 4);
             list_.emplace_back(de);
         }
-        else if (path.extension() == ".fasta") {
+        else if (tlx::ends_with(path, ".fasta") ||
+                 tlx::ends_with(path, ".fasta.gz")) {
             FastaFile fasta(path);
             DocumentEntry de;
             de.path_ = path;
@@ -222,7 +227,7 @@ public:
             de.term_size_ = 0, de.term_count_ = 0;
             list_.emplace_back(de);
         }
-        else if (path.extension() == ".mfasta") {
+        else if (tlx::ends_with(path, ".mfasta")) {
             FastaMultifile mfasta(path);
             for (size_t i = 0; i < mfasta.num_documents(); ++i) {
                 DocumentEntry de;
