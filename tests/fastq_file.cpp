@@ -1,5 +1,5 @@
 /*******************************************************************************
- * tests/fasta_file.cpp
+ * tests/fastq_file.cpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
@@ -8,18 +8,18 @@
 
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/document_list.hpp>
-#include <cobs/fasta_file.hpp>
+#include <cobs/fastq_file.hpp>
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/classic_search.hpp>
 #include <gtest/gtest.h>
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir = "test/resources/fasta/";
-static fs::path index_dir = "test/fasta_index/index";
+static fs::path in_dir = "test/resources/fastq/";
+static fs::path index_dir = "test/fastq_index/index";
 static fs::path index_path = index_dir / "index.cobs_classic";
 
-class fasta : public ::testing::Test
+class fastq : public ::testing::Test
 {
 protected:
     void SetUp() final {
@@ -32,18 +32,18 @@ protected:
     }
 };
 
-TEST_F(fasta, process_kmers) {
-    cobs::FastaFile fasta1(in_dir / "sample1.fasta");
-    die_unequal(fasta1.size(), 3219u);
+TEST_F(fastq, process_kmers) {
+    cobs::FastqFile fastq1(in_dir / "sample1.fastq");
+    die_unequal(fastq1.size(), 3518u);
 
-    cobs::FastaFile fasta7(in_dir / "sample7.fasta.gz");
-    die_unequal(fasta7.size(), 1659u);
+    cobs::FastqFile fastq2(in_dir / "sample2.fastq.gz");
+    die_unequal(fastq2.size(), 3001u);
 
-    size_t nterms = fasta7.num_terms(31);
-    die_unequal(nterms, 15u * (76 - 31 + 1));
+    size_t nterms = fastq2.num_terms(31);
+    // die_unequal(nterms, 17u * (65 - 31 + 1));
 
     size_t check = 0;
-    fasta7.process_terms(
+    fastq2.process_terms(
         31, [&](const cobs::string_view& s) {
             LOG0 << s.to_string();
             check++;
@@ -51,12 +51,12 @@ TEST_F(fasta, process_kmers) {
     die_unequal(nterms, check);
 }
 
-TEST_F(fasta, document_list) {
+TEST_F(fastq, document_list) {
     static constexpr bool debug = false;
 
     cobs::DocumentList doc_list(in_dir);
 
-    die_unequal(doc_list.list().size(), 7u);
+    die_unequal(doc_list.list().size(), 3u);
 
     // construct classic index
     cobs::classic_index::IndexParameters index_params;
@@ -78,7 +78,7 @@ TEST_F(fasta, document_list) {
 
                 std::vector<std::pair<uint16_t, std::string> > result;
                 s_base.search(query, result);
-                ASSERT_EQ(7u, result.size());
+                ASSERT_EQ(3u, result.size());
 
                 for (size_t i = 0; i < result.size(); ++i) {
                     sLOG << result[i].first << result[i].second;

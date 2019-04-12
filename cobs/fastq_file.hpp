@@ -1,13 +1,13 @@
 /*******************************************************************************
- * cobs/fasta_file.hpp
+ * cobs/fastq_file.hpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_FASTA_FILE_HEADER
-#define COBS_FASTA_FILE_HEADER
+#ifndef COBS_FASTQ_FILE_HEADER
+#define COBS_FASTQ_FILE_HEADER
 
 #include <cstring>
 #include <string>
@@ -26,10 +26,10 @@
 
 namespace cobs {
 
-class FastaFile
+class FastqFile
 {
 public:
-    FastaFile(std::string path, bool use_cache = true) : path_(path) {
+    FastqFile(std::string path, bool use_cache = true) : path_(path) {
         is_.open(path);
         die_unless(is_.good());
 
@@ -50,42 +50,45 @@ public:
         return path_ + ".cobs_cache";
     }
 
-    //! read complete FASTA file for sub-documents
+    //! read complete FASTQ file for sub-documents
     void compute_index(std::istream& is) {
-        LOG1 << "FastaFile: computing index for " << path_;
+        LOG1 << "FastqFile: computing index for " << path_;
 
         char line[64 * 1024];
-        size_t sequence_size = 0;
         sequence_count_ = 0;
         size_ = 0;
 
-        is.getline(line, sizeof(line));
-        die_unless(is.good());
-
-        if (is.gcount() == 0 || (line[0] != '>' && line[0] != ';'))
-            die("FastaFile: file does not start with > or ; - " << path_);
-        size_ += is.gcount();
-
+        size_t line_num = 0;
         while (is.getline(line, sizeof(line))) {
+            die_unless(is.gcount() < (int)sizeof(line));
             size_ += is.gcount();
-            if (is.gcount() == 0 || line[0] == '>' || line[0] == ';') {
-                // comment or empty line restart the term buffer
-                if (sequence_size != 0) {
-                    sequence_size_hist_[sequence_size]++;
-                    sequence_count_++;
+
+            if (line_num % 4 == 0) {
+                if (is.gcount() == 0 || line[0] != '@') {
+                    die("FastqFile: line " << line_num <<
+                        " does not start with @ - " << path_);
                 }
-                sequence_size = 0;
-                continue;
             }
-            sequence_size += is.gcount() - 1;
-        }
-        if (sequence_size != 0) {
-            sequence_size_hist_[sequence_size]++;
-            sequence_count_++;
+            else if (line_num % 4 == 1) {
+                // sequence/read line
+                size_t sequence_size = is.gcount() - 1;
+                sequence_size_hist_[sequence_size]++;
+                sequence_count_++;
+            }
+            else if (line_num % 4 == 2) {
+                if (is.gcount() == 0 || line[0] != '+') {
+                    die("FastqFile: line " << line_num <<
+                        " does not start with + - " << path_);
+                }
+            }
+            else if (line_num % 4 == 3) {
+                // don't care about quality
+            }
+            ++line_num;
         }
     }
 
-    //! read complete FASTA file for sub-documents
+    //! read complete FASTQ file for sub-documents
     void compute_index() {
         is_.clear();
         is_.seekg(0);
@@ -112,7 +115,7 @@ public:
         }
         fs::rename(cache_path() + ".tmp",
                    cache_path());
-        LOG1 << "FastaFile: saved index as " << cache_path();
+        LOG1 << "FastqFile: saved index as " << cache_path();
     }
 
     //! read cache file
@@ -123,7 +126,7 @@ public:
         stream_get_pod(is, size_);
         stream_get_pod(is, sequence_count_);
         stream_get_pod(is, hist_size);
-        LOG1 << "FastaFile: loading index " << cache_path()
+        LOG1 << "FastqFile: loading index " << cache_path()
              << " [" << sequence_count_ << " subsequences]";
         for (size_t i = 0; i < hist_size; ++i) {
             size_t size, count;
@@ -134,7 +137,7 @@ public:
         return is.good() && (is.get() == EOF);
     }
 
-    //! return estimated size of a fasta document
+    //! return estimated size of a fastq document
     size_t size() {
         return size_;
     }
@@ -151,25 +154,34 @@ public:
     template <typename Callback>
     void process_terms(std::istream& is, size_t term_size, Callback callback) {
         char line[64 * 1024];
-        size_t pos = 0;
 
-        while (is.getline(line + pos, sizeof(line) - pos)) {
-            if (is.gcount() == 0 || line[pos] == '>' || line[pos] == ';') {
-                // comment or empty line restart the term buffer
-                pos = 0;
-                continue;
-            }
+        size_t line_num = 0;
+        while (is.getline(line, sizeof(line))) {
+            die_unless(is.gcount() < (int)sizeof(line));
 
-            pos += is.gcount() - 1;
-            // process terms continued on next line
-            for (size_t i = 0; i + term_size <= pos; ++i) {
-                callback(string_view(line + i, term_size));
+            if (line_num % 4 == 0) {
+                if (is.gcount() == 0 || line[0] != '@') {
+                    die("FastqFile: line " << line_num <<
+                        " does not start with @ - " << path_);
+                }
             }
-            if (pos > term_size - 1) {
-                std::copy(line + pos - (term_size - 1), line + pos,
-                          line);
-                pos = term_size - 1;
+            else if (line_num % 4 == 1) {
+                // process terms in sequence/read line. gcount() is 1 larger
+                // than the character count (newline is included).
+                for (size_t i = 0; i + term_size < (size_t)is.gcount(); ++i) {
+                    callback(string_view(line + i, term_size));
+                }
             }
+            else if (line_num % 4 == 2) {
+                if (is.gcount() == 0 || line[0] != '+') {
+                    die("FastqFile: line " << line_num <<
+                        " does not start with + - " << path_);
+                }
+            }
+            else if (line_num % 4 == 3) {
+                // don't care about quality
+            }
+            ++line_num;
         }
     }
 
@@ -203,6 +215,6 @@ private:
 
 } // namespace cobs
 
-#endif // !COBS_FASTA_FILE_HEADER
+#endif // !COBS_FASTQ_FILE_HEADER
 
 /******************************************************************************/

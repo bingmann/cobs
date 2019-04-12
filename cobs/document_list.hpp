@@ -12,6 +12,7 @@
 #include <cobs/cortex_file.hpp>
 #include <cobs/fasta_file.hpp>
 #include <cobs/fasta_multifile.hpp>
+#include <cobs/fastq_file.hpp>
 #include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -239,6 +240,17 @@ public:
                 de.term_size_ = 0, de.term_count_ = 0;
                 list_.emplace_back(de);
             }
+        }
+        else if (tlx::ends_with(path, ".fastq") ||
+                 tlx::ends_with(path, ".fastq.gz")) {
+            FastqFile fastq(path);
+            DocumentEntry de;
+            de.path_ = path;
+            de.type_ = FileType::Fastq;
+            de.name_ = cobs::base_name(path);
+            de.size_ = fastq.size();
+            de.term_size_ = 0, de.term_count_ = 0;
+            list_.emplace_back(de);
         }
     }
 

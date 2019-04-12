@@ -229,6 +229,10 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
         sLOG1 << "FASTA_MULTI: max_doc_size" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
+    else if (it->type_ == FileType::Fastq) {
+        sLOG1 << "FASTQ: max_doc_size" << it->num_terms(term_size);
+        return it->num_terms(term_size);
+    }
     die("Unknown file type");
 }
 
