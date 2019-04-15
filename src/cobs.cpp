@@ -27,8 +27,6 @@
 #include <map>
 #include <random>
 
-#include <omp.h>
-
 /******************************************************************************/
 
 cobs::FileType StringToFileType(std::string& s) {
@@ -191,9 +189,8 @@ int classic_construct(int argc, char** argv) {
         'C', "clobber", clobber,
         "erase output directory if it exists");
 
-    size_t threads = 0;
     cp.add_size_t(
-        'T', "threads", threads,
+        'T', "threads", cobs::gopt_threads,
         "number of threads to use, default: max cores");
 
     if (!cp.process(argc, argv))
@@ -203,18 +200,6 @@ int classic_construct(int argc, char** argv) {
 
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
-
-    // limit threads using OpenMP
-    if (threads != 0) {
-        if (threads == 1) {
-            cobs::gopt_parallel = false;
-        }
-        else {
-            cobs::gopt_parallel = true;
-            omp_set_num_threads(threads);
-        }
-    }
-    omp_set_nested(true);
 
     // check output and maybe clobber
     if (cobs::fs::exists(out_dir)) {

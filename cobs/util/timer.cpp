@@ -10,12 +10,15 @@
 
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/string/hash_djb2.hpp>
 
 namespace cobs {
+
+static std::mutex s_timer_add_mutex;
 
 Timer::Entry& Timer::find_or_create(const char* name) {
     uint32_t h = tlx::hash_djb2(name);
@@ -69,6 +72,7 @@ void Timer::print(std::ostream& os, size_t max_name_length,
 }
 
 Timer& Timer::operator += (const Timer& b) {
+    std::unique_lock<std::mutex> lock(s_timer_add_mutex);
     for (const Entry& t : b.timers_) {
         Entry& e = find_or_create(t.name);
         e.duration += t.duration;

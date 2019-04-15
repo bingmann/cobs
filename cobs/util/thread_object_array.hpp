@@ -11,10 +11,12 @@
 
 #include <tlx/container/lru_cache.hpp>
 
+#include <cobs/util/parallel_for.hpp>
+
 #include <memory>
 #include <mutex>
-
-#include <omp.h>
+#include <thread>
+#include <unordered_map>
 
 namespace cobs {
 
@@ -60,32 +62,22 @@ public:
     template <typename... Args>
     std::shared_ptr<Type> get(Args&& ... args) {
         std::unique_lock<std::mutex> lock(lru_set_.mutex_);
-        int id = omp_get_thread_num();
-        // expand array if necessary
-        if (id >= static_cast<int>(array_.size())) {
-            if (array_.empty()) {
-                // expand to max_threads
-                array_.resize(std::max(id + 1, omp_get_max_threads()));
-            }
-            else {
-                array_.resize(id + 1);
-            }
-        }
+        std::thread::id id = std::this_thread::get_id();
         // try to acquire shared ptr from array
-        std::shared_ptr<Type> p = array_[id].lock();
+        std::shared_ptr<Type> p = map_[id].lock();
         if (p) {
             lru_set_.touch(p);
             return p;
         }
         // otherwise acquire a token from the LRU set and construct a new object
         p = std::make_shared<Type>(std::forward<Args...>(args) ...);
-        array_[id] = p;
+        map_[id] = p;
         lru_set_.put(p);
         return p;
     }
 
 private:
-    std::vector<std::weak_ptr<Type> > array_;
+    std::unordered_map<std::thread::id, std::weak_ptr<Type> > map_;
     ThreadObjectLRUSet<Type>& lru_set_;
 };
 

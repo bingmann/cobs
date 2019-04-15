@@ -62,6 +62,7 @@ set(SOURCE_FILES
         cobs/util/file.hpp
         cobs/util/misc.cpp
         cobs/util/misc.hpp
+        cobs/util/parallel_for.hpp
         cobs/util/process_file_batches.hpp
         cobs/util/query.cpp
         cobs/util/query.hpp
@@ -121,6 +122,14 @@ file(GLOB_RECURSE EXECUTABLE_FILES
 MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
 MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
+
+# enable ThreadSanitizer
+if(OFF)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -pie -fPIC")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DCOBS_HAVE_THREAD_SANITIZER=1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -pie -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOBS_HAVE_THREAD_SANITIZER=1")
+endif()
 
 ################################################################################
 

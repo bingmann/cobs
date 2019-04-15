@@ -8,9 +8,11 @@
 
 #include <cobs/settings.hpp>
 
+#include <thread>
+
 namespace cobs {
 
-bool gopt_parallel = true;
+size_t gopt_threads = std::thread::hardware_concurrency();
 
 } // namespace cobs
 

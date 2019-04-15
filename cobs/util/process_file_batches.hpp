@@ -82,10 +82,11 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
         }
     }
 
-#pragma omp parallel for schedule(dynamic) if(gopt_parallel)
-    for (size_t i = 0; i < batch_list.size(); ++i) {
-        callback(batch_list[i].files, batch_list[i].out_file);
-    }
+    parallel_for(
+        0, batch_list.size(), gopt_threads,
+        [&](size_t i) {
+            callback(batch_list[i].files, batch_list[i].out_file);
+        });
 
     return batch_num;
 }

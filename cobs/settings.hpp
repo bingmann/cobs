@@ -9,10 +9,12 @@
 #ifndef COBS_SETTINGS_HEADER
 #define COBS_SETTINGS_HEADER
 
+#include <cstdlib>
+
 namespace cobs {
 
-//! run COBS using parallel threads
-extern bool gopt_parallel;
+//! run COBS using parallel threads, default: all cores
+extern size_t gopt_threads;
 
 } // namespace cobs
 

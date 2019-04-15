@@ -63,24 +63,27 @@ void process_batch(size_t batch_num, size_t num_batches,
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
 
-    size_t count = 0;
+    std::atomic<size_t> count = 0;
     t.active("process");
 
     // parallelize over 8 documents, which fit into one byte, the terms are
     // random hence only little cache trashing inside a cache line should occur.
-#pragma omp parallel for schedule(dynamic) reduction(+:count) if(gopt_parallel)
-    for (size_t b = 0; b < (paths.size() + 7) / 8; ++b) {
-        for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
-            cih.file_names()[i] = paths[i].name_;
+    parallel_for(
+        0, (paths.size() + 7) / 8, std::sqrt(gopt_threads),
+        [&](size_t b) {
+            size_t local_count = 0;
+            for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
+                cih.file_names()[i] = paths[i].name_;
 
-            paths[i].process_terms(
-                cih.term_size(),
-                [&](const string_view& term) {
-                    process_term(term, data, cih, i);
-                    ++count;
-                });
-        }
-    }
+                paths[i].process_terms(
+                    cih.term_size(),
+                    [&](const string_view& term) {
+                        process_term(term, data, cih, i);
+                        ++local_count;
+                    });
+            }
+            count += local_count;
+        });
 
     t.active("write");
     cih.write_file(out_file, data);
@@ -130,7 +133,6 @@ void construct_from_documents(const DocumentList& doc_list,
             process_batch(batch_num, num_batches,
                           paths, out_path, cih, thr_timer);
 
-#pragma omp critical
             t += thr_timer;
         });
     std::cout << t;

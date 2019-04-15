@@ -12,8 +12,10 @@
 
 #include <algorithm>
 #include <cobs/kmer.hpp>
+#include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/misc.hpp>
+#include <cobs/util/parallel_for.hpp>
 #include <cobs/util/query.hpp>
 #include <cobs/util/timer.hpp>
 #include <numeric>
@@ -72,11 +74,13 @@ void counts_to_result(const std::vector<std::string>& file_names,
         });
 
     result.resize(num_results);
-#pragma omp parallel for
-    for (size_t i = 0; i < num_results; i++) {
-        result[i] = std::make_pair(
-            scores[sorted_indices[i]], file_names[sorted_indices[i]]);
-    }
+
+    parallel_for(
+        0, num_results, gopt_threads,
+        [&](size_t i) {
+            result[i] = std::make_pair(
+                scores[sorted_indices[i]], file_names[sorted_indices[i]]);
+        });
 }
 
 void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
@@ -157,42 +161,42 @@ void ClassicSearch::search(const std::string& query,
     score_batch_size = std::max(score_batch_size, 8 * page_size);
     size_t score_batch_num = tlx::div_ceil(scores_size, score_batch_size);
 
-#pragma omp parallel for
-    for (size_t b = 0; b < score_batch_num; ++b) {
-        Timer thr_timer;
-        size_t score_begin = b * score_batch_size;
-        size_t score_end = std::min((b + 1) * score_batch_size, scores_size);
-        size_t score_size = score_end - score_begin;
-        LOG << "search() score_begin=" << score_begin
-            << " score_end=" << score_end
-            << " score_size=" << score_size
-            << " rows buffer=" << score_size * hashes.size();
+    parallel_for(
+        0, score_batch_num, gopt_threads,
+        [&](size_t b) {
+            Timer thr_timer;
+            size_t score_begin = b * score_batch_size;
+            size_t score_end = std::min((b + 1) * score_batch_size, scores_size);
+            size_t score_size = score_end - score_begin;
+            LOG << "search() score_begin=" << score_begin
+                << " score_end=" << score_end
+                << " score_size=" << score_size
+                << " rows buffer=" << score_size * hashes.size();
 
-        die_unless(score_begin % 8 == 0);
-        score_begin = tlx::div_ceil(score_begin, 8);
-        score_size = tlx::div_ceil(score_size, 8);
+            die_unless(score_begin % 8 == 0);
+            score_begin = tlx::div_ceil(score_begin, 8);
+            score_size = tlx::div_ceil(score_size, 8);
 
-        // rows array: interleaved as
-        // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
-        char* rows = allocate_aligned<char>(score_size * hashes.size(), get_page_size());
+            // rows array: interleaved as
+            // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
+            char* rows = allocate_aligned<char>(score_size * hashes.size(), get_page_size());
 
-        LOG << "read_from_disk";
-        thr_timer.active("io");
-        index_file_.read_from_disk(hashes, rows, score_begin, score_size);
+            LOG << "read_from_disk";
+            thr_timer.active("io");
+            index_file_.read_from_disk(hashes, rows, score_begin, score_size);
 
-        LOG << "aggregate_rows";
-        thr_timer.active("and rows");
-        aggregate_rows(hashes.size(), rows, score_size);
+            LOG << "aggregate_rows";
+            thr_timer.active("and rows");
+            aggregate_rows(hashes.size(), rows, score_size);
 
-        LOG << "compute_counts";
-        thr_timer.active("add rows");
-        compute_counts(hashes.size(), scores + 8 * score_begin, rows, score_size);
+            LOG << "compute_counts";
+            thr_timer.active("add rows");
+            compute_counts(hashes.size(), scores + 8 * score_begin, rows, score_size);
 
-        deallocate_aligned(rows);
+            deallocate_aligned(rows);
 
-#pragma omp critical
-        timer_ += thr_timer;
-    }
+            timer_ += thr_timer;
+        });
 
     timer_.active("sort results");
     counts_to_result(file_names, scores, result, num_results);

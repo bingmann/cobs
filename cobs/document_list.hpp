@@ -17,6 +17,7 @@
 #include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
+#include <cobs/util/parallel_for.hpp>
 
 #include <algorithm>
 #include <iomanip>
@@ -147,20 +148,23 @@ public:
 
         std::sort(paths.begin(), paths.end());
 
-#pragma omp parallel for if(gopt_parallel)
-        for (size_t i = 0; i < paths.size(); ++i) {
-            try {
-                DocumentEntryList del = add(paths[i]);
-#pragma omp critical
-                std::move(del.begin(), del.end(), std::back_inserter(list_));
-            }
-            catch (std::exception& e) {
-                LOG1 << "EXCEPTION: " << e.what();
-            }
-        }
+        // process files in parallel such that indices are created in parallel
+        std::mutex list_mutex;
+        parallel_for(
+            0, paths.size(), gopt_threads,
+            [&](size_t i) {
+                try {
+                    DocumentEntryList l = add(paths[i]);
+                    std::unique_lock<std::mutex> lock(list_mutex);
+                    std::move(l.begin(), l.end(), std::back_inserter(list_));
+                }
+                catch (std::exception& e) {
+                    LOG1 << "EXCEPTION: " << e.what();
+                }
+            });
 
         // sort again due to random thread execution order
-        if (gopt_parallel)
+        if (gopt_threads > 1)
             std::sort(list_.begin(), list_.end());
     }
 
@@ -366,10 +370,11 @@ public:
             }
         }
 
-#pragma omp parallel for schedule(dynamic) if(gopt_parallel)
-        for (size_t i = 0; i < batch_list.size(); ++i) {
-            func(i, batch_list[i].batch, batch_list[i].out_file);
-        }
+        parallel_for(
+            0, batch_list.size(), gopt_threads,
+            [&](size_t i) {
+                func(i, batch_list[i].batch, batch_list[i].out_file);
+            });
     }
 
 private:

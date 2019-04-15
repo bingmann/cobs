@@ -29,7 +29,8 @@ private:
     std::vector<Entry> timers_;
 
     //! total duration
-    std::chrono::duration<double> total_duration_ = std::chrono::duration<double>::zero();
+    std::chrono::duration<double> total_duration_ =
+        std::chrono::duration<double>::zero();
 
     //! currently running timer name
     const char* running_ = nullptr;
@@ -50,7 +51,8 @@ public:
     double get(const char* timer);
     void print(std::ostream& ostream) const;
 
-    //! add all timers from another
+    //! add all timers from another, internally holds a global lock, because
+    //! this is used to add thread values
     Timer& operator += (const Timer& b);
 };
 
