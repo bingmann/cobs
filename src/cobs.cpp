@@ -159,6 +159,11 @@ int classic_construct(int argc, char** argv) {
         'k', "term_size", index_params.term_size,
         "term size (k-mer size), default: 31");
 
+    bool canonicalize = false;
+    cp.add_flag(
+        'c', "canonicalize", canonicalize,
+        "canonicalize DNA k-mers, default: false");
+
     bool clobber = false;
     cp.add_flag(
         'C', "clobber", clobber,
@@ -168,6 +173,9 @@ int classic_construct(int argc, char** argv) {
         return -1;
 
     cp.print_result(std::cerr);
+
+    // bool to uint8_t
+    index_params.canonicalize = canonicalize;
 
     if (cobs::fs::exists(out_dir)) {
         if (clobber) {
@@ -285,10 +293,18 @@ int compact_construct(int argc, char** argv) {
         'k', "term_size", index_params.term_size,
         "term size (k-mer size), default: 31");
 
+    bool canonicalize = false;
+    cp.add_flag(
+        'c', "canonicalize", canonicalize,
+        "canonicalize DNA k-mers, default: false");
+
     if (!cp.process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
+
+    // bool to uint8_t
+    index_params.canonicalize = canonicalize;
 
     if (cobs::fs::exists(out_dir)) {
         if (clobber) {
