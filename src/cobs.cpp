@@ -63,16 +63,33 @@ int doc_list(int argc, char** argv) {
         'T', "file_type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
+    unsigned term_size = 31;
+    cp.add_unsigned(
+        'k', "term_size", term_size,
+        "term size (k-mer size), default: 31");
+
     if (!cp.process(argc, argv))
         return -1;
 
     cobs::DocumentList filelist(path, StringToFileType(file_type));
+    size_t max_kmers = 0, total_kmers = 0;
 
     for (size_t i = 0; i < filelist.size(); ++i) {
+        size_t num_terms = filelist[i].num_terms(term_size);
         std::cout << "document[" << i << "] size " << filelist[i].size_
+                  << " " << term_size << "-mers " << num_terms
                   << " : " << filelist[i].path_
                   << " : " << filelist[i].name_ << std::endl;
+        max_kmers = std::max(max_kmers, num_terms);
+        total_kmers += num_terms;
     }
+
+    double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
+
+    std::cout << "maximum " << term_size << "-mers: " << max_kmers << std::endl;
+    std::cout << "average " << term_size << "-mers: "
+              << static_cast<size_t>(avg_kmers)
+              << std::endl;
 
     return 0;
 }
@@ -509,8 +526,8 @@ int print_parameters(int argc, char** argv) {
         'f', "false_positive_rate", false_positive_rate,
         "false positive rate, default: 0.3");
 
-    unsigned num_elements = 0;
-    cp.add_unsigned(
+    uint64_t num_elements = 0;
+    cp.add_bytes(
         'n', "num_elements", num_elements,
         "number of elements to be inserted into the index");
 
@@ -525,7 +542,10 @@ int print_parameters(int argc, char** argv) {
     else {
         uint64_t signature_size =
             cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
-        std::cout << signature_size << '\n';
+        std::cout << "signature_size = " << signature_size << '\n';
+        std::cout << "signature_bytes = " << signature_size / 8
+                  << " = " << tlx::format_iec_units(signature_size / 8)
+                  << '\n';
     }
 
     return 0;
