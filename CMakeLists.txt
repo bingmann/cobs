@@ -53,6 +53,8 @@ set(SOURCE_FILES
         cobs/query/ranfold_index/mmap.cpp
         cobs/query/ranfold_index/mmap.hpp
         cobs/query/search.hpp
+        cobs/settings.cpp
+        cobs/settings.hpp
         cobs/util/calc_signature_size.cpp
         cobs/util/calc_signature_size.hpp
         cobs/util/error_handling.cpp

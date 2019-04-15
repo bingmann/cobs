@@ -13,6 +13,7 @@
 #include <cobs/fasta_file.hpp>
 #include <cobs/fasta_multifile.hpp>
 #include <cobs/fastq_file.hpp>
+#include <cobs/settings.hpp>
 #include <cobs/text_file.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -120,8 +121,10 @@ struct DocumentEntry {
 class DocumentList
 {
 public:
+    using DocumentEntryList = std::vector<DocumentEntry>;
+
     //! accept a file list, sort by name
-    DocumentList(const std::vector<DocumentEntry>& list)
+    DocumentList(const DocumentEntryList& list)
         : list_(list) {
         std::sort(list_.begin(), list_.end());
     }
@@ -143,9 +146,22 @@ public:
         }
 
         std::sort(paths.begin(), paths.end());
-        for (const fs::path& p : paths) {
-            add(p);
+
+#pragma omp parallel for if(gopt_parallel)
+        for (size_t i = 0; i < paths.size(); ++i) {
+            try {
+                DocumentEntryList del = add(paths[i]);
+#pragma omp critical
+                std::move(del.begin(), del.end(), std::back_inserter(list_));
+            }
+            catch (std::exception& e) {
+                LOG1 << "EXCEPTION: " << e.what();
+            }
         }
+
+        // sort again due to random thread execution order
+        if (gopt_parallel)
+            std::sort(list_.begin(), list_.end());
     }
 
     //! filter method to match file specifications
@@ -182,7 +198,7 @@ public:
     }
 
     //! add DocumentEntry for given file
-    void add(const fs::path& path) {
+    DocumentEntryList add(const fs::path& path) const {
         if (tlx::ends_with(path, ".txt")) {
             DocumentEntry de;
             de.path_ = path;
@@ -190,7 +206,7 @@ public:
             de.name_ = base_name(path);
             de.size_ = fs::file_size(path);
             de.term_size_ = 0, de.term_count_ = 0;
-            list_.emplace_back(de);
+            return DocumentEntryList({ de });
         }
         else if (tlx::ends_with(path, ".ctx")) {
             CortexFile ctx(path);
@@ -201,7 +217,7 @@ public:
             de.size_ = fs::file_size(path);
             de.term_size_ = ctx.kmer_size_;
             de.term_count_ = ctx.num_kmers();
-            list_.emplace_back(de);
+            return DocumentEntryList({ de });
         }
         else if (tlx::ends_with(path, ".cobs_doc")) {
             std::ifstream is;
@@ -215,7 +231,7 @@ public:
             size_t size = get_stream_size(is);
             de.term_size_ = dh.kmer_size();
             de.term_count_ = size / ((de.term_size_ + 3) / 4);
-            list_.emplace_back(de);
+            return DocumentEntryList({ de });
         }
         else if (tlx::ends_with(path, ".fasta") ||
                  tlx::ends_with(path, ".fasta.gz")) {
@@ -226,9 +242,10 @@ public:
             de.name_ = cobs::base_name(path);
             de.size_ = fasta.size();
             de.term_size_ = 0, de.term_count_ = 0;
-            list_.emplace_back(de);
+            return DocumentEntryList({ de });
         }
         else if (tlx::ends_with(path, ".mfasta")) {
+            DocumentEntryList list;
             FastaMultifile mfasta(path);
             for (size_t i = 0; i < mfasta.num_documents(); ++i) {
                 DocumentEntry de;
@@ -238,8 +255,9 @@ public:
                 de.size_ = mfasta.size(i);
                 de.subdoc_index_ = i;
                 de.term_size_ = 0, de.term_count_ = 0;
-                list_.emplace_back(de);
+                list.emplace_back(de);
             }
+            return list;
         }
         else if (tlx::ends_with(path, ".fastq") ||
                  tlx::ends_with(path, ".fastq.gz")) {
@@ -250,12 +268,15 @@ public:
             de.name_ = cobs::base_name(path);
             de.size_ = fastq.size();
             de.term_size_ = 0, de.term_count_ = 0;
-            list_.emplace_back(de);
+            return DocumentEntryList({ de });
+        }
+        else {
+            die("DocumentList: unknown file to add: " << path);
         }
     }
 
     //! return list of paths
-    const std::vector<DocumentEntry>& list() const { return list_; }
+    const DocumentEntryList& list() const { return list_; }
 
     //! return length of list
     size_t size() const { return list_.size(); }
@@ -286,7 +307,7 @@ public:
     void process_batches(size_t batch_size, bool verbose, Functor func) const {
         std::string first_filename, last_filename;
         size_t batch_num = 0;
-        std::vector<DocumentEntry> batch;
+        DocumentEntryList batch;
         for (size_t i = 0; i < list_.size(); i++) {
             std::string filename = list_[i].name_;
             if (first_filename.empty()) {
@@ -318,14 +339,14 @@ public:
     void process_batches_parallel(size_t batch_size, bool verbose,
                                   Functor func) const {
         struct Batch {
-            std::vector<DocumentEntry> files;
+            DocumentEntryList batch;
             std::string out_file;
         };
         std::vector<Batch> batch_list;
 
         std::string first_filename, last_filename;
         size_t batch_num = 0;
-        std::vector<DocumentEntry> batch;
+        DocumentEntryList batch;
         for (size_t i = 0; i < list_.size(); i++) {
             std::string filename = list_[i].name_;
             if (first_filename.empty()) {
@@ -351,13 +372,13 @@ public:
 #pragma omp parallel for schedule(dynamic)
         for (size_t i = 0; i < batch_list.size(); ++i) {
             LOGC(verbose) << "IN - " << batch_list[i].out_file;
-            func(i, batch_list[i].files, batch_list[i].out_file);
+            func(i, batch_list[i].batch, batch_list[i].out_file);
             LOGC(verbose) << "OK - " << batch_list[i].out_file;
         }
     }
 
 private:
-    std::vector<DocumentEntry> list_;
+    DocumentEntryList list_;
 };
 
 } // namespace cobs
