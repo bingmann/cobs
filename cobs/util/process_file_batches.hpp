@@ -41,12 +41,18 @@ void get_sorted_file_names(const fs::path& in_dir,
 
 template <typename Selector, typename Callback>
 size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
-                            size_t batch_size,
-                            Selector selector, Callback callback) {
+                            size_t batch_size, Selector selector,
+                            Callback callback) {
     std::vector<fs::path> sorted_paths;
     get_sorted_file_names(
         in_dir, &sorted_paths, [](const fs::path&) { return true; });
     fs::create_directories(out_dir);
+
+    struct Batch {
+        std::vector<fs::path> files;
+        std::string out_file;
+    };
+    std::vector<Batch> batch_list;
 
     std::string first_filename, last_filename;
 
@@ -68,15 +74,19 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
                 pad_index(batch_num) + '_' +
                 '[' + first_filename + '-' + last_filename + ']';
 
-            LOG1 << "IN - " << out_file;
-            callback(paths, out_file);
-            LOG1 << "OK - " << out_file;
+            batch_list.emplace_back(Batch { std::move(paths), out_file });
 
             paths.clear();
             first_filename.clear();
             batch_num++;
         }
     }
+
+#pragma omp parallel for schedule(dynamic) if(gopt_parallel)
+    for (size_t i = 0; i < batch_list.size(); ++i) {
+        callback(batch_list[i].files, batch_list[i].out_file);
+    }
+
     return batch_num;
 }
 

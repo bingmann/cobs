@@ -62,7 +62,7 @@ TEST_F(fasta_multi, document_list) {
     cobs::classic_index::IndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
-    index_params.batch_bytes = 0;
+    index_params.batch_size = 16;
 
     cobs::classic_index::construct(in_dir, index_dir, index_params);
     cobs::query::classic_index::mmap s_mmap(index_path);

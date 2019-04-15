@@ -24,6 +24,7 @@
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
+#include <tlx/math/div_ceil.hpp>
 #include <tlx/math/popcount.hpp>
 #include <tlx/math/round_up.hpp>
 #include <tlx/string/format_iec_units.hpp>
@@ -33,8 +34,7 @@ namespace cobs::classic_index {
 /******************************************************************************/
 // Construction of classic index from documents
 
-void set_bit(std::vector<uint8_t>& data,
-             const ClassicIndexHeader& cih,
+void set_bit(std::vector<uint8_t>& data, const ClassicIndexHeader& cih,
              uint64_t pos, uint64_t doc_index) {
     data[cih.row_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
 }
@@ -48,35 +48,48 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
                    });
 }
 
-void process_batch(const std::vector<DocumentEntry>& paths,
+void process_batch(size_t batch_num, size_t num_batches,
+                   const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
 
-    sLOG0 << "paths" << paths.size() << "row_size" << cih.row_size() * 8
-          << cih.signature_size() * cih.row_size();
+    LOG1 << pad_index(batch_num) << '/' << pad_index(num_batches)
+         << " documents " << paths.size()
+         << " row_size " << cih.row_size()
+         << " signature_size " << cih.signature_size()
+         << " matrix_size " << cih.signature_size() * cih.row_size() << " = "
+         << tlx::format_iec_units(cih.signature_size() * cih.row_size());
 
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
 
+    size_t count = 0;
     t.active("process");
-    for (uint64_t i = 0; i < paths.size(); i++) {
-        cih.file_names()[i] = paths[i].name_;
 
-        size_t count = 0;
-        paths[i].process_terms(
-            cih.term_size(),
-            [&](const string_view& term) {
-                process_term(term, data, cih, i);
-                ++count;
-            });
-        sLOG0 << paths[i].name_ << count;
+    // parallelize over 8 documents, which fit into one byte, the terms are
+    // random hence only little cache trashing inside a cache line should occur.
+#pragma omp parallel for schedule(dynamic) reduction(+:count) if(gopt_parallel)
+    for (size_t b = 0; b < (paths.size() + 7) / 8; ++b) {
+        for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
+            cih.file_names()[i] = paths[i].name_;
+
+            paths[i].process_terms(
+                cih.term_size(),
+                [&](const string_view& term) {
+                    process_term(term, data, cih, i);
+                    ++count;
+                });
+        }
     }
-    size_t bit_count = tlx::popcount(data.data(), data.size());
-    LOG1 << "ratio of ones: "
-         << static_cast<double>(bit_count) / (data.size() * 8);
 
     t.active("write");
     cih.write_file(out_file, data);
+
+    size_t bit_count = tlx::popcount(data.data(), data.size());
+    LOG1 << pad_index(batch_num) << '/' << pad_index(num_batches)
+         << " done: terms " << count << " ratio_of_ones "
+         << static_cast<double>(bit_count) / (data.size() * 8);
+
     t.stop();
 }
 
@@ -86,22 +99,39 @@ void construct_from_documents(const DocumentList& doc_list,
     Timer t;
     fs::create_directories(out_dir);
 
+    if (params.batch_size == 0) {
+        params.batch_size = params.batch_bytes / (params.signature_size / 8);
+        params.batch_size = std::max(8lu, tlx::round_up(params.batch_size, 8));
+    }
+
     die_unless(params.num_hashes != 0);
     die_unless(params.signature_size != 0);
+    die_unless(params.batch_size % 8 == 0);
 
-    doc_list.process_batches(
-        params.batch_bytes, /* verbose */ true,
-        [&](size_t /* batch_num */, const std::vector<DocumentEntry>& paths,
+    size_t num_batches = tlx::div_ceil(doc_list.size(), params.batch_size);
+
+    doc_list.process_batches_parallel(
+        params.batch_size,
+        [&](size_t batch_num, const std::vector<DocumentEntry>& paths,
             std::string out_file) {
+            Timer thr_timer;
+
+            LOG1 << "Construct Classic Index " << out_file;
+
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
             if (fs::exists(out_path))
                 return;
+
             ClassicIndexHeader cih(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
-            process_batch(paths, out_path, cih, t);
+            process_batch(batch_num, num_batches,
+                          paths, out_path, cih, thr_timer);
+
+#pragma omp critical
+            t += thr_timer;
         });
     std::cout << t;
 }
@@ -143,8 +173,14 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
             return file_has_header<ClassicIndexHeader>(path);
         },
         [&](const std::vector<fs::path>& paths, std::string out_file) {
+            Timer thr_timer;
+
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
+
+            LOG1 << "Combine Classic "
+                 << paths.size() << " indices "
+                 << out_path;
 
             std::vector<std::pair<std::ifstream, uint64_t> > streams;
             std::vector<std::string> file_names;
@@ -184,9 +220,11 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
             }
             combine_streams(streams, out_path, term_size, canonicalize,
                             signature_size, new_row_size,
-                            num_hashes, t, file_names);
+                            num_hashes, thr_timer, file_names);
             streams.clear();
             file_names.clear();
+
+            t += thr_timer;
         });
     std::cout << t;
     return (batch_num <= 1);
@@ -210,27 +248,27 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
 
     // look into largest file and return number of elements
     if (it->type_ == FileType::Text) {
-        sLOG1 << "TEXT: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [Text]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Cortex) {
-        sLOG1 << "CTX: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [Cortex]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::KMerBuffer) {
-        sLOG1 << "COBS_DOC: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [cobs_doc]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Fasta) {
-        sLOG1 << "FASTA: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [Fasta]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::FastaMulti) {
-        sLOG1 << "FASTA_MULTI: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [FastaMulti]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Fastq) {
-        sLOG1 << "FASTQ: max_doc_size" << it->num_terms(term_size);
+        sLOG1 << "Max Document Size [FastQ]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     die("Unknown file type");
@@ -247,22 +285,27 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     params.signature_size = calc_signature_size(
         max_doc_size, params.num_hashes, params.false_positive_rate);
 
-    size_t batch_size = params.batch_bytes / (params.signature_size / 8);
-    batch_size = tlx::round_up(batch_size, 8);
+    if (params.batch_size == 0) {
+        params.batch_size = params.batch_bytes / (params.signature_size / 8);
+        params.batch_size = std::max(8lu, tlx::round_up(params.batch_size, 8));
+    }
 
     size_t docsize_roundup = tlx::round_up(filelist.size(), 8);
 
-    LOG1 << "Classic Index Parameters:";
-    LOG1 << "  term_size: " << params.term_size;
-    LOG1 << "  canonicalize: " << unsigned(params.canonicalize);
-    LOG1 << "  number of documents: " << filelist.size();
-    LOG1 << "  maximum document size: " << max_doc_size;
-    LOG1 << "  num_hashes: " << params.num_hashes;
-    LOG1 << "  false_positive_rate: " << params.false_positive_rate;
-    LOG1 << "  signature_size: " << params.signature_size;
-    LOG1 << "  index size: "
-         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size);
-    LOG1 << "  batch size: " << batch_size << " documents";
+    LOG1 << "Classic Index Parameters:\n"
+         << "  term_size: " << params.term_size << '\n'
+         << "  canonicalize: " << unsigned(params.canonicalize) << '\n'
+         << "  number of documents: " << filelist.size() << '\n'
+         << "  maximum document size: " << max_doc_size << '\n'
+         << "  num_hashes: " << params.num_hashes << '\n'
+         << "  false_positive_rate: " << params.false_positive_rate << '\n'
+         << "  signature_size: " << params.signature_size << '\n'
+         << "  index size: "
+         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size)
+         << '\n'
+         << "  batch size: " << params.batch_size << " documents" << '\n'
+         << "  number of batches: "
+         << tlx::div_ceil(filelist.size(), params.batch_size);
 
     // construct one classic index
     construct_from_documents(filelist, out_dir / pad_index(1), params);
@@ -270,7 +313,7 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     // combine batches
     size_t i = 1;
     while (!combine(out_dir / pad_index(i),
-                    out_dir / pad_index(i + 1), batch_size)) {
+                    out_dir / pad_index(i + 1), params.batch_size)) {
         i++;
     }
 

@@ -14,6 +14,7 @@
 #include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/query/classic_search.hpp>
 #include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/settings.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #ifdef __linux__
     #include <cobs/query/compact_index/aio.hpp>
@@ -26,7 +27,7 @@
 #include <map>
 #include <random>
 
-#include <unistd.h>
+#include <omp.h>
 
 /******************************************************************************/
 
@@ -50,6 +51,27 @@ cobs::FileType StringToFileType(std::string& s) {
 /******************************************************************************/
 // Document List and Dump
 
+static void print_document_list(cobs::DocumentList& filelist,
+                                size_t term_size) {
+    size_t max_kmers = 0, total_kmers = 0;
+
+    for (size_t i = 0; i < filelist.size(); ++i) {
+        size_t num_terms = filelist[i].num_terms(term_size);
+        LOG1 << "document[" << i << "] size " << filelist[i].size_
+             << " " << term_size << "-mers " << num_terms
+             << " : " << filelist[i].path_
+             << " : " << filelist[i].name_;
+        max_kmers = std::max(max_kmers, num_terms);
+        total_kmers += num_terms;
+    }
+
+    double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
+
+    LOG1 << "maximum " << term_size << "-mers: " << max_kmers;
+    LOG1 << "average " << term_size << "-mers: "
+         << static_cast<size_t>(avg_kmers);
+}
+
 int doc_list(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
@@ -72,24 +94,7 @@ int doc_list(int argc, char** argv) {
         return -1;
 
     cobs::DocumentList filelist(path, StringToFileType(file_type));
-    size_t max_kmers = 0, total_kmers = 0;
-
-    for (size_t i = 0; i < filelist.size(); ++i) {
-        size_t num_terms = filelist[i].num_terms(term_size);
-        std::cout << "document[" << i << "] size " << filelist[i].size_
-                  << " " << term_size << "-mers " << num_terms
-                  << " : " << filelist[i].path_
-                  << " : " << filelist[i].name_ << std::endl;
-        max_kmers = std::max(max_kmers, num_terms);
-        total_kmers += num_terms;
-    }
-
-    double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
-
-    std::cout << "maximum " << term_size << "-mers: " << max_kmers << std::endl;
-    std::cout << "average " << term_size << "-mers: "
-              << static_cast<size_t>(avg_kmers)
-              << std::endl;
+    print_document_list(filelist, term_size);
 
     return 0;
 }
@@ -156,7 +161,7 @@ int classic_construct(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file_type", file_type,
+        't', "file_type", file_type,
         "filter input documents by file type (any, text, cortex, fasta, etc)");
 
     cp.add_bytes(
@@ -186,6 +191,11 @@ int classic_construct(int argc, char** argv) {
         'C', "clobber", clobber,
         "erase output directory if it exists");
 
+    size_t threads = 0;
+    cp.add_size_t(
+        'T', "threads", threads,
+        "number of threads to use, default: max cores");
+
     if (!cp.process(argc, argv))
         return -1;
 
@@ -194,6 +204,19 @@ int classic_construct(int argc, char** argv) {
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
 
+    // limit threads using OpenMP
+    if (threads != 0) {
+        if (threads == 1) {
+            cobs::gopt_parallel = false;
+        }
+        else {
+            cobs::gopt_parallel = true;
+            omp_set_num_threads(threads);
+        }
+    }
+    omp_set_nested(true);
+
+    // check output and maybe clobber
     if (cobs::fs::exists(out_dir)) {
         if (clobber) {
             cobs::fs::remove_all(out_dir);
@@ -204,6 +227,7 @@ int classic_construct(int argc, char** argv) {
     }
 
     cobs::DocumentList filelist(in_dir, StringToFileType(file_type));
+    print_document_list(filelist, index_params.term_size);
 
     cobs::classic_index::construct(filelist, out_dir, index_params);
 

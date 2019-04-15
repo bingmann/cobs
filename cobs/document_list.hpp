@@ -304,7 +304,7 @@ public:
 
     //! process files in batch with output file generation
     template <typename Functor>
-    void process_batches(size_t batch_size, bool verbose, Functor func) const {
+    void process_batches(size_t batch_size, Functor func) const {
         std::string first_filename, last_filename;
         size_t batch_num = 0;
         DocumentEntryList batch;
@@ -323,9 +323,7 @@ public:
                     pad_index(batch_num) + '_' +
                     '[' + first_filename + '-' + last_filename + ']';
 
-                LOGC(verbose) << "IN - " << out_file;
                 func(batch_num, batch, out_file);
-                LOGC(verbose) << "OK - " << out_file;
 
                 batch.clear();
                 first_filename.clear();
@@ -336,8 +334,7 @@ public:
 
     //! process files in batch with output file generation
     template <typename Functor>
-    void process_batches_parallel(size_t batch_size, bool verbose,
-                                  Functor func) const {
+    void process_batches_parallel(size_t batch_size, Functor func) const {
         struct Batch {
             DocumentEntryList batch;
             std::string out_file;
@@ -369,11 +366,9 @@ public:
             }
         }
 
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) if(gopt_parallel)
         for (size_t i = 0; i < batch_list.size(); ++i) {
-            LOGC(verbose) << "IN - " << batch_list[i].out_file;
             func(i, batch_list[i].batch, batch_list[i].out_file);
-            LOGC(verbose) << "OK - " << batch_list[i].out_file;
         }
     }
 

@@ -35,6 +35,9 @@ struct IndexParameters {
     uint64_t signature_size = 0;
     //! batch size in bytes to process per thread
     uint64_t batch_bytes = 128 * 1024 * 1024llu;
+    //! number of documents in a batch. calculated by construct() from
+    //! batch_bytes and the document's size, passed from compact_index
+    size_t batch_size = 0;
 };
 
 /*!
