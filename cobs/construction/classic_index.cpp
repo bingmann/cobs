@@ -301,7 +301,8 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
          << "  maximum document size: " << max_doc_size << '\n'
          << "  num_hashes: " << params.num_hashes << '\n'
          << "  false_positive_rate: " << params.false_positive_rate << '\n'
-         << "  signature_size: " << params.signature_size << '\n'
+         << "  signature_size: " << params.signature_size
+         << " = " << tlx::format_iec_units(params.signature_size / 8) << '\n'
          << "  index size: "
          << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size)
          << '\n'
