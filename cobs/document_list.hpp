@@ -125,6 +125,10 @@ struct DocumentEntry {
             FastaMultifile mfasta(path_);
             mfasta.process_terms(subdoc_index_, term_size, callback);
         }
+        else if (type_ == FileType::Fastq) {
+            FastqFile fastq(path_);
+            fastq.process_terms(term_size, callback);
+        }
         else {
             die("DocumentEntry: unknown file type");
         }
