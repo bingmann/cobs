@@ -296,11 +296,12 @@ void sketch_path(const fs::path& path,
     LOG1 << "Sketching " << path.string();
     CortexFile ctx(path.string());
     KMerBuffer<31> doc;
-    ctx.process_kmers<31>(
-        [&](KMer<31>& m) {
-            m.canonicalize();
-            doc.data().push_back(m);
-        });
+    // TODO: use ctx.process_terms()
+    // ctx.process_kmers<31>(
+    //     [&](KMer<31>& m) {
+    //         m.canonicalize();
+    //         doc.data().push_back(m);
+    //     });
     sketch_document(doc, rih, num_hashes, min_hash);
 
     std::ofstream of(mh_cache.string());

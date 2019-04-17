@@ -65,17 +65,31 @@ struct DocumentEntry {
 
     //! calculate number of terms in file
     size_t num_terms(size_t k) const {
-        if (term_size_ == 0) {
-            if (type_ == FileType::Fasta) {
-                // read fasta index
-                FastaFile fasta(path_);
-                return fasta.num_terms(k);
-            }
+        if (type_ == FileType::Text) {
             return size_ < k ? 0 : size_ - k + 1;
         }
-        die_verbose_unequal(
-            term_size_, k, "DocumentEntry term_size_ mismatches requested k");
-        return term_count_;
+        else if (type_ == FileType::Cortex) {
+            return term_size_ >= k ? term_count_ * (term_size_ - k + 1) : 0;
+        }
+        else if (type_ == FileType::KMerBuffer) {
+            return term_size_ >= k ? term_count_ * (term_size_ - k + 1) : 0;
+        }
+        else if (type_ == FileType::Fasta) {
+            // read fasta index
+            FastaFile fasta(path_);
+            return fasta.num_terms(k);
+        }
+        else if (type_ == FileType::FastaMulti) {
+            return size_ < k ? 0 : size_ - k + 1;
+        }
+        else if (type_ == FileType::Fastq) {
+            // read fasta index
+            FastqFile fastq(path_);
+            return fastq.num_terms(k);
+        }
+        else {
+            die("DocumentEntry: unknown file type");
+        }
     }
 
     //! process terms
@@ -86,9 +100,8 @@ struct DocumentEntry {
             text.process_terms(term_size, callback);
         }
         else if (type_ == FileType::Cortex) {
-            die_unequal(term_size, 31u);
             CortexFile ctx(path_);
-            ctx.process_terms<31>(callback);
+            ctx.process_terms(term_size, callback);
         }
         else if (type_ == FileType::KMerBuffer) {
             die_unequal(term_size, 31u);
@@ -111,6 +124,9 @@ struct DocumentEntry {
         else if (type_ == FileType::FastaMulti) {
             FastaMultifile mfasta(path_);
             mfasta.process_terms(subdoc_index_, term_size, callback);
+        }
+        else {
+            die("DocumentEntry: unknown file type");
         }
     }
 };

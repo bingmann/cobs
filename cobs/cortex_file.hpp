@@ -95,7 +95,8 @@ public:
     }
 
     template <unsigned N, typename Callback>
-    void process_kmers(Callback callback) {
+    void process_kmers(size_t term_size, Callback callback) {
+        std::string term(N, 0);
         KMer<N> kmer;
         auto kmer_data = reinterpret_cast<char*>(kmer.data());
 
@@ -114,18 +115,21 @@ public:
             is_.read(kmer_data, num_uint8_ts_per_kmer);
             is_.ignore(5 * num_colors_);
 
-            callback(kmer);
+            kmer.to_string(&term);
+            for (size_t i = 0; i + term_size <= N; ++i) {
+                callback(string_view(term.data() + i, term_size));
+            }
         }
     }
 
-    template <unsigned N, typename Callback>
-    void process_terms(Callback callback) {
-        std::string term(N, 0);
-        process_kmers<N>([&](KMer<N>& m) {
-                             m.canonicalize();
-                             m.to_string(&term);
-                             callback(string_view(term));
-                         });
+    template <typename Callback>
+    void process_terms(size_t term_size, Callback callback) {
+        if (kmer_size_ == 31) {
+            return process_kmers<31>(term_size, callback);
+        }
+        else {
+            die("CortexFile: unsupported kmer_size_ " << kmer_size_);
+        }
     }
 
     uint32_t version_;

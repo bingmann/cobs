@@ -29,9 +29,10 @@ TEST(cortex, process_kmers) {
 
     // process kmers
     std::vector<std::string> kmer_list;
-    ctx.process_kmers<31>(
-        [&](cobs::KMer<31>& m) {
-            kmer_list.emplace_back(m.string());
+    ctx.process_terms(
+        31,
+        [&](const cobs::string_view& v) {
+            kmer_list.emplace_back(v.to_string());
         });
 
     die_unequal(ctx.num_kmers(), kmer_list.size());
