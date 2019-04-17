@@ -147,7 +147,7 @@ int doc_dump(int argc, char** argv) {
 int classic_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
-    cobs::classic_index::IndexParameters index_params;
+    cobs::ClassicIndexParameters index_params;
     index_params.num_hashes = 1;
     index_params.false_positive_rate = 0.3;
 
@@ -216,7 +216,7 @@ int classic_construct(int argc, char** argv) {
     cobs::DocumentList filelist(in_dir, StringToFileType(file_type));
     print_document_list(filelist, index_params.term_size);
 
-    cobs::classic_index::construct(filelist, out_dir, index_params);
+    cobs::classic_construct(filelist, out_dir, index_params);
 
     return 0;
 }
@@ -265,7 +265,7 @@ int classic_construct_random(int argc, char** argv) {
               << tlx::format_iec_units(num_documents / 8 * signature_size)
               << std::endl;
 
-    cobs::classic_index::construct_random(
+    cobs::classic_construct_random(
         out_file, signature_size, num_documents, document_size, num_hashes, seed);
 
     return 0;

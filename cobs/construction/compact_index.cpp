@@ -28,7 +28,7 @@ bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
     bool all_combined = false;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
         if (fs::is_directory(it->path())) {
-            all_combined = classic_index::combine(
+            all_combined = classic_combine(
                 in_dir / it->path().filename(),
                 out_dir / it->path().filename(),
                 batch_size);
@@ -167,7 +167,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             if (max_doc_size == 0)
                 return;
 
-            classic_index::IndexParameters classic_params;
+            ClassicIndexParameters classic_params;
             classic_params.term_size = params.term_size;
             classic_params.canonicalize = params.canonicalize;
             classic_params.num_hashes = params.num_hashes;
@@ -178,7 +178,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             DocumentList batch_list(files);
             fs::path classic_dir = index_dir / pad_index(iteration);
 
-            classic_index::construct_from_documents(
+            classic_construct_from_documents(
                 batch_list, classic_dir / pad_index(batch_num), classic_params);
         });
 

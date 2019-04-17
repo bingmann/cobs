@@ -20,9 +20,12 @@
  * constructed from existing documents or with random dummy data for performance
  * testing purposes.
  */
-namespace cobs::classic_index {
+namespace cobs {
 
-struct IndexParameters {
+/*!
+ * Parameters for classic index construction.
+ */
+struct ClassicIndexParameters {
     //! length of terms / k-mers
     unsigned term_size = 31;
     //! canonicalization flag for base pairs
@@ -43,35 +46,36 @@ struct IndexParameters {
 /*!
  * Constructs the index by executing all necessary steps.
  *
- * First calls cobs::classic_index::construct_from_documents to construct
- * multiple small indices.  Afterwards combines these indices with calls to
- * cobs::classic_index::combine until only one index remains.
+ * First calls cobs::classic_construct_from_documents() to construct multiple
+ * small indices.  Afterwards combines these indices with calls to
+ * cobs::classic_combine until only one index remains.
  */
-void construct(
+void classic_construct(
     const DocumentList& filelist, const fs::path& out_dir,
-    IndexParameters index_params);
+    ClassicIndexParameters index_params);
 
 /*!
  * Constructs multiple small indices from document files.
  */
-void construct_from_documents(
+void classic_construct_from_documents(
     const DocumentList& doc_list, const fs::path& out_dir,
-    IndexParameters index_params);
+    ClassicIndexParameters index_params);
 
 /*!
  * Combines multiple indices into one or more bigger indices.
  */
-bool combine(const fs::path& in_dir, const fs::path& out_dir,
-             uint64_t batch_size);
+bool classic_combine(
+    const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size);
 
 /*!
- * Constructs an index filled with random data.
+ * Constructs a classic index filled with random data.
  */
-void construct_random(const fs::path& p, uint64_t signature_size,
-                      uint64_t num_documents, size_t document_size,
-                      uint64_t num_hashes, size_t seed);
+void classic_construct_random(
+    const fs::path& out_file, uint64_t signature_size,
+    uint64_t num_documents, size_t document_size,
+    uint64_t num_hashes, size_t seed);
 
-} // namespace cobs::classic_index
+} // namespace cobs
 
 #endif // !COBS_CONSTRUCTION_CLASSIC_INDEX_HEADER
 

@@ -29,16 +29,18 @@
 #include <tlx/math/round_up.hpp>
 #include <tlx/string/format_iec_units.hpp>
 
-namespace cobs::classic_index {
+namespace cobs {
 
 /******************************************************************************/
 // Construction of classic index from documents
 
+static inline
 void set_bit(std::vector<uint8_t>& data, const ClassicIndexHeader& cih,
              uint64_t pos, uint64_t doc_index) {
     data[cih.row_size() * pos + doc_index / 8] |= 1 << (doc_index % 8);
 }
 
+static inline
 void process_term(const string_view& term, std::vector<uint8_t>& data,
                   const ClassicIndexHeader& cih, size_t doc_index) {
     process_hashes(term.data(), term.size(),
@@ -48,6 +50,7 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
                    });
 }
 
+static inline
 void process_batch(size_t batch_num, size_t num_batches,
                    const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
@@ -96,9 +99,9 @@ void process_batch(size_t batch_num, size_t num_batches,
     t.stop();
 }
 
-void construct_from_documents(const DocumentList& doc_list,
-                              const fs::path& out_dir,
-                              IndexParameters params) {
+void classic_construct_from_documents(
+    const DocumentList& doc_list, const fs::path& out_dir,
+    ClassicIndexParameters params) {
     Timer t;
     fs::create_directories(out_dir);
 
@@ -141,6 +144,7 @@ void construct_from_documents(const DocumentList& doc_list,
 /******************************************************************************/
 // Combine multiple classic indexes
 
+static inline
 void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
                      const fs::path& out_file,
                      unsigned term_size, uint8_t canonicalize,
@@ -166,8 +170,8 @@ void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
     t.stop();
 }
 
-bool combine(const fs::path& in_dir, const fs::path& out_dir,
-             uint64_t batch_size) {
+bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
+                     uint64_t batch_size) {
     Timer t;
     size_t batch_num = process_file_batches(
         in_dir, out_dir, batch_size,
@@ -234,6 +238,7 @@ bool combine(const fs::path& in_dir, const fs::path& out_dir,
 
 /******************************************************************************/
 
+static inline
 uint64_t get_max_file_size(const DocumentList& doc_list,
                            size_t term_size) {
     // sort document by file size (as approximation to the number of kmers)
@@ -276,8 +281,8 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
     die("Unknown file type");
 }
 
-void construct(const DocumentList& filelist, const fs::path& out_dir,
-               IndexParameters params) {
+void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
+                       ClassicIndexParameters params) {
 
     die_unless(params.num_hashes != 0);
     die_unless(params.signature_size == 0);
@@ -311,12 +316,12 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
          << tlx::div_ceil(filelist.size(), params.batch_size);
 
     // construct one classic index
-    construct_from_documents(filelist, out_dir / pad_index(1), params);
+    classic_construct_from_documents(filelist, out_dir / pad_index(1), params);
 
     // combine batches
     size_t i = 1;
-    while (!combine(out_dir / pad_index(i),
-                    out_dir / pad_index(i + 1), params.batch_size)) {
+    while (!classic_combine(out_dir / pad_index(i),
+                            out_dir / pad_index(i + 1), params.batch_size)) {
         i++;
     }
 
@@ -330,10 +335,10 @@ void construct(const DocumentList& filelist, const fs::path& out_dir,
     fs::rename(index, out_dir / ("index" + ClassicIndexHeader::file_extension));
 }
 
-void construct_random(const fs::path& out_file,
-                      uint64_t signature_size,
-                      uint64_t num_documents, size_t document_size,
-                      uint64_t num_hashes, size_t seed) {
+void classic_construct_random(const fs::path& out_file,
+                              uint64_t signature_size,
+                              uint64_t num_documents, size_t document_size,
+                              uint64_t num_hashes, size_t seed) {
     Timer t;
 
     std::vector<std::string> file_names;
@@ -386,6 +391,6 @@ void construct_random(const fs::path& out_file,
     std::cout << t;
 }
 
-} // namespace cobs::classic_index
+} // namespace cobs
 
 /******************************************************************************/
