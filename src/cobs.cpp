@@ -26,6 +26,8 @@
 #include <cmath>
 #include <map>
 #include <random>
+#include <unordered_map>
+#include <unordered_set>
 
 /******************************************************************************/
 
@@ -739,6 +741,234 @@ int benchmark_fpr(int argc, char** argv) {
 
 /******************************************************************************/
 
+int generate_queries(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    std::string path;
+    cp.add_param_string(
+        "path", path,
+        "path to base documents");
+
+    std::string file_type = "any";
+    cp.add_string(
+        't', "file_type", file_type,
+        "filter documents by file type (any, text, cortex, fasta, etc)");
+
+    cp.add_size_t(
+        'T', "threads", cobs::gopt_threads,
+        "number of threads to use, default: max cores");
+
+    unsigned term_size = 31;
+    cp.add_unsigned(
+        'k', "term_size", term_size,
+        "term size (k-mer size), default: 31");
+
+    size_t num_positive = 0;
+    cp.add_size_t(
+        'p', "positive", num_positive,
+        "pick this number of existing positive queries, default: 0");
+
+    size_t num_negative = 0;
+    cp.add_size_t(
+        'n', "negative", num_negative,
+        "construct this number of random non-existing negative queries, "
+        "default: 0");
+
+    bool true_negatives = false;
+    cp.add_flag(
+        'N', "true-negative", true_negatives,
+        "check that negative queries actually are not in the documents (slow)");
+
+    size_t fixed_size = 0;
+    cp.add_size_t(
+        's', "size", fixed_size,
+        "extend positive terms with random data to this size");
+
+    size_t seed = std::random_device { } ();
+    cp.add_size_t(
+        'S', "seed", seed,
+        "random seed");
+
+    std::string out_file;
+    cp.add_string(
+        'o', "out_file", out_file,
+        "output file path");
+
+    if (!cp.process(argc, argv))
+        return -1;
+
+    cobs::DocumentList filelist(path, StringToFileType(file_type));
+
+    std::vector<size_t> terms_prefixsum;
+    terms_prefixsum.reserve(filelist.size());
+    size_t total_terms = 0;
+    for (size_t i = 0; i < filelist.size(); ++i) {
+        terms_prefixsum.push_back(total_terms);
+        total_terms += filelist[i].num_terms(term_size);
+    }
+
+    LOG1 << "Given " << filelist.size() << " documents containing "
+         << total_terms << " " << term_size << "-gram terms";
+
+    if (fixed_size < term_size)
+        fixed_size = term_size;
+
+    std::default_random_engine rng(seed);
+
+    struct Query {
+        // term string
+        std::string term;
+        // document index
+        size_t doc_index;
+        // term index inside document
+        size_t term_index;
+    };
+
+    // select random term ids for positive queries
+    std::vector<size_t> positive_indices;
+    std::vector<Query> positives;
+    {
+        die_unless(total_terms >= num_positive);
+
+        std::unordered_set<size_t> positive_set;
+        while (positive_set.size() < num_positive) {
+            positive_set.insert(rng() % total_terms);
+        }
+
+        positive_indices.reserve(num_positive);
+        for (auto it = positive_set.begin(); it != positive_set.end(); ++it) {
+            positive_indices.push_back(*it);
+        }
+        std::sort(positive_indices.begin(), positive_indices.end());
+
+        positives.resize(positive_indices.size());
+    }
+
+    // generate random negative queries
+    std::vector<std::string> negatives;
+    std::mutex negatives_mutex;
+    std::unordered_map<std::string, std::vector<size_t> > negative_terms;
+    std::unordered_set<size_t> negative_hashes;
+    for (size_t t = 0; t < 1.5 * num_negative; ++t) {
+        std::string neg = cobs::random_sequence_rng(fixed_size, rng);
+        negatives.push_back(neg);
+
+        // insert and hash all terms in the query
+        for (size_t i = 0; i + term_size <= neg.size(); ++i) {
+            std::string term = neg.substr(i, term_size);
+            negative_terms[term].push_back(t);
+            negative_hashes.insert(tlx::hash_djb2(term));
+        }
+    }
+
+    // run over all documents and fetch positive queries
+    cobs::parallel_for(
+        0, filelist.size(), cobs::gopt_threads,
+        [&](size_t d) {
+            size_t index = terms_prefixsum[d];
+            // find starting iterator for positive_indices in this file
+            size_t pos_index = std::lower_bound(
+                positive_indices.begin(), positive_indices.end(), index)
+                               - positive_indices.begin();
+            size_t next_index =
+                pos_index < positive_indices.size() ?
+                positive_indices[pos_index] : size_t(-1);
+            if (next_index == size_t(-1) && !true_negatives)
+                return;
+
+            filelist[d].process_terms(
+                term_size,
+                [&](const cobs::string_view& term) {
+                    if (index == next_index) {
+                        // store positive term
+                        Query& q = positives[pos_index];
+                        q.term = term.to_string();
+                        q.doc_index = d;
+                        q.term_index = index - terms_prefixsum[d];
+
+                        // extend positive term to term_size by padding
+                        if (q.term.size() < fixed_size) {
+                            size_t padding = fixed_size - q.term.size();
+                            size_t front_padding = rng() % padding;
+                            size_t back_padding = padding - front_padding;
+
+                            q.term =
+                                cobs::random_sequence_rng(front_padding, rng) +
+                                q.term +
+                                cobs::random_sequence_rng(back_padding, rng);
+                        }
+
+                        ++pos_index;
+                        next_index = pos_index < positive_indices.size() ?
+                                     positive_indices[pos_index] : size_t(-1);
+                    }
+                    index++;
+
+                    if (true_negatives) {
+                        // lookup hash of term in read-only hash table first
+                        std::string t = term.to_string();
+                        if (negative_hashes.count(tlx::hash_djb2(t)) != 0) {
+                            std::unique_lock<std::mutex> lock(negatives_mutex);
+                            auto it = negative_terms.find(t);
+                            if (it != negative_terms.end()) {
+                                // clear negative query with term found
+                                LOG1 << "remove false negative: " << t;
+                                for (const size_t& i : it->second)
+                                    negatives[i].clear();
+                                negative_terms.erase(it);
+                            }
+                        }
+                    }
+                });
+        });
+
+    // check if there are enough negatives queries left
+    if (negatives.size() < num_negative) {
+        die("Not enough true negatives left, you were unlucky, try again.");
+    }
+
+    // collect everything and return them in random order
+    std::vector<Query> queries = std::move(positives);
+    queries.reserve(num_positive + num_negative);
+
+    size_t ni = 0;
+    for (auto it = negatives.begin(); ni < num_negative; ++it) {
+        if (it->empty())
+            continue;
+        Query q;
+        q.term = std::move(*it);
+        q.doc_index = size_t(-1);
+        queries.emplace_back(q);
+        ++ni;
+    }
+
+    std::shuffle(queries.begin(), queries.end(), rng);
+
+    auto write_output =
+        [&](std::ostream& os) {
+            for (const Query& q : queries) {
+                if (q.doc_index != size_t(-1))
+                    os << ">doc:" << q.doc_index << ":term:" << q.term_index
+                       << ":" << filelist[q.doc_index].name_ << '\n';
+                else
+                    os << ">negative" << '\n';
+                os << q.term << '\n';
+            }
+        };
+
+    if (out_file.empty()) {
+        write_output(std::cout);
+    }
+    else {
+        std::ofstream os(out_file.c_str());
+        write_output(os);
+    }
+
+    return 0;
+}
+
+/******************************************************************************/
+
 struct SubTool {
     const char* name;
     int (* func)(int argc, char* argv[]);
@@ -798,6 +1028,10 @@ struct SubTool subtools[] = {
     {
         "benchmark_fpr", &benchmark_fpr, true,
         "run benchmark and false positive measurement"
+    },
+    {
+        "generate_queries", &generate_queries, true,
+        "select queries randomly from documents"
     },
     { nullptr, nullptr, true, nullptr }
 };
