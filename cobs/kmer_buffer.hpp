@@ -37,6 +37,10 @@ public:
         return m_data;
     }
 
+    const KMer<N>& operator [] (size_t i) const {
+        return m_data[i];
+    }
+
     size_t num_kmers() const {
         return m_data.size();
     }

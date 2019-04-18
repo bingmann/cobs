@@ -35,6 +35,10 @@ uint64_t ClassicIndexHeader::signature_size() const {
     return signature_size_;
 }
 
+uint64_t ClassicIndexHeader::row_bits() const {
+    return file_names_.size();
+}
+
 uint64_t ClassicIndexHeader::row_size() const {
     return (file_names_.size() + 7) / 8;
 }

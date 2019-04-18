@@ -36,6 +36,7 @@ public:
     uint32_t term_size() const;
     uint8_t canonicalize() const;
     uint64_t signature_size() const;
+    uint64_t row_bits() const;
     uint64_t row_size() const;
     uint64_t num_hashes() const;
     const std::vector<std::string>& file_names() const;
