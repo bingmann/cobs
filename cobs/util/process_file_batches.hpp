@@ -56,7 +56,6 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
 
     std::string first_filename, last_filename;
 
-    size_t batch_num = 0;
     std::vector<fs::path> paths;
     for (size_t i = 0; i < sorted_paths.size(); i++) {
         if (selector(sorted_paths[i])) {
@@ -71,14 +70,13 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
             (!paths.empty() && i + 1 == sorted_paths.size()))
         {
             std::string out_file =
-                pad_index(batch_num) + '_' +
+                pad_index(batch_list.size()) + '_' +
                 '[' + first_filename + '-' + last_filename + ']';
 
             batch_list.emplace_back(Batch { std::move(paths), out_file });
 
             paths.clear();
             first_filename.clear();
-            batch_num++;
         }
     }
 
@@ -88,7 +86,7 @@ size_t process_file_batches(const fs::path& in_dir, const fs::path& out_dir,
             callback(batch_list[i].files, batch_list[i].out_file);
         });
 
-    return batch_num;
+    return batch_list.size();
 }
 
 } // namespace cobs
