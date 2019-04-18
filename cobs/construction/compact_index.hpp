@@ -19,9 +19,9 @@
  * testing purposes. The index uses different signature sizes to minimize space
  * wastage.
  */
-namespace cobs::compact_index {
+namespace cobs {
 
-struct IndexParameters {
+struct CompactIndexParameters {
     //! length of terms / k-mers
     unsigned term_size = 31;
     //! canonicalization flag for base pairs
@@ -30,26 +30,27 @@ struct IndexParameters {
     unsigned num_hashes;
     //! false positive rate, provided by user
     double false_positive_rate = 0;
-    //! batch size in bytes to process per thread
-    uint64_t batch_bytes = 128 * 1024 * 1024llu;
     //! page or block size of filters with common fpr
     uint64_t page_size = get_page_size();
+    //! batch size in bytes to process per thread
+    uint64_t mem_bytes = 2 * 1024 * 1024 * 1024llu;
+    //! number of threads to use
+    size_t num_threads = gopt_threads;
 };
 
 /*!
- * Constructs the folders used by the
- * cobs::compact_index::construct_from_documents.  Sorts the documents by file
- * size and then splits them into several directories.
+ * Constructs the folders used by the cobs::compact_index::construct.  Sorts the
+ * documents by file size and then splits them into several directories.
  */
-void construct_from_documents(
+void compact_construct(
     const fs::path& in_dir, const fs::path& index_dir,
-    IndexParameters index_params);
+    CompactIndexParameters index_params);
 
-void combine_into_compact(
+void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,
     uint64_t page_size = get_page_size());
 
-} // namespace cobs::compact_index
+} // namespace cobs
 
 #endif // !COBS_CONSTRUCTION_COMPACT_INDEX_HEADER
 

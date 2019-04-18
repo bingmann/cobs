@@ -21,24 +21,26 @@
 #include <tlx/math/round_up.hpp>
 #include <tlx/string/format_iec_units.hpp>
 
-namespace cobs::compact_index {
+namespace cobs {
 
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
-                           size_t batch_size) {
+                           size_t mem_bytes, size_t num_threads) {
     bool all_combined = false;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
         if (fs::is_directory(it->path())) {
             all_combined = classic_combine(
                 in_dir / it->path().filename(),
                 out_dir / it->path().filename(),
-                batch_size);
+                mem_bytes, num_threads);
         }
     }
     return all_combined;
 }
 
-void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
-                          uint64_t page_size) {
+void compact_combine_into_compact(
+    const fs::path& in_dir, const fs::path& out_file,
+    uint64_t page_size)
+{
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
     std::copy_if(it, end, std::back_inserter(paths), [](const auto& p) {
@@ -100,8 +102,8 @@ void combine_into_compact(const fs::path& in_dir, const fs::path& out_file,
     }
 }
 
-void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
-                              IndexParameters params) {
+void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
+                       CompactIndexParameters params) {
     size_t iteration = 1;
 
     // read file list, sort by size
@@ -110,12 +112,23 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
     size_t num_pages = tlx::div_ceil(doc_list.size(), 8 * params.page_size);
 
-    LOG1 << "Compact Index Parameters:";
-    LOG1 << "  term_size: " << params.term_size;
-    LOG1 << "  number of documents: " << doc_list.size();
-    LOG1 << "  num_hashes: " << params.num_hashes;
-    LOG1 << "  false_positive_rate: " << params.false_positive_rate;
-    LOG1 << "  num_pages: " << num_pages;
+    size_t num_threads = params.num_threads;
+    if (num_threads > num_pages) {
+        // use div_floor() instead
+        num_threads = doc_list.size() / (8 * params.page_size);
+    }
+    if (num_threads == 0) num_threads = 1;
+
+    LOG1 << "Compact Index Parameters:\n"
+         << "  term_size: " << params.term_size << '\n'
+         << "  number of documents: " << doc_list.size() << '\n'
+         << "  num_hashes: " << params.num_hashes << '\n'
+         << "  false_positive_rate: " << params.false_positive_rate << '\n'
+         << "  page_size: " << params.page_size << " bytes"
+         << " = " << params.page_size * 8 << " documents" << '\n'
+         << "  num_pages: " << num_pages << '\n'
+         << "  mem_bytes: " << params.mem_bytes
+         << " = " << tlx::format_iec_units(params.mem_bytes);
 
     size_t total_size = 0;
 
@@ -142,7 +155,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
     // process batches and create classic indexes for each batch
     doc_list.process_batches_parallel(
-        8 * params.page_size, gopt_threads,
+        8 * params.page_size, num_threads,
         [&](size_t batch_num, const std::vector<DocumentEntry>& files,
             fs::path /* out_file */) {
 
@@ -157,13 +170,6 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
             size_t docsize_roundup = tlx::round_up(files.size(), 8);
 
-            LOG1 << "Classic Sub-Index Parameters: "
-                 << "[" << batch_num << '/' << num_pages << ']' << '\n'
-                 << "  number of documents: " << files.size() << '\n'
-                 << "  maximum document size: " << max_doc_size << '\n'
-                 << "  signature_size: " << signature_size << '\n'
-                 << "  sub-index size: " << (docsize_roundup / 8 * signature_size);
-
             if (max_doc_size == 0)
                 return;
 
@@ -173,7 +179,18 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
             classic_params.num_hashes = params.num_hashes;
             classic_params.false_positive_rate = params.false_positive_rate;
             classic_params.signature_size = signature_size;
-            classic_params.batch_bytes = params.batch_bytes;
+            classic_params.mem_bytes = params.mem_bytes / num_threads;
+            classic_params.num_threads = params.num_threads / num_threads;
+
+            LOG1 << "Classic Sub-Index Parameters: "
+                 << "[" << batch_num << '/' << num_pages << ']' << '\n'
+                 << "  number of documents: " << files.size() << '\n'
+                 << "  maximum document size: " << max_doc_size << '\n'
+                 << "  signature_size: " << signature_size << '\n'
+                 << "  sub-index size: "
+                 << (docsize_roundup / 8 * signature_size) << '\n'
+                 << "  mem_bytes: " << classic_params.mem_bytes << '\n'
+                 << "  num_threads: " << classic_params.num_threads;
 
             DocumentList batch_list(files);
             fs::path classic_dir = index_dir / pad_index(iteration);
@@ -185,17 +202,17 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
     // combine classic indexes
     while (!combine_classic_index(index_dir / pad_index(iteration),
                                   index_dir / pad_index(iteration + 1),
-                                  params.batch_bytes)) {
+                                  params.mem_bytes, params.num_threads)) {
         iteration++;
     }
 
     // combine classic indexes into one compact index
-    combine_into_compact(
+    compact_combine_into_compact(
         index_dir / pad_index(iteration + 1),
         index_dir / ("index" + CompactIndexHeader::file_extension),
         params.page_size);
 }
 
-} // namespace cobs::compact_index
+} // namespace cobs
 
 /******************************************************************************/

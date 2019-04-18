@@ -53,7 +53,7 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
 }
 
 static inline
-void process_batch(size_t batch_num, size_t num_batches,
+void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
                    const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
@@ -74,7 +74,7 @@ void process_batch(size_t batch_num, size_t num_batches,
     // parallelize over 8 documents, which fit into one byte, the terms are
     // random hence only little cache trashing inside a cache line should occur.
     parallel_for(
-        0, (paths.size() + 7) / 8, std::sqrt(gopt_threads),
+        0, (paths.size() + 7) / 8, std::sqrt(num_threads),
         [&](size_t b) {
             size_t local_count = 0;
             for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
@@ -108,7 +108,7 @@ void classic_construct_from_documents(
     Timer t;
     fs::create_directories(out_dir);
 
-    size_t num_threads = gopt_threads;
+    size_t num_threads = params.num_threads;
     if (num_threads == 0)
         num_threads = 1;
 
@@ -147,7 +147,7 @@ void classic_construct_from_documents(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
-            process_batch(batch_num, num_batches,
+            process_batch(batch_num, num_batches, num_threads,
                           paths, out_path, cih, thr_timer);
 
             t += thr_timer;
@@ -286,7 +286,7 @@ void classic_combine_streams(
 }
 
 bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
-                     uint64_t mem_bytes)
+                     uint64_t mem_bytes, size_t num_threads)
 {
     fs::create_directories(out_dir);
 
@@ -335,7 +335,6 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
 
     // ---[ Determine Batches to Combine ]--------------------------------------
 
-    size_t num_threads = gopt_threads;
     size_t target_row_bits = 8 * mem_bytes / num_threads;
 
     struct Batch {
@@ -539,15 +538,17 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
          << "  signature_size: " << params.signature_size
          << " = " << tlx::format_iec_units(params.signature_size) << '\n'
          << "  index size: "
-         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size);
+         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size) << '\n'
+         << "  mem_bytes: " << params.mem_bytes
+         << " = " << tlx::format_iec_units(params.mem_bytes);
 
     // construct one classic index
     classic_construct_from_documents(filelist, out_dir / pad_index(1), params);
 
     // combine batches
     size_t i = 1;
-    while (!classic_combine(out_dir / pad_index(i),
-                            out_dir / pad_index(i + 1), params.mem_bytes)) {
+    while (!classic_combine(out_dir / pad_index(i), out_dir / pad_index(i + 1),
+                            params.mem_bytes, params.num_threads)) {
         i++;
     }
 

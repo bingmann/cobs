@@ -202,7 +202,7 @@ int classic_construct(int argc, char** argv) {
         "continue in existing output directory");
 
     cp.add_size_t(
-        'T', "threads", cobs::gopt_threads,
+        'T', "threads", index_params.num_threads,
         "number of threads to use, default: max cores");
 
     if (!cp.process(argc, argv))
@@ -290,7 +290,7 @@ int classic_construct_random(int argc, char** argv) {
 int compact_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
-    cobs::compact_index::IndexParameters index_params;
+    cobs::CompactIndexParameters index_params;
     index_params.num_hashes = 1;
     index_params.false_positive_rate = 0.3;
 
@@ -303,9 +303,9 @@ int compact_construct(int argc, char** argv) {
         "out_dir", out_dir, "path to the output directory");
 
     cp.add_bytes(
-        'b', "batch_bytes", index_params.batch_bytes,
-        "batch size in bytes, default: " +
-        tlx::format_iec_units(index_params.batch_bytes));
+        'm', "mem_bytes", index_params.mem_bytes,
+        "memory in bytes to use, default: " +
+        tlx::format_iec_units(index_params.mem_bytes));
 
     cp.add_unsigned(
         'h', "num_hashes", index_params.num_hashes,
@@ -339,6 +339,10 @@ int compact_construct(int argc, char** argv) {
         'c', "canonicalize", canonicalize,
         "canonicalize DNA k-mers, default: false");
 
+    cp.add_size_t(
+        'T', "threads", index_params.num_threads,
+        "number of threads to use, default: max cores");
+
     if (!cp.process(argc, argv))
         return -1;
 
@@ -359,8 +363,7 @@ int compact_construct(int argc, char** argv) {
         }
     }
 
-    cobs::compact_index::construct_from_documents(
-        in_dir, out_dir, index_params);
+    cobs::compact_construct(in_dir, out_dir, index_params);
 
     return 0;
 }
@@ -386,7 +389,7 @@ int compact_construct_combine(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
-    cobs::compact_index::combine_into_compact(in_dir, out_file, page_size);
+    cobs::compact_combine_into_compact(in_dir, out_file, page_size);
 
     return 0;
 }

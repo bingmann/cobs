@@ -40,13 +40,13 @@ TEST_F(compact_index_query, all_included_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::IndexParameters index_params;
+    cobs::CompactIndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
+    cobs::compact_construct(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);
     cobs::query::ClassicSearch s_base(s_mmap);
 
@@ -66,13 +66,13 @@ TEST_F(compact_index_query, one_included_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::IndexParameters index_params;
+    cobs::CompactIndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
+    cobs::compact_construct(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);
     cobs::query::ClassicSearch s_base(s_mmap);
 
@@ -91,13 +91,13 @@ TEST_F(compact_index_query, false_positive_mmap) {
     generate_test_case(documents, input_dir.string());
 
     // construct compact index and mmap query
-    cobs::compact_index::IndexParameters index_params;
+    cobs::CompactIndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, index_params);
+    cobs::compact_construct(input_dir, index_dir, index_params);
     cobs::query::compact_index::mmap s_mmap(index_path);
     cobs::query::ClassicSearch s_base(s_mmap);
 
@@ -125,7 +125,7 @@ TEST_F(compact_index_query, false_positive_mmap) {
 TEST_F(compact_index_query, all_included_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::aio s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -140,7 +140,7 @@ TEST_F(compact_index_query, all_included_aio) {
 TEST_F(compact_index_query, one_included_aio) {
     auto documents = generate_documents_one(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -154,7 +154,7 @@ TEST_F(compact_index_query, one_included_aio) {
 TEST_F(compact_index_query, false_positive_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
-    cobs::compact_index::construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
+    cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
     cobs::query::compact_index::mmap s_aio(index_path);
 
     size_t num_tests = 10000;
