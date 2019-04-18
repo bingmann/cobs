@@ -55,6 +55,8 @@ static void print_document_list(cobs::DocumentList& filelist,
                                 size_t term_size) {
     size_t max_kmers = 0, total_kmers = 0;
 
+    LOG1 << "--- document list (" << filelist.size() << " entries) ---";
+
     for (size_t i = 0; i < filelist.size(); ++i) {
         size_t num_terms = filelist[i].num_terms(term_size);
         LOG1 << "document[" << i << "] size " << filelist[i].size_
@@ -64,12 +66,15 @@ static void print_document_list(cobs::DocumentList& filelist,
         max_kmers = std::max(max_kmers, num_terms);
         total_kmers += num_terms;
     }
+    LOG1 << "--- end of document list (" << filelist.size() << " entries) ---";
 
     double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
 
+    LOG1 << "documents: " << filelist.size();
     LOG1 << "maximum " << term_size << "-mers: " << max_kmers;
     LOG1 << "average " << term_size << "-mers: "
          << static_cast<size_t>(avg_kmers);
+    LOG1 << "total " << term_size << "-mers: " << total_kmers;
 }
 
 int doc_list(int argc, char** argv) {
@@ -191,6 +196,11 @@ int classic_construct(int argc, char** argv) {
         'C', "clobber", clobber,
         "erase output directory if it exists");
 
+    bool continue_ = false;
+    cp.add_flag(
+        "continue", continue_,
+        "continue in existing output directory");
+
     cp.add_size_t(
         'T', "threads", cobs::gopt_threads,
         "number of threads to use, default: max cores");
@@ -207,6 +217,9 @@ int classic_construct(int argc, char** argv) {
     if (cobs::fs::exists(out_dir)) {
         if (clobber) {
             cobs::fs::remove_all(out_dir);
+        }
+        else if (continue_) {
+            // fall through
         }
         else {
             die("Output directory exists, will not overwrite without --clobber");
