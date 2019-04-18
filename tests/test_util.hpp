@@ -79,20 +79,21 @@ generate_documents_one(const std::string& query, size_t num_documents = 33) {
 }
 
 static inline
-std::string get_file_stem(unsigned index) {
-    die_unless(index < 100000);
-    return tlx::ssprintf("document_%05u", index);
+void generate_test_case(std::vector<cobs::KMerBuffer<31> > documents,
+                        std::string prefix,
+                        const std::string& out_dir) {
+    for (size_t i = 0; i < documents.size(); i++) {
+        std::string file_name = prefix + "document_" + cobs::pad_index(i);
+        documents[i].serialize(
+            out_dir + "/" + file_name + cobs::KMerBufferHeader::file_extension,
+            file_name);
+    }
 }
 
 static inline
 void generate_test_case(std::vector<cobs::KMerBuffer<31> > documents,
                         const std::string& out_dir) {
-    for (size_t i = 0; i < documents.size(); i++) {
-        std::string file_name = get_file_stem(i);
-        documents[i].serialize(
-            out_dir + "/" + file_name + cobs::KMerBufferHeader::file_extension,
-            file_name);
-    }
+    return generate_test_case(documents, "", out_dir);
 }
 
 #endif // !COBS_TESTS_TEST_UTIL_HEADER

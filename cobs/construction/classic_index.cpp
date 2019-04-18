@@ -27,7 +27,9 @@
 #include <tlx/math/div_ceil.hpp>
 #include <tlx/math/popcount.hpp>
 #include <tlx/math/round_up.hpp>
+#include <tlx/string/bitdump.hpp>
 #include <tlx/string/format_iec_units.hpp>
+#include <tlx/string/join_generic.hpp>
 
 namespace cobs {
 
@@ -101,23 +103,35 @@ void process_batch(size_t batch_num, size_t num_batches,
 
 void classic_construct_from_documents(
     const DocumentList& doc_list, const fs::path& out_dir,
-    ClassicIndexParameters params) {
+    const ClassicIndexParameters& params)
+{
     Timer t;
     fs::create_directories(out_dir);
 
-    if (params.batch_size == 0) {
-        params.batch_size = params.batch_bytes / (params.signature_size / 8);
-        params.batch_size = std::max(8lu, tlx::round_up(params.batch_size, 8));
-    }
+    size_t num_threads = gopt_threads;
+    if (num_threads == 0)
+        num_threads = 1;
+
+    size_t batch_size =
+        params.mem_bytes / (params.signature_size / 8) / num_threads;
+    batch_size = std::max(8lu, tlx::round_up(batch_size, 8));
+    num_threads = std::min(
+        num_threads,
+        params.mem_bytes / (batch_size / 8 * params.signature_size));
 
     die_unless(params.num_hashes != 0);
     die_unless(params.signature_size != 0);
-    die_unless(params.batch_size % 8 == 0);
+    die_unless(batch_size % 8 == 0);
 
-    size_t num_batches = tlx::div_ceil(doc_list.size(), params.batch_size);
+    size_t num_batches = tlx::div_ceil(doc_list.size(), batch_size);
+
+    LOG1 << "classic_construct_from_documents()"
+         << " batch_size=" << batch_size
+         << " num_threads=" << num_threads
+         << " num_batches=" << num_batches;
 
     doc_list.process_batches_parallel(
-        params.batch_size,
+        batch_size, num_threads,
         [&](size_t batch_num, const std::vector<DocumentEntry>& paths,
             std::string out_file) {
             Timer thr_timer;
@@ -145,63 +159,273 @@ void classic_construct_from_documents(
 // Combine multiple classic indexes
 
 static inline
-void combine_streams(std::vector<std::pair<std::ifstream, uint64_t> >& streams,
-                     const fs::path& out_file,
-                     unsigned term_size, uint8_t canonicalize,
-                     uint64_t signature_size, uint64_t row_size,
-                     uint64_t num_hash,
-                     Timer& t, const std::vector<std::string>& file_names) {
+void classic_combine_streams(
+    std::vector<std::ifstream>& streams,
+    std::vector<uint64_t>& row_bits,
+    const fs::path& out_file,
+    unsigned term_size, uint8_t canonicalize, uint64_t signature_size,
+    uint64_t new_row_bits, uint64_t num_hash, uint64_t mem_bytes,
+    Timer& t, const std::vector<std::string>& file_names)
+{
+    static constexpr bool debug = false;
+
     std::ofstream ofs;
     ClassicIndexHeader cih(term_size, canonicalize, signature_size,
                            num_hash, file_names);
     serialize_header(ofs, out_file, cih);
 
-    std::vector<char> block(row_size);
-    for (uint64_t i = 0; i < signature_size; i++) {
-        uint64_t pos = 0;
+    die_unequal(streams.size(), row_bits.size());
+    die_unequal(new_row_bits, file_names.size());
+
+    // use fast method if all row_bits are zero mod 8 with exception of last one
+    bool use_fast_method = true;
+
+    size_t in_row_bytes = 0;
+    std::vector<uint64_t> row_bytes(streams.size());
+    for (size_t i = 0; i < streams.size(); ++i) {
+        if (i + 1 != streams.size() && row_bits[i] % 8 != 0)
+            use_fast_method = false;
+
+        row_bytes[i] = tlx::div_ceil(row_bits[i], 8);
+        in_row_bytes += row_bytes[i];
+    }
+
+    size_t new_row_bytes = tlx::div_ceil(new_row_bits, 8);
+    size_t batch_size = mem_bytes / new_row_bytes / 2;
+    if (batch_size < 1) batch_size = 1;
+
+    size_t num_batches = tlx::div_ceil(signature_size, batch_size);
+
+    LOG1 << "classic_combine_streams()"
+         << " streams=" << streams.size()
+         << " new_row_bits=" << new_row_bits
+         << " new_row_bytes=" << new_row_bytes
+         << " batch_size=" << batch_size
+         << " num_batches=" << num_batches
+         << " use_fast_method=" << use_fast_method
+         << " memory=" << ((new_row_bytes + in_row_bytes) * batch_size);
+
+    // read many blocks from each file, interleave them into new block, and
+    // write it out
+    std::vector<std::vector<char> > in_blocks(streams.size());
+    for (size_t i = 0; i < streams.size(); ++i) {
+        in_blocks[i].resize(row_bytes[i] * batch_size);
+    }
+
+    std::vector<size_t> in_pos(streams.size());
+    // output block
+    std::vector<char> out_block(new_row_bytes* batch_size);
+
+    uint64_t current_row = 0;
+    for (size_t b = 0; b < num_batches; ++b) {
         t.active("read");
-        for (auto& ifs : streams) {
-            ifs.first.read(block.data() + pos, ifs.second);
-            pos += ifs.second;
+        LOG << "read batch " << b << "/" << num_batches;
+        size_t this_batch =
+            std::min(batch_size, signature_size - current_row);
+
+        // read data from streams
+        for (size_t i = 0; i < streams.size(); ++i) {
+            streams[i].read(
+                in_blocks[i].data(), row_bytes[i] * this_batch);
+            LOG << "stream[" << i << "] read " << streams[i].gcount();
+            die_unequal(streams[i].gcount(), row_bytes[i] * this_batch);
         }
+        current_row += this_batch;
+
+        std::fill(in_pos.begin(), in_pos.end(), 0);
+
+        // interleave rows, two methods: one byte aligned, other can use any bit
+        // combination.
+        t.active("interleave");
+        for (size_t k = 0; k < this_batch; ++k) {
+            std::vector<char>::iterator out =
+                out_block.begin() + k * new_row_bytes;
+
+            if (use_fast_method) {
+                // out_pos is in bytes, copies whole bytes.
+                size_t out_pos = 0;
+                for (size_t s = 0; s < streams.size(); ++s) {
+                    LOG << "in[" << s << "] " << tlx::bitdump_le8(
+                        in_blocks[s].data() + in_pos[s], row_bytes[s]);
+
+                    for (size_t i = 0; i < row_bytes[s]; ++i) {
+                        out[out_pos++] = in_blocks[s][in_pos[s] + i];
+                    }
+                    in_pos[s] += row_bytes[s];
+                }
+            }
+            else {
+                // slower method which can interleave any bit combinations,
+                // out_pos is in bits.
+                size_t out_pos = 0;
+                for (size_t s = 0; s < streams.size(); ++s) {
+                    LOG << "in[" << s << "] " << tlx::bitdump_le8(
+                        in_blocks[s].data() + in_pos[s], row_bytes[s]);
+
+                    size_t j = row_bits[s];
+                    for (size_t i = 0; i < row_bytes[s]; ++i) {
+                        out[out_pos / 8] |=
+                            in_blocks[s][in_pos[s] + i] << (out_pos % 8);
+                        if (j >= (8 - out_pos % 8)) {
+                            out[out_pos / 8 + 1] |=
+                                in_blocks[s][in_pos[s] + i] >> (8 - out_pos % 8);
+                        }
+                        out_pos += std::min<size_t>(8, row_bits[s] - 8 * i);
+                        j -= 8;
+                    }
+                    in_pos[s] += row_bytes[s];
+                }
+            }
+            LOG << "out[] " << tlx::bitdump_le8(&*out, new_row_bytes);
+        }
+
         t.active("write");
-        ofs.write(block.data(), row_size);
+        ofs.write(out_block.data(), new_row_bytes * this_batch);
     }
     t.stop();
 }
 
 bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
-                     uint64_t batch_size) {
+                     uint64_t mem_bytes)
+{
+    fs::create_directories(out_dir);
+
+    // ---[ Collect Classic Indexes to Combine ]--------------------------------
+
+    struct Index {
+        fs::path path;
+        ClassicIndexHeader header;
+    };
+
+    std::vector<Index> index_list;
+
+    fs::recursive_directory_iterator it(in_dir), end;
+    while (it != end) {
+        if (it->path().extension() != ClassicIndexHeader::file_extension) {
+            ++it;
+            continue;
+        }
+
+        auto cih = deserialize_header<ClassicIndexHeader>(*it);
+        index_list.emplace_back(Index { *it, cih });
+        ++it;
+    }
+
+    // handle easy cases
+    if (index_list.size() == 0)
+        die("classic_combine() could not find any cobs_classic to combine");
+
+    if (index_list.size() == 1) {
+        fs::path out_path = out_dir / index_list[0].path.filename();
+        LOG1 << "Move 1 Classic Index [" << index_list[0].header.row_bits()
+             << " documents] to " << out_path;
+
+        if (!gopt_keep_temporary)
+            fs::rename(index_list[0].path, out_path);
+        else
+            fs::copy(index_list[0].path, out_path);
+
+        return true;
+    }
+
+    std::sort(index_list.begin(), index_list.end(),
+              [](const Index& a, const Index& b) {
+                  return a.path < b.path;
+              });
+
+    // ---[ Determine Batches to Combine ]--------------------------------------
+
+    size_t num_threads = gopt_threads;
+    size_t target_row_bits = 8 * mem_bytes / num_threads;
+
+    struct Batch {
+        std::vector<fs::path> files;
+        std::string out_file;
+    };
+    std::vector<Batch> batch_list;
+
+    {
+        std::string first_filename, last_filename;
+        size_t new_row_bits = 0;
+
+        std::vector<fs::path> batch;
+
+        for (size_t i = 0; i < index_list.size(); i++) {
+            if (!batch.empty() && (
+                    // row buffer exceeds memory
+                    new_row_bits + index_list[i].header.row_bits()
+                    > target_row_bits ||
+                    // only open about 512 files
+                    batch.size() > 512 / num_threads))
+            {
+                std::string out_file =
+                    pad_index(batch_list.size()) + '_' +
+                    '[' + first_filename + '-' + last_filename + ']';
+
+                batch_list.emplace_back(Batch { std::move(batch), out_file });
+
+                batch.clear();
+                first_filename.clear();
+                new_row_bits = 0;
+            }
+
+            std::string filename = cobs::base_name(index_list[i].path);
+            if (first_filename.empty()) {
+                first_filename = filename;
+            }
+            last_filename = filename;
+
+            batch.push_back(std::move(index_list[i].path));
+            new_row_bits += index_list[i].header.row_bits();
+        }
+        if (!batch.empty()) {
+            std::string out_file =
+                pad_index(batch_list.size()) + '_' +
+                '[' + first_filename + '-' + last_filename + ']';
+
+            batch_list.emplace_back(Batch { std::move(batch), out_file });
+        }
+    }
+
     Timer t;
-    size_t batch_num = process_file_batches(
-        in_dir, out_dir, batch_size,
-        [](const fs::path& path) {
-            return file_has_header<ClassicIndexHeader>(path);
-        },
-        [&](const std::vector<fs::path>& paths, std::string out_file) {
+    parallel_for(
+        0, batch_list.size(), num_threads,
+        [&](size_t b) {
             Timer thr_timer;
+            const std::vector<fs::path>& files = batch_list[b].files;
 
-            fs::path out_path =
-                out_dir / (out_file + ClassicIndexHeader::file_extension);
+            fs::path out_path = out_dir
+                                / (batch_list[b].out_file + ClassicIndexHeader::file_extension);
 
-            LOG1 << "Combine Classic "
-                 << paths.size() << " indices "
-                 << out_path;
+            if (files.size() == 1) {
+                LOG1 << "Move Classic Index to " << out_path;
 
-            std::vector<std::pair<std::ifstream, uint64_t> > streams;
+                if (!gopt_keep_temporary)
+                    fs::rename(files[0], out_path);
+                else
+                    fs::copy(files[0], out_path);
+
+                return;
+            }
+
+            std::vector<std::ifstream> streams;
+            std::vector<uint64_t> row_bits;
             std::vector<std::string> file_names;
             unsigned term_size = 0;
             uint8_t canonicalize = false;
             uint64_t signature_size = 0;
             uint64_t num_hashes = 0;
 
+            streams.reserve(files.size());
+            row_bits.reserve(files.size());
+
             // collect new block size
-            uint64_t new_row_size = 0;
-            for (size_t i = 0; i < paths.size(); i++) {
+            uint64_t new_row_bits = 0;
+            for (size_t i = 0; i < files.size(); i++) {
                 // read header from classic index
-                streams.emplace_back(std::make_pair(std::ifstream(), 0));
+                streams.emplace_back(std::ifstream());
                 auto cih = deserialize_header<ClassicIndexHeader>(
-                    streams.back().first, paths[i]);
+                    streams.back(), files[i]);
                 // check parameters for compatibility
                 if (signature_size == 0) {
                     term_size = cih.term_size();
@@ -214,26 +438,35 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
                 die_unequal(cih.signature_size(), signature_size);
                 die_unequal(cih.num_hashes(), num_hashes);
                 // calculate new row length
-                streams.back().second = cih.row_size();
-                new_row_size += cih.row_size();
+                row_bits.emplace_back(cih.row_bits());
+                new_row_bits += cih.row_bits();
                 // append file names
                 std::copy(cih.file_names().begin(), cih.file_names().end(),
                           std::back_inserter(file_names));
-                // append dummy file name entries
-                while (cih.file_names().size() % 8 != 0) {
-                    cih.file_names().push_back(std::string());
-                }
             }
-            combine_streams(streams, out_path, term_size, canonicalize,
-                            signature_size, new_row_size,
-                            num_hashes, thr_timer, file_names);
+
+            LOG1 << "Combine Classic " << files.size() << " indices "
+                 << "[" << tlx::join(" ", row_bits) << " documents]"
+                 << " into " << out_path;
+
+            classic_combine_streams(
+                streams, row_bits, out_path, term_size, canonicalize,
+                signature_size, new_row_bits, num_hashes,
+                mem_bytes / num_threads,
+                thr_timer, file_names);
             streams.clear();
             file_names.clear();
+
+            if (!gopt_keep_temporary) {
+                for (size_t i = 0; i < files.size(); i++) {
+                    // fs::remove(files[i]);
+                }
+            }
 
             t += thr_timer;
         });
     std::cout << t;
-    return (batch_num <= 1);
+    return (batch_list.size() <= 1);
 }
 
 /******************************************************************************/
@@ -241,6 +474,8 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
 static inline
 uint64_t get_max_file_size(const DocumentList& doc_list,
                            size_t term_size) {
+    static constexpr bool debug = false;
+
     // sort document by file size (as approximation to the number of kmers)
     const std::vector<DocumentEntry>& paths = doc_list.list();
     auto it = std::max_element(
@@ -255,27 +490,27 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
 
     // look into largest file and return number of elements
     if (it->type_ == FileType::Text) {
-        sLOG1 << "Max Document Size [Text]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [Text]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Cortex) {
-        sLOG1 << "Max Document Size [Cortex]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [Cortex]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::KMerBuffer) {
-        sLOG1 << "Max Document Size [cobs_doc]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [cobs_doc]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Fasta) {
-        sLOG1 << "Max Document Size [Fasta]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [Fasta]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::FastaMulti) {
-        sLOG1 << "Max Document Size [FastaMulti]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [FastaMulti]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     else if (it->type_ == FileType::Fastq) {
-        sLOG1 << "Max Document Size [FastQ]:" << it->num_terms(term_size);
+        sLOG << "Max Document Size [FastQ]:" << it->num_terms(term_size);
         return it->num_terms(term_size);
     }
     die("Unknown file type");
@@ -292,11 +527,6 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
     params.signature_size = calc_signature_size(
         max_doc_size, params.num_hashes, params.false_positive_rate);
 
-    if (params.batch_size == 0) {
-        params.batch_size = params.batch_bytes / (params.signature_size / 8);
-        params.batch_size = std::max(8lu, tlx::round_up(params.batch_size, 8));
-    }
-
     size_t docsize_roundup = tlx::round_up(filelist.size(), 8);
 
     LOG1 << "Classic Index Parameters:\n"
@@ -307,13 +537,9 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
          << "  num_hashes: " << params.num_hashes << '\n'
          << "  false_positive_rate: " << params.false_positive_rate << '\n'
          << "  signature_size: " << params.signature_size
-         << " = " << tlx::format_iec_units(params.signature_size / 8) << '\n'
+         << " = " << tlx::format_iec_units(params.signature_size) << '\n'
          << "  index size: "
-         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size)
-         << '\n'
-         << "  batch size: " << params.batch_size << " documents" << '\n'
-         << "  number of batches: "
-         << tlx::div_ceil(filelist.size(), params.batch_size);
+         << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size);
 
     // construct one classic index
     classic_construct_from_documents(filelist, out_dir / pad_index(1), params);
@@ -321,7 +547,7 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
     // combine batches
     size_t i = 1;
     while (!classic_combine(out_dir / pad_index(i),
-                            out_dir / pad_index(i + 1), params.batch_size)) {
+                            out_dir / pad_index(i + 1), params.mem_bytes)) {
         i++;
     }
 

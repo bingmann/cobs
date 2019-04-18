@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include "test_util.hpp"
+#include <cobs/query/classic_index/mmap.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -87,6 +88,60 @@ TEST_F(classic_index_construction, deserialization) {
     double num_ones_average = set_bit_ratio * h.signature_size();
     for (auto& no : num_ones) {
         ASSERT_LE(no.second, num_ones_average * 1.01);
+    }
+}
+
+TEST_F(classic_index_construction, combine) {
+    using cobs::pad_index;
+    // generate 10 individual sets of documents and construct indices
+    using DocumentSet = std::vector<cobs::KMerBuffer<31> >;
+    std::vector<DocumentSet> doc_sets;
+    for (size_t i = 0; i < 10; ++i) {
+        std::string query = cobs::random_sequence(10000, /* seed */ i + 1);
+        auto documents = generate_documents_all(
+            query, /* num_documents */ 3, /* num_terms */ 100);
+        generate_test_case(
+            documents, /* prefix */ "set_" + pad_index(i) + "_",
+            input_dir / pad_index(i));
+        doc_sets.emplace_back(std::move(documents));
+
+        // construct classic index
+        cobs::ClassicIndexParameters index_params;
+        index_params.num_hashes = 3;
+        index_params.false_positive_rate = 0.1;
+
+        cobs::classic_construct(
+            input_dir / pad_index(i), index_dir / pad_index(i), index_params);
+    }
+
+    cobs::classic_combine(
+        index_dir, index_dir / "combine", /* mem_bytes */ 128 * 1024 * 1024);
+
+    // check result by querying for document terms
+    cobs::query::classic_index::mmap s_mmap(
+        index_dir / "combine/000000_[index-index].cobs_classic");
+    cobs::query::ClassicSearch s_base(s_mmap);
+
+    std::vector<std::pair<uint16_t, std::string> > result;
+
+    for (size_t ds = 0; ds < 10; ++ds) {
+        for (size_t d = 0; d < doc_sets[ds].size(); ++d) {
+            for (size_t i = 0; i < doc_sets[ds][d].num_kmers(); ++i) {
+                std::string doc_match =
+                    "set_" + pad_index(ds) + "_document_" + pad_index(d);
+                std::string kmer = doc_sets[ds][d][i].string();
+                LOG0 << kmer;
+
+                s_base.search(kmer, result);
+
+                bool found = false;
+                for (auto& r : result) {
+                    if (r.second == doc_match && r.first > 0)
+                        found = true;
+                }
+                ASSERT_TRUE(found);
+            }
+        }
     }
 }
 

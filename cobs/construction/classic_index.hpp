@@ -41,6 +41,8 @@ struct ClassicIndexParameters {
     //! number of documents in a batch. calculated by construct() from
     //! batch_bytes and the document's size, passed from compact_index
     size_t batch_size = 0;
+    //! batch size in bytes to process per thread
+    uint64_t mem_bytes = 2 * 1024 * 1024 * 1024llu;
 };
 
 /*!
@@ -59,13 +61,13 @@ void classic_construct(
  */
 void classic_construct_from_documents(
     const DocumentList& doc_list, const fs::path& out_dir,
-    ClassicIndexParameters index_params);
+    const ClassicIndexParameters& index_params);
 
 /*!
  * Combines multiple indices into one or more bigger indices.
  */
 bool classic_combine(
-    const fs::path& in_dir, const fs::path& out_dir, uint64_t batch_size);
+    const fs::path& in_dir, const fs::path& out_dir, uint64_t mem_bytes);
 
 /*!
  * Constructs a classic index filled with random data.

@@ -389,7 +389,8 @@ public:
 
     //! process files in batch with output file generation
     template <typename Functor>
-    void process_batches_parallel(size_t batch_size, Functor func) const {
+    void process_batches_parallel(size_t batch_size, size_t num_threads,
+                                  Functor func) const {
         struct Batch {
             DocumentEntryList batch;
             std::string out_file;
@@ -422,7 +423,7 @@ public:
         }
 
         parallel_for(
-            0, batch_list.size(), gopt_threads,
+            0, batch_list.size(), num_threads,
             [&](size_t i) {
                 func(i, batch_list[i].batch, batch_list[i].out_file);
             });

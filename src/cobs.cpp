@@ -170,9 +170,9 @@ int classic_construct(int argc, char** argv) {
         "filter input documents by file type (any, text, cortex, fasta, etc)");
 
     cp.add_bytes(
-        'b', "batch_size", index_params.batch_bytes,
-        "batch size in bytes, default: " +
-        tlx::format_iec_units(index_params.batch_bytes));
+        'm', "mem_bytes", index_params.mem_bytes,
+        "memory in bytes to use, default: " +
+        tlx::format_iec_units(index_params.mem_bytes));
 
     cp.add_unsigned(
         'h', "num_hashes", index_params.num_hashes,
@@ -303,7 +303,7 @@ int compact_construct(int argc, char** argv) {
         "out_dir", out_dir, "path to the output directory");
 
     cp.add_bytes(
-        'b', "batch_size", index_params.batch_bytes,
+        'b', "batch_bytes", index_params.batch_bytes,
         "batch size in bytes, default: " +
         tlx::format_iec_units(index_params.batch_bytes));
 

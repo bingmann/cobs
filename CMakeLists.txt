@@ -12,6 +12,17 @@ cmake_policy(VERSION 3.9.2)
 
 project(cobs)
 
+# Set a default build type if none was specified
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+    STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
@@ -122,6 +133,9 @@ file(GLOB_RECURSE EXECUTABLE_FILES
 MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
 MESSAGE("TEST_FILES       ${TEST_FILES}")
 MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
+
+# with run-time STL checks
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
 
 # enable ThreadSanitizer
 if(OFF)

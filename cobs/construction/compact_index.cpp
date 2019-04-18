@@ -142,7 +142,7 @@ void construct_from_documents(const fs::path& in_dir, const fs::path& index_dir,
 
     // process batches and create classic indexes for each batch
     doc_list.process_batches_parallel(
-        8 * params.page_size,
+        8 * params.page_size, gopt_threads,
         [&](size_t batch_num, const std::vector<DocumentEntry>& files,
             fs::path /* out_file */) {
 
