@@ -662,12 +662,12 @@ void benchmark_fpr_run(const cobs::fs::path& p,
         }
     }
 
-    std::string simd = "on";
+    std::string sse2 = "off";
     std::string openmp = "on";
     std::string aio = "on";
 
-#ifdef NO_SIMD
-    simd = "off";
+#if __SSE2__
+    sse2 = "on";
 #endif
 
 #ifdef NO_OPENMP
@@ -686,7 +686,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
               << " queries=" << queries.size()
               << " warmup=" << warmup_queries.size()
               << " results=" << result.size()
-              << " simd=" << simd
+              << " sse2=" << sse2
               << " openmp=" << openmp
               << " aio=" << aio
               << " t_hashes=" << t.get("hashes")

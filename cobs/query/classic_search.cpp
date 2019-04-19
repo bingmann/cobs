@@ -27,6 +27,10 @@
 
 #include <xxhash.h>
 
+#if __SSE2__
+#include <immintrin.h>
+#endif
+
 namespace cobs::query {
 
 void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
@@ -85,26 +89,26 @@ void counts_to_result(const std::vector<std::string>& file_names,
 
 void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
                                    const char* rows, size_t size) {
-#ifndef NO_SIMD
+#if __SSE2__
     auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
 #endif
     auto rows_b = reinterpret_cast<const uint8_t*>(rows);
     uint64_t num_hashes = index_file_.num_hashes();
     uint64_t bs = size;
 
-#ifdef NO_SIMD
-    auto counts_64 = reinterpret_cast<uint64_t*>(scores);
-#else
+#if __SSE2__
     auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
+#else
+    auto counts_64 = reinterpret_cast<uint64_t*>(scores);
 #endif
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         auto rows_8 = rows_b + i * bs;
         for (size_t k = 0; k < bs; k++) {
-#ifdef NO_SIMD
+#if __SSE2__
+            counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
+#else
             counts_64[2 * k] += s_expansion[rows_8[k] & 0xF];
             counts_64[2 * k + 1] += s_expansion[rows_8[k] >> 4];
-#else
-            counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
 #endif
         }
     }

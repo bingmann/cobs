@@ -14,8 +14,6 @@
 #include <cobs/query/search.hpp>
 #include <cobs/util/query.hpp>
 
-#include <immintrin.h>
-
 namespace cobs::query {
 
 class ClassicSearch : public Search

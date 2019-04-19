@@ -85,16 +85,6 @@ set(SOURCE_FILES
         cobs/util/zip_stream_fwd.hpp
         )
 
-if(NOT DEFINED SIMD)
-    message(WARNING "SIMD was not specified use: -DSIMD=<ON/OFF>\nSIMD default value ON is used")
-endif()
-option(SIMD "use simd instructions" ON)
-if(SIMD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-else()
-    add_definitions(-DNO_SIMD)
-endif()
-
 if(NOT DEFINED OPENMP)
     message(WARNING "OPENMP was not specified use: -DOPENMP=<ON/OFF>\nOPENMP default value ON is used")
 endif()
