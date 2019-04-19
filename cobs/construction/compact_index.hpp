@@ -31,9 +31,9 @@ struct CompactIndexParameters {
     //! false positive rate, provided by user
     double false_positive_rate = 0;
     //! page or block size of filters with common fpr
-    uint64_t page_size = get_page_size();
-    //! batch size in bytes to process per thread
-    uint64_t mem_bytes = 2 * 1024 * 1024 * 1024llu;
+    uint64_t page_size = 0;
+    //! memory to use bytes to create index
+    uint64_t mem_bytes = get_memory_size(80);
     //! number of threads to use
     size_t num_threads = gopt_threads;
 };
@@ -48,7 +48,8 @@ void compact_construct(
 
 void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,
-    uint64_t page_size = get_page_size());
+    uint64_t page_size = get_page_size(),
+    uint64_t memory = get_memory_size(80));
 
 } // namespace cobs
 

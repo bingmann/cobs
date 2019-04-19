@@ -54,16 +54,18 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
 
 static inline
 void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
+                   std::string log_prefix,
                    const std::vector<DocumentEntry>& paths,
                    const fs::path& out_file,
                    ClassicIndexHeader& cih, Timer& t) {
 
-    LOG1 << pad_index(batch_num) << '/' << pad_index(num_batches)
+    LOG1 << log_prefix
+         << pad_index(batch_num) << '/' << pad_index(num_batches)
          << " documents " << paths.size()
          << " row_size " << cih.row_size()
          << " signature_size " << cih.signature_size()
          << " matrix_size " << cih.signature_size() * cih.row_size() << " = "
-         << tlx::format_iec_units(cih.signature_size() * cih.row_size());
+         << tlx::format_iec_units(cih.signature_size() * cih.row_size()) << 'B';
 
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
@@ -94,7 +96,8 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     cih.write_file(out_file, data);
 
     size_t bit_count = tlx::popcount(data.data(), data.size());
-    LOG1 << pad_index(batch_num) << '/' << pad_index(num_batches)
+    LOG1 << log_prefix
+         << pad_index(batch_num) << '/' << pad_index(num_batches)
          << " done: terms " << count << " ratio_of_ones "
          << static_cast<double>(bit_count) / (data.size() * 8);
 
@@ -125,7 +128,8 @@ void classic_construct_from_documents(
 
     size_t num_batches = tlx::div_ceil(doc_list.size(), batch_size);
 
-    LOG1 << "classic_construct_from_documents()"
+    LOG1 << params.log_prefix
+         << "classic_construct_from_documents()"
          << " batch_size=" << batch_size
          << " num_threads=" << num_threads
          << " num_batches=" << num_batches;
@@ -136,7 +140,8 @@ void classic_construct_from_documents(
             std::string out_file) {
             Timer thr_timer;
 
-            LOG1 << "Construct Classic Index " << out_file;
+            LOG1 << params.log_prefix
+                 << "Construct Classic Index " << out_file;
 
             fs::path out_path =
                 out_dir / (out_file + ClassicIndexHeader::file_extension);
@@ -147,7 +152,7 @@ void classic_construct_from_documents(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
-            process_batch(batch_num, num_batches, num_threads,
+            process_batch(batch_num, num_batches, num_threads, params.log_prefix,
                           paths, out_path, cih, thr_timer);
 
             t += thr_timer;
@@ -228,7 +233,8 @@ void classic_combine_streams(
             streams[i].read(
                 in_blocks[i].data(), row_bytes[i] * this_batch);
             LOG << "stream[" << i << "] read " << streams[i].gcount();
-            die_unequal(streams[i].gcount(), row_bytes[i] * this_batch);
+            die_unequal(row_bytes[i] * this_batch,
+                        static_cast<size_t>(streams[i].gcount()));
         }
         current_row += this_batch;
 
@@ -458,7 +464,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
 
             if (!gopt_keep_temporary) {
                 for (size_t i = 0; i < files.size(); i++) {
-                    // fs::remove(files[i]);
+                    fs::remove(files[i]);
                 }
             }
 
@@ -537,10 +543,11 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
          << "  false_positive_rate: " << params.false_positive_rate << '\n'
          << "  signature_size: " << params.signature_size
          << " = " << tlx::format_iec_units(params.signature_size) << '\n'
+         << "  row size: " << docsize_roundup / 8 << '\n'
          << "  index size: "
          << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size) << '\n'
          << "  mem_bytes: " << params.mem_bytes
-         << " = " << tlx::format_iec_units(params.mem_bytes);
+         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B';
 
     // construct one classic index
     classic_construct_from_documents(filelist, out_dir / pad_index(1), params);

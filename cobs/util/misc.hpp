@@ -23,6 +23,10 @@ namespace cobs {
 
 uint64_t get_page_size();
 
+uint64_t get_memory_size();
+
+uint64_t get_memory_size(size_t percentage);
+
 template <typename RandomGenerator>
 std::string random_sequence_rng(size_t size, RandomGenerator& rng) {
     static const std::array<char, 4> basepairs = { 'A', 'C', 'G', 'T' };
@@ -51,8 +55,8 @@ void deallocate_aligned(void* ptr) {
 }
 
 static inline
-std::string pad_index(unsigned index) {
-    return tlx::ssprintf("%06u", index);
+std::string pad_index(unsigned index, int size = 6) {
+    return tlx::ssprintf("%0*u", size, index);
 }
 
 /*!

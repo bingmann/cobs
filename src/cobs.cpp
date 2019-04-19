@@ -205,6 +205,10 @@ int classic_construct(int argc, char** argv) {
         'T', "threads", index_params.num_threads,
         "number of threads to use, default: max cores");
 
+    cp.add_flag(
+        "keep-temporary", cobs::gopt_keep_temporary,
+        "keep temporary files during construction");
+
     if (!cp.process(argc, argv))
         return -1;
 
@@ -318,7 +322,7 @@ int compact_construct(int argc, char** argv) {
     cp.add_size_t(
         'p', "page_size", index_params.page_size,
         "the page size of the SSD the index is constructed for, "
-        "default: " + std::to_string(index_params.page_size));
+        "default: sqrt(#documents)");
 
     bool clobber = false;
     cp.add_flag(
@@ -342,6 +346,10 @@ int compact_construct(int argc, char** argv) {
     cp.add_size_t(
         'T', "threads", index_params.num_threads,
         "number of threads to use, default: max cores");
+
+    cp.add_flag(
+        "keep-temporary", cobs::gopt_keep_temporary,
+        "keep temporary files during construction");
 
     if (!cp.process(argc, argv))
         return -1;

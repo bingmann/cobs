@@ -18,6 +18,7 @@
 
 #include <tlx/die.hpp>
 #include <tlx/math/div_ceil.hpp>
+#include <tlx/math/round_to_power_of_two.hpp>
 #include <tlx/math/round_up.hpp>
 #include <tlx/string/format_iec_units.hpp>
 
@@ -39,7 +40,7 @@ bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
 
 void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,
-    uint64_t page_size)
+    uint64_t page_size, uint64_t memory)
 {
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
@@ -53,10 +54,13 @@ void compact_combine_into_compact(
     std::vector<CompactIndexHeader::parameter> parameters;
     std::vector<std::string> file_names;
 
+    LOG1 << "Combine Compact Index from " << paths.size() << " Classic Indices";
+
     for (size_t i = 0; i < paths.size(); i++) {
         auto h = deserialize_header<ClassicIndexHeader>(paths[i]);
         parameters.push_back({ h.signature_size(), h.num_hashes() });
-        file_names.insert(file_names.end(), h.file_names().begin(), h.file_names().end());
+        file_names.insert(file_names.end(),
+                          h.file_names().begin(), h.file_names().end());
 
         if (term_size == 0) {
             term_size = h.term_size();
@@ -65,7 +69,10 @@ void compact_combine_into_compact(
         die_unequal(term_size, h.term_size());
         die_unequal(canonicalize, h.canonicalize());
 
-        LOG1 << i << ": " << h.row_size() << " " << paths[i].string();
+        LOG1 << i << ": " << h.row_bits() << " documents "
+             << tlx::format_iec_units(fs::file_size(paths[i])) << 'B'
+             << " row_size " << h.row_size()
+             << " : " << paths[i].string();
 
         if (i < paths.size() - 1) {
             die_unless(h.row_size() == page_size);
@@ -75,31 +82,71 @@ void compact_combine_into_compact(
         }
     }
 
-    CompactIndexHeader h(term_size, canonicalize, parameters, file_names, page_size);
+    Timer t;
+
+    CompactIndexHeader h(term_size, canonicalize, parameters,
+                         file_names, page_size);
     std::ofstream ofs;
     serialize_header(ofs, out_file, h);
 
-    std::vector<char> buffer(1024 * page_size);
     for (const auto& p : paths) {
         std::ifstream ifs;
-        uint64_t row_size = deserialize_header<ClassicIndexHeader>(ifs, p).row_size();
+        uint64_t row_size =
+            deserialize_header<ClassicIndexHeader>(ifs, p).row_size();
         if (row_size == page_size) {
+            // row_size is page_size -> direct copy
+            t.active("copy");
             ofs << ifs.rdbuf();
+            t.stop();
         }
         else {
+            // row_size needs to be padded to page_size
+            size_t batch_size = memory / 2 / page_size;
+
             uint64_t data_size = get_stream_size(ifs);
-            std::vector<char> padding(page_size - row_size, 0);
+            batch_size = std::min(
+                batch_size, tlx::div_ceil(data_size, page_size));
+
+            sLOG0 << "batch_size" << batch_size;
+
+            std::vector<char> buffer(batch_size* page_size);
+            die_unless(data_size % row_size == 0);
+
             while (data_size > 0) {
-                size_t num_uint8_ts = std::min(1024 * row_size, data_size);
-                ifs.read(buffer.data(), num_uint8_ts);
-                data_size -= num_uint8_ts;
-                for (size_t i = 0; i < num_uint8_ts; i += row_size) {
-                    ofs.write(buffer.data() + i, row_size);
-                    ofs.write(padding.data(), padding.size());
+                t.active("read");
+                size_t this_batch = std::min(batch_size, data_size / row_size);
+                ifs.read(buffer.data(), this_batch * row_size);
+                die_unequal(this_batch * row_size,
+                            static_cast<size_t>(ifs.gcount()));
+                data_size -= this_batch * row_size;
+
+                t.active("expand");
+                // expand each row_size to page_size, start at the back
+                for (size_t b = this_batch; b != 0; ) {
+                    --b;
+
+                    std::copy_backward(
+                        buffer.begin() + b * row_size,
+                        buffer.begin() + (b + 1) * row_size,
+                        buffer.begin() + b * page_size + row_size);
+                    std::fill(
+                        buffer.begin() + b * page_size + row_size,
+                        buffer.begin() + (b + 1) * page_size,
+                        0);
                 }
+
+                t.active("write");
+                ofs.write(buffer.data(), this_batch * page_size);
+                t.stop();
             }
         }
+
+        ifs.close();
+        if (!gopt_keep_temporary) {
+            fs::remove(p);
+        }
     }
+    std::cout << t;
 }
 
 void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
@@ -109,6 +156,13 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
     // read file list, sort by size
     DocumentList doc_list(in_dir);
     doc_list.sort_by_size();
+
+    if (params.page_size == 0) {
+        params.page_size = tlx::round_up_to_power_of_two(
+            static_cast<size_t>(std::sqrt(doc_list.size() / 8)));
+        params.page_size = std::max<uint64_t>(params.page_size, 8);
+        params.page_size = std::min<uint64_t>(params.page_size, 4096);
+    }
 
     size_t num_pages = tlx::div_ceil(doc_list.size(), 8 * params.page_size);
 
@@ -128,7 +182,8 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
          << " = " << params.page_size * 8 << " documents" << '\n'
          << "  num_pages: " << num_pages << '\n'
          << "  mem_bytes: " << params.mem_bytes
-         << " = " << tlx::format_iec_units(params.mem_bytes);
+         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B'
+         << "  num_threads: " << num_threads;
 
     size_t total_size = 0;
 
@@ -146,12 +201,10 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
             size_t signature_size = calc_signature_size(
                 max_doc_size, params.num_hashes, params.false_positive_rate);
 
-            size_t docsize_roundup = tlx::round_up(files.size(), 8);
-
-            total_size += docsize_roundup / 8 * signature_size;
+            total_size += params.page_size * signature_size;
         });
 
-    LOG1 << "  total_size: " << tlx::format_iec_units(total_size);
+    LOG1 << "  total_size: " << tlx::format_iec_units(total_size) << 'B';
 
     // process batches and create classic indexes for each batch
     doc_list.process_batches_parallel(
@@ -181,9 +234,12 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
             classic_params.signature_size = signature_size;
             classic_params.mem_bytes = params.mem_bytes / num_threads;
             classic_params.num_threads = params.num_threads / num_threads;
+            classic_params.log_prefix
+                = "[" + pad_index(batch_num, 2)
+                  + "/" + pad_index(num_pages, 2) + "] ";
 
             LOG1 << "Classic Sub-Index Parameters: "
-                 << "[" << batch_num << '/' << num_pages << ']' << '\n'
+                 << classic_params.log_prefix << '\n'
                  << "  number of documents: " << files.size() << '\n'
                  << "  maximum document size: " << max_doc_size << '\n'
                  << "  signature_size: " << signature_size << '\n'
@@ -210,7 +266,7 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
     compact_combine_into_compact(
         index_dir / pad_index(iteration + 1),
         index_dir / ("index" + CompactIndexHeader::file_extension),
-        params.page_size);
+        params.page_size, params.mem_bytes);
 }
 
 } // namespace cobs

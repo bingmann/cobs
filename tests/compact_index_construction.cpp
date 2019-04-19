@@ -7,6 +7,7 @@
  ******************************************************************************/
 
 #include "test_util.hpp"
+#include <cobs/settings.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -28,11 +29,13 @@ protected:
         cobs::error_code ec;
         fs::remove_all(index_dir, ec);
         fs::remove_all(input_dir, ec);
+        cobs::gopt_keep_temporary = false;
     }
     void TearDown() final {
         cobs::error_code ec;
         fs::remove_all(index_dir, ec);
         fs::remove_all(input_dir, ec);
+        cobs::gopt_keep_temporary = false;
     }
 };
 
@@ -76,6 +79,8 @@ TEST_F(compact_index_construction, deserialization) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
+
+    cobs::gopt_keep_temporary = true;
 
     cobs::compact_construct(input_dir, index_dir, index_params);
 

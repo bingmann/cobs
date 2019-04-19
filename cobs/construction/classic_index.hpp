@@ -12,6 +12,7 @@
 
 #include <cobs/document_list.hpp>
 #include <cobs/util/fs.hpp>
+#include <cobs/util/misc.hpp>
 
 /*!
  * The classic Inverted Signature Index without the space-saving improvements.
@@ -36,10 +37,12 @@ struct ClassicIndexParameters {
     double false_positive_rate = 0;
     //! signature size, either provided by user or calculated from FPR
     uint64_t signature_size = 0;
-    //! batch size in bytes to process per thread
-    uint64_t mem_bytes = 2 * 1024 * 1024 * 1024llu;
+    //! memory to use bytes to create index
+    uint64_t mem_bytes = get_memory_size(80);
     //! number of threads to use
     size_t num_threads = gopt_threads;
+    //! log prefix
+    std::string log_prefix;
 };
 
 /*!
