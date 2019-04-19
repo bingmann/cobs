@@ -95,7 +95,7 @@ int doc_list(int argc, char** argv) {
         'k', "term_size", term_size,
         "term size (k-mer size), default: 31");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cobs::DocumentList filelist(path, StringToFileType(file_type));
@@ -122,7 +122,7 @@ int doc_dump(int argc, char** argv) {
         'T', "file_type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cobs::DocumentList filelist(path, StringToFileType(file_type));
@@ -209,7 +209,7 @@ int classic_construct(int argc, char** argv) {
         "keep-temporary", cobs::gopt_keep_temporary,
         "keep temporary files during construction");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -270,7 +270,7 @@ int classic_construct_random(int argc, char** argv) {
     size_t seed = std::random_device { } ();
     cp.add_size_t("seed", seed, "random seed");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -321,7 +321,7 @@ int compact_construct(int argc, char** argv) {
 
     cp.add_size_t(
         'p', "page_size", index_params.page_size,
-        "the page size of the SSD the index is constructed for, "
+        "the page size of the compact the index, "
         "default: sqrt(#documents)");
 
     bool clobber = false;
@@ -351,7 +351,7 @@ int compact_construct(int argc, char** argv) {
         "keep-temporary", cobs::gopt_keep_temporary,
         "keep temporary files during construction");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -390,9 +390,10 @@ int compact_construct_combine(int argc, char** argv) {
     unsigned page_size = 8192;
     cp.add_unsigned(
         'p', "page_size", page_size,
-        "the page size of the SSD the index is constructed for, default: 8192");
+        "the page size of the compact the index, "
+        "default: 8192");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -420,7 +421,7 @@ int query(int argc, char** argv) {
         'h', "num_results", num_results,
         "number of results to return, default: 100");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -464,7 +465,7 @@ int ranfold_construct(int argc, char** argv) {
     cp.add_param_string(
         "out_file", out_file, "path to the output file");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -518,7 +519,7 @@ int ranfold_construct_random(int argc, char** argv) {
     size_t seed = std::random_device { } ();
     cp.add_size_t("seed", seed, "random seed");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cp.print_result(std::cerr);
@@ -566,7 +567,7 @@ int print_parameters(int argc, char** argv) {
         'n', "num_elements", num_elements,
         "number of elements to be inserted into the index");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     if (num_elements == 0) {
@@ -614,7 +615,7 @@ int print_kmers(int argc, char** argv) {
         'k', "kmer_size", kmer_size,
         "the size of one kmer, default: 31");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     char kmer_buffer[kmer_size];
@@ -737,7 +738,7 @@ int benchmark_fpr(int argc, char** argv) {
     size_t seed = std::random_device { } ();
     cp.add_size_t("seed", seed, "random seed");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     std::mt19937 rng(seed);
@@ -818,7 +819,7 @@ int generate_queries(int argc, char** argv) {
         'o', "out_file", out_file,
         "output file path");
 
-    if (!cp.process(argc, argv))
+    if (!cp.sort().process(argc, argv))
         return -1;
 
     cobs::DocumentList filelist(path, StringToFileType(file_type));
