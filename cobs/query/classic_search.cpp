@@ -24,6 +24,7 @@
 
 #include <tlx/logger.hpp>
 #include <tlx/math/div_ceil.hpp>
+#include <tlx/simple_vector.hpp>
 
 #include <xxhash.h>
 
@@ -64,17 +65,32 @@ void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
     }
 }
 
-void counts_to_result(const std::vector<std::string>& file_names,
-                      const uint16_t* scores,
-                      std::vector<std::pair<uint16_t, std::string> >& result,
-                      size_t num_results) {
-    std::vector<uint32_t> sorted_indices(file_names.size());
-    std::iota(sorted_indices.begin(), sorted_indices.end(), 0);
+static inline
+void counts_to_result(
+    const std::vector<std::string>& file_names,
+    const uint16_t* scores,
+    std::vector<std::pair<uint16_t, std::string> >& result,
+    size_t threshold, size_t num_results)
+{
+    // uninitialized index vector
+    tlx::simple_vector<
+        std::pair<uint16_t, uint32_t> > sorted_indices(file_names.size());
+
+    // determine result size, from num_results and scores >= threshold, fill
+    // index vector
+    size_t count_threshold = 0;
+    for (size_t i = 0; i < file_names.size(); ++i) {
+        if (scores[i] >= threshold) {
+            sorted_indices[count_threshold++] = std::make_pair(scores[i], i);
+        }
+    }
+    num_results = std::min(num_results, count_threshold);
+
     std::partial_sort(
         sorted_indices.begin(), sorted_indices.begin() + num_results,
-        sorted_indices.end(),
+        sorted_indices.begin() + count_threshold,
         [&](auto v1, auto v2) {
-            return scores[v1] > scores[v2];
+            return std::tie(v2.first, v1.second) < std::tie(v1.first, v2.second);
         });
 
     result.resize(num_results);
@@ -83,7 +99,7 @@ void counts_to_result(const std::vector<std::string>& file_names,
         0, num_results, gopt_threads,
         [&](size_t i) {
             result[i] = std::make_pair(
-                scores[sorted_indices[i]], file_names[sorted_indices[i]]);
+                sorted_indices[i].first, file_names[sorted_indices[i].second]);
         });
 }
 
@@ -136,9 +152,11 @@ void ClassicSearch::aggregate_rows(size_t hashes_size, char* rows, size_t size) 
     }
 }
 
-void ClassicSearch::search(const std::string& query,
-                           std::vector<std::pair<uint16_t, std::string> >& result,
-                           size_t num_results) {
+void ClassicSearch::search(
+    const std::string& query,
+    std::vector<std::pair<uint16_t, std::string> >& result,
+    double threshold, size_t num_results)
+{
     static constexpr bool debug = false;
 
     uint32_t term_size = index_file_.term_size();
@@ -152,6 +170,10 @@ void ClassicSearch::search(const std::string& query,
     assert_exit(query.size() - term_size < UINT16_MAX,
                 "query too long, can not be longer than "
                 + std::to_string(UINT16_MAX + term_size - 1) + " characters");
+
+    size_t threshold_terms =
+        std::ceil((query.size() - term_size + 1) * threshold);
+    LOG0 << "threshold_terms = " << threshold_terms;
 
     timer_.active("hashes");
     num_results = num_results == 0 ? file_names.size()
@@ -203,7 +225,7 @@ void ClassicSearch::search(const std::string& query,
         });
 
     timer_.active("sort results");
-    counts_to_result(file_names, scores, result, num_results);
+    counts_to_result(file_names, scores, result, threshold_terms, num_results);
     deallocate_aligned(scores);
     timer_.stop();
 }

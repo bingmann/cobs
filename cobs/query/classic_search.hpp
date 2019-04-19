@@ -31,9 +31,10 @@ public:
     ClassicSearch(IndexFile& index_file)
         : index_file_(index_file) { }
 
-    void search(const std::string& query,
-                std::vector<std::pair<uint16_t, std::string> >& result,
-                size_t num_results = 0) final;
+    void search(
+        const std::string& query,
+        std::vector<std::pair<uint16_t, std::string> >& result,
+        double threshold = 0.0, size_t num_results = 0) final;
 
 protected:
     //! reference to index file query object to retrieve data

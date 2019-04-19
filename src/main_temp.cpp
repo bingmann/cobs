@@ -38,7 +38,7 @@ void run(cobs::query::ClassicSearch& s, size_t query_len, std::vector<std::pair<
     cobs::Timer t;
     t.active("total");
 //    for (size_t i = 0; i < 100; i++) {
-    s.search(cobs::random_sequence(query_len, 1234), result, 10);
+    s.search(cobs::random_sequence(query_len, 1234), result, 0.0, 10);
 //    }
     t.stop();
     std::cout << s.timer_ << std::endl;

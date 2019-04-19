@@ -25,9 +25,10 @@ protected:
 public:
     virtual ~base() = default;
 
-    void search(const std::string& query,
-                std::vector<std::pair<uint16_t, std::string> >& result,
-                size_t num_results = 0) final;
+    void search(
+        const std::string& query,
+        std::vector<std::pair<uint16_t, std::string> >& result,
+        double threshold, size_t num_results = 0) final;
 };
 
 } // namespace cobs::query::ranfold_index

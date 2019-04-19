@@ -18,9 +18,10 @@ base::base(const fs::path& path) : query::Search() {
     m_smd = get_stream_pos(ifs);
 }
 
-void base::search(const std::string& query,
-                  std::vector<std::pair<uint16_t, std::string> >& result,
-                  size_t num_results)
+void base::search(
+    const std::string& query,
+    std::vector<std::pair<uint16_t, std::string> >& result,
+    double threshold, size_t num_results)
 { }
 
 } // namespace cobs::query::ranfold_index
