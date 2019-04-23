@@ -87,12 +87,12 @@ int doc_list(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file_type", file_type,
+        "file-type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
     unsigned term_size = 31;
     cp.add_unsigned(
-        'k', "term_size", term_size,
+        'k', "term-size", term_size,
         "term size (k-mer size), default: 31");
 
     if (!cp.sort().process(argc, argv))
@@ -114,12 +114,12 @@ int doc_dump(int argc, char** argv) {
 
     unsigned term_size = 31;
     cp.add_unsigned(
-        'k', "term_size", term_size,
+        'k', "term-size", term_size,
         "term size (k-mer size), default: 31");
 
     std::string file_type = "any";
     cp.add_string(
-        'T', "file_type", file_type,
+        "file-type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
     if (!cp.sort().process(argc, argv))
@@ -158,32 +158,32 @@ int classic_construct(int argc, char** argv) {
 
     std::string in_dir;
     cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
+        "in-dir", in_dir, "path to the input directory");
 
     std::string out_dir;
     cp.add_param_string(
-        "out_dir", out_dir, "path to the output directory");
+        "out-dir", out_dir, "path to the output directory");
 
     std::string file_type = "any";
     cp.add_string(
-        't', "file_type", file_type,
+        "file-type", file_type,
         "filter input documents by file type (any, text, cortex, fasta, etc)");
 
     cp.add_bytes(
-        'm', "mem_bytes", index_params.mem_bytes,
+        'm', "memory", index_params.mem_bytes,
         "memory in bytes to use, default: " +
         tlx::format_iec_units(index_params.mem_bytes));
 
     cp.add_unsigned(
-        'h', "num_hashes", index_params.num_hashes,
+        'h', "num-hashes", index_params.num_hashes,
         "number of hash functions, default: 1");
 
     cp.add_double(
-        'f', "false_positive_rate", index_params.false_positive_rate,
+        'f', "false-positive-rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
     cp.add_unsigned(
-        'k', "term_size", index_params.term_size,
+        'k', "term-size", index_params.term_size,
         "term size (k-mer size), default: 31");
 
     bool canonicalize = false;
@@ -243,28 +243,28 @@ int classic_construct_random(int argc, char** argv) {
 
     std::string out_file;
     cp.add_param_string(
-        "out_file", out_file, "path to the output file");
+        "out-file", out_file, "path to the output file");
 
     size_t signature_size = 2 * 1024 * 1024;
     cp.add_bytes(
-        's', "signature_size", signature_size,
+        's', "signature-size", signature_size,
         "number of bits of the signatures (vertical size), default: 2 Mi");
 
     unsigned num_documents = 10000;
     cp.add_unsigned(
-        'n', "num_documents", num_documents,
+        'n', "num-documents", num_documents,
         "number of random documents in index,"
         " default: " + std::to_string(num_documents));
 
     unsigned document_size = 1000000;
     cp.add_unsigned(
-        'm', "document_size", document_size,
+        'm', "document-size", document_size,
         "number of random 31-mers in document,"
         " default: " + std::to_string(document_size));
 
     unsigned num_hashes = 1;
     cp.add_unsigned(
-        'h', "num_hashes", num_hashes,
+        'h', "num-hashes", num_hashes,
         "number of hash functions, default: 1");
 
     size_t seed = std::random_device { } ();
@@ -300,27 +300,27 @@ int compact_construct(int argc, char** argv) {
 
     std::string in_dir;
     cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
+        "in-dir", in_dir, "path to the input directory");
 
     std::string out_dir;
     cp.add_param_string(
-        "out_dir", out_dir, "path to the output directory");
+        "out-dir", out_dir, "path to the output directory");
 
     cp.add_bytes(
-        'm', "mem_bytes", index_params.mem_bytes,
+        'm', "memory", index_params.mem_bytes,
         "memory in bytes to use, default: " +
         tlx::format_iec_units(index_params.mem_bytes));
 
     cp.add_unsigned(
-        'h', "num_hashes", index_params.num_hashes,
+        'h', "num-hashes", index_params.num_hashes,
         "number of hash functions, default: 1");
 
     cp.add_double(
-        'f', "false_positive_rate", index_params.false_positive_rate,
+        'f', "false-positive-rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
     cp.add_size_t(
-        'p', "page_size", index_params.page_size,
+        'p', "page-size", index_params.page_size,
         "the page size of the compact the index, "
         "default: sqrt(#documents)");
 
@@ -335,7 +335,7 @@ int compact_construct(int argc, char** argv) {
         "continue in existing output directory");
 
     cp.add_unsigned(
-        'k', "term_size", index_params.term_size,
+        'k', "term-size", index_params.term_size,
         "term size (k-mer size), default: 31");
 
     bool canonicalize = false;
@@ -381,15 +381,15 @@ int compact_construct_combine(int argc, char** argv) {
 
     std::string in_dir;
     cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
+        "in-dir", in_dir, "path to the input directory");
 
     std::string out_file;
     cp.add_param_string(
-        "out_file", out_file, "path to the output file");
+        "out-file", out_file, "path to the output file");
 
     unsigned page_size = 8192;
     cp.add_unsigned(
-        'p', "page_size", page_size,
+        'p', "page-size", page_size,
         "the page size of the compact the index, "
         "default: 8192");
 
@@ -479,7 +479,7 @@ int query(int argc, char** argv) {
 
     std::string query_file;
     cp.add_string(
-        'q', "query", query_file, "query (fasta) file to process");
+        'f', "file", query_file, "query (fasta) file to process");
 
     double threshold = 0.8;
     cp.add_double(
@@ -488,7 +488,7 @@ int query(int argc, char** argv) {
 
     unsigned num_results = 0;
     cp.add_unsigned(
-        'h', "num_results", num_results,
+        'l', "limit", num_results,
         "number of results to return, default: all");
 
     if (!cp.sort().process(argc, argv))
@@ -526,11 +526,11 @@ int ranfold_construct(int argc, char** argv) {
 
     std::string in_dir;
     cp.add_param_string(
-        "in_dir", in_dir, "path to the input directory");
+        "in-dir", in_dir, "path to the input directory");
 
     std::string out_file;
     cp.add_param_string(
-        "out_file", out_file, "path to the output file");
+        "out-file", out_file, "path to the output file");
 
     if (!cp.sort().process(argc, argv))
         return -1;
@@ -547,39 +547,39 @@ int ranfold_construct_random(int argc, char** argv) {
 
     std::string out_file;
     cp.add_param_string(
-        "out_file", out_file, "path to the output file");
+        "out-file", out_file, "path to the output file");
 
     size_t term_space = 2 * 1024 * 1024;
     cp.add_bytes(
-        't', "term_space", term_space,
+        't', "term-space", term_space,
         "size of term space for kmer signatures (vertical size), "
         "default: " + tlx::format_iec_units(term_space));
 
     unsigned num_term_hashes = 1;
     cp.add_unsigned(
-        'T', "term_hashes", num_term_hashes,
+        'T', "term-hashes", num_term_hashes,
         "number of hash functions per term, default: 1");
 
     size_t doc_space_bits = 16 * 1024;
     cp.add_bytes(
-        'd', "doc_space_bits", doc_space_bits,
+        'd', "doc-space-bits", doc_space_bits,
         "number of bits in the document space (horizontal size), "
         "default: " + tlx::format_iec_units(doc_space_bits));
 
     unsigned num_doc_hashes = 2;
     cp.add_unsigned(
-        'D', "doc_hashes", num_doc_hashes,
+        'D', "doc-hashes", num_doc_hashes,
         "number of hash functions per term, default: 2");
 
     unsigned num_documents = 10000;
     cp.add_unsigned(
-        'n', "num_documents", num_documents,
+        'n', "num-documents", num_documents,
         "number of random documents in index,"
         " default: " + std::to_string(num_documents));
 
     unsigned document_size = 1000000;
     cp.add_unsigned(
-        'm', "document_size", document_size,
+        'm', "document-size", document_size,
         "number of random 31-mers in document,"
         " default: " + std::to_string(document_size));
 
@@ -621,17 +621,17 @@ int print_parameters(int argc, char** argv) {
 
     unsigned num_hashes = 1;
     cp.add_unsigned(
-        'h', "num_hashes", num_hashes,
+        'h', "num-hashes", num_hashes,
         "number of hash functions, default: 1");
 
     double false_positive_rate = 0.3;
     cp.add_double(
-        'f', "false_positive_rate", false_positive_rate,
+        'f', "false-positive-rate", false_positive_rate,
         "false positive rate, default: 0.3");
 
     uint64_t num_elements = 0;
     cp.add_bytes(
-        'n', "num_elements", num_elements,
+        'n', "num-elements", num_elements,
         "number of elements to be inserted into the index");
 
     if (!cp.sort().process(argc, argv))
@@ -679,7 +679,7 @@ int print_kmers(int argc, char** argv) {
 
     unsigned kmer_size = 31;
     cp.add_unsigned(
-        'k', "kmer_size", kmer_size,
+        'k', "kmer-size", kmer_size,
         "the size of one kmer, default: 31");
 
     if (!cp.sort().process(argc, argv))
@@ -781,7 +781,7 @@ int benchmark_fpr(int argc, char** argv) {
 
     unsigned num_kmers = 1000;
     cp.add_unsigned(
-        'k', "num_kmers", num_kmers,
+        'k', "num-kmers", num_kmers,
         "number of kmers of each query, "
         "default: " + std::to_string(num_kmers));
 
@@ -843,7 +843,7 @@ int generate_queries(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        't', "file_type", file_type,
+        "file-type", file_type,
         "filter documents by file type (any, text, cortex, fasta, etc)");
 
     cp.add_size_t(
@@ -852,7 +852,7 @@ int generate_queries(int argc, char** argv) {
 
     unsigned term_size = 31;
     cp.add_unsigned(
-        'k', "term_size", term_size,
+        'k', "term-size", term_size,
         "term size (k-mer size), default: 31");
 
     size_t num_positive = 0;
@@ -883,7 +883,7 @@ int generate_queries(int argc, char** argv) {
 
     std::string out_file;
     cp.add_string(
-        'o', "out_file", out_file,
+        'o', "out-file", out_file,
         "output file path");
 
     if (!cp.sort().process(argc, argv))
@@ -1036,6 +1036,8 @@ int generate_queries(int argc, char** argv) {
 
     std::shuffle(queries.begin(), queries.end(), rng);
 
+    size_t negative_count = 0;
+
     auto write_output =
         [&](std::ostream& os) {
             for (const Query& q : queries) {
@@ -1043,7 +1045,7 @@ int generate_queries(int argc, char** argv) {
                     os << ">doc:" << q.doc_index << ":term:" << q.term_index
                        << ":" << filelist[q.doc_index].name_ << '\n';
                 else
-                    os << ">negative" << '\n';
+                    os << ">negative" << negative_count++ << '\n';
                 os << q.term << '\n';
             }
         };
@@ -1070,35 +1072,35 @@ struct SubTool {
 
 struct SubTool subtools[] = {
     {
-        "doc_list", &doc_list, true,
+        "doc-list", &doc_list, true,
         "read a list of documents and print the list"
     },
     {
-        "doc_dump", &doc_dump, true,
+        "doc-dump", &doc_dump, true,
         "read a list of documents and dump their contents"
     },
     {
-        "classic_construct", &classic_construct, true,
+        "classic-construct", &classic_construct, true,
         "constructs a classic index from the documents in <in_dir>"
     },
     {
-        "classic_construct_random", &classic_construct_random, true,
+        "classic-construct-random", &classic_construct_random, true,
         "constructs a classic index with random content"
     },
     {
-        "compact_construct", &compact_construct, true,
+        "compact-construct", &compact_construct, true,
         "creates the folders used for further construction"
     },
     {
-        "compact_construct_combine", &compact_construct_combine, true,
+        "compact-construct-combine", &compact_construct_combine, true,
         "combines the classic indices in <in_dir> to form a compact index"
     },
     {
-        "ranfold_construct", &ranfold_construct, true,
+        "ranfold-construct", &ranfold_construct, true,
         "constructs a ranfold index from documents"
     },
     {
-        "ranfold_construct_random", &ranfold_construct_random, true,
+        "ranfold-construct-random", &ranfold_construct_random, true,
         "constructs a ranfold index with random content"
     },
     {
@@ -1106,23 +1108,23 @@ struct SubTool subtools[] = {
         "query an index"
     },
     {
-        "print_parameters", &print_parameters, true,
+        "print-parameters", &print_parameters, true,
         "calculates index parameters"
     },
     {
-        "print_kmers", &print_kmers, true,
+        "print-kmers", &print_kmers, true,
         "print all canonical kmers from <query>"
     },
     {
-        "print_basepair_map", &print_basepair_map, true,
+        "print-basepair-map", &print_basepair_map, true,
         "print canonical basepair character mapping"
     },
     {
-        "benchmark_fpr", &benchmark_fpr, true,
+        "benchmark-fpr", &benchmark_fpr, true,
         "run benchmark and false positive measurement"
     },
     {
-        "generate_queries", &generate_queries, true,
+        "generate-queries", &generate_queries, true,
         "select queries randomly from documents"
     },
     { nullptr, nullptr, true, nullptr }
