@@ -1167,6 +1167,8 @@ int main_usage(const char* arg0) {
 int main(int argc, char** argv) {
     char progsub[256];
 
+    tlx::set_logger_to_stderr();
+
     if (argc < 2)
         return main_usage(argv[0]);
 
