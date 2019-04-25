@@ -60,6 +60,7 @@ public:
         size_ = 0;
 
         is.getline(line, sizeof(line));
+        if (is.eof()) return;
         die_unless(is.good());
 
         if (is.gcount() == 0 || (line[0] != '>' && line[0] != ';'))
