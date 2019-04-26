@@ -244,7 +244,9 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
                  << "  maximum document size: " << max_doc_size << '\n'
                  << "  signature_size: " << signature_size << '\n'
                  << "  sub-index size: "
-                 << (docsize_roundup / 8 * signature_size) << '\n'
+                 << (docsize_roundup / 8 * signature_size) << " = "
+                 << tlx::format_iec_units(docsize_roundup / 8 * signature_size)
+                 << '\n'
                  << "  mem_bytes: " << classic_params.mem_bytes << '\n'
                  << "  num_threads: " << classic_params.num_threads;
 
