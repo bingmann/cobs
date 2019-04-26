@@ -17,24 +17,24 @@ namespace cobs {
 CompactIndexMMapSearchFile::CompactIndexMMapSearchFile(const fs::path& path)
     : CompactIndexSearchFile(path)
 {
-    m_data.resize(header_.parameters().size());
+    data_.resize(header_.parameters().size());
     std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
-    m_fd = handles.first;
-    m_data[0] = handles.second;
+    fd_ = handles.first;
+    data_[0] = handles.second;
     for (size_t i = 1; i < header_.parameters().size(); i++) {
-        m_data[i] =
-            m_data[i - 1]
+        data_[i] =
+            data_[i - 1]
             + header_.page_size() * header_.parameters()[i - 1].signature_size;
     }
 }
 
 CompactIndexMMapSearchFile::~CompactIndexMMapSearchFile() {
-    destroy_mmap(m_fd, m_data[0], stream_pos_);
+    destroy_mmap(fd_, data_[0], stream_pos_);
 }
 
 void CompactIndexMMapSearchFile::read_from_disk(
     const std::vector<size_t>& hashes, uint8_t* rows,
-    size_t begin, size_t size)
+    size_t begin, size_t size, size_t buffer_size)
 {
     size_t page_size = header_.page_size();
 
@@ -49,6 +49,7 @@ void CompactIndexMMapSearchFile::read_from_disk(
          << " hashes.size=" << hashes.size()
          << " begin=" << begin
          << " size=" << size
+         << " buffer_size=" << buffer_size
          << " begin_page=" << begin_page
          << " end_page=" << end_page;
 
@@ -56,9 +57,9 @@ void CompactIndexMMapSearchFile::read_from_disk(
         size_t j = 0;
         for (size_t p = begin_page; p < end_page; ++p, ++j) {
             uint64_t hash = hashes[i] % header_.parameters()[p].signature_size;
-            uint8_t* data_8 = m_data[p] + hash * page_size;
+            uint8_t* data_8 = data_[p] + hash * page_size;
             uint8_t* rows_8 =
-                reinterpret_cast<uint8_t*>(rows) + i * size + j * page_size;
+                reinterpret_cast<uint8_t*>(rows) + i * buffer_size + j * page_size;
             // die_unless(rows_8 + page_size <= rows + size * hashes.size());
             // std::memcpy(rows_8, data_8, page_size);
             std::copy(data_8, data_8 + page_size, rows_8);

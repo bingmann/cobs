@@ -17,24 +17,24 @@ namespace cobs {
 ClassicIndexMMapSearchFile::ClassicIndexMMapSearchFile(const fs::path& path)
     : ClassicIndexSearchFile(path) {
     std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
-    m_fd = handles.first;
-    m_data = handles.second;
+    fd_ = handles.first;
+    data_ = handles.second;
 }
 
 ClassicIndexMMapSearchFile::~ClassicIndexMMapSearchFile() {
-    destroy_mmap(m_fd, m_data, stream_pos_);
+    destroy_mmap(fd_, data_, stream_pos_);
 }
 
 void ClassicIndexMMapSearchFile::read_from_disk(
     const std::vector<size_t>& hashes, uint8_t* rows,
-    size_t begin, size_t size)
+    size_t begin, size_t size, size_t buffer_size)
 {
     die_unless(begin + size <= header_.row_size());
     for (size_t i = 0; i < hashes.size(); i++) {
         auto data_8 =
-            m_data + begin
+            data_ + begin
             + (hashes[i] % header_.signature_size()) * header_.row_size();
-        auto rows_8 = rows + i * size;
+        auto rows_8 = rows + i * buffer_size;
         // std::memcpy(rows_8, data_8, size);
         std::copy(data_8, data_8 + size, rows_8);
     }

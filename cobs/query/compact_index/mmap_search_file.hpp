@@ -16,12 +16,12 @@ namespace cobs {
 class CompactIndexMMapSearchFile : public CompactIndexSearchFile
 {
 private:
-    int m_fd;
-    std::vector<uint8_t*> m_data;
+    int fd_;
+    std::vector<uint8_t*> data_;
 
 protected:
     void read_from_disk(const std::vector<size_t>& hashes, uint8_t* rows,
-                        size_t begin, size_t size) override;
+                        size_t begin, size_t size, size_t buffer_size) override;
 
 public:
     explicit CompactIndexMMapSearchFile(const fs::path& path);

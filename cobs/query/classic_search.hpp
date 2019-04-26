@@ -22,9 +22,10 @@ private:
     static const uint64_t s_expansion[16];
     alignas(16) static const uint16_t s_expansion_128[2048];
 
-    void compute_counts(size_t hashes_size, uint16_t* counts, const uint8_t* rows,
-                        size_t size);
-    void aggregate_rows(size_t hashes_size, uint8_t* rows, size_t size);
+    void compute_counts(size_t hashes_size, uint16_t* counts,
+                        const uint8_t* rows, size_t size, size_t buffer_size);
+    void aggregate_rows(size_t hashes_size, uint8_t* rows, size_t size,
+                        size_t buffer_size);
     void create_hashes(std::vector<uint64_t>& hashes, const std::string& query);
 
 public:
