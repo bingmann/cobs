@@ -182,10 +182,15 @@ void ClassicSearch::search(
     uint16_t* scores = allocate_aligned<uint16_t>(scores_size, 16);
     std::vector<uint64_t> hashes;
     create_hashes(hashes, query);
+    timer_.stop();
 
     size_t score_batch_size = 128;
+    score_batch_size = scores_size;
     score_batch_size = std::max(score_batch_size, 8 * page_size);
     size_t score_batch_num = tlx::div_ceil(scores_size, score_batch_size);
+    LOG << "search()"
+        << " score_batch_size=" << score_batch_size
+        << " score_batch_num=" << score_batch_num;
 
     parallel_for(
         0, score_batch_num, gopt_threads,
