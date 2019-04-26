@@ -16,7 +16,7 @@ namespace cobs {
 class CompactIndexMMapSearchFile : public CompactIndexSearchFile
 {
 private:
-    int fd_;
+    MMapHandle handle_;
     std::vector<uint8_t*> data_;
 
 protected:

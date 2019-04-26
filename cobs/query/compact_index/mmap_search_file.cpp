@@ -18,9 +18,8 @@ CompactIndexMMapSearchFile::CompactIndexMMapSearchFile(const fs::path& path)
     : CompactIndexSearchFile(path)
 {
     data_.resize(header_.parameters().size());
-    std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
-    fd_ = handles.first;
-    data_[0] = handles.second;
+    handle_ = initialize_mmap(path);
+    data_[0] = handle_.data + stream_pos_.curr_pos;
     for (size_t i = 1; i < header_.parameters().size(); i++) {
         data_[i] =
             data_[i - 1]
@@ -29,7 +28,7 @@ CompactIndexMMapSearchFile::CompactIndexMMapSearchFile(const fs::path& path)
 }
 
 CompactIndexMMapSearchFile::~CompactIndexMMapSearchFile() {
-    destroy_mmap(fd_, data_[0], stream_pos_);
+    destroy_mmap(handle_);
 }
 
 void CompactIndexMMapSearchFile::read_from_disk(

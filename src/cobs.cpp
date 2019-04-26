@@ -491,6 +491,10 @@ int query(int argc, char** argv) {
         'l', "limit", num_results,
         "number of results to return, default: all");
 
+    cp.add_flag(
+        "load-complete", cobs::gopt_load_complete_index,
+        "load complete index into RAM for batch queries");
+
     if (!cp.sort().process(argc, argv))
         return -1;
 

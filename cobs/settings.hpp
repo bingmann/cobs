@@ -19,6 +19,9 @@ extern size_t gopt_threads;
 //! whether to keep temporary files such as small intermediate indices
 extern bool gopt_keep_temporary;
 
+//! whether to load the complete index to RAM for queries.
+extern bool gopt_load_complete_index;
+
 } // namespace cobs
 
 #endif // !COBS_SETTINGS_HEADER

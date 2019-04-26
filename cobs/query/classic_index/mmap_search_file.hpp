@@ -16,7 +16,7 @@ namespace cobs {
 class ClassicIndexMMapSearchFile : public ClassicIndexSearchFile
 {
 private:
-    int fd_;
+    MMapHandle handle_;
     uint8_t* data_;
 
 protected:

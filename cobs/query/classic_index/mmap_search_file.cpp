@@ -16,13 +16,12 @@ namespace cobs {
 
 ClassicIndexMMapSearchFile::ClassicIndexMMapSearchFile(const fs::path& path)
     : ClassicIndexSearchFile(path) {
-    std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
-    fd_ = handles.first;
-    data_ = handles.second;
+    handle_ = initialize_mmap(path);
+    data_ = handle_.data + stream_pos_.curr_pos;
 }
 
 ClassicIndexMMapSearchFile::~ClassicIndexMMapSearchFile() {
-    destroy_mmap(fd_, data_, stream_pos_);
+    destroy_mmap(handle_);
 }
 
 void ClassicIndexMMapSearchFile::read_from_disk(

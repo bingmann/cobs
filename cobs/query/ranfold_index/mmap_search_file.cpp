@@ -17,13 +17,12 @@ namespace cobs {
 RanfoldIndexMMapSearchFile::RanfoldIndexMMapSearchFile(const fs::path& path)
     : RanfoldIndexSearchFile(path)
 {
-    std::pair<int, uint8_t*> handles = initialize_mmap(path, m_smd);
-    m_fd = handles.first;
-    m_data = handles.second;
+    handle_ = initialize_mmap(path);
+    data_ = handle_.data;
 }
 
 RanfoldIndexMMapSearchFile::~RanfoldIndexMMapSearchFile() {
-    destroy_mmap(m_fd, m_data, m_smd);
+    destroy_mmap(handle_);
 }
 
 void RanfoldIndexMMapSearchFile::read_from_disk(

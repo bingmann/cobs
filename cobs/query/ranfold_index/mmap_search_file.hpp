@@ -16,8 +16,8 @@ namespace cobs {
 class RanfoldIndexMMapSearchFile : public RanfoldIndexSearchFile
 {
 private:
-    int m_fd;
-    uint8_t* m_data;
+    MMapHandle handle_;
+    uint8_t* data_;
 
 protected:
     void read_from_disk(const std::vector<size_t>& hashes, char* rows);

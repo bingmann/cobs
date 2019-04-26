@@ -6,12 +6,17 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <algorithm>
+#include <cobs/settings.hpp>
 #include <cobs/util/error_handling.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/query.hpp>
+
+#include <algorithm>
 #include <iostream>
 #include <unistd.h>
+
+#include <tlx/logger.hpp>
+#include <tlx/string/format_iec_units.hpp>
 
 namespace cobs {
 
@@ -29,25 +34,64 @@ void close_file(int fd) {
     }
 }
 
-std::pair<int, uint8_t*> initialize_mmap(const fs::path& path, const StreamPos& smd) {
+MMapHandle initialize_mmap(const fs::path& path)
+{
     int fd = open_file(path, O_RDONLY);
-    void* mmap_ptr = mmap(nullptr, smd.end_pos, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (mmap_ptr == MAP_FAILED) {
-        exit_error_errno("mmap failed");
+    off_t size = lseek(fd, 0, SEEK_END);
+
+    if (!gopt_load_complete_index) {
+        void* mmap_ptr = mmap(nullptr, size, PROT_READ,
+                              MAP_PRIVATE, fd, /* offset */ 0);
+        if (mmap_ptr == MAP_FAILED) {
+            exit_error_errno("mmap failed");
+        }
+        if (madvise(mmap_ptr, size, MADV_RANDOM)) {
+            print_errno("madvise failed for MADV_RANDOM");
+        }
+        return MMapHandle {
+                   fd, reinterpret_cast<uint8_t*>(mmap_ptr), uint64_t(size)
+        };
     }
-    if (madvise(mmap_ptr, smd.end_pos, MADV_RANDOM)) {
-        print_errno("madvise failed");
+    else {
+        LOG1 << "Reading complete index";
+        uint8_t* data_ptr = reinterpret_cast<uint8_t*>(
+            std::aligned_alloc(2 * 1024 * 1024, size));
+        if (madvise(data_ptr, size, MADV_HUGEPAGE)) {
+            print_errno("madvise failed for MADV_HUGEPAGE");
+        }
+        lseek(fd, 0, SEEK_SET);
+        uint64_t remain = size;
+        size_t pos = 0;
+        while (remain != 0) {
+            ssize_t rb = read(fd, data_ptr + pos, remain);
+            if (rb < 0) {
+                print_errno("read failed");
+                break;
+            }
+            remain -= rb;
+            pos += rb;
+            LOG1 << "Read " << tlx::format_iec_units(pos)
+                 << "B / " << tlx::format_iec_units(size) << "B - "
+                 << pos * 100 / size << "%";
+        }
+        LOG1 << "Index loaded into RAM.";
+        return MMapHandle {
+                   fd, data_ptr, uint64_t(size)
+        };
     }
-    return {
-               fd, smd.curr_pos + reinterpret_cast<uint8_t*>(mmap_ptr)
-    };
 }
 
-void destroy_mmap(int fd, uint8_t* mmap_ptr, const StreamPos& smd) {
-    if (munmap(mmap_ptr - smd.curr_pos, smd.end_pos)) {
-        print_errno("could not unmap index file");
+void destroy_mmap(MMapHandle& handle)
+{
+    if (!gopt_load_complete_index) {
+        if (munmap(handle.data, handle.size)) {
+            print_errno("could not unmap index file");
+        }
     }
-    close_file(fd);
+    else {
+        free(handle.data);
+    }
+    close_file(handle.fd);
 }
 
 // character map. A -> T, C -> G, G -> C, T -> A.
