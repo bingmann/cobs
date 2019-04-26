@@ -24,7 +24,7 @@ mmap::~mmap() {
     destroy_mmap(m_fd, m_data, stream_pos_);
 }
 
-void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
+void mmap::read_from_disk(const std::vector<size_t>& hashes, uint8_t* rows,
                           size_t begin, size_t size) {
     die_unless(begin + size <= header_.row_size());
     for (size_t i = 0; i < hashes.size(); i++) {
@@ -32,7 +32,8 @@ void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
             m_data + begin
             + (hashes[i] % header_.signature_size()) * header_.row_size();
         auto rows_8 = rows + i * size;
-        std::memcpy(rows_8, data_8, size);
+        // std::memcpy(rows_8, data_8, size);
+        std::copy(data_8, data_8 + size, rows_8);
     }
 }
 

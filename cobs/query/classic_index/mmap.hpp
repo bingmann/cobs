@@ -20,7 +20,7 @@ private:
     uint8_t* m_data;
 
 protected:
-    void read_from_disk(const std::vector<size_t>& hashes, char* rows,
+    void read_from_disk(const std::vector<size_t>& hashes, uint8_t* rows,
                         size_t begin, size_t size) override;
 
 public:

@@ -104,13 +104,11 @@ void counts_to_result(
 }
 
 void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
-                                   const char* rows, size_t size) {
+                                   const uint8_t* rows, size_t size) {
 #if __SSE2__
     auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
 #endif
-    auto rows_b = reinterpret_cast<const uint8_t*>(rows);
     uint64_t num_hashes = index_file_.num_hashes();
-    uint64_t bs = size;
 
 #if __SSE2__
     auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
@@ -118,8 +116,8 @@ void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
     auto counts_64 = reinterpret_cast<uint64_t*>(scores);
 #endif
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
-        auto rows_8 = rows_b + i * bs;
-        for (size_t k = 0; k < bs; k++) {
+        const uint8_t* rows_8 = rows + i * size;
+        for (size_t k = 0; k < size; k++) {
 #if __SSE2__
             counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
 #else
@@ -130,20 +128,26 @@ void ClassicSearch::compute_counts(size_t hashes_size, uint16_t* scores,
     }
 }
 
-void ClassicSearch::aggregate_rows(size_t hashes_size, char* rows, size_t size) {
+void ClassicSearch::aggregate_rows(size_t hashes_size, uint8_t* rows, const size_t size) {
     uint64_t num_hashes = index_file_.num_hashes();
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
-        auto rows_8 = rows + i * size;
-        auto rows_64 = reinterpret_cast<uint64_t*>(rows_8);
-        for (size_t j = 1; j < num_hashes; j++) {
-            auto rows_8_j = rows_8 + j * size;
-            auto rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
+        uint8_t* rows_8 = rows + i * size;
+        uint64_t* rows_64 = reinterpret_cast<uint64_t*>(rows_8);
+        for (size_t j = 1; j < num_hashes; ++j) {
+            uint8_t* rows_8_j = rows_8 + j * size;
+            uint64_t* rows_64_j = reinterpret_cast<uint64_t*>(rows_8_j);
+
             size_t k = 0;
-            while ((k + 1) * 8 <= size) {
-                rows_64[k] &= rows_64_j[k];
-                k++;
-            }
-            k = k * 8;
+            // while (8 * (k + 1) < size) {
+            //     sLOG0 << i << hashes_size
+            //           << j << num_hashes << size
+            //           << reinterpret_cast<uint8_t*>(rows_64 + k) - rows
+            //           << reinterpret_cast<uint8_t*>(rows_64_j + k) - rows
+            //           << size * hashes_size;
+            //     rows_64[k] &= rows_64_j[k];
+            //     k++;
+            // }
+            // k = k * 8;
             while (k < size) {
                 rows_8[k] &= rows_8_j[k];
                 k++;
@@ -178,26 +182,29 @@ void ClassicSearch::search(
     timer_.active("hashes");
     num_results = num_results == 0 ? file_names.size()
                   : std::min(num_results, file_names.size());
-    size_t scores_size = counts_size;
-    uint16_t* scores = allocate_aligned<uint16_t>(scores_size, 16);
+    size_t scores_totalsize = counts_size;
+    uint16_t* scores = allocate_aligned<uint16_t>(scores_totalsize, 16);
     std::vector<uint64_t> hashes;
     create_hashes(hashes, query);
     timer_.stop();
 
     size_t score_batch_size = 128;
-    score_batch_size = scores_size;
+    score_batch_size = scores_totalsize;
     score_batch_size = std::max(score_batch_size, 8 * page_size);
-    size_t score_batch_num = tlx::div_ceil(scores_size, score_batch_size);
+    score_batch_size = std::min(score_batch_size, scores_totalsize);
+    size_t score_batch_num = tlx::div_ceil(scores_totalsize, score_batch_size);
     LOG << "search()"
         << " score_batch_size=" << score_batch_size
-        << " score_batch_num=" << score_batch_num;
+        << " score_batch_num=" << score_batch_num
+        << " scores_totalsize=" << scores_totalsize
+        << " hashes.size=" << hashes.size();
 
     parallel_for(
         0, score_batch_num, gopt_threads,
         [&](size_t b) {
             Timer thr_timer;
             size_t score_begin = b * score_batch_size;
-            size_t score_end = std::min((b + 1) * score_batch_size, scores_size);
+            size_t score_end = std::min((b + 1) * score_batch_size, scores_totalsize);
             size_t score_size = score_end - score_begin;
             LOG << "search() score_begin=" << score_begin
                 << " score_end=" << score_end
@@ -210,15 +217,18 @@ void ClassicSearch::search(
 
             // rows array: interleaved as
             // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
-            char* rows = allocate_aligned<char>(score_size * hashes.size(), get_page_size());
+            uint8_t* rows = allocate_aligned<uint8_t>(
+                score_size * hashes.size(), get_page_size());
 
             LOG << "read_from_disk";
             thr_timer.active("io");
             index_file_.read_from_disk(hashes, rows, score_begin, score_size);
 
-            LOG << "aggregate_rows";
-            thr_timer.active("and rows");
-            aggregate_rows(hashes.size(), rows, score_size);
+            if (index_file_.num_hashes() != 1) {
+                LOG << "aggregate_rows";
+                thr_timer.active("and rows");
+                aggregate_rows(hashes.size(), rows, score_size);
+            }
 
             LOG << "compute_counts";
             thr_timer.active("add rows");

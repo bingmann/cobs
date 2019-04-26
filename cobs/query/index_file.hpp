@@ -21,8 +21,9 @@ class IndexFile
 public:
     StreamPos stream_pos_;
 
-    virtual void read_from_disk(const std::vector<size_t>& hashes, char* rows,
-                                size_t begin, size_t size) = 0;
+    virtual void read_from_disk(
+        const std::vector<size_t>& hashes, uint8_t* rows,
+        size_t begin, size_t size) = 0;
 
     virtual uint32_t term_size() const = 0;
     virtual uint8_t canonicalize() const = 0;

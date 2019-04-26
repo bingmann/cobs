@@ -29,7 +29,7 @@ mmap::~mmap() {
     destroy_mmap(m_fd, m_data[0], stream_pos_);
 }
 
-void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
+void mmap::read_from_disk(const std::vector<size_t>& hashes, uint8_t* rows,
                           size_t begin, size_t size) {
     die_unless(begin + size <= row_size());
     die_unless(begin % header_.page_size() == 0);
