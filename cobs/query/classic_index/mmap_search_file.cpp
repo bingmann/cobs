@@ -26,7 +26,7 @@ ClassicIndexMMapSearchFile::~ClassicIndexMMapSearchFile() {
 }
 
 void ClassicIndexMMapSearchFile::read_from_disk(
-    const std::vector<size_t>& hashes, char* rows,
+    const std::vector<size_t>& hashes, uint8_t* rows,
     size_t begin, size_t size)
 {
     die_unless(begin + size <= header_.row_size());
@@ -35,7 +35,8 @@ void ClassicIndexMMapSearchFile::read_from_disk(
             m_data + begin
             + (hashes[i] % header_.signature_size()) * header_.row_size();
         auto rows_8 = rows + i * size;
-        std::memcpy(rows_8, data_8, size);
+        // std::memcpy(rows_8, data_8, size);
+        std::copy(data_8, data_8 + size, rows_8);
     }
 }
 

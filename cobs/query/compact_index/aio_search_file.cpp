@@ -52,12 +52,12 @@ CompactIndexAioSearchFile::~CompactIndexAioSearchFile() {
 }
 
 void CompactIndexAioSearchFile::read_from_disk(
-    const std::vector<size_t>& hashes, char* rows,
+    const std::vector<size_t>& hashes, uint8_t* rows,
     size_t begin, size_t size)
 {
     int64_t num_requests = header_.parameters().size() * hashes.size();
 
-        #pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
     for (size_t i = 0; i < header_.parameters().size(); i++) {
         for (size_t j = 0; j < hashes.size(); j++) {
             uint64_t index = i + j * header_.parameters().size();
