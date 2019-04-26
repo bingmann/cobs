@@ -1,19 +1,19 @@
 /*******************************************************************************
- * cobs/query/classic_index/mmap.hpp
+ * cobs/query/classic_index/mmap_search_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_CLASSIC_INDEX_MMAP_HEADER
-#define COBS_QUERY_CLASSIC_INDEX_MMAP_HEADER
+#ifndef COBS_QUERY_CLASSIC_INDEX_MMAP_SEARCH_FILE_HEADER
+#define COBS_QUERY_CLASSIC_INDEX_MMAP_SEARCH_FILE_HEADER
 
-#include <cobs/query/classic_index/base.hpp>
+#include <cobs/query/classic_index/search_file.hpp>
 
-namespace cobs::query::classic_index {
+namespace cobs {
 
-class mmap : public base
+class ClassicIndexMMapSearchFile : public ClassicIndexSearchFile
 {
 private:
     int m_fd;
@@ -24,12 +24,12 @@ protected:
                         size_t begin, size_t size) override;
 
 public:
-    explicit mmap(const fs::path& path);
-    ~mmap();
+    explicit ClassicIndexMMapSearchFile(const fs::path& path);
+    ~ClassicIndexMMapSearchFile();
 };
 
-} // namespace cobs::query::classic_index
+} // namespace cobs
 
-#endif // !COBS_QUERY_CLASSIC_INDEX_MMAP_HEADER
+#endif // !COBS_QUERY_CLASSIC_INDEX_MMAP_SEARCH_FILE_HEADER
 
 /******************************************************************************/

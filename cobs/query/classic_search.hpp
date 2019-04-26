@@ -14,7 +14,7 @@
 #include <cobs/query/search.hpp>
 #include <cobs/util/query.hpp>
 
-namespace cobs::query {
+namespace cobs {
 
 class ClassicSearch : public Search
 {
@@ -28,7 +28,7 @@ private:
     void create_hashes(std::vector<uint64_t>& hashes, const std::string& query);
 
 public:
-    ClassicSearch(IndexFile& index_file)
+    ClassicSearch(IndexSearchFile& index_file)
         : index_file_(index_file) { }
 
     void search(
@@ -38,10 +38,10 @@ public:
 
 protected:
     //! reference to index file query object to retrieve data
-    IndexFile& index_file_;
+    IndexSearchFile& index_file_;
 };
 
-} // namespace cobs::query
+} // namespace cobs
 
 #endif // !COBS_QUERY_CLASSIC_SEARCH_HEADER
 

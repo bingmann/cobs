@@ -1,20 +1,22 @@
 /*******************************************************************************
- * cobs/query/compact_index/mmap.cpp
+ * cobs/query/compact_index/mmap_search_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/query/compact_index/mmap_search_file.hpp>
 #include <cobs/util/query.hpp>
 
-#include <tlx/math/div_ceil.hpp>
 #include <tlx/logger.hpp>
+#include <tlx/math/div_ceil.hpp>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-mmap::mmap(const fs::path& path) : compact_index::base(path) {
+CompactIndexMMapSearchFile::CompactIndexMMapSearchFile(const fs::path& path)
+    : CompactIndexSearchFile(path)
+{
     m_data.resize(header_.parameters().size());
     std::pair<int, uint8_t*> handles = initialize_mmap(path, stream_pos_);
     m_fd = handles.first;
@@ -26,12 +28,14 @@ mmap::mmap(const fs::path& path) : compact_index::base(path) {
     }
 }
 
-mmap::~mmap() {
+CompactIndexMMapSearchFile::~CompactIndexMMapSearchFile() {
     destroy_mmap(m_fd, m_data[0], stream_pos_);
 }
 
-void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
-                          size_t begin, size_t size) {
+void CompactIndexMMapSearchFile::read_from_disk(
+    const std::vector<size_t>& hashes, char* rows,
+    size_t begin, size_t size)
+{
     size_t page_size = header_.page_size();
 
     die_unless(begin + size <= row_size());
@@ -56,12 +60,12 @@ void mmap::read_from_disk(const std::vector<size_t>& hashes, char* rows,
             uint8_t* rows_8 =
                 reinterpret_cast<uint8_t*>(rows) + i * size + j * page_size;
             // die_unless(rows_8 + page_size <= rows + size * hashes.size());
-            //std::memcpy(rows_8, data_8, page_size);
+            // std::memcpy(rows_8, data_8, page_size);
             std::copy(data_8, data_8 + page_size, rows_8);
         }
     }
 }
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
 /******************************************************************************/

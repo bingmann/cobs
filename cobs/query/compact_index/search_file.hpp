@@ -1,25 +1,25 @@
 /*******************************************************************************
- * cobs/query/compact_index/base.hpp
+ * cobs/query/compact_index/search_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_COMPACT_INDEX_BASE_HEADER
-#define COBS_QUERY_COMPACT_INDEX_BASE_HEADER
+#ifndef COBS_QUERY_COMPACT_INDEX_SEARCH_FILE_HEADER
+#define COBS_QUERY_COMPACT_INDEX_SEARCH_FILE_HEADER
 
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/query/index_file.hpp>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-class base : public query::IndexFile
+class CompactIndexSearchFile : public IndexSearchFile
 {
 protected:
     size_t num_hashes_;
     size_t row_size_;
-    explicit base(const fs::path& path);
+    explicit CompactIndexSearchFile(const fs::path& path);
 
     uint32_t term_size() const final { return header_.term_size(); }
     uint8_t canonicalize() const final { return header_.canonicalize(); }
@@ -35,11 +35,11 @@ protected:
     CompactIndexHeader header_;
 
 public:
-    virtual ~base() = default;
+    virtual ~CompactIndexSearchFile() = default;
 };
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
-#endif // !COBS_QUERY_COMPACT_INDEX_BASE_HEADER
+#endif // !COBS_QUERY_COMPACT_INDEX_SEARCH_FILE_HEADER
 
 /******************************************************************************/

@@ -12,7 +12,7 @@
 
 #include <cobs/util/timer.hpp>
 
-namespace cobs::query {
+namespace cobs {
 
 class Search
 {
@@ -34,7 +34,7 @@ public:
     Timer timer_;
 };
 
-} // namespace cobs::query
+} // namespace cobs
 
 #endif // !COBS_QUERY_SEARCH_HEADER
 

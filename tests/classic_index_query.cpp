@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 #include "test_util.hpp"
-#include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -46,8 +46,8 @@ TEST_F(classic_index_query, all_included_small_batch) {
     index_params.canonicalize = 1;
 
     cobs::classic_construct(input_dir, index_dir, index_params);
-    cobs::query::classic_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -71,8 +71,8 @@ TEST_F(classic_index_query, one_included_small_batch) {
     index_params.canonicalize = 1;
 
     cobs::classic_construct(input_dir, index_dir, index_params);
-    cobs::query::classic_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -95,8 +95,8 @@ TEST_F(classic_index_query, one_included_large_batch) {
     index_params.canonicalize = 1;
 
     cobs::classic_construct(input_dir, index_dir, index_params);
-    cobs::query::classic_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -119,8 +119,8 @@ TEST_F(classic_index_query, false_positive) {
     index_params.canonicalize = 1;
 
     cobs::classic_construct(input_dir, index_dir, index_params);
-    cobs::query::classic_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     size_t num_tests = 10000;

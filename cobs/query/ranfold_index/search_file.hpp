@@ -1,29 +1,29 @@
 /*******************************************************************************
- * cobs/query/ranfold_index/base.hpp
+ * cobs/query/ranfold_index/search_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
-#define COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
+#ifndef COBS_QUERY_RANFOLD_INDEX_SEARCH_FILE_HEADER
+#define COBS_QUERY_RANFOLD_INDEX_SEARCH_FILE_HEADER
 
 #include <cobs/file/ranfold_index_header.hpp>
 #include <cobs/query/classic_search.hpp>
 
-namespace cobs::query::ranfold_index {
+namespace cobs {
 
-class base : public query::Search
+class RanfoldIndexSearchFile : public Search
 {
 protected:
-    explicit base(const fs::path& path);
+    explicit RanfoldIndexSearchFile(const fs::path& path);
 
     RanfoldIndexHeader m_header;
     StreamPos m_smd;
 
 public:
-    virtual ~base() = default;
+    virtual ~RanfoldIndexSearchFile() = default;
 
     void search(
         const std::string& query,
@@ -31,8 +31,8 @@ public:
         double threshold, size_t num_results = 0) final;
 };
 
-} // namespace cobs::query::ranfold_index
+} // namespace cobs
 
-#endif // !COBS_QUERY_RANFOLD_INDEX_BASE_HEADER
+#endif // !COBS_QUERY_RANFOLD_INDEX_SEARCH_FILE_HEADER
 
 /******************************************************************************/

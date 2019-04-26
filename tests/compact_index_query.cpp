@@ -9,7 +9,7 @@
 #include "test_util.hpp"
 #include <gtest/gtest.h>
 #ifdef __linux__
-#include <cobs/query/compact_index/aio.hpp>
+#include <cobs/query/compact_index/aio_search_file.hpp>
 #endif
 
 namespace fs = cobs::fs;
@@ -47,8 +47,8 @@ TEST_F(compact_index_query, all_included_mmap) {
     index_params.canonicalize = 1;
 
     cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::query::compact_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -73,8 +73,8 @@ TEST_F(compact_index_query, one_included_mmap) {
     index_params.canonicalize = 1;
 
     cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::query::compact_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -98,8 +98,8 @@ TEST_F(compact_index_query, false_positive_mmap) {
     index_params.canonicalize = 1;
 
     cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::query::compact_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
     size_t num_tests = 10000;
@@ -126,7 +126,7 @@ TEST_F(compact_index_query, all_included_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
     cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
-    cobs::query::compact_index::aio s_aio(index_path);
+    cobs::CompactIndexAioSearchFile s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_aio.search(query, result);
@@ -141,7 +141,7 @@ TEST_F(compact_index_query, one_included_aio) {
     auto documents = generate_documents_one(query);
     generate_test_case(documents, input_dir.string());
     cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
-    cobs::query::compact_index::mmap s_aio(index_path);
+    cobs::CompactIndexAioSearchFile s_aio(index_path);
 
     std::vector<std::pair<uint16_t, std::string> > result;
     s_aio.search(query, result);
@@ -155,7 +155,7 @@ TEST_F(compact_index_query, false_positive_aio) {
     auto documents = generate_documents_all(query);
     generate_test_case(documents, input_dir.string());
     cobs::compact_construct_from_documents(input_dir, index_dir, 8, 3, 0.1, 4096);
-    cobs::query::compact_index::mmap s_aio(index_path);
+    cobs::CompactIndexAioSearchFile s_aio(index_path);
 
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;

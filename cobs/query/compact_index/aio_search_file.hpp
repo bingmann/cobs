@@ -1,20 +1,20 @@
 /*******************************************************************************
- * cobs/query/compact_index/aio.hpp
+ * cobs/query/compact_index/aio_search_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_COMPACT_INDEX_AIO_HEADER
-#define COBS_QUERY_COMPACT_INDEX_AIO_HEADER
+#ifndef COBS_QUERY_COMPACT_INDEX_AIO_SEARCH_FILE_HEADER
+#define COBS_QUERY_COMPACT_INDEX_AIO_SEARCH_FILE_HEADER
 
-#include <cobs/query/compact_index/base.hpp>
+#include <cobs/query/compact_index/search_file.hpp>
 #include <linux/aio_abi.h>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-class aio : public base
+class CompactIndexAioSearchFile : public CompactIndexSearchFile
 {
 private:
     uint64_t m_max_nr_ios;
@@ -30,12 +30,12 @@ protected:
                         size_t begin, size_t size) override;
 
 public:
-    explicit aio(const fs::path& path);
-    ~aio();
+    explicit CompactIndexAioSearchFile(const fs::path& path);
+    ~CompactIndexAioSearchFile();
 };
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
-#endif // !COBS_QUERY_COMPACT_INDEX_AIO_HEADER
+#endif // !COBS_QUERY_COMPACT_INDEX_AIO_SEARCH_FILE_HEADER
 
 /******************************************************************************/

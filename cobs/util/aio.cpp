@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <vector>
 
-namespace cobs::query {
+namespace cobs {
 
 int io_setup(unsigned nr, aio_context_t* ctxp) {
     return syscall(__NR_io_setup, nr, ctxp);
@@ -38,6 +38,6 @@ int io_getevents(aio_context_t ctx, long min_nr, long max_nr, io_event* events, 
     return syscall(__NR_io_getevents, ctx, min_nr, max_nr, events, timeout);
 }
 
-} // namespace cobs::query
+} // namespace cobs
 
 /******************************************************************************/

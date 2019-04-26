@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 #include <cobs/query/classic_search.hpp>
-#include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/query/compact_index/mmap_search_file.hpp>
 #include <cobs/util/misc.hpp>
 
 #include <cstddef>
@@ -31,8 +31,8 @@ int main(int argc, char** argv) {
         std::string index = "/well/iqbal/people/florian/indices/ena_" + std::to_string(in) + ".cobs_compact";
 
         std::map<size_t, size_t> counts;
-        cobs::query::compact_index::mmap s_mmap(index);
-        cobs::query::ClassicSearch s(s_mmap);
+        cobs::CompactIndexMMapSearchFile s_mmap(index);
+        cobs::ClassicSearch s(s_mmap);
         for (size_t i = 0; i < queries.size(); i++) {
             s.search(queries[i], result);
             for (const auto& r : result) {

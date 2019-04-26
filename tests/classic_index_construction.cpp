@@ -7,7 +7,7 @@
  ******************************************************************************/
 
 #include "test_util.hpp"
-#include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
@@ -119,9 +119,9 @@ TEST_F(classic_index_construction, combine) {
         /* mem_bytes */ 128 * 1024 * 1024, /* num_threads */ 4);
 
     // check result by querying for document terms
-    cobs::query::classic_index::mmap s_mmap(
+    cobs::ClassicIndexMMapSearchFile s_mmap(
         index_dir / "combine/000000_[index-index].cobs_classic");
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(s_mmap);
 
     std::vector<std::pair<uint16_t, std::string> > result;
 

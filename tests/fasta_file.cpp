@@ -9,7 +9,7 @@
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/document_list.hpp>
 #include <cobs/fasta_file.hpp>
-#include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
 #include <cobs/query/classic_search.hpp>
 #include <gtest/gtest.h>
 
@@ -64,8 +64,8 @@ TEST_F(fasta, document_list) {
     index_params.false_positive_rate = 0.1;
 
     cobs::classic_construct(in_dir, index_dir, index_params);
-    cobs::query::classic_index::mmap s_mmap(index_path);
-    cobs::query::ClassicSearch s_base(s_mmap);
+    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
+    cobs::ClassicSearch s_base(s_mmap);
 
     // run queries for each kmer in the documents
     for (const cobs::DocumentEntry& de : doc_list.list()) {

@@ -11,13 +11,13 @@
 #include <cobs/construction/compact_index.hpp>
 #include <cobs/construction/ranfold_index.hpp>
 #include <cobs/cortex_file.hpp>
-#include <cobs/query/classic_index/mmap.hpp>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
 #include <cobs/query/classic_search.hpp>
-#include <cobs/query/compact_index/mmap.hpp>
+#include <cobs/query/compact_index/mmap_search_file.hpp>
 #include <cobs/settings.hpp>
 #include <cobs/util/calc_signature_size.hpp>
 #ifdef __linux__
-    #include <cobs/query/compact_index/aio.hpp>
+    #include <cobs/query/compact_index/aio_search_file.hpp>
 #endif
 
 #include <tlx/cmdline_parser.hpp>
@@ -407,7 +407,7 @@ int compact_construct_combine(int argc, char** argv) {
 
 static inline
 void process_query(
-    cobs::query::Search& s, double threshold, unsigned num_results,
+    cobs::Search& s, double threshold, unsigned num_results,
     const std::string& query_line, const std::string& query_file)
 {
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -502,13 +502,13 @@ int query(int argc, char** argv) {
     std::string index_file = index_files[0];
 
     if (cobs::file_has_header<cobs::ClassicIndexHeader>(index_file)) {
-        cobs::query::classic_index::mmap mmap(index_file);
-        cobs::query::ClassicSearch s(mmap);
+        cobs::ClassicIndexMMapSearchFile mmap(index_file);
+        cobs::ClassicSearch s(mmap);
         process_query(s, threshold, num_results, query, query_file);
     }
     else if (cobs::file_has_header<cobs::CompactIndexHeader>(index_file)) {
-        cobs::query::compact_index::mmap mmap(index_file);
-        cobs::query::ClassicSearch s(mmap);
+        cobs::CompactIndexMMapSearchFile mmap(index_file);
+        cobs::ClassicSearch s(mmap);
         process_query(s, threshold, num_results, query, query_file);
     }
     else {
@@ -703,8 +703,8 @@ void benchmark_fpr_run(const cobs::fs::path& p,
                        const std::vector<std::string>& queries,
                        const std::vector<std::string>& warmup_queries) {
 
-    cobs::query::classic_index::mmap sf(p);
-    cobs::query::ClassicSearch s(sf);
+    cobs::ClassicIndexMMapSearchFile sf(p);
+    cobs::ClassicSearch s(sf);
 
     sync();
     std::ofstream ofs("/proc/sys/vm/drop_caches");

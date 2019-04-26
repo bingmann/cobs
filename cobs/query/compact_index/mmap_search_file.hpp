@@ -1,19 +1,19 @@
 /*******************************************************************************
- * cobs/query/compact_index/mmap.hpp
+ * cobs/query/compact_index/mmap_search_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#ifndef COBS_QUERY_COMPACT_INDEX_MMAP_HEADER
-#define COBS_QUERY_COMPACT_INDEX_MMAP_HEADER
+#ifndef COBS_QUERY_COMPACT_INDEX_MMAP_SEARCH_FILE_HEADER
+#define COBS_QUERY_COMPACT_INDEX_MMAP_SEARCH_FILE_HEADER
 
-#include <cobs/query/compact_index/base.hpp>
+#include <cobs/query/compact_index/search_file.hpp>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-class mmap : public base
+class CompactIndexMMapSearchFile : public CompactIndexSearchFile
 {
 private:
     int m_fd;
@@ -24,12 +24,12 @@ protected:
                         size_t begin, size_t size) override;
 
 public:
-    explicit mmap(const fs::path& path);
-    ~mmap();
+    explicit CompactIndexMMapSearchFile(const fs::path& path);
+    ~CompactIndexMMapSearchFile();
 };
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
-#endif // !COBS_QUERY_COMPACT_INDEX_MMAP_HEADER
+#endif // !COBS_QUERY_COMPACT_INDEX_MMAP_SEARCH_FILE_HEADER
 
 /******************************************************************************/

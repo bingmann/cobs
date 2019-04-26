@@ -1,12 +1,12 @@
 /*******************************************************************************
- * cobs/query/compact_index/aio.cpp
+ * cobs/query/compact_index/aio_search_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/query/compact_index/aio.hpp>
+#include <cobs/query/compact_index/aio_search_file.hpp>
 #include <cobs/util/aio.hpp>
 #include <cobs/util/error_handling.hpp>
 #include <cobs/util/file.hpp>
@@ -16,11 +16,12 @@
 #include <cstring>
 #include <fcntl.h>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-aio::aio(const fs::path& path)
-    : compact_index::base(path), m_max_nr_ios(65536 * header_.parameters().size()),
-      m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios), m_io_events(m_max_nr_ios) {
+CompactIndexAioSearchFile::CompactIndexAioSearchFile(const fs::path& path)
+    : CompactIndexSearchFile(path), m_max_nr_ios(65536 * header_.parameters().size()),
+      m_iocbs(m_max_nr_ios), m_iocbpp(m_max_nr_ios), m_io_events(m_max_nr_ios)
+{
     // todo use sysctl to check max-nr-io
     assert_exit(header_.page_size() % cobs::get_page_size() == 0, "page size needs to be divisible by 4096 so the index can be opened with O_DIRECT");
 
@@ -43,15 +44,17 @@ aio::aio(const fs::path& path)
     }
 }
 
-aio::~aio() {
+CompactIndexAioSearchFile::~CompactIndexAioSearchFile() {
     close_file(m_fd);
     if (io_destroy(m_ctx) < 0) {
         exit_error_errno("io_destroy error");
     }
 }
 
-void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows,
-                         size_t begin, size_t size) {
+void CompactIndexAioSearchFile::read_from_disk(
+    const std::vector<size_t>& hashes, char* rows,
+    size_t begin, size_t size)
+{
     int64_t num_requests = header_.parameters().size() * hashes.size();
 
         #pragma omp parallel for collapse(2)
@@ -87,6 +90,6 @@ void aio::read_from_disk(const std::vector<size_t>& hashes, char* rows,
     }
 }
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
 /******************************************************************************/

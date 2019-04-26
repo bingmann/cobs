@@ -1,20 +1,20 @@
 /*******************************************************************************
- * cobs/query/compact_index/base.cpp
+ * cobs/query/compact_index/search_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/query/compact_index/base.hpp>
+#include <cobs/query/compact_index/search_file.hpp>
 
 #include <cobs/util/file.hpp>
 
 #include <tlx/die.hpp>
 
-namespace cobs::query::compact_index {
+namespace cobs {
 
-base::base(const fs::path& path) {
+CompactIndexSearchFile::CompactIndexSearchFile(const fs::path& path) {
     std::ifstream ifs;
     header_ = deserialize_header<CompactIndexHeader>(ifs, path);
     stream_pos_ = get_stream_pos(ifs);
@@ -27,10 +27,10 @@ base::base(const fs::path& path) {
     }
 }
 
-uint64_t base::counts_size() const {
+uint64_t CompactIndexSearchFile::counts_size() const {
     return 8 * header_.parameters().size() * header_.page_size();
 }
 
-} // namespace cobs::query::compact_index
+} // namespace cobs
 
 /******************************************************************************/

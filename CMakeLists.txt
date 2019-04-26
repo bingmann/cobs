@@ -49,20 +49,20 @@ set(SOURCE_FILES
         cobs/file/ranfold_index_header.hpp
         cobs/kmer.hpp
         cobs/kmer_buffer.hpp
-        cobs/query/classic_index/base.cpp
-        cobs/query/classic_index/base.hpp
-        cobs/query/classic_index/mmap.cpp
-        cobs/query/classic_index/mmap.hpp
+        cobs/query/classic_index/mmap_search_file.cpp
+        cobs/query/classic_index/mmap_search_file.hpp
+        cobs/query/classic_index/search_file.cpp
+        cobs/query/classic_index/search_file.hpp
         cobs/query/classic_search.cpp
         cobs/query/classic_search.hpp
-        cobs/query/compact_index/base.cpp
-        cobs/query/compact_index/base.hpp
-        cobs/query/compact_index/mmap.cpp
-        cobs/query/compact_index/mmap.hpp
-        cobs/query/ranfold_index/base.cpp
-        cobs/query/ranfold_index/base.hpp
-        cobs/query/ranfold_index/mmap.cpp
-        cobs/query/ranfold_index/mmap.hpp
+        cobs/query/compact_index/mmap_search_file.cpp
+        cobs/query/compact_index/mmap_search_file.hpp
+        cobs/query/compact_index/search_file.cpp
+        cobs/query/compact_index/search_file.hpp
+        cobs/query/ranfold_index/mmap_search_file.cpp
+        cobs/query/ranfold_index/mmap_search_file.hpp
+        cobs/query/ranfold_index/search_file.cpp
+        cobs/query/ranfold_index/search_file.hpp
         cobs/query/search.hpp
         cobs/settings.cpp
         cobs/settings.hpp
@@ -102,7 +102,7 @@ if(LINUX)
     endif()
     option(AIO "use linux aio to access index" ON)
     if(AIO)
-        set(SOURCE_FILES ${SOURCE_FILES} cobs/query/compact_index/aio.hpp cobs/query/compact_index/aio.cpp cobs/util/aio.hpp cobs/util/aio.cpp)
+        set(SOURCE_FILES ${SOURCE_FILES} cobs/query/compact_index/aio_search_file.hpp cobs/query/compact_index/aio_search_file.cpp cobs/util/aio.hpp cobs/util/aio.cpp)
     else()
         add_definitions(-DNO_AIO)
     endif()

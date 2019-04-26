@@ -32,7 +32,7 @@
 #include <immintrin.h>
 #endif
 
-namespace cobs::query {
+namespace cobs {
 
 void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
                                   const std::string& query) {
@@ -500,6 +500,6 @@ const uint16_t ClassicSearch::s_expansion_128[] = {
     1, 1, 1, 1, 1, 1, 1, 1
 };
 
-} // namespace cobs::query
+} // namespace cobs
 
 /******************************************************************************/

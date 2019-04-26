@@ -14,9 +14,9 @@
 
 #include <immintrin.h>
 
-namespace cobs::query {
+namespace cobs {
 
-class IndexFile
+class IndexSearchFile
 {
 public:
     StreamPos stream_pos_;
@@ -33,7 +33,7 @@ public:
     virtual const std::vector<std::string>& file_names() const = 0;
 };
 
-} // namespace cobs::query
+} // namespace cobs
 
 #endif // !COBS_QUERY_INDEX_FILE_HEADER
 
