@@ -10,11 +10,14 @@
 #define COBS_UTIL_PARALLEL_FOR_HEADER
 
 #include <atomic>
-#include <mutex>
-#include <thread>
-#include <vector>
+
+#include <tlx/semaphore.hpp>
+#include <tlx/thread_pool.hpp>
 
 namespace cobs {
+
+//! thread pool singleton
+extern std::unique_ptr<tlx::ThreadPool> g_thread_pool;
 
 //! run a functor in parallel
 template <typename Functor>
@@ -26,22 +29,25 @@ void parallel_for(size_t begin, size_t end, size_t num_threads,
         }
     }
     else {
+        if (!g_thread_pool)
+            g_thread_pool = std::make_unique<tlx::ThreadPool>();
+
+        tlx::Semaphore sem;
         std::atomic<size_t> counter { begin };
-        std::vector<std::thread> threads;
-        threads.resize(num_threads);
-        // start threads
+        // enqueue threads for work
         for (size_t t = 0; t < num_threads; ++t) {
-            threads[t] = std::thread(
+            g_thread_pool->enqueue(
                 [&]() {
                     size_t i;
                     while ((i = counter++) < end) {
                         functor(i);
                     }
+                    // done, raise semaphore
+                    sem.signal();
                 });
         }
-        for (size_t i = 0; i < num_threads; ++i) {
-            threads[i].join();
-        }
+        // wait for all num_threads to finish
+        sem.wait(num_threads);
     }
 }
 

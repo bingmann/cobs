@@ -73,6 +73,7 @@ set(SOURCE_FILES
         cobs/util/file.hpp
         cobs/util/misc.cpp
         cobs/util/misc.hpp
+        cobs/util/parallel_for.cpp
         cobs/util/parallel_for.hpp
         cobs/util/process_file_batches.hpp
         cobs/util/query.cpp

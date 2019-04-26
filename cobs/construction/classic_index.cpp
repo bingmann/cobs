@@ -76,7 +76,7 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     // parallelize over 8 documents, which fit into one byte, the terms are
     // random hence only little cache trashing inside a cache line should occur.
     parallel_for(
-        0, (paths.size() + 7) / 8, std::sqrt(num_threads),
+        0, (paths.size() + 7) / 8, num_threads,
         [&](size_t b) {
             size_t local_count = 0;
             for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
@@ -152,8 +152,9 @@ void classic_construct_from_documents(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
             cih.file_names().resize(paths.size());
-            process_batch(batch_num, num_batches, num_threads, params.log_prefix,
-                          paths, out_path, cih, thr_timer);
+            process_batch(batch_num, num_batches,
+                          tlx::div_ceil(num_threads, num_batches),
+                          params.log_prefix, paths, out_path, cih, thr_timer);
 
             t += thr_timer;
         });
@@ -399,8 +400,9 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             Timer thr_timer;
             const std::vector<fs::path>& files = batch_list[b].files;
 
-            fs::path out_path = out_dir
-                                / (batch_list[b].out_file + ClassicIndexHeader::file_extension);
+            fs::path out_path =
+                out_dir /
+                (batch_list[b].out_file + ClassicIndexHeader::file_extension);
 
             if (files.size() == 1) {
                 LOG1 << "Move Classic Index to " << out_path;
@@ -457,8 +459,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             classic_combine_streams(
                 streams, row_bits, out_path, term_size, canonicalize,
                 signature_size, new_row_bits, num_hashes,
-                mem_bytes / num_threads,
-                thr_timer, file_names);
+                mem_bytes / num_threads, thr_timer, file_names);
             streams.clear();
             file_names.clear();
 

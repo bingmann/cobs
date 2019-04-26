@@ -182,7 +182,7 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
          << " = " << params.page_size * 8 << " documents" << '\n'
          << "  num_pages: " << num_pages << '\n'
          << "  mem_bytes: " << params.mem_bytes
-         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B'
+         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B' << '\n'
          << "  num_threads: " << num_threads;
 
     size_t total_size = 0;
@@ -233,7 +233,8 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
             classic_params.false_positive_rate = params.false_positive_rate;
             classic_params.signature_size = signature_size;
             classic_params.mem_bytes = params.mem_bytes / num_threads;
-            classic_params.num_threads = params.num_threads / num_threads;
+            classic_params.num_threads =
+                tlx::div_ceil(params.num_threads, num_threads);
             classic_params.log_prefix
                 = "[" + pad_index(batch_num, 2)
                   + "/" + pad_index(num_pages, 2) + "] ";

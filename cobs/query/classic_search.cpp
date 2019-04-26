@@ -193,7 +193,6 @@ void ClassicSearch::search(
     timer_.stop();
 
     size_t score_batch_size = 128;
-    score_batch_size = scores_totalsize;
     score_batch_size = std::max(score_batch_size, 8 * page_size);
     score_batch_size = std::min(score_batch_size, scores_totalsize);
     size_t score_batch_num = tlx::div_ceil(scores_totalsize, score_batch_size);
