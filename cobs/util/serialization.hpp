@@ -21,7 +21,7 @@ namespace cobs {
 struct StreamPos {
     uint64_t curr_pos;
     uint64_t end_pos;
-    size_t size() const { return end_pos - curr_pos; }
+    uint64_t size() const { return end_pos - curr_pos; }
 };
 
 //! return StreamPos object

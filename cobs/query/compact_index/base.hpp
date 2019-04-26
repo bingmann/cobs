@@ -21,14 +21,14 @@ protected:
     size_t row_size_;
     explicit base(const fs::path& path);
 
-    uint32_t term_size() const override { return header_.term_size(); }
-    uint8_t canonicalize() const override { return header_.canonicalize(); }
-    uint64_t num_hashes() const override { return num_hashes_; }
-    uint64_t page_size() const override { return header_.page_size(); }
-    uint64_t row_size() const override { return row_size_; }
-    uint64_t counts_size() const override;
+    uint32_t term_size() const final { return header_.term_size(); }
+    uint8_t canonicalize() const final { return header_.canonicalize(); }
+    uint64_t num_hashes() const final { return num_hashes_; }
+    uint64_t page_size() const final { return header_.page_size(); }
+    uint64_t row_size() const final { return row_size_; }
+    uint64_t counts_size() const final;
 
-    const std::vector<std::string>& file_names() const override {
+    const std::vector<std::string>& file_names() const final {
         return header_.file_names();
     }
 
