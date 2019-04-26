@@ -30,6 +30,7 @@
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/math/popcount.hpp>
+#include <tlx/unused.hpp>
 
 namespace cobs::ranfold_index {
 
@@ -288,7 +289,7 @@ void sketch_path(const fs::path& path,
             min_hash->resize(size / min_hash->item_size());
             in.seekg(0);
             in.read(reinterpret_cast<char*>(min_hash->data()), size);
-            die_unequal(size, in.gcount());
+            die_unequal(size, static_cast<size_t>(in.gcount()));
             return;
         }
     }
@@ -556,6 +557,8 @@ void cluster_documents_ward(std::vector<Sketch>& min_hashes, size_t num_hashes) 
 }
 
 void construct(const fs::path& in_dir, const fs::path& out_dir) {
+    tlx::unused(out_dir);
+
     Timer t;
 
     std::vector<fs::path> sorted_paths;

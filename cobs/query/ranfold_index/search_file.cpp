@@ -10,6 +10,8 @@
 
 #include <cobs/util/file.hpp>
 
+#include <tlx/unused.hpp>
+
 namespace cobs {
 
 RanfoldIndexSearchFile::RanfoldIndexSearchFile(const fs::path& path) {
@@ -22,7 +24,9 @@ void RanfoldIndexSearchFile::search(
     const std::string& query,
     std::vector<std::pair<uint16_t, std::string> >& result,
     double threshold, size_t num_results)
-{ }
+{
+    tlx::unused(query, result, threshold, num_results);
+}
 
 } // namespace cobs
 

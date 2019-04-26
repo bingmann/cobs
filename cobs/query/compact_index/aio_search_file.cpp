@@ -16,6 +16,8 @@
 #include <cstring>
 #include <fcntl.h>
 
+#include <tlx/unused.hpp>
+
 namespace cobs {
 
 CompactIndexAioSearchFile::CompactIndexAioSearchFile(const fs::path& path)
@@ -55,6 +57,8 @@ void CompactIndexAioSearchFile::read_from_disk(
     const std::vector<size_t>& hashes, uint8_t* rows,
     size_t begin, size_t size, size_t buffer_size)
 {
+    tlx::unused(begin, size, buffer_size);
+
     int64_t num_requests = header_.parameters().size() * hashes.size();
 
 #pragma omp parallel for collapse(2)
