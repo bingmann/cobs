@@ -43,8 +43,8 @@ void run(cobs::ClassicSearch& s, size_t query_len,
     s.search(cobs::random_sequence(query_len, 1234), result, 0.0, 10);
 //    }
     t.stop();
-    std::cout << s.timer_ << std::endl;
-    std::cout << t << std::endl;
+    s.timer_.print("run");
+    t.print("run");
 }
 
 void server() {

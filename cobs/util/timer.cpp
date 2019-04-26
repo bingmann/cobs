@@ -64,13 +64,6 @@ double Timer::get(const char* name) {
     return find_or_create(name).duration.count();
 }
 
-void Timer::print(std::ostream& os, size_t max_name_length,
-                  const char* name,
-                  const std::chrono::duration<double>& duration) const {
-    os << std::setfill(' ') << std::left << std::setw(max_name_length)
-       << name << " - " << duration.count() << std::right << std::endl;
-}
-
 Timer& Timer::operator += (const Timer& b) {
     std::unique_lock<std::mutex> lock(s_timer_add_mutex);
     for (const Entry& t : b.timers_) {
@@ -81,23 +74,18 @@ Timer& Timer::operator += (const Timer& b) {
     return *this;
 }
 
-void Timer::print(std::ostream& os) const {
+void Timer::print(const char* info, std::ostream& os) const {
     die_unless(!running_);
-    static const char* total_name = "total";
 
-    size_t max_name_length = std::strlen(total_name);
+    os << "TIMER info=" << info;
     for (const Entry& timer : timers_) {
-        max_name_length = std::max(max_name_length, std::strlen(timer.name));
+        os << ' ' << timer.name << '=' << timer.duration.count();
     }
-    for (const Entry& timer : timers_) {
-        print(os, max_name_length, timer.name, timer.duration);
-    }
-    print(os, max_name_length, total_name, total_duration_);
+    os << " total=" << total_duration_.count() << std::endl;
 }
 
-std::ostream& operator << (std::ostream& os, const Timer& t) {
-    t.print(os);
-    return os;
+void Timer::print(const char* info) const {
+    return print(info, std::cerr);
 }
 
 } // namespace cobs

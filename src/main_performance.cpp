@@ -323,7 +323,7 @@ int main() {
         compute_counts(hashes_size, counts, reinterpret_cast<uint8_t*>(rows.data()), row_size);
         t.stop();
     }
-    std::cout << t << std::endl;
+    t.print("main");
     for (size_t i = 0; i < 100; i++) {
         std::cout << counts[i] << ", ";
     }

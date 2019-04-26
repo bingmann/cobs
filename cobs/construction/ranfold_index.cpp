@@ -671,7 +671,7 @@ void construct_random(const fs::path& out_file,
     rih.write_file(out_file, data);
     t.stop();
 
-    std::cout << t;
+    t.print("construct_random");
 }
 
 } // namespace cobs::ranfold_index

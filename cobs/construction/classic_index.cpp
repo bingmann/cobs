@@ -158,7 +158,7 @@ void classic_construct_from_documents(
 
             t += thr_timer;
         });
-    std::cout << t;
+    t.print("classic_construct_from_documents");
 }
 
 /******************************************************************************/
@@ -471,7 +471,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
 
             t += thr_timer;
         });
-    std::cout << t;
+    t.print("classic_combine");
     return (batch_list.size() <= 1);
 }
 
@@ -623,7 +623,7 @@ void classic_construct_random(const fs::path& out_file,
     cih.write_file(out_file, data);
     t.stop();
 
-    std::cout << t;
+    t.print("classic_construct_random");
 }
 
 } // namespace cobs

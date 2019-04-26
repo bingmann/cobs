@@ -146,7 +146,7 @@ void compact_combine_into_compact(
             fs::remove(p);
         }
     }
-    std::cout << t;
+    t.print("compact_combine_into_compact()");
 }
 
 void compact_construct(const fs::path& in_dir, const fs::path& index_dir,

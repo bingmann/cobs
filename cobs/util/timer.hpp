@@ -10,6 +10,7 @@
 #define COBS_UTIL_TIMER_HEADER
 
 #include <chrono>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -37,10 +38,6 @@ private:
     //! start of currently running timer name
     std::chrono::time_point<std::chrono::high_resolution_clock> time_point_;
 
-    void print(std::ostream& ostream, size_t max_name_length,
-               const char* name,
-               const std::chrono::duration<double>& duration) const;
-
     Entry& find_or_create(const char* name);
 
 public:
@@ -49,14 +46,13 @@ public:
     void stop();
     void reset();
     double get(const char* timer);
-    void print(std::ostream& ostream) const;
+    void print(const char* info, std::ostream& os) const;
+    void print(const char* info) const;
 
     //! add all timers from another, internally holds a global lock, because
     //! this is used to add thread values
     Timer& operator += (const Timer& b);
 };
-
-std::ostream& operator << (std::ostream& os, const Timer& t);
 
 } // namespace cobs
 

@@ -463,7 +463,7 @@ void process_query(
         die("Pass a verbatim query of a query file.");
     }
 
-    std::cerr << s.timer();
+    s.timer().print("search");
 }
 
 int query(int argc, char** argv) {
