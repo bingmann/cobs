@@ -10,6 +10,7 @@
 #define COBS_UTIL_PARALLEL_FOR_HEADER
 
 #include <atomic>
+#include <exception>
 
 #include <tlx/semaphore.hpp>
 #include <tlx/thread_pool.hpp>
@@ -34,13 +35,20 @@ void parallel_for(size_t begin, size_t end, size_t num_threads,
 
         tlx::Semaphore sem;
         std::atomic<size_t> counter { begin };
+        std::exception_ptr eptr;
         // enqueue threads for work
         for (size_t t = 0; t < num_threads; ++t) {
             g_thread_pool->enqueue(
                 [&]() {
-                    size_t i;
-                    while ((i = counter++) < end) {
-                        functor(i);
+                    try {
+                        size_t i;
+                        while ((i = counter++) < end) {
+                            functor(i);
+                        }
+                    }
+                    catch (...) {
+                        // capture exception
+                        eptr = std::current_exception();
                     }
                     // done, raise semaphore
                     sem.signal();
@@ -48,6 +56,9 @@ void parallel_for(size_t begin, size_t end, size_t num_threads,
         }
         // wait for all num_threads to finish
         sem.wait(num_threads);
+        // rethrow exception
+        if (eptr)
+            std::rethrow_exception(eptr);
     }
 }
 
