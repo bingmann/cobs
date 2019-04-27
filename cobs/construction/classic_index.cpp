@@ -175,6 +175,9 @@ void classic_combine_streams(
 {
     static constexpr bool debug = false;
 
+    if (fs::exists(out_file))
+        return;
+
     std::ofstream ofs;
     ClassicIndexHeader cih(term_size, canonicalize, signature_size,
                            num_hash, file_names);
@@ -327,8 +330,10 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
         LOG1 << "Move 1 Classic Index [" << index_list[0].header.row_bits()
              << " documents] to " << out_path;
 
-        if (!gopt_keep_temporary)
+        if (!gopt_keep_temporary) {
             fs::rename(index_list[0].path, out_path);
+            fs::remove(in_dir);
+        }
         else
             fs::copy(index_list[0].path, out_path);
 
@@ -351,7 +356,6 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
     std::vector<Batch> batch_list;
 
     {
-        std::string first_filename, last_filename;
         size_t new_row_bits = 0;
 
         std::vector<fs::path> batch;
@@ -364,31 +368,21 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
                     // only open about 512 files
                     batch.size() > 512 / num_threads))
             {
-                std::string out_file =
-                    pad_index(batch_list.size()) + '_' +
-                    '[' + first_filename + '-' + last_filename + ']';
+                std::string out_file = pad_index(batch_list.size());
 
                 batch_list.emplace_back(Batch { std::move(batch), out_file });
 
                 batch.clear();
-                first_filename.clear();
                 new_row_bits = 0;
             }
 
             std::string filename = cobs::base_name(index_list[i].path);
-            if (first_filename.empty()) {
-                first_filename = filename;
-            }
-            last_filename = filename;
 
             batch.push_back(std::move(index_list[i].path));
             new_row_bits += index_list[i].header.row_bits();
         }
         if (!batch.empty()) {
-            std::string out_file =
-                pad_index(batch_list.size()) + '_' +
-                '[' + first_filename + '-' + last_filename + ']';
-
+            std::string out_file = pad_index(batch_list.size());
             batch_list.emplace_back(Batch { std::move(batch), out_file });
         }
     }
@@ -433,6 +427,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
                 streams.emplace_back(std::ifstream());
                 auto cih = deserialize_header<ClassicIndexHeader>(
                     streams.back(), files[i]);
+                die_unless(streams.back().good());
                 // check parameters for compatibility
                 if (signature_size == 0) {
                     term_size = cih.term_size();
@@ -471,6 +466,11 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
 
             t += thr_timer;
         });
+
+    if (!gopt_keep_temporary) {
+        fs::remove(in_dir);
+    }
+
     t.print("classic_combine");
     return (batch_list.size() <= 1);
 }

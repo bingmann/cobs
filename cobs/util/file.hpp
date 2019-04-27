@@ -15,12 +15,15 @@
 
 #include <cobs/util/fs.hpp>
 
+#include <tlx/die.hpp>
+
 namespace cobs {
 
 template <class Header>
 void serialize_header(std::ofstream& ofs, const fs::path& p, const Header& h) {
     ofs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ofs.open(p.string(), std::ios::out | std::ios::binary);
+    die_unless(ofs.good());
     h.serialize(ofs);
 }
 
@@ -34,6 +37,7 @@ template <class Header>
 Header deserialize_header(std::ifstream& ifs, const fs::path& p) {
     ifs.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     ifs.open(p.string(), std::ios::in | std::ios::binary);
+    die_unless(ifs.good());
     Header h;
     h.deserialize(ifs);
     return h;
