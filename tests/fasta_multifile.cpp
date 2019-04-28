@@ -15,31 +15,32 @@
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir = "test/resources/fasta_multi/";
-static fs::path index_dir = "test/fasta_multi_index/index";
-static fs::path index_path = index_dir / "index.cobs_classic";
+static fs::path input_dir = "test/resources/fasta_multi/";
+static fs::path base_dir = "test/fasta_multi_index";
+static fs::path index_path = base_dir / "index.cobs_classic";
+static fs::path tmp_path = base_dir / "tmp";
 
 class fasta_multi : public ::testing::Test
 {
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
     void TearDown() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
 };
 
 TEST_F(fasta_multi, process_kmers1) {
-    cobs::FastaMultifile fasta_multi(in_dir / "sample1.mfasta");
+    cobs::FastaMultifile fasta_multi(input_dir / "sample1.mfasta");
 
     die_unequal(fasta_multi.num_documents(), 1u);
 }
 
 TEST_F(fasta_multi, process_kmers2) {
-    cobs::FastaMultifile fasta_multi(in_dir / "sample2.mfasta");
+    cobs::FastaMultifile fasta_multi(input_dir / "sample2.mfasta");
 
     die_unequal(fasta_multi.num_documents(), 5u);
 
@@ -54,7 +55,7 @@ TEST_F(fasta_multi, process_kmers2) {
 TEST_F(fasta_multi, document_list) {
     static constexpr bool debug = false;
 
-    cobs::DocumentList doc_list(in_dir);
+    cobs::DocumentList doc_list(input_dir);
 
     die_unequal(doc_list.list().size(), 6u);
 
@@ -63,7 +64,7 @@ TEST_F(fasta_multi, document_list) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
 
-    cobs::classic_construct(in_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 

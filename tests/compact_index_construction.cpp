@@ -15,10 +15,11 @@
 
 namespace fs = cobs::fs;
 
-static fs::path input_dir("test/compact_index_construction/input");
-static fs::path index_dir("test/compact_index_construction/index");
-static fs::path cobs_2_dir(index_dir / cobs::pad_index(2));
-static fs::path compact_index_path(index_dir.string() + "/index.cobs_compact");
+static fs::path base_dir = "test/compact_index_construction";
+static fs::path input_dir = base_dir / "input";
+static fs::path index_file = base_dir / "index.cobs_compact";
+static fs::path tmp_path = base_dir / "tmp";
+static fs::path cobs_2_dir = tmp_path / cobs::pad_index(2);
 
 static std::string query = cobs::random_sequence(100000, 1);
 
@@ -27,14 +28,12 @@ class compact_index_construction : public ::testing::Test
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
         cobs::gopt_keep_temporary = false;
     }
     void TearDown() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
         cobs::gopt_keep_temporary = false;
     }
 };
@@ -50,11 +49,11 @@ TEST_F(compact_index_construction, padding) {
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 16;
 
-    cobs::compact_construct(input_dir, index_dir, index_params);
+    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
 
     // read compact index header, check page_size alignment of data
     std::ifstream ifs;
-    cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, compact_index_path);
+    cobs::deserialize_header<cobs::CompactIndexHeader>(ifs, index_file);
     cobs::StreamPos sp = cobs::get_stream_pos(ifs);
     ASSERT_EQ(sp.curr_pos % index_params.page_size, 0U);
 }
@@ -82,12 +81,12 @@ TEST_F(compact_index_construction, deserialization) {
 
     cobs::gopt_keep_temporary = true;
 
-    cobs::compact_construct(input_dir, index_dir, index_params);
+    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
 
     // read compact index header and check fields
     std::vector<std::vector<uint8_t> > data;
     cobs::CompactIndexHeader h;
-    h.read_file(compact_index_path, data);
+    h.read_file(index_file, data);
     ASSERT_EQ(h.file_names().size(), 33U);
     ASSERT_EQ(h.parameters().size(), 3U);
     ASSERT_EQ(data.size(), 3U);

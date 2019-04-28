@@ -14,9 +14,10 @@
 
 namespace fs = cobs::fs;
 
-static fs::path input_dir("test/compact_index_query/input");
-static fs::path index_dir("test/compact_index_query/index");
-static fs::path index_path(index_dir.string() + "/index.cobs_compact");
+static fs::path base_dir = "test/compact_index_query";
+static fs::path input_dir = base_dir / "input";
+static fs::path index_file = base_dir / "index.cobs_compact";
+static fs::path tmp_path = base_dir / "tmp";
 static std::string query = cobs::random_sequence(21000, 1);
 
 class compact_index_query : public ::testing::Test
@@ -24,13 +25,11 @@ class compact_index_query : public ::testing::Test
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
     void TearDown() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
 };
 
@@ -46,8 +45,8 @@ TEST_F(compact_index_query, all_included_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
@@ -72,8 +71,8 @@ TEST_F(compact_index_query, one_included_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results
@@ -97,8 +96,8 @@ TEST_F(compact_index_query, false_positive_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_dir, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_path);
+    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 
     // execute query and check results

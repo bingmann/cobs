@@ -54,7 +54,7 @@ struct ClassicIndexParameters {
  */
 void classic_construct(
     const DocumentList& filelist, const fs::path& out_dir,
-    ClassicIndexParameters index_params);
+    const fs::path& tmp_path, ClassicIndexParameters index_params);
 
 /*!
  * Constructs multiple small indices from document files.
@@ -67,7 +67,7 @@ void classic_construct_from_documents(
  * Combines multiple indices into one or more bigger indices.
  */
 bool classic_combine(
-    const fs::path& in_dir, const fs::path& out_dir,
+    const fs::path& in_dir, const fs::path& out_dir, fs::path& result_file,
     uint64_t mem_bytes, size_t num_threads);
 
 /*!

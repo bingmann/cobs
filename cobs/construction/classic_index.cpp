@@ -296,6 +296,7 @@ void classic_combine_streams(
 }
 
 bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
+                     fs::path& result_file,
                      uint64_t mem_bytes, size_t num_threads)
 {
     fs::create_directories(out_dir);
@@ -334,9 +335,11 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             fs::rename(index_list[0].path, out_path);
             fs::remove(in_dir);
         }
-        else
+        else {
             fs::copy(index_list[0].path, out_path);
+        }
 
+        result_file = out_path;
         return true;
     }
 
@@ -470,6 +473,11 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
     if (!gopt_keep_temporary) {
         fs::remove(in_dir);
     }
+    if (batch_list.size() == 1) {
+        result_file =
+            out_dir /
+            (batch_list[0].out_file + ClassicIndexHeader::file_extension);
+    }
 
     t.print("classic_combine");
     return (batch_list.size() <= 1);
@@ -522,11 +530,15 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
     die("Unknown file type");
 }
 
-void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
-                       ClassicIndexParameters params) {
-
+void classic_construct(
+    const DocumentList& filelist, const fs::path& out_file,
+    const fs::path& tmp_path, ClassicIndexParameters params)
+{
     die_unless(params.num_hashes != 0);
     die_unless(params.signature_size == 0);
+
+    std::error_code ec;
+    fs::create_directories(tmp_path, ec);
 
     // estimate signature size by finding number of elements in the largest file
     uint64_t max_doc_size = get_max_file_size(filelist, params.term_size);
@@ -551,23 +563,28 @@ void classic_construct(const DocumentList& filelist, const fs::path& out_dir,
          << " = " << tlx::format_iec_units(params.mem_bytes) << 'B';
 
     // construct one classic index
-    classic_construct_from_documents(filelist, out_dir / pad_index(1), params);
+    classic_construct_from_documents(filelist, tmp_path / pad_index(1), params);
 
     // combine batches
     size_t i = 1;
-    while (!classic_combine(out_dir / pad_index(i), out_dir / pad_index(i + 1),
+    fs::path result_file;
+    while (!classic_combine(tmp_path / pad_index(i),
+                            tmp_path / pad_index(i + 1),
+                            result_file,
                             params.mem_bytes, params.num_threads)) {
         i++;
     }
 
-    fs::path index;
-    for (fs::directory_iterator sub_it(out_dir / pad_index(i + 1)), end;
-         sub_it != end; sub_it++) {
-        if (file_has_header<ClassicIndexHeader>(sub_it->path())) {
-            index = sub_it->path();
-        }
+    fs::rename(result_file, out_file);
+
+    if (!gopt_keep_temporary) {
+        fs::remove(tmp_path / pad_index(i + 1));
     }
-    fs::rename(index, out_dir / ("index" + ClassicIndexHeader::file_extension));
+
+    // cleanup: this will fail if not _all_ temporary files are removed
+    if (!gopt_keep_temporary) {
+        fs::remove(tmp_path);
+    }
 }
 
 void classic_construct_random(const fs::path& out_file,

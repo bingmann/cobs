@@ -15,22 +15,22 @@
 
 namespace fs = cobs::fs;
 
-static fs::path input_dir("test/classic_index_construction/input");
-static fs::path index_dir("test/classic_index_construction/index");
-static fs::path classic_index_path(index_dir.string() + "/index.cobs_classic");
+static fs::path base_dir = "test/classic_index_construction";
+static fs::path input_dir = base_dir / "input";
+static fs::path index_dir = base_dir / "index";
+static fs::path index_file = base_dir / "index.cobs_classic";
+static fs::path tmp_path = base_dir / "tmp";
 
 class classic_index_construction : public ::testing::Test
 {
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
     void TearDown() final {
         cobs::error_code ec;
-        fs::remove_all(input_dir, ec);
-        fs::remove_all(index_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
 };
 
@@ -55,12 +55,12 @@ TEST_F(classic_index_construction, deserialization) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
 
-    cobs::classic_construct(input_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_file, tmp_path, index_params);
 
     // read classic index and check header fields
     std::vector<uint8_t> data;
     cobs::ClassicIndexHeader h;
-    h.read_file(classic_index_path, data);
+    h.read_file(index_file, data);
     ASSERT_EQ(h.file_names().size(), 33u);
     ASSERT_EQ(h.num_hashes(), 3u);
     ASSERT_EQ(h.file_names().size(), paths.size());
@@ -93,6 +93,7 @@ TEST_F(classic_index_construction, deserialization) {
 
 TEST_F(classic_index_construction, combine) {
     using cobs::pad_index;
+    fs::create_directories(index_dir);
     // generate 10 individual sets of documents and construct indices
     using DocumentSet = std::vector<cobs::KMerBuffer<31> >;
     std::vector<DocumentSet> doc_sets;
@@ -111,16 +112,18 @@ TEST_F(classic_index_construction, combine) {
         index_params.false_positive_rate = 0.1;
 
         cobs::classic_construct(
-            input_dir / pad_index(i), index_dir / pad_index(i), index_params);
+            input_dir / pad_index(i),
+            index_dir / (pad_index(i) + ".cobs_classic"),
+            tmp_path, index_params);
     }
 
+    fs::path result_file;
     cobs::classic_combine(
-        index_dir, index_dir / "combine",
+        index_dir, index_file, result_file,
         /* mem_bytes */ 128 * 1024 * 1024, /* num_threads */ 4);
 
     // check result by querying for document terms
-    cobs::ClassicIndexMMapSearchFile s_mmap(
-        index_dir / "combine/000000_[index-index].cobs_classic");
+    cobs::ClassicIndexMMapSearchFile s_mmap(result_file);
     cobs::ClassicSearch s_base(s_mmap);
 
     std::vector<std::pair<uint16_t, std::string> > result;

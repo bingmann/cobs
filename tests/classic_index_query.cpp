@@ -14,9 +14,10 @@
 
 namespace fs = cobs::fs;
 
-static fs::path input_dir = "test/classic_index_query/input";
-static fs::path index_dir = "test/classic_index_query/index";
-static fs::path index_path = index_dir / "index.cobs_classic";
+static fs::path base_dir = "test/classic_index_query";
+static fs::path input_dir = base_dir / "input";
+static fs::path index_path = base_dir / "index.cobs_classic";
+static fs::path tmp_path = base_dir / "tmp";
 static std::string query = cobs::random_sequence(50000, 2);
 
 class classic_index_query : public ::testing::Test
@@ -24,13 +25,11 @@ class classic_index_query : public ::testing::Test
 protected:
     void SetUp() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
     void TearDown() final {
         cobs::error_code ec;
-        fs::remove_all(index_dir, ec);
-        fs::remove_all(input_dir, ec);
+        fs::remove_all(base_dir, ec);
     }
 };
 
@@ -45,7 +44,7 @@ TEST_F(classic_index_query, all_included_small_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -70,7 +69,7 @@ TEST_F(classic_index_query, one_included_small_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -94,7 +93,7 @@ TEST_F(classic_index_query, one_included_large_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -118,7 +117,7 @@ TEST_F(classic_index_query, false_positive) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_dir, index_params);
+    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 

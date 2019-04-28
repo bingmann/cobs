@@ -156,13 +156,13 @@ int classic_construct(int argc, char** argv) {
     index_params.num_hashes = 1;
     index_params.false_positive_rate = 0.3;
 
-    std::string in_dir;
+    std::string input;
     cp.add_param_string(
-        "in-dir", in_dir, "path to the input directory");
+        "input", input, "path to the input directory or file");
 
-    std::string out_dir;
+    std::string out_file;
     cp.add_param_string(
-        "out-dir", out_dir, "path to the output directory");
+        "out_file", out_file, "path to the output .cobs_classic index file ");
 
     std::string file_type = "any";
     cp.add_string(
@@ -209,6 +209,11 @@ int classic_construct(int argc, char** argv) {
         "keep-temporary", cobs::gopt_keep_temporary,
         "keep temporary files during construction");
 
+    std::string tmp_path;
+    cp.add_string(
+        "tmp-path", tmp_path,
+        "directory for intermediate index files, default: out_file + \".tmp\")");
+
     if (!cp.sort().process(argc, argv))
         return -1;
 
@@ -218,22 +223,44 @@ int classic_construct(int argc, char** argv) {
     index_params.canonicalize = canonicalize;
 
     // check output and maybe clobber
-    if (cobs::fs::exists(out_dir)) {
+    if (!tlx::ends_with(out_file, cobs::ClassicIndexHeader::file_extension)) {
+        LOG1 << "Error: classic COBS index file must end with "
+             << cobs::ClassicIndexHeader::file_extension;
+        return -1;
+    }
+    if (cobs::fs::exists(out_file)) {
         if (clobber) {
-            cobs::fs::remove_all(out_dir);
+            cobs::fs::remove_all(out_file);
         }
         else if (continue_) {
             // fall through
         }
         else {
-            die("Output directory exists, will not overwrite without --clobber");
+            die("Output file exists, will not overwrite without --clobber");
         }
     }
 
-    cobs::DocumentList filelist(in_dir, StringToFileType(file_type));
+    // if not set, make tmp path, and maybe clobber
+    if (tmp_path.empty()) {
+        tmp_path = out_file + ".tmp";
+    }
+    if (cobs::fs::exists(tmp_path)) {
+        if (clobber) {
+            cobs::fs::remove_all(tmp_path);
+        }
+        else if (continue_) {
+            // fall through
+        }
+        else {
+            die("Temporary directory exists, will not delete without --clobber");
+        }
+    }
+
+    // read file list
+    cobs::DocumentList filelist(input, StringToFileType(file_type));
     print_document_list(filelist, index_params.term_size);
 
-    cobs::classic_construct(filelist, out_dir, index_params);
+    cobs::classic_construct(filelist, out_file, tmp_path, index_params);
 
     return 0;
 }
@@ -298,13 +325,13 @@ int compact_construct(int argc, char** argv) {
     index_params.num_hashes = 1;
     index_params.false_positive_rate = 0.3;
 
-    std::string in_dir;
+    std::string input;
     cp.add_param_string(
-        "in-dir", in_dir, "path to the input directory");
+        "input", input, "path to the input directory or file");
 
-    std::string out_dir;
+    std::string out_file;
     cp.add_param_string(
-        "out-dir", out_dir, "path to the output directory");
+        "out_file", out_file, "path to the output .cobs_compact index file");
 
     cp.add_bytes(
         'm', "memory", index_params.mem_bytes,
@@ -319,10 +346,19 @@ int compact_construct(int argc, char** argv) {
         'f', "false-positive-rate", index_params.false_positive_rate,
         "false positive rate, default: 0.3");
 
+    cp.add_unsigned(
+        'k', "term-size", index_params.term_size,
+        "term size (k-mer size), default: 31");
+
     cp.add_size_t(
         'p', "page-size", index_params.page_size,
         "the page size of the compact the index, "
         "default: sqrt(#documents)");
+
+    bool canonicalize = false;
+    cp.add_flag(
+        'c', "canonicalize", canonicalize,
+        "canonicalize DNA k-mers, default: false");
 
     bool clobber = false;
     cp.add_flag(
@@ -334,15 +370,6 @@ int compact_construct(int argc, char** argv) {
         "continue", continue_,
         "continue in existing output directory");
 
-    cp.add_unsigned(
-        'k', "term-size", index_params.term_size,
-        "term size (k-mer size), default: 31");
-
-    bool canonicalize = false;
-    cp.add_flag(
-        'c', "canonicalize", canonicalize,
-        "canonicalize DNA k-mers, default: false");
-
     cp.add_size_t(
         'T', "threads", index_params.num_threads,
         "number of threads to use, default: max cores");
@@ -350,6 +377,11 @@ int compact_construct(int argc, char** argv) {
     cp.add_flag(
         "keep-temporary", cobs::gopt_keep_temporary,
         "keep temporary files during construction");
+
+    std::string tmp_path;
+    cp.add_string(
+        "tmp-path", tmp_path,
+        "directory for intermediate index files, default: out_file + \".tmp\")");
 
     if (!cp.sort().process(argc, argv))
         return -1;
@@ -359,19 +391,41 @@ int compact_construct(int argc, char** argv) {
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
 
-    if (cobs::fs::exists(out_dir)) {
+    // check output and maybe clobber
+    if (!tlx::ends_with(out_file, cobs::CompactIndexHeader::file_extension)) {
+        LOG1 << "Error: classic COBS index file must end with "
+             << cobs::CompactIndexHeader::file_extension;
+        return -1;
+    }
+    if (cobs::fs::exists(out_file)) {
         if (clobber) {
-            cobs::fs::remove_all(out_dir);
+            cobs::fs::remove_all(out_file);
         }
         else if (continue_) {
             // fall through
         }
         else {
-            die("Output directory exists, will not overwrite without --clobber");
+            die("Output file exists, will not overwrite without --clobber");
         }
     }
 
-    cobs::compact_construct(in_dir, out_dir, index_params);
+    // if not set, make tmp path, and maybe clobber
+    if (tmp_path.empty()) {
+        tmp_path = out_file + ".tmp";
+    }
+    if (cobs::fs::exists(tmp_path)) {
+        if (clobber) {
+            cobs::fs::remove_all(tmp_path);
+        }
+        else if (continue_) {
+            // fall through
+        }
+        else {
+            die("Temporary directory exists, will not delete without --clobber");
+        }
+    }
+
+    cobs::compact_construct(input, out_file, tmp_path, index_params);
 
     return 0;
 }

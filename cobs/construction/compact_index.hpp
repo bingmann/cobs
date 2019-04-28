@@ -44,7 +44,7 @@ struct CompactIndexParameters {
  */
 void compact_construct(
     const fs::path& in_dir, const fs::path& index_dir,
-    CompactIndexParameters index_params);
+    const fs::path& tmp_path, CompactIndexParameters index_params);
 
 void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,

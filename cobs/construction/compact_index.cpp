@@ -27,13 +27,19 @@ namespace cobs {
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
                            size_t mem_bytes, size_t num_threads) {
     bool all_combined = false;
+    fs::path result_file;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
         if (fs::is_directory(it->path())) {
             all_combined = classic_combine(
                 in_dir / it->path().filename(),
                 out_dir / it->path().filename(),
+                result_file,
                 mem_bytes, num_threads);
         }
+    }
+
+    if (!gopt_keep_temporary) {
+        fs::remove(in_dir);
     }
     return all_combined;
 }
@@ -144,12 +150,18 @@ void compact_combine_into_compact(
         ifs.close();
         if (!gopt_keep_temporary) {
             fs::remove(p);
+            fs::remove(p.parent_path());
         }
+    }
+
+    if (!gopt_keep_temporary) {
+        fs::remove(in_dir);
     }
     t.print("compact_combine_into_compact()");
 }
 
-void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
+void compact_construct(const fs::path& in_dir, const fs::path& index_file,
+                       const fs::path& tmp_path,
                        CompactIndexParameters params) {
     size_t iteration = 1;
 
@@ -252,24 +264,29 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_dir,
                  << "  num_threads: " << classic_params.num_threads;
 
             DocumentList batch_list(files);
-            fs::path classic_dir = index_dir / pad_index(iteration);
+            fs::path classic_dir = tmp_path / pad_index(iteration);
 
             classic_construct_from_documents(
                 batch_list, classic_dir / pad_index(batch_num), classic_params);
         });
 
     // combine classic indexes
-    while (!combine_classic_index(index_dir / pad_index(iteration),
-                                  index_dir / pad_index(iteration + 1),
+    while (!combine_classic_index(tmp_path / pad_index(iteration),
+                                  tmp_path / pad_index(iteration + 1),
                                   params.mem_bytes, params.num_threads)) {
         iteration++;
     }
 
     // combine classic indexes into one compact index
     compact_combine_into_compact(
-        index_dir / pad_index(iteration + 1),
-        index_dir / ("index" + CompactIndexHeader::file_extension),
+        tmp_path / pad_index(iteration + 1),
+        index_file,
         params.page_size, params.mem_bytes);
+
+    // cleanup: this will fail if not _all_ temporary files are removed
+    if (!gopt_keep_temporary) {
+        fs::remove(tmp_path);
+    }
 }
 
 } // namespace cobs
