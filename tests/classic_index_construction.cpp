@@ -15,7 +15,7 @@
 
 namespace fs = cobs::fs;
 
-static fs::path base_dir = "test/classic_index_construction";
+static fs::path base_dir = "data/classic_index_construction";
 static fs::path input_dir = base_dir / "input";
 static fs::path index_dir = base_dir / "index";
 static fs::path index_file = base_dir / "index.cobs_classic";

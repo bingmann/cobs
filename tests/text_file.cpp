@@ -12,7 +12,7 @@
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir = "test/resources/text/";
+static fs::path in_dir = "data/text/";
 
 TEST(text, process_txt1) {
     cobs::TextFile text(in_dir / "sample1.txt");

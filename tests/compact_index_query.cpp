@@ -14,7 +14,7 @@
 
 namespace fs = cobs::fs;
 
-static fs::path base_dir = "test/compact_index_query";
+static fs::path base_dir = "data/compact_index_query";
 static fs::path input_dir = base_dir / "input";
 static fs::path index_file = base_dir / "index.cobs_compact";
 static fs::path tmp_path = base_dir / "tmp";

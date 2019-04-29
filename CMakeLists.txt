@@ -2,7 +2,7 @@
 # CMakeLists.txt
 #
 # Copyright (c) 2018 Florian Gauger
-# Copyright (c) 2018 Timo Bingmann
+# Copyright (c) 2018-2019 Timo Bingmann
 #
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
@@ -12,118 +12,45 @@ cmake_policy(VERSION 3.9.2)
 
 project(cobs)
 
+# prohibit in-source builds
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+  message(SEND_ERROR "In-source builds are not allowed.")
+endif()
+
 # Set a default build type if none was specified
-set(default_build_type "Release")
+set(COBS_DEFAULT_BUILD_TYPE "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+  message(STATUS "Setting build type to '${COBS_DEFAULT_BUILD_TYPE}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${COBS_DEFAULT_BUILD_TYPE}" CACHE
     STRING "Choose the type of build." FORCE)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-if(UNIX AND NOT APPLE)
-    set(LINUX TRUE)
-endif()
+################################################################################
+### Options and Switches
 
-set(SOURCE_FILES
-        cobs/construction/classic_index.cpp
-        cobs/construction/classic_index.hpp
-        cobs/construction/compact_index.cpp
-        cobs/construction/compact_index.hpp
-        cobs/construction/ranfold_index.cpp
-        cobs/construction/ranfold_index.hpp
-        cobs/cortex_file.hpp
-        cobs/fasta_multifile.cpp
-        cobs/fasta_multifile.hpp
-        cobs/file/classic_index_header.cpp
-        cobs/file/classic_index_header.hpp
-        cobs/file/compact_index_header.cpp
-        cobs/file/compact_index_header.hpp
-        cobs/file/file_io_exception.hpp
-        cobs/file/header.hpp
-        cobs/file/kmer_buffer_header.cpp
-        cobs/file/kmer_buffer_header.hpp
-        cobs/file/ranfold_index_header.cpp
-        cobs/file/ranfold_index_header.hpp
-        cobs/kmer.hpp
-        cobs/kmer_buffer.hpp
-        cobs/query/classic_index/mmap_search_file.cpp
-        cobs/query/classic_index/mmap_search_file.hpp
-        cobs/query/classic_index/search_file.cpp
-        cobs/query/classic_index/search_file.hpp
-        cobs/query/classic_search.cpp
-        cobs/query/classic_search.hpp
-        cobs/query/compact_index/mmap_search_file.cpp
-        cobs/query/compact_index/mmap_search_file.hpp
-        cobs/query/compact_index/search_file.cpp
-        cobs/query/compact_index/search_file.hpp
-        cobs/query/ranfold_index/mmap_search_file.cpp
-        cobs/query/ranfold_index/mmap_search_file.hpp
-        cobs/query/ranfold_index/search_file.cpp
-        cobs/query/ranfold_index/search_file.hpp
-        cobs/query/search.hpp
-        cobs/settings.cpp
-        cobs/settings.hpp
-        cobs/util/calc_signature_size.cpp
-        cobs/util/calc_signature_size.hpp
-        cobs/util/error_handling.cpp
-        cobs/util/error_handling.hpp
-        cobs/util/file.hpp
-        cobs/util/misc.cpp
-        cobs/util/misc.hpp
-        cobs/util/parallel_for.cpp
-        cobs/util/parallel_for.hpp
-        cobs/util/process_file_batches.hpp
-        cobs/util/query.cpp
-        cobs/util/query.hpp
-        cobs/util/serialization.hpp
-        cobs/util/timer.cpp
-        cobs/util/timer.hpp
-        cobs/util/zip_stream.cpp
-        cobs/util/zip_stream.hpp
-        cobs/util/zip_stream_fwd.hpp
-        )
+# BUILD_SHARED_LIBS is a standard CMake variable, but we declare it here to
+# make it prominent in the GUI.
+option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
 
-if(NOT DEFINED OPENMP)
-    message(WARNING "OPENMP was not specified use: -DOPENMP=<ON/OFF>\nOPENMP default value ON is used")
-endif()
-option(OPENMP "use openmp" ON)
-if(OPENMP)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgomp")
-    add_definitions(-DNO_OPENMP)
-endif()
+################################################################################
+### Compiler Flags
 
-if(LINUX)
-    if(NOT DEFINED AIO)
-        message(WARNING "AIO was not specified use: -DAIO=<ON/OFF>\nAIO default value ON is used")
-    endif()
-    option(AIO "use linux aio to access index" ON)
-    if(AIO)
-        set(SOURCE_FILES ${SOURCE_FILES} cobs/query/compact_index/aio_search_file.hpp cobs/query/compact_index/aio_search_file.cpp cobs/util/aio.hpp cobs/util/aio.cpp)
-    else()
-        add_definitions(-DNO_AIO)
-    endif()
-else()
-    add_definitions(-DNO_AIO)
-endif()
+# variables to collect compile-time definitions, include dirs, and libraries
+set(COBS_DEFINITIONS "")
+set(COBS_INCLUDE_DIRS "")
+set(COBS_LINK_LIBRARIES "")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+
+# enable more warnings
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
+
+# enable warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++17 -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
-
-MESSAGE(STATUS "CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
-
-file(GLOB_RECURSE TEST_FILES
-  "${PROJECT_SOURCE_DIR}/tests/*.hpp" "${PROJECT_SOURCE_DIR}/tests/*.cpp")
-file(GLOB_RECURSE EXECUTABLE_FILES
-  "${PROJECT_SOURCE_DIR}/src/*.cpp")
-
-MESSAGE("SOURCE_FILES     ${SOURCE_FILES}")
-MESSAGE("TEST_FILES       ${TEST_FILES}")
-MESSAGE("EXECUTABLE_FILES ${EXECUTABLE_FILES}")
 
 # with run-time STL checks
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
@@ -139,34 +66,43 @@ if(OFF)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCOBS_HAVE_THREAD_SANITIZER=1")
 endif()
 
+message(STATUS "COBS CMAKE_CXX_FLAGS:" ${CMAKE_CXX_FLAGS})
+
 ################################################################################
+### Find Required Libraries
 
 ### find pthreads ###
 
 find_package(Threads REQUIRED)
 set(COBS_LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${COBS_LINK_LIBRARIES})
+if(CMAKE_USE_PTHREADS_INIT)
+  set(COBS_LINK_LIBRARIES pthread ${COBS_LINK_LIBRARIES})
+endif()
 
 ### use Google Test ###
 
 add_subdirectory(extlib/googletest)
 
+enable_testing()
+include(GoogleTest)
+
 ### use xxHash ###
 
 add_subdirectory(extlib/xxhash/cmake_unofficial)
+set(COBS_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/extlib/xxhash ${COBS_INCLUDE_DIRS})
 set(COBS_LINK_LIBRARIES xxhash ${COBS_LINK_LIBRARIES})
 
 ### use ZLIB ###
 
 find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-
+set(COBS_INCLUDE_DIRS ${ZLIB_INCLUDE_DIRS} ${COBS_INCLUDE_DIRS})
 set(COBS_LINK_LIBRARIES ${ZLIB_LIBRARIES} ${COBS_LINK_LIBRARIES})
 
 ### use Boost filesystem ###
 
 find_package(Boost 1.42.0 COMPONENTS system filesystem)
 if(${Boost_FOUND})
-  include_directories(${Boost_INCLUDE_DIRS})
+  set(COBS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS} ${COBS_INCLUDE_DIRS})
   set(COBS_LINK_LIBRARIES ${Boost_LIBRARIES} ${COBS_LINK_LIBRARIES})
 endif()
 
@@ -178,31 +114,15 @@ add_subdirectory(extlib/tlx)
 set(COBS_LINK_LIBRARIES tlx ${COBS_LINK_LIBRARIES})
 
 ################################################################################
+### Descend into Subdirectories
 
-include_directories(${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/extlib/xxhash)
+# descend into library source
+add_subdirectory(cobs)
 
-add_library(cobs_static STATIC ${SOURCE_FILES})
+# descend into programs
+add_subdirectory(src)
 
-target_link_libraries(cobs_static ${COBS_LINK_LIBRARIES})
-
-################################################################################
-
-file(COPY tests/resources DESTINATION test)
-
-foreach(target ${EXECUTABLE_FILES})
-  get_filename_component(target_name ${target} NAME_WE)
-  add_executable(${target_name} ${target})
-  target_link_libraries(${target_name} cobs_static)
-endforeach(target)
-
-################################################################################
-
-enable_testing()
-include(GoogleTest)
-add_executable(tests ${TEST_FILES} ${SOURCE_FILES})
-target_compile_definitions(tests PRIVATE cobs_test)
-target_link_libraries(tests cobs_static gtest gtest_main)
-gtest_add_tests(tests "" ${TEST_FILES})
+# descend into tests
+add_subdirectory(tests)
 
 ################################################################################

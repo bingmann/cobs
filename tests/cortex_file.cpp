@@ -11,7 +11,7 @@
 
 namespace fs = cobs::fs;
 
-static fs::path in_dir = "test/resources/cortex/";
+static fs::path in_dir = "data/cortex/";
 static fs::path in_cortex = in_dir / "document.ctx";
 static fs::path compare_document = in_dir / "document_sorted.txt";
 

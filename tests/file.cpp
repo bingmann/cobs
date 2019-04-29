@@ -19,7 +19,7 @@
 namespace fs = cobs::fs;
 
 TEST(file, base_name) {
-    fs::path out_path("test/out/file/classic_index.cobs_doc");
+    fs::path out_path("data/out/file/classic_index.cobs_doc");
     ASSERT_EQ("classic_index", cobs::base_name(out_path));
 }
 

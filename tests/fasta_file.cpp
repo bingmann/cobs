@@ -15,8 +15,8 @@
 
 namespace fs = cobs::fs;
 
-static fs::path input_dir = "test/resources/fasta/";
-static fs::path base_dir = "test/fasta_index";
+static fs::path input_dir = "data/fasta/";
+static fs::path base_dir = "data/fasta_index";
 static fs::path index_path = base_dir / "index.cobs_classic";
 static fs::path tmp_path = base_dir / "tmp";
 
