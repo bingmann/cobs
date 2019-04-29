@@ -21,6 +21,6 @@ add_library(cobs_static STATIC ${COBS_SOURCES})
 target_compile_definitions(cobs_static PUBLIC ${COBS_DEFINITIONS})
 target_include_directories(cobs_static PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(cobs_static SYSTEM PUBLIC ${COBS_INCLUDE_DIRS})
-target_link_libraries(cobs_static ${COBS_LINK_LIBRARIES})
+target_link_libraries(cobs_static PUBLIC ${COBS_LINK_LIBRARIES})
 
 ################################################################################

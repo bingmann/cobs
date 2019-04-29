@@ -153,8 +153,6 @@ int classic_construct(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
     cobs::ClassicIndexParameters index_params;
-    index_params.num_hashes = 1;
-    index_params.false_positive_rate = 0.3;
 
     std::string input;
     cp.add_param_string(
@@ -176,11 +174,13 @@ int classic_construct(int argc, char** argv) {
 
     cp.add_unsigned(
         'h', "num-hashes", index_params.num_hashes,
-        "number of hash functions, default: 1");
+        "number of hash functions, default: "
+        + std::to_string(index_params.num_hashes));
 
     cp.add_double(
         'f', "false-positive-rate", index_params.false_positive_rate,
-        "false positive rate, default: 0.3");
+        "false positive rate, default: "
+        + std::to_string(index_params.false_positive_rate));
 
     cp.add_unsigned(
         'k', "term-size", index_params.term_size,

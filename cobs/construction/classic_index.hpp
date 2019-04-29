@@ -32,9 +32,9 @@ struct ClassicIndexParameters {
     //! canonicalization flag for base pairs
     uint8_t canonicalize = 0;
     //! number of hash functions, provided by user
-    unsigned num_hashes;
+    unsigned num_hashes = 1;
     //! false positive rate, provided by user
-    double false_positive_rate = 0;
+    double false_positive_rate = 0.3;
     //! signature size, either provided by user or calculated from FPR
     uint64_t signature_size = 0;
     //! memory to use bytes to create index

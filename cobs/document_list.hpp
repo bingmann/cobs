@@ -23,6 +23,7 @@
 #include <iomanip>
 
 #include <tlx/logger.hpp>
+#include <tlx/string/ends_with.hpp>
 
 namespace cobs {
 
@@ -220,32 +221,33 @@ public:
 
     //! return FileType of path or FileType::Any for others.
     static FileType identify_filetype(const fs::path& path) {
-        if (tlx::ends_with(path, ".txt")) {
+        std::string spath = path.string();
+        if (tlx::ends_with(spath, ".txt")) {
             return FileType::Text;
         }
-        else if (tlx::ends_with(path, ".ctx") ||
-                 tlx::ends_with(path, ".cortex")) {
+        else if (tlx::ends_with(spath, ".ctx") ||
+                 tlx::ends_with(spath, ".cortex")) {
             return FileType::Cortex;
         }
-        else if (tlx::ends_with(path, ".cobs_doc")) {
+        else if (tlx::ends_with(spath, ".cobs_doc")) {
             return FileType::KMerBuffer;
         }
-        else if (tlx::ends_with(path, ".fa") ||
-                 tlx::ends_with(path, ".fa.gz") ||
-                 tlx::ends_with(path, ".fasta") ||
-                 tlx::ends_with(path, ".fasta.gz")) {
+        else if (tlx::ends_with(spath, ".fa") ||
+                 tlx::ends_with(spath, ".fa.gz") ||
+                 tlx::ends_with(spath, ".fasta") ||
+                 tlx::ends_with(spath, ".fasta.gz")) {
             return FileType::Fasta;
         }
-        else if (tlx::ends_with(path, ".fq") ||
-                 tlx::ends_with(path, ".fq.gz") ||
-                 tlx::ends_with(path, ".fastq") ||
-                 tlx::ends_with(path, ".fastq.gz")) {
+        else if (tlx::ends_with(spath, ".fq") ||
+                 tlx::ends_with(spath, ".fq.gz") ||
+                 tlx::ends_with(spath, ".fastq") ||
+                 tlx::ends_with(spath, ".fastq.gz")) {
             return FileType::Fastq;
         }
-        else if (tlx::ends_with(path, ".mfasta")) {
+        else if (tlx::ends_with(spath, ".mfasta")) {
             return FileType::FastaMulti;
         }
-        else if (tlx::ends_with(path, ".mfastq")) {
+        else if (tlx::ends_with(spath, ".mfastq")) {
             return FileType::FastqMulti;
         }
         else {
@@ -258,7 +260,7 @@ public:
         FileType ft = identify_filetype(path);
         if (ft == FileType::Text) {
             DocumentEntry de;
-            de.path_ = path;
+            de.path_ = path.string();
             de.type_ = FileType::Text;
             de.name_ = base_name(path);
             de.size_ = fs::file_size(path);
@@ -266,9 +268,9 @@ public:
             return DocumentEntryList({ de });
         }
         else if (ft == FileType::Cortex) {
-            CortexFile ctx(path);
+            CortexFile ctx(path.string());
             DocumentEntry de;
-            de.path_ = path;
+            de.path_ = path.string();
             de.type_ = FileType::Cortex;
             de.name_ = ctx.name_;
             de.size_ = fs::file_size(path);
@@ -280,7 +282,7 @@ public:
             std::ifstream is;
             KMerBufferHeader dh = deserialize_header<KMerBufferHeader>(is, path);
             DocumentEntry de;
-            de.path_ = path;
+            de.path_ = path.string();
             de.type_ = FileType::KMerBuffer;
             de.name_ = dh.name();
             de.size_ = fs::file_size(path);
@@ -291,9 +293,9 @@ public:
             return DocumentEntryList({ de });
         }
         else if (ft == FileType::Fasta) {
-            FastaFile fasta(path);
+            FastaFile fasta(path.string());
             DocumentEntry de;
-            de.path_ = path;
+            de.path_ = path.string();
             de.type_ = FileType::Fasta;
             de.name_ = cobs::base_name(path);
             de.size_ = fasta.size();
@@ -302,10 +304,10 @@ public:
         }
         else if (ft == FileType::FastaMulti) {
             DocumentEntryList list;
-            FastaMultifile mfasta(path);
+            FastaMultifile mfasta(path.string());
             for (size_t i = 0; i < mfasta.num_documents(); ++i) {
                 DocumentEntry de;
-                de.path_ = path;
+                de.path_ = path.string();
                 de.type_ = FileType::FastaMulti;
                 de.name_ = cobs::base_name(path) + '_' + pad_index(i);
                 de.size_ = mfasta.size(i);
@@ -316,9 +318,9 @@ public:
             return list;
         }
         else if (ft == FileType::Fastq) {
-            FastqFile fastq(path);
+            FastqFile fastq(path.string());
             DocumentEntry de;
-            de.path_ = path;
+            de.path_ = path.string();
             de.type_ = FileType::Fastq;
             de.name_ = cobs::base_name(path);
             de.size_ = fastq.size();
