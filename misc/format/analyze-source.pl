@@ -488,6 +488,8 @@ foreach my $file (@filelist)
     }
     elsif ($file =~ m!^extlib/!) {
     }
+    elsif ($file =~ m!^python/pybind11/!) {
+    }
     elsif ($file =~ /\.(h|cpp|hpp|h\.in|dox)$/) {
         process_cpp($file);
     }

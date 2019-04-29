@@ -125,4 +125,7 @@ add_subdirectory(src)
 # descend into tests
 add_subdirectory(tests)
 
+# descend into python
+add_subdirectory(python)
+
 ################################################################################

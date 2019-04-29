@@ -10,3 +10,6 @@
 [submodule "extlib/xxhash"]
 	path = extlib/xxhash
 	url = https://github.com/Cyan4973/xxHash.git
+[submodule "python/pybind11"]
+	path = python/pybind11
+	url = https://github.com/pybind/pybind11.git
