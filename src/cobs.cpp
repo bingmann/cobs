@@ -53,7 +53,7 @@ cobs::FileType StringToFileType(std::string& s) {
 
 static void print_document_list(cobs::DocumentList& filelist,
                                 size_t term_size) {
-    size_t max_kmers = 0, total_kmers = 0;
+    size_t min_kmers = size_t(-1), max_kmers = 0, total_kmers = 0;
 
     LOG1 << "--- document list (" << filelist.size() << " entries) ---";
 
@@ -63,18 +63,22 @@ static void print_document_list(cobs::DocumentList& filelist,
              << " " << term_size << "-mers " << num_terms
              << " : " << filelist[i].path_
              << " : " << filelist[i].name_;
+        min_kmers = std::min(min_kmers, num_terms);
         max_kmers = std::max(max_kmers, num_terms);
         total_kmers += num_terms;
     }
     LOG1 << "--- end of document list (" << filelist.size() << " entries) ---";
 
-    double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
 
     LOG1 << "documents: " << filelist.size();
-    LOG1 << "maximum " << term_size << "-mers: " << max_kmers;
-    LOG1 << "average " << term_size << "-mers: "
-         << static_cast<size_t>(avg_kmers);
-    LOG1 << "total " << term_size << "-mers: " << total_kmers;
+    if (filelist.size() != 0) {
+        double avg_kmers = static_cast<double>(total_kmers) / filelist.size();
+        LOG1 << "minimum " << term_size << "-mers: " << min_kmers;
+        LOG1 << "maximum " << term_size << "-mers: " << max_kmers;
+        LOG1 << "average " << term_size << "-mers: "
+             << static_cast<size_t>(avg_kmers);
+        LOG1 << "total " << term_size << "-mers: " << total_kmers;
+    }
 }
 
 int doc_list(int argc, char** argv) {
