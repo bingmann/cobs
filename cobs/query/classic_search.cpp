@@ -71,7 +71,7 @@ void counts_to_result(
     const std::vector<std::string>& file_names,
     const uint16_t* scores,
     std::vector<std::pair<uint16_t, std::string> >& result,
-    size_t threshold, size_t num_results)
+    size_t threshold, size_t num_results, size_t max_counts)
 {
     // uninitialized index vector
     tlx::simple_vector<
@@ -87,12 +87,16 @@ void counts_to_result(
     }
     num_results = std::min(num_results, count_threshold);
 
-    std::partial_sort(
-        sorted_indices.begin(), sorted_indices.begin() + num_results,
-        sorted_indices.begin() + count_threshold,
-        [&](auto v1, auto v2) {
-            return std::tie(v2.first, v1.second) < std::tie(v1.first, v2.second);
-        });
+    if (max_counts > 1)
+    {
+        std::partial_sort(
+            sorted_indices.begin(), sorted_indices.begin() + num_results,
+            sorted_indices.begin() + count_threshold,
+            [&](auto v1, auto v2) {
+                return (std::tie(v2.first, v1.second)
+                        < std::tie(v1.first, v2.second));
+            });
+    }
 
     result.resize(num_results);
 
@@ -248,7 +252,8 @@ void ClassicSearch::search(
         });
 
     timer_.active("sort results");
-    counts_to_result(file_names, scores, result, threshold_terms, num_results);
+    counts_to_result(file_names, scores, result, threshold_terms, num_results,
+                     hashes.size());
     deallocate_aligned(scores);
     timer_.stop();
 }
