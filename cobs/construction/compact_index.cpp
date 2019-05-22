@@ -26,15 +26,17 @@ namespace cobs {
 
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
                            size_t mem_bytes, size_t num_threads) {
-    bool all_combined = false;
+    bool all_combined = true;
     fs::path result_file;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
         if (fs::is_directory(it->path())) {
-            all_combined = classic_combine(
+            bool this_combined = classic_combine(
                 in_dir / it->path().filename(),
                 out_dir / it->path().filename(),
                 result_file,
                 mem_bytes, num_threads);
+            if (!this_combined)
+                all_combined = false;
         }
     }
 
