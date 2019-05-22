@@ -553,10 +553,12 @@ int query(int argc, char** argv) {
         "load-complete", cobs::gopt_load_complete_index,
         "load complete index into RAM for batch queries");
 
+    cp.add_size_t(
+        'T', "threads", cobs::gopt_threads,
+        "number of threads to use, default: max cores");
+
     if (!cp.sort().process(argc, argv))
         return -1;
-
-    cobs::gopt_threads = 1;
 
     if (index_files.size() != 1) {
         die("Supply one index file, TODO: add support for multiple.");

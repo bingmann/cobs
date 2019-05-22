@@ -100,12 +100,10 @@ void counts_to_result(
 
     result.resize(num_results);
 
-    parallel_for(
-        0, num_results, gopt_threads,
-        [&](size_t i) {
-            result[i] = std::make_pair(
-                sorted_indices[i].first, file_names[sorted_indices[i].second]);
-        });
+    for (size_t i = 0; i < num_results; ++i) {
+        result[i] = std::make_pair(
+            sorted_indices[i].first, file_names[sorted_indices[i].second]);
+    }
 }
 
 void ClassicSearch::compute_counts(
@@ -231,8 +229,8 @@ void ClassicSearch::search(
 
             LOG << "read_from_disk";
             thr_timer.active("io");
-            index_file_.read_from_disk(hashes, rows, score_begin, score_size,
-                                       score_buffer_size);
+            index_file_.read_from_disk(
+                hashes, rows, score_begin, score_size, score_buffer_size);
 
             if (index_file_.num_hashes() != 1) {
                 LOG << "aggregate_rows";
