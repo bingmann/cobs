@@ -749,10 +749,10 @@ int print_kmers(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    char kmer_buffer[kmer_size];
+    std::vector<char> kmer_buffer(kmer_size);
     for (size_t i = 0; i < query.size() - kmer_size; i++) {
         auto kmer = cobs::canonicalize_kmer(
-            query.data() + i, kmer_buffer, kmer_size);
+            query.data() + i, kmer_buffer.data(), kmer_size);
         std::cout << std::string(kmer, kmer_size) << '\n';
     }
 

@@ -12,6 +12,7 @@
 #include <cobs/util/query.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <unistd.h>
 
@@ -54,8 +55,11 @@ MMapHandle initialize_mmap(const fs::path& path)
     }
     else {
         LOG1 << "Reading complete index";
-        uint8_t* data_ptr = reinterpret_cast<uint8_t*>(
-            std::aligned_alloc(2 * 1024 * 1024, size));
+        void* ptr = nullptr;
+        if (posix_memalign(&ptr, 2 * 1024 * 1024, size)) {
+            print_errno("posix_memalign()");
+        }
+        uint8_t* data_ptr = reinterpret_cast<uint8_t*>(ptr);
         if (madvise(data_ptr, size, MADV_HUGEPAGE)) {
             print_errno("madvise failed for MADV_HUGEPAGE");
         }
