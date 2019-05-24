@@ -518,7 +518,7 @@ void process_query(
         }
     }
     else {
-        die("Pass a verbatim query of a query file.");
+        die("Pass a verbatim query or a query file.");
     }
 
     s.timer().print("search");
