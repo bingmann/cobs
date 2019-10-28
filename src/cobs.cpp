@@ -125,6 +125,11 @@ int doc_dump(int argc, char** argv) {
         'k', "term-size", term_size,
         "term size (k-mer size), default: 31");
 
+    bool canonicalize = false;
+    cp.add_flag(
+        'c', "canonicalize", canonicalize,
+        "canonicalize DNA k-mers, default: false");
+
     std::string file_type = "any";
     cp.add_string(
         "file-type", file_type,
@@ -140,10 +145,18 @@ int doc_dump(int argc, char** argv) {
     for (size_t i = 0; i < filelist.size(); ++i) {
         std::cerr << "document[" << i << "] : " << filelist[i].path_
                   << " : " << filelist[i].name_ << std::endl;
+        std::vector<char> kmer_buffer(term_size);
         filelist[i].process_terms(
             term_size,
             [&](const cobs::string_view& t) {
-                std::cout << t << '\n';
+                if (canonicalize) {
+                    auto kmer = cobs::canonicalize_kmer(
+                        t.data(), kmer_buffer.data(), term_size);
+                    std::cout << std::string(kmer, term_size) << '\n';
+                }
+                else {
+                    std::cout << t << '\n';
+                }
             });
         std::cout.flush();
         std::cerr << "document[" << i << "] : "
