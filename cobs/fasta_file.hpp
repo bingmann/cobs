@@ -20,6 +20,7 @@
 
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
+#include <tlx/string/appendline.hpp>
 #include <tlx/string/ends_with.hpp>
 
 #include <map>
@@ -54,22 +55,22 @@ public:
     void compute_index(std::istream& is) {
         LOG1 << "FastaFile: computing index for " << path_;
 
-        char line[64 * 1024];
+        std::string line;
         size_t sequence_size = 0;
         sequence_count_ = 0;
         size_ = 0;
 
-        is.getline(line, sizeof(line));
+        std::getline(is, line);
         if (is.eof()) return;
         die_unless(is.good());
 
-        if (is.gcount() == 0 || (line[0] != '>' && line[0] != ';'))
+        if (line.size() == 0 || (line[0] != '>' && line[0] != ';'))
             die("FastaFile: file does not start with > or ; - " << path_);
-        size_ += is.gcount();
+        size_ += line.size() + 1;
 
-        while (is.getline(line, sizeof(line))) {
-            size_ += is.gcount();
-            if (is.gcount() == 0 || line[0] == '>' || line[0] == ';') {
+        while (std::getline(is, line)) {
+            size_ += line.size() + 1;
+            if (line.size() == 0 || line[0] == '>' || line[0] == ';') {
                 // comment or empty line restart the term buffer
                 if (sequence_size != 0) {
                     sequence_size_hist_[sequence_size]++;
@@ -78,7 +79,7 @@ public:
                 sequence_size = 0;
                 continue;
             }
-            sequence_size += is.gcount() - 1;
+            sequence_size += line.size();
         }
         if (sequence_size != 0) {
             sequence_size_hist_[sequence_size]++;
@@ -151,25 +152,32 @@ public:
 
     template <typename Callback>
     void process_terms(std::istream& is, size_t term_size, Callback callback) {
-        char line[64 * 1024];
+        std::string line;
         size_t pos = 0;
 
-        while (is.getline(line + pos, sizeof(line) - pos)) {
-            if (is.gcount() == 0 || line[pos] == '>' || line[pos] == ';') {
+        while (tlx::appendline(is, line)) {
+            if (line.size() == pos || line[pos] == '>' || line[pos] == ';') {
                 // comment or empty line restart the term buffer
-                pos = 0;
+                line.clear();
                 continue;
             }
 
-            pos += is.gcount() - 1;
             // process terms continued on next line
-            for (size_t i = 0; i + term_size <= pos; ++i) {
-                callback(string_view(line + i, term_size));
+            LOG1 << "llp: " << line;
+            for (size_t i = 0; i + term_size <= line.size(); ++i) {
+                callback(string_view(line.data() + i, term_size));
             }
-            if (pos > term_size - 1) {
-                std::copy(line + pos - (term_size - 1), line + pos,
-                          line);
-                pos = term_size - 1;
+            if (line.size() > term_size - 1) {
+                LOG1 << "l1: " << line;
+                std::copy(line.data() + line.size() - (term_size - 1),
+                          line.data() + line.size(),
+                          line.data());
+                line.resize(term_size - 1);
+                LOG1 << "l2: " << line;
+                pos = line.size();
+            }
+            else {
+                pos = 0;
             }
         }
     }

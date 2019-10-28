@@ -54,29 +54,28 @@ public:
     void compute_index(std::istream& is) {
         LOG1 << "FastqFile: computing index for " << path_;
 
-        char line[64 * 1024];
+        std::string line;
         sequence_count_ = 0;
         size_ = 0;
 
         size_t line_num = 0;
-        while (is.getline(line, sizeof(line))) {
-            die_unless(is.gcount() < (int)sizeof(line));
-            size_ += is.gcount();
+        while (std::getline(is, line)) {
+            size_ += line.size() + 1;
 
             if (line_num % 4 == 0) {
-                if (is.gcount() == 0 || line[0] != '@') {
+                if (line.size() == 0 || line[0] != '@') {
                     die("FastqFile: line " << line_num <<
                         " does not start with @ - " << path_);
                 }
             }
             else if (line_num % 4 == 1) {
                 // sequence/read line
-                size_t sequence_size = is.gcount() - 1;
+                size_t sequence_size = line.size();
                 sequence_size_hist_[sequence_size]++;
                 sequence_count_++;
             }
             else if (line_num % 4 == 2) {
-                if (is.gcount() == 0 || line[0] != '+') {
+                if (line.size() == 0 || line[0] != '+') {
                     die("FastqFile: line " << line_num <<
                         " does not start with + - " << path_);
                 }
@@ -153,27 +152,24 @@ public:
 
     template <typename Callback>
     void process_terms(std::istream& is, size_t term_size, Callback callback) {
-        char line[64 * 1024];
+        std::string line;
 
         size_t line_num = 0;
-        while (is.getline(line, sizeof(line))) {
-            die_unless(is.gcount() < (int)sizeof(line));
-
+        while (std::getline(is, line)) {
             if (line_num % 4 == 0) {
-                if (is.gcount() == 0 || line[0] != '@') {
+                if (line.size() == 0 || line[0] != '@') {
                     die("FastqFile: line " << line_num <<
                         " does not start with @ - " << path_);
                 }
             }
             else if (line_num % 4 == 1) {
-                // process terms in sequence/read line. gcount() is 1 larger
-                // than the character count (newline is included).
-                for (size_t i = 0; i + term_size < (size_t)is.gcount(); ++i) {
-                    callback(string_view(line + i, term_size));
+                // process terms in sequence/read line.
+                for (size_t i = 0; i + term_size <= line.size(); ++i) {
+                    callback(string_view(line.data() + i, term_size));
                 }
             }
             else if (line_num % 4 == 2) {
-                if (is.gcount() == 0 || line[0] != '+') {
+                if (line.size() == 0 || line[0] != '+') {
                     die("FastqFile: line " << line_num <<
                         " does not start with + - " << path_);
                 }
