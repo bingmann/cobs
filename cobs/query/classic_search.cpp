@@ -35,9 +35,10 @@
 
 namespace cobs {
 
-void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
-                                  const std::string& query) {
-
+void ClassicSearch::create_hashes(
+    std::vector<uint64_t>& hashes, const std::string& query,
+    char* canonicalize_buffer)
+{
     uint32_t term_size = index_file_.term_size();
     size_t num_hashes = index_file_.num_hashes();
     uint8_t canonicalize = index_file_.canonicalize();
@@ -55,7 +56,6 @@ void ClassicSearch::create_hashes(std::vector<uint64_t>& hashes,
         }
     }
     else if (canonicalize == 1) {
-        char canonicalize_buffer[term_size];
         for (size_t i = 0; i < num_terms; i++) {
             const char* normalized_kmer =
                 canonicalize_kmer(query_8 + i, canonicalize_buffer, term_size);
@@ -191,7 +191,9 @@ void ClassicSearch::search(
     size_t scores_totalsize = counts_size;
     uint16_t* scores = allocate_aligned<uint16_t>(scores_totalsize, 16);
     std::vector<uint64_t> hashes;
-    create_hashes(hashes, query);
+
+    std::vector<char> canonicalize_buffer(term_size);
+    create_hashes(hashes, query, canonicalize_buffer.data());
     timer_.stop();
 
     size_t score_batch_size = 128;

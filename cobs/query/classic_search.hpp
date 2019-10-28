@@ -26,7 +26,8 @@ private:
                         const uint8_t* rows, size_t size, size_t buffer_size);
     void aggregate_rows(size_t hashes_size, uint8_t* rows, size_t size,
                         size_t buffer_size);
-    void create_hashes(std::vector<uint64_t>& hashes, const std::string& query);
+    void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
+                       char* canonicalize_buffer);
 
 public:
     ClassicSearch(IndexSearchFile& index_file)
