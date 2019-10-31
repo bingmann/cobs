@@ -6,10 +6,11 @@ However, unlike Mantis and other previous work, COBS does not need the complete 
 
 ![cobs-architecture](https://user-images.githubusercontent.com/2604907/58323540-91b52100-7e24-11e9-933d-98b9b24ae041.png)
 
-More information about COBS is presented in [our research paper](https://arxiv.org/abs/1905.09624):
+More information about COBS is presented in [our current research paper](https://arxiv.org/abs/1905.09624):
 Timo Bingmann, Phelim Bradley, Florian Gauger, and Zamin Iqbal.
-COBS: a Compact Bit-Sliced Signature Index
-arXiv:1905.09624, May 2019.
+"COBS: a Compact Bit-Sliced Signature Index".
+In: *26th International Symposium on String Processing and Information Retrieval (SPIRE)*. pages 285-303. Spinger. October 2019.
+preprint arXiv:1905.09624.
 
 # Installation and First Steps
 
