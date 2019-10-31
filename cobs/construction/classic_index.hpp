@@ -35,7 +35,8 @@ struct ClassicIndexParameters {
     unsigned num_hashes = 1;
     //! false positive rate, provided by user
     double false_positive_rate = 0.3;
-    //! signature size, either provided by user or calculated from FPR
+    //! signature size, either provided by user or calculated from
+    //! false_positive_rate if zero.
     uint64_t signature_size = 0;
     //! memory to use bytes to create index
     uint64_t mem_bytes = get_memory_size(80);

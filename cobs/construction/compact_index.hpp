@@ -25,11 +25,11 @@ struct CompactIndexParameters {
     //! length of terms / k-mers
     unsigned term_size = 31;
     //! canonicalization flag for base pairs
-    uint8_t canonicalize = false;
+    uint8_t canonicalize = 0;
     //! number of hash functions, provided by user
-    unsigned num_hashes;
+    unsigned num_hashes = 1;
     //! false positive rate, provided by user
-    double false_positive_rate = 0;
+    double false_positive_rate = 0.3;
     //! page or block size of filters with common fpr
     uint64_t page_size = 0;
     //! memory to use bytes to create index
