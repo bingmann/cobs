@@ -737,22 +737,6 @@ int print_parameters(int argc, char** argv) {
     return 0;
 }
 
-int print_basepair_map(int, char**) {
-    char basepair_map[256];
-    memset(basepair_map, 0, sizeof(basepair_map));
-    basepair_map['A'] = 'T';
-    basepair_map['C'] = 'G';
-    basepair_map['G'] = 'C';
-    basepair_map['T'] = 'A';
-    for (size_t i = 0; i < sizeof(basepair_map); ++i) {
-        std::cout << int(basepair_map[i]) << ',';
-        if (i % 16 == 15) {
-            std::cout << '\n';
-        }
-    }
-    return 0;
-}
-
 int print_kmers(int argc, char** argv) {
     tlx::CmdlineParser cp;
 
@@ -1197,10 +1181,6 @@ struct SubTool subtools[] = {
     {
         "print-kmers", &print_kmers, true,
         "print all canonical kmers from <query>"
-    },
-    {
-        "print-basepair-map", &print_basepair_map, true,
-        "print canonical basepair character mapping"
     },
     {
         "benchmark-fpr", &benchmark_fpr, true,

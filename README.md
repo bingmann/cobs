@@ -50,7 +50,7 @@ Maybe the most important is `--canonicalize` to enable k-mer DNA canonicalizatio
 
 COBS has a simple command line query tool:
 ```
-src/cobs query -i example.cobs_compact CTDNIETFYCTNSYRYENVPRPIYVWVLFQEDEWHGYR
+src/cobs query -i example.cobs_compact AGTCAACGCTAAGGCATTTCCCCCCTGCCTCCTGCCTGCTGCCAAGCCCT
 ```
 or a fasta file of queries with
 ```
