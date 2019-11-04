@@ -42,7 +42,7 @@ struct ClassicIndexParameters {
     uint64_t mem_bytes = get_memory_size(80);
     //! number of threads to use
     size_t num_threads = gopt_threads;
-    //! log prefix
+    //! log prefix (used by compact index construction)
     std::string log_prefix;
 };
 

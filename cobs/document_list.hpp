@@ -55,7 +55,7 @@ struct DocumentEntry {
     size_t subdoc_index_ = 0;
     //! fixed term (term) size or zero
     size_t term_size_ = 0;
-    //! number of terms
+    //! number of terms if fixed size
     size_t term_count_ = 0;
 
     //! default sort operator
@@ -339,8 +339,16 @@ public:
     size_t size() const { return list_.size(); }
 
     //! return DocumentEntry index
-    const DocumentEntry& operator [] (size_t i) {
+    const DocumentEntry& operator [] (size_t i) const {
         return list_.at(i);
+    }
+
+    //! sort files by path
+    void sort_by_path() {
+        std::sort(list_.begin(), list_.end(),
+                  [](const DocumentEntry& d1, const DocumentEntry& d2) {
+                      return d1.path_ < d2.path_;
+                  });
     }
 
     //! sort files by size

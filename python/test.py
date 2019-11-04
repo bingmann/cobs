@@ -1,9 +1,14 @@
-import cobs
+import cobs_index as cobs
 
 assert cobs.add(1, 2) == 3
 assert cobs.subtract(1, 2) == -1
 
-index_params = cobs.ClassicIndexParameters()
-index_params.term_size = 20
+list = cobs.doc_list('/home/tb/2/cobs-experiments')
+list.sort_by_path()
+for f in list:
+    print(f.size)
 
-cobs.construct_classic("hello", "output", index_params)
+#index_params = cobs.ClassicIndexParameters()
+#index_params.term_size = 20
+
+#cobs.classic_construct("hello", "output.cobs_classic", index_params, clobber=True)

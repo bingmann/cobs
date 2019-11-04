@@ -9,8 +9,8 @@
 add_subdirectory(pybind11)
 pybind11_add_module(cobs_python main.cpp)
 
-# rename cobs_python target output to cobs
-set_target_properties(cobs_python PROPERTIES OUTPUT_NAME cobs)
+# rename cobs_python target output to cobs-index
+set_target_properties(cobs_python PROPERTIES OUTPUT_NAME cobs_index)
 target_link_libraries(cobs_python PRIVATE cobs_static)
 
 ################################################################################

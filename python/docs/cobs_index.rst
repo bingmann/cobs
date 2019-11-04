@@ -1,0 +1,1 @@
+.. automodule:: cobs_index

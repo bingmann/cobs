@@ -91,7 +91,7 @@ int doc_list(int argc, char** argv) {
     std::string path;
     cp.add_param_string(
         "path", path,
-        "path to documents to dump");
+        "path to documents to list");
 
     std::string file_type = "any";
     cp.add_string(
