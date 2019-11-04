@@ -9,7 +9,9 @@
 #include <pybind11/pybind11.h>
 
 #include <cobs/construction/classic_index.hpp>
+#include <cobs/construction/compact_index.hpp>
 #include <cobs/file/classic_index_header.hpp>
+#include <cobs/file/compact_index_header.hpp>
 
 #include <cobs/settings.hpp>
 
@@ -54,6 +56,34 @@ void classic_construct(
     cobs::classic_construct(filelist, out_file, tmp_path, index_params);
 }
 
+void classic_construct_list(
+    const cobs::DocumentList& list, const std::string& out_file,
+    const cobs::ClassicIndexParameters& index_params,
+    std::string tmp_path)
+{
+    cobs::classic_construct(list, out_file, tmp_path, index_params);
+}
+
+/******************************************************************************/
+
+void compact_construct(
+    const std::string& input, const std::string& out_file,
+    const cobs::CompactIndexParameters& index_params,
+    std::string file_type, std::string tmp_path)
+{
+    // read file list
+    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    cobs::compact_construct(filelist, out_file, tmp_path, index_params);
+}
+
+void compact_construct_list(
+    const cobs::DocumentList& list, const std::string& out_file,
+    const cobs::CompactIndexParameters& index_params,
+    std::string tmp_path)
+{
+    cobs::compact_construct(list, out_file, tmp_path, index_params);
+}
+
 /******************************************************************************/
 
 int add(int i, int j) {
@@ -67,17 +97,27 @@ PYBIND11_MODULE(cobs_index, m) {
         COBS Python Interface
         ---------------------
         .. currentmodule:: cobs_index
+
+        .. rubric:: Classes and Types
         .. autosummary::
            :toctree: _generate
 
            FileType
            DocumentEntry
            DocumentList
-           doc_list
            ClassicIndexParameters
+           CompactIndexParameters
+
+        .. rubric:: Methods
+
+        .. autosummary::
+           :toctree: _generate
+
+           doc_list
            classic_construct
-           add
-           subtract
+           classic_construct_list
+           compact_construct
+           compact_construct_list
     )pbdoc";
 
     /**************************************************************************/
@@ -85,7 +125,7 @@ PYBIND11_MODULE(cobs_index, m) {
 
     using cobs::FileType;
     py::enum_<FileType>(
-        m, "FileType", py::arithmetic(), "Indexable file types")
+        m, "FileType", py::arithmetic(), "Enum of indexable file types")
     .value("Any", FileType::Any)
     .value("Text", FileType::Text)
     .value("Cortex", FileType::Cortex)
@@ -220,20 +260,102 @@ Construct a COBS Classic Index from a path of input files.
         py::arg("file_type") = "any",
         py::arg("tmp_path") = "");
 
-    /**************************************************************************/
-    //
+    m.def(
+        "classic_construct_list", &classic_construct_list, R"pbdoc(
+
+Construct a COBS Classic Index from a pre-populated DocumentList object.
+
+:param DocumentList input: DocumentList object of documents to index
+:param str out_file: path to the output ``.cobs_classic`` index file
+:param ClassicIndexParameters index_params: instance of classic index parameter object
+:param str tmp_path: directory for intermediate index files, default: ``out_file`` + ``.tmp``
+
+        )pbdoc",
+        py::arg("list"),
+        py::arg("out_file"),
+        py::arg("index_params"),
+        py::arg("tmp_path") = "");
 
     /**************************************************************************/
+    // CompactIndexParameters
 
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
-        Some other explanation about the add function.
-    )pbdoc");
+    using cobs::CompactIndexParameters;
+    py::class_<CompactIndexParameters>(
+        m, "CompactIndexParameters",
+        "Parameter object for compact_construct()")
+    .def(py::init<>(),
+         "constructor, fills the object with default parameters.")
+    .def_readwrite(
+        "term_size", &CompactIndexParameters::term_size,
+        "length of terms / k-mers, default 31")
+    .def_readwrite(
+        "canonicalize", &CompactIndexParameters::canonicalize,
+        "canonicalization flag for base pairs, default false")
+    .def_readwrite(
+        "num_hashes", &CompactIndexParameters::num_hashes,
+        "number of hash functions, provided by user, default 1")
+    .def_readwrite(
+        "false_positive_rate", &CompactIndexParameters::false_positive_rate,
+        "false positive rate, provided by user, default 0.3")
+    .def_readwrite(
+        "page_size", &CompactIndexParameters::page_size,
+        "page size (number of documents grouped into a classic index with "
+        "identical parameters), either provided by user or calculated "
+        "from number of documents if zero, default 0")
+    .def_readwrite(
+        "mem_bytes", &CompactIndexParameters::mem_bytes,
+        "memory to use bytes to create index, default 80% of RAM")
+    .def_readwrite(
+        "num_threads", &CompactIndexParameters::num_threads,
+        "number of threads to use, default all cores")
+    .def_readwrite(
+        "clobber", &CompactIndexParameters::clobber,
+        "clobber erase output directory if it exists, default false")
+    .def_readwrite(
+        "continue", &CompactIndexParameters::continue_,
+        "continue in existing output directory, default false")
+    .def_readwrite(
+        "keep_temporary", &CompactIndexParameters::keep_temporary,
+        "keep temporary files during construction, default false");
 
-    m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
-        Subtract two numbers
-        Some other explanation about the subtract function.
-    )pbdoc");
+    /**************************************************************************/
+    // compact_construct()
+
+    m.def(
+        "compact_construct", &compact_construct, R"pbdoc(
+
+Construct a COBS Compact Index from a path of input files.
+
+:param str input: path to the input directory or file
+:param str out_file: path to the output ``.cobs_compact`` index file
+:param CompactIndexParameters index_params: instance of compact index parameter object
+:param str file_type: filter input documents by file type (any, text, cortex, fasta, etc), default: any
+:param str tmp_path: directory for intermediate index files, default: ``out_file`` + ``.tmp``
+
+        )pbdoc",
+        py::arg("input"),
+        py::arg("out_file"),
+        py::arg("index_params"),
+        py::arg("file_type") = "any",
+        py::arg("tmp_path") = "");
+
+    m.def(
+        "compact_construct_list", &compact_construct_list, R"pbdoc(
+
+Construct a COBS Compact Index from a pre-populated DocumentList object.
+
+:param DocumentList input: DocumentList object of documents to index
+:param str out_file: path to the output ``.cobs_compact`` index file
+:param CompactIndexParameters index_params: instance of compact index parameter object
+:param str tmp_path: directory for intermediate index files, default: ``out_file`` + ``.tmp``
+
+        )pbdoc",
+        py::arg("list"),
+        py::arg("out_file"),
+        py::arg("index_params"),
+        py::arg("tmp_path") = "");
+
+    /**************************************************************************/
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

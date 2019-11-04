@@ -164,7 +164,7 @@ void compact_combine_into_compact(
     t.print("compact_combine_into_compact()");
 }
 
-void compact_construct(const fs::path& in_dir, const fs::path& index_file,
+void compact_construct(DocumentList doc_list, const fs::path& index_file,
                        fs::path tmp_path, CompactIndexParameters params) {
     size_t iteration = 1;
 
@@ -175,7 +175,6 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
     }
 
     // read file list, sort by size
-    DocumentList doc_list(in_dir);
     doc_list.sort_by_size();
 
     if (params.page_size == 0) {

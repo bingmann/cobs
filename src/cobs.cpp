@@ -317,6 +317,11 @@ int compact_construct(int argc, char** argv) {
     cp.add_param_string(
         "out_file", out_file, "path to the output .cobs_compact index file");
 
+    std::string file_type = "any";
+    cp.add_string(
+        "file-type", file_type,
+        "filter input documents by file type (any, text, cortex, fasta, etc)");
+
     cp.add_bytes(
         'm', "memory", index_params.mem_bytes,
         "memory in bytes to use, default: " +
@@ -376,7 +381,11 @@ int compact_construct(int argc, char** argv) {
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
 
-    cobs::compact_construct(input, out_file, tmp_path, index_params);
+    // read file list
+    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    print_document_list(filelist, index_params.term_size);
+
+    cobs::compact_construct(filelist, out_file, tmp_path, index_params);
 
     return 0;
 }

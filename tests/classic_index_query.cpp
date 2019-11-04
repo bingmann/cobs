@@ -44,7 +44,8 @@ TEST_F(classic_index_query, all_included_small_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
+    cobs::classic_construct(
+        cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -69,7 +70,8 @@ TEST_F(classic_index_query, one_included_small_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
+    cobs::classic_construct(
+        cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -93,7 +95,8 @@ TEST_F(classic_index_query, one_included_large_batch) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
+    cobs::classic_construct(
+        cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -117,7 +120,8 @@ TEST_F(classic_index_query, false_positive) {
     index_params.false_positive_rate = 0.1;
     index_params.canonicalize = 1;
 
-    cobs::classic_construct(input_dir, index_path, tmp_path, index_params);
+    cobs::classic_construct(
+        cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
     cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
     cobs::ClassicSearch s_base(s_mmap);
 

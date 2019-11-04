@@ -146,13 +146,13 @@ public:
     using DocumentEntryList = std::vector<DocumentEntry>;
 
     //! accept a file list, sort by name
-    DocumentList(const DocumentEntryList& list)
+    explicit DocumentList(const DocumentEntryList& list)
         : list_(list) {
         std::sort(list_.begin(), list_.end());
     }
 
     //! read a directory, filter files
-    DocumentList(const fs::path& root, FileType filter = FileType::Any) {
+    explicit DocumentList(const fs::path& root, FileType filter = FileType::Any) {
         std::vector<fs::path> paths;
         if (fs::is_directory(root)) {
             fs::recursive_directory_iterator it(root), end;

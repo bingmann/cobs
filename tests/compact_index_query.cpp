@@ -45,7 +45,8 @@ TEST_F(compact_index_query, all_included_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
     cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -71,7 +72,8 @@ TEST_F(compact_index_query, one_included_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
     cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 
@@ -96,7 +98,8 @@ TEST_F(compact_index_query, false_positive_mmap) {
     index_params.page_size = 2;
     index_params.canonicalize = 1;
 
-    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
     cobs::CompactIndexMMapSearchFile s_mmap(index_file);
     cobs::ClassicSearch s_base(s_mmap);
 

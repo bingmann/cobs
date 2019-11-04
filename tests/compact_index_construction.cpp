@@ -47,7 +47,8 @@ TEST_F(compact_index_construction, padding) {
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 16;
 
-    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
 
     // read compact index header, check page_size alignment of data
     std::ifstream ifs;
@@ -78,7 +79,8 @@ TEST_F(compact_index_construction, deserialization) {
     index_params.page_size = 2;
     index_params.keep_temporary = true;
 
-    cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
 
     // read compact index header and check fields
     std::vector<std::vector<uint8_t> > data;

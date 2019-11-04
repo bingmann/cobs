@@ -55,7 +55,8 @@ TEST_F(classic_index_construction, deserialization) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
 
-    cobs::classic_construct(input_dir, index_file, tmp_path, index_params);
+    cobs::classic_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
 
     // read classic index and check header fields
     std::vector<uint8_t> data;
@@ -112,7 +113,7 @@ TEST_F(classic_index_construction, combine) {
         index_params.false_positive_rate = 0.1;
 
         cobs::classic_construct(
-            input_dir / pad_index(i),
+            cobs::DocumentList(input_dir / pad_index(i)),
             index_dir / (pad_index(i) + ".cobs_classic"),
             tmp_path, index_params);
     }

@@ -49,7 +49,7 @@ struct CompactIndexParameters {
  * documents by file size and then splits them into several directories.
  */
 void compact_construct(
-    const fs::path& in_dir, const fs::path& index_dir,
+    DocumentList doc_list, const fs::path& index_dir,
     fs::path tmp_path, CompactIndexParameters index_params);
 
 void compact_combine_into_compact(
