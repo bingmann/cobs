@@ -163,17 +163,14 @@ public:
             }
 
             // process terms continued on next line
-            LOG1 << "llp: " << line;
             for (size_t i = 0; i + term_size <= line.size(); ++i) {
                 callback(string_view(line.data() + i, term_size));
             }
             if (line.size() > term_size - 1) {
-                LOG1 << "l1: " << line;
                 std::copy(line.data() + line.size() - (term_size - 1),
                           line.data() + line.size(),
                           line.data());
                 line.resize(term_size - 1);
-                LOG1 << "l2: " << line;
                 pos = line.size();
             }
             else {
