@@ -289,7 +289,7 @@ const uint16_t expansion[] = {
     1, 1, 1, 1, 1, 1, 1, 1
 };
 
-const auto expansion_128 = reinterpret_cast<const __m128i_u*>(expansion);
+const auto expansion_128 = reinterpret_cast<const __m128i*>(expansion);
 
 void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uint8_t* rows, size_t row_size) {
     #pragma omp declare reduction (merge : std::vector<uint16_t> :                                          \
@@ -298,7 +298,7 @@ void compute_counts(size_t hashes_size, std::vector<uint16_t>& counts, const uin
     #pragma omp parallel reduction(merge: counts)
     {
 //        auto counts_64 = reinterpret_cast<uint64_t*>(counts.data());
-        auto counts_128 = reinterpret_cast<__m128i_u*>(counts.data());
+        auto counts_128 = reinterpret_cast<__m128i*>(counts.data());
         #pragma omp for
         for (uint64_t i = 0; i < hashes_size; i += 1) {
             auto rows_8 = rows + i * row_size;

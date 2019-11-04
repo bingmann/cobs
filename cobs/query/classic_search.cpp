@@ -111,12 +111,12 @@ void ClassicSearch::compute_counts(
     const uint8_t* rows, size_t size, size_t buffer_size)
 {
 #if __SSE2__
-    auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
+    auto expansion_128 = reinterpret_cast<const __m128i*>(s_expansion_128);
 #endif
     uint64_t num_hashes = index_file_.num_hashes();
 
 #if __SSE2__
-    auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
+    auto counts_128 = reinterpret_cast<__m128i*>(scores);
 #else
     auto counts_64 = reinterpret_cast<uint64_t*>(scores);
 #endif
@@ -264,7 +264,7 @@ const uint64_t ClassicSearch::s_expansion[] = {
     281479271677952, 281479271677953, 281479271743488, 281479271743489
 };
 
-const uint16_t ClassicSearch::s_expansion_128[] = {
+alignas(16) const uint16_t ClassicSearch::s_expansion_128[] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
