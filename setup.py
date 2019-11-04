@@ -3,17 +3,16 @@ import re
 import sys
 import platform
 import subprocess
+import unittest
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
-
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
-
 
 class CMakeBuild(build_ext):
     def run(self):
@@ -56,15 +55,22 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
-setup(
-    name='cobs_index',
-    version='0.1',
-    author='Timo Bingmann',
-    author_email='tbdev@panthema.net',
-    description='Compact Bit-Sliced Signature Index (COBS)',
-    long_description='',
-    url="https://github.com/bingmann/cobs",
-    ext_modules=[CMakeExtension('cobs_index')],
-    cmdclass=dict(build_ext=CMakeBuild),
-    zip_safe=False,
-)
+def test_suite():
+    test_loader = unittest.TestLoader()
+    test_suite = test_loader.discover('python/tests', pattern='*_test.py')
+    return test_suite
+
+if __name__ == '__main__':
+    setup(
+        name='cobs_index',
+        version='0.1',
+        author='Timo Bingmann',
+        author_email='tbdev@panthema.net',
+        description='Compact Bit-Sliced Signature Index (COBS)',
+        long_description='',
+        url="https://github.com/bingmann/cobs",
+        ext_modules=[CMakeExtension('cobs_index')],
+        cmdclass=dict(build_ext=CMakeBuild),
+        zip_safe=False,
+        test_suite='setup.test_suite',
+    )

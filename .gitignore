@@ -5,3 +5,6 @@ build/
 cmake-build-release
 python/docs/_build
 python/docs/_generate
+*.cobs_cache
+*.cobs_classic
+*.cobs_compact

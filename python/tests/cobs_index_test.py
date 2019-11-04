@@ -1,0 +1,46 @@
+import unittest
+import os
+
+import cobs_index as cobs
+
+mydir = os.path.dirname(os.path.realpath(__file__))
+datadir = os.path.realpath(mydir + "/../../tests/data")
+
+class MainTest(unittest.TestCase):
+    # read a directory containing FastA files
+    def test_doc_list(self):
+        l = cobs.doc_list(datadir + "/fasta")
+        self.assertEqual(l.size(), 7)
+
+    # construct classic index and run queries
+    def test_classic_construct_query(self):
+        index_file = datadir + "/python_test.cobs_classic"
+
+        # construct classic index
+        p = cobs.ClassicIndexParameters()
+        p.clobber = True
+        cobs.classic_construct(
+            input=datadir + "/fasta",
+            out_file=index_file,
+            index_params=p)
+        self.assertTrue(os.path.isfile(index_file))
+
+        # TODO: run queries
+
+    # construct compact index and run queries
+    def test_compact_construct_query(self):
+        index_file = datadir + "/python_test.cobs_compact"
+
+        # construct compact index
+        p = cobs.CompactIndexParameters()
+        p.clobber = True
+        cobs.compact_construct(
+            input=datadir + "/fasta",
+            out_file=index_file,
+            index_params=p)
+        self.assertTrue(os.path.isfile(index_file))
+
+        # TODO: run queries
+
+if __name__ == '__main__':
+    unittest.main()
