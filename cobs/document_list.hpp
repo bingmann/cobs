@@ -28,13 +28,21 @@
 namespace cobs {
 
 enum class FileType {
+    //! Accept any supported file types in dir scan
     Any,
+    //! Text file: read as sequential symbol stream
     Text,
+    //! McCortex file
     Cortex,
+    //! Explicit list of k-mers for testing
     KMerBuffer,
+    //! FastA file, parsed as one document containing subsequences
     Fasta,
+    //! FastQ file, parsed as one document containing subsequences
     Fastq,
+    //! FastA multi-file, parsed as multiple documents
     FastaMulti,
+    //! FastQ multi-file, parsed as multiple documents
     FastqMulti,
 };
 

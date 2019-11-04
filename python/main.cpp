@@ -121,19 +121,25 @@ PYBIND11_MODULE(cobs_index, m) {
     )pbdoc";
 
     /**************************************************************************/
-    // doc_list()
+    // DocumentList and doc_list()
 
     using cobs::FileType;
     py::enum_<FileType>(
         m, "FileType", py::arithmetic(), "Enum of indexable file types")
-    .value("Any", FileType::Any)
-    .value("Text", FileType::Text)
-    .value("Cortex", FileType::Cortex)
-    .value("KMerBuffer", FileType::KMerBuffer)
-    .value("Fasta", FileType::Fasta)
-    .value("Fastq", FileType::Fastq)
-    .value("FastaMulti", FileType::FastaMulti)
-    .value("FastqMulti", FileType::FastqMulti)
+    .value("Any", FileType::Any, "Accept any supported file types in dir scan")
+    .value("Text", FileType::Text,
+           "Text file: read as sequential symbol stream")
+    .value("Cortex", FileType::Cortex, "McCortex file")
+    .value("KMerBuffer", FileType::KMerBuffer,
+           "Explicit list of k-mers for testing")
+    .value("Fasta", FileType::Fasta,
+           "FastA file, parsed as one document containing subsequences")
+    .value("Fastq", FileType::Fastq,
+           "FastQ file, parsed as one document containing subsequences")
+    .value("FastaMulti", FileType::FastaMulti,
+           "FastA multi-file, parsed as multiple documents")
+    .value("FastqMulti", FileType::FastqMulti,
+           "FastQ multi-file, parsed as multiple documents")
     .export_values();
 
     using cobs::DocumentEntry;
