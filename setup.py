@@ -57,13 +57,14 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='cobs-index',
-    version='0.0.1',
+    name='cobs_index',
+    version='0.1',
     author='Timo Bingmann',
     author_email='tbdev@panthema.net',
     description='Compact Bit-Sliced Signature Index (COBS)',
     long_description='',
-    ext_modules=[CMakeExtension('cobs-index')],
+    url="https://github.com/bingmann/cobs",
+    ext_modules=[CMakeExtension('cobs_index')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )
