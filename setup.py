@@ -53,11 +53,11 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(['cmake', '--build', '.', '--target', 'cobs_python'] + build_args, cwd=self.build_temp)
 
 def test_suite():
     test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover('python/tests', pattern='*_test.py')
+    test_suite = test_loader.discover('python/tests', pattern='test_*.py')
     return test_suite
 
 if __name__ == '__main__':

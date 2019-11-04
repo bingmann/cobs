@@ -8,3 +8,4 @@ python/docs/_generate
 *.cobs_cache
 *.cobs_classic
 *.cobs_compact
+__pycache__
