@@ -113,9 +113,9 @@ include(CheckCXXSourceRuns)
 set(CMAKE_REQUIRED_FLAGS " -std=c++17")
 check_cxx_source_runs("
     #include <iostream>
-    #include <filesystem>
+    #include <experimental/filesystem>
     int main() {
-        std::cout << std::filesystem::temp_directory_path();
+        std::cout << std::experimental::filesystem::temp_directory_path();
         return 0;
     }
 " CPPNOFS)
@@ -124,9 +124,9 @@ if(NOT CPPNOFS)
   set(CMAKE_REQUIRED_LIBRARIES "c++fs")
   check_cxx_source_runs("
       #include <iostream>
-      #include <filesystem>
+      #include <experimental/filesystem>
       int main() {
-          std::cout << std::filesystem::temp_directory_path();
+          std::cout << std::experimental::filesystem::temp_directory_path();
           return 0;
       }
   " CPPFS)
@@ -139,9 +139,9 @@ if(NOT CPPNOFS)
     set(CMAKE_REQUIRED_LIBRARIES "stdc++fs")
     check_cxx_source_runs("
         #include <iostream>
-        #include <filesystem>
+        #include <experimental/filesystem>
         int main() {
-            std::cout << std::filesystem::temp_directory_path();
+            std::cout << std::experimental::filesystem::temp_directory_path();
             return 0;
         }
     " STDCPPFS)
@@ -150,7 +150,7 @@ if(NOT CPPNOFS)
     if(STDCPPFS)
       set(COBS_LINK_LIBRARIES stdc++fs ${COBS_LINK_LIBRARIES})
     else()
-      message(FATAL_ERROR "std::filesystem not found")
+      message(FATAL_ERROR "std::experimental::filesystem not found")
     endif()
   endif()
 endif()
