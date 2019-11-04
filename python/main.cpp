@@ -47,47 +47,8 @@ cobs::DocumentList doc_list(const std::string& path, std::string file_type)
 void classic_construct(
     const std::string& input, const std::string& out_file,
     const cobs::ClassicIndexParameters& index_params,
-    std::string file_type,
-    bool clobber, bool continue_, bool keep_temporary,
-    std::string tmp_path)
+    std::string file_type, std::string tmp_path)
 {
-    // check output and maybe clobber
-    if (!tlx::ends_with(out_file, cobs::ClassicIndexHeader::file_extension)) {
-        LOG1 << "Error: classic COBS index file must end with "
-             << cobs::ClassicIndexHeader::file_extension;
-        return;
-    }
-    if (cobs::fs::exists(out_file)) {
-        if (clobber) {
-            cobs::fs::remove_all(out_file);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Output file exists, will not overwrite without --clobber");
-        }
-    }
-
-    // if not set, make tmp path, and maybe clobber
-    if (tmp_path.empty()) {
-        tmp_path = out_file + ".tmp";
-    }
-    if (cobs::fs::exists(tmp_path)) {
-        if (clobber) {
-            cobs::fs::remove_all(tmp_path);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Temporary directory exists, will not delete without --clobber");
-        }
-    }
-
-    // TODO: fix this
-    cobs::gopt_keep_temporary = keep_temporary;
-
     // read file list
     cobs::DocumentList filelist(input, StringToFileType(file_type));
     cobs::classic_construct(filelist, out_file, tmp_path, index_params);
@@ -160,6 +121,12 @@ PYBIND11_MODULE(cobs_index, m) {
         "List of DocumentEntry objects returned by doc_list()")
     .def("size", &DocumentList::size,
          "return number of DocumentEntry in list")
+    .def("add",
+         [](const DocumentList& l, const std::string& path) {
+             return l.add(path);
+         },
+         "identify and add new file to DocumentList",
+         py::arg("path"))
     .def("sort_by_path", &DocumentList::sort_by_path,
          "sort entries by path")
     .def("sort_by_size", &DocumentList::sort_by_size,
@@ -221,7 +188,16 @@ Read a list of documents and returns them as a DocumentList containing DocumentE
         "number of threads to use, default all cores")
     .def_readwrite(
         "log_prefix", &ClassicIndexParameters::log_prefix,
-        "log prefix (used by compact index construction), default empty");
+        "log prefix (used by compact index construction), default empty")
+    .def_readwrite(
+        "clobber", &ClassicIndexParameters::clobber,
+        "clobber erase output directory if it exists, default false")
+    .def_readwrite(
+        "continue", &ClassicIndexParameters::continue_,
+        "continue in existing output directory, default false")
+    .def_readwrite(
+        "keep_temporary", &ClassicIndexParameters::keep_temporary,
+        "keep temporary files during construction, default false");
 
     /**************************************************************************/
     // classic_construct()
@@ -235,9 +211,6 @@ Construct a COBS Classic Index from a path of input files.
 :param str out_file: path to the output ``.cobs_classic`` index file
 :param ClassicIndexParameters index_params: instance of classic index parameter object
 :param str file_type: filter input documents by file type (any, text, cortex, fasta, etc), default: any
-:param bool clobber: erase output directory if it exists, default: False
-:param bool continue_: continue in existing output directory, default: False
-:param bool keep_temporary: keep temporary files during construction, default: False
 :param str tmp_path: directory for intermediate index files, default: ``out_file`` + ``.tmp``
 
         )pbdoc",
@@ -245,9 +218,6 @@ Construct a COBS Classic Index from a path of input files.
         py::arg("out_file"),
         py::arg("index_params"),
         py::arg("file_type") = "any",
-        py::arg("clobber") = false,
-        py::arg("continue_") = false,
-        py::arg("keep_temporary") = false,
         py::arg("tmp_path") = "");
 
     /**************************************************************************/

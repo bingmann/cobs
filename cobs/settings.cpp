@@ -14,8 +14,6 @@ namespace cobs {
 
 size_t gopt_threads = std::thread::hardware_concurrency();
 
-bool gopt_keep_temporary = false;
-
 bool gopt_load_complete_index = false;
 
 } // namespace cobs

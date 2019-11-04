@@ -313,7 +313,8 @@ void classic_combine_streams(
 
 bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
                      fs::path& result_file,
-                     uint64_t mem_bytes, size_t num_threads)
+                     uint64_t mem_bytes, size_t num_threads,
+                     bool keep_temporary)
 {
     fs::create_directories(out_dir);
 
@@ -347,7 +348,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
         LOG1 << "Move 1 Classic Index [" << index_list[0].header.row_bits()
              << " documents] to " << out_path;
 
-        if (!gopt_keep_temporary) {
+        if (!keep_temporary) {
             fs::rename(index_list[0].path, out_path);
             fs::remove(in_dir);
         }
@@ -420,7 +421,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             if (files.size() == 1) {
                 LOG1 << "Move Classic Index to " << out_path;
 
-                if (!gopt_keep_temporary)
+                if (!keep_temporary)
                     fs::rename(files[0], out_path);
                 else
                     fs::copy(files[0], out_path);
@@ -477,7 +478,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             streams.clear();
             file_names.clear();
 
-            if (!gopt_keep_temporary) {
+            if (!keep_temporary) {
                 for (size_t i = 0; i < files.size(); i++) {
                     fs::remove(files[i]);
                 }
@@ -486,7 +487,7 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
             t += thr_timer;
         });
 
-    if (!gopt_keep_temporary) {
+    if (!keep_temporary) {
         fs::remove(in_dir);
     }
     if (batch_list.size() == 1) {
@@ -548,13 +549,10 @@ uint64_t get_max_file_size(const DocumentList& doc_list,
 
 void classic_construct(
     const DocumentList& filelist, const fs::path& out_file,
-    const fs::path& tmp_path, ClassicIndexParameters params)
+    fs::path tmp_path, ClassicIndexParameters params)
 {
     die_unless(params.num_hashes != 0);
     die_unless(params.signature_size == 0);
-
-    std::error_code ec;
-    fs::create_directories(tmp_path, ec);
 
     // estimate signature size by finding number of elements in the largest file
     uint64_t max_doc_size = get_max_file_size(filelist, params.term_size);
@@ -576,7 +574,49 @@ void classic_construct(
          << "  index size: "
          << tlx::format_iec_units(docsize_roundup / 8 * params.signature_size) << '\n'
          << "  mem_bytes: " << params.mem_bytes
-         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B';
+         << " = " << tlx::format_iec_units(params.mem_bytes) << 'B' << '\n'
+         << "  clobber: " << unsigned(params.clobber) << '\n'
+         << "  continue_: " << unsigned(params.continue_) << '\n'
+         << "  keep_temporary: " << unsigned(params.keep_temporary);
+
+    // check output and maybe clobber
+    if (!tlx::ends_with(out_file, ClassicIndexHeader::file_extension)) {
+        die("Error: classic COBS index file must end with "
+            << ClassicIndexHeader::file_extension);
+    }
+
+    // check output file
+    if (fs::exists(out_file)) {
+        if (params.clobber) {
+            fs::remove_all(out_file);
+        }
+        else if (params.continue_) {
+            // fall through
+        }
+        else {
+            die("Output file exists, will not overwrite without --clobber");
+        }
+    }
+
+    // if not set, make tmp path, and maybe clobber
+    if (tmp_path.empty()) {
+        tmp_path = out_file.string() + ".tmp";
+    }
+    if (fs::exists(tmp_path)) {
+        if (params.clobber) {
+            fs::remove_all(tmp_path);
+        }
+        else if (params.continue_) {
+            // fall through
+        }
+        else {
+            die("Temporary directory exists, will not delete without --clobber");
+        }
+    }
+
+    // create temporary directory
+    std::error_code ec;
+    fs::create_directories(tmp_path, ec);
 
     // construct one classic index
     classic_construct_from_documents(filelist, tmp_path / pad_index(1), params);
@@ -584,21 +624,21 @@ void classic_construct(
     // combine batches
     size_t i = 1;
     fs::path result_file;
-    while (!classic_combine(tmp_path / pad_index(i),
-                            tmp_path / pad_index(i + 1),
-                            result_file,
-                            params.mem_bytes, params.num_threads)) {
+    while (!classic_combine(
+               tmp_path / pad_index(i), tmp_path / pad_index(i + 1),
+               result_file,
+               params.mem_bytes, params.num_threads, params.keep_temporary)) {
         i++;
     }
 
     fs::rename(result_file, out_file);
 
-    if (!gopt_keep_temporary) {
+    if (!params.keep_temporary) {
         fs::remove(tmp_path / pad_index(i + 1));
     }
 
     // cleanup: this will fail if not _all_ temporary files are removed
-    if (!gopt_keep_temporary) {
+    if (!params.keep_temporary) {
         fs::remove(tmp_path);
     }
 }

@@ -44,6 +44,12 @@ struct ClassicIndexParameters {
     size_t num_threads = gopt_threads;
     //! log prefix (used by compact index construction)
     std::string log_prefix;
+    //! clobber erase output directory if it exists, default: false
+    bool clobber = false;
+    //! continue in existing output directory, default: false
+    bool continue_ = false;
+    //! keep temporary files during construction, default: false
+    bool keep_temporary = false;
 };
 
 /*!
@@ -55,7 +61,7 @@ struct ClassicIndexParameters {
  */
 void classic_construct(
     const DocumentList& filelist, const fs::path& out_dir,
-    const fs::path& tmp_path, ClassicIndexParameters index_params);
+    fs::path tmp_path, ClassicIndexParameters index_params);
 
 /*!
  * Constructs multiple small indices from document files.
@@ -69,7 +75,7 @@ void classic_construct_from_documents(
  */
 bool classic_combine(
     const fs::path& in_dir, const fs::path& out_dir, fs::path& result_file,
-    uint64_t mem_bytes, size_t num_threads);
+    uint64_t mem_bytes, size_t num_threads, bool keep_temporary);
 
 /*!
  * Constructs a classic index filled with random data.

@@ -24,8 +24,10 @@
 
 namespace cobs {
 
+static inline
 bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
-                           size_t mem_bytes, size_t num_threads) {
+                           size_t mem_bytes, size_t num_threads,
+                           bool keep_temporary) {
     bool all_combined = true;
     fs::path result_file;
     for (fs::directory_iterator it(in_dir), end; it != end; it++) {
@@ -34,13 +36,13 @@ bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
                 in_dir / it->path().filename(),
                 out_dir / it->path().filename(),
                 result_file,
-                mem_bytes, num_threads);
+                mem_bytes, num_threads, keep_temporary);
             if (!this_combined)
                 all_combined = false;
         }
     }
 
-    if (!gopt_keep_temporary) {
+    if (!keep_temporary) {
         fs::remove(in_dir);
     }
     return all_combined;
@@ -48,7 +50,7 @@ bool combine_classic_index(const fs::path& in_dir, const fs::path& out_dir,
 
 void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,
-    uint64_t page_size, uint64_t memory)
+    uint64_t page_size, uint64_t memory, bool keep_temporary)
 {
     std::vector<fs::path> paths;
     fs::recursive_directory_iterator it(in_dir), end;
@@ -150,22 +152,27 @@ void compact_combine_into_compact(
         }
 
         ifs.close();
-        if (!gopt_keep_temporary) {
+        if (!keep_temporary) {
             fs::remove(p);
             fs::remove(p.parent_path());
         }
     }
 
-    if (!gopt_keep_temporary) {
+    if (!keep_temporary) {
         fs::remove(in_dir);
     }
     t.print("compact_combine_into_compact()");
 }
 
 void compact_construct(const fs::path& in_dir, const fs::path& index_file,
-                       const fs::path& tmp_path,
-                       CompactIndexParameters params) {
+                       fs::path tmp_path, CompactIndexParameters params) {
     size_t iteration = 1;
+
+    // check output file
+    if (!tlx::ends_with(index_file, CompactIndexHeader::file_extension)) {
+        die("Error: classic COBS index file must end with "
+            << CompactIndexHeader::file_extension);
+    }
 
     // read file list, sort by size
     DocumentList doc_list(in_dir);
@@ -187,6 +194,39 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
     }
     if (num_threads == 0) num_threads = 1;
 
+    // check output and maybe clobber
+    if (!tlx::ends_with(index_file, CompactIndexHeader::file_extension)) {
+        die("Error: classic COBS index file must end with "
+            << CompactIndexHeader::file_extension);
+    }
+    if (fs::exists(index_file)) {
+        if (params.clobber) {
+            fs::remove_all(index_file);
+        }
+        else if (params.continue_) {
+            // fall through
+        }
+        else {
+            die("Output file exists, will not overwrite without --clobber");
+        }
+    }
+
+    // if not set, make tmp path, and maybe clobber
+    if (tmp_path.empty()) {
+        tmp_path = index_file.string() + ".tmp";
+    }
+    if (fs::exists(tmp_path)) {
+        if (params.clobber) {
+            fs::remove_all(tmp_path);
+        }
+        else if (params.continue_) {
+            // fall through
+        }
+        else {
+            die("Temporary directory exists, will not delete without --clobber");
+        }
+    }
+
     LOG1 << "Compact Index Parameters:\n"
          << "  term_size: " << params.term_size << '\n'
          << "  number of documents: " << doc_list.size() << '\n'
@@ -197,7 +237,10 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
          << "  num_pages: " << num_pages << '\n'
          << "  mem_bytes: " << params.mem_bytes
          << " = " << tlx::format_iec_units(params.mem_bytes) << 'B' << '\n'
-         << "  num_threads: " << num_threads;
+         << "  num_threads: " << num_threads << '\n'
+         << "  clobber: " << unsigned(params.clobber) << '\n'
+         << "  continue_: " << unsigned(params.continue_) << '\n'
+         << "  keep_temporary: " << unsigned(params.keep_temporary);
 
     size_t total_size = 0;
 
@@ -252,6 +295,7 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
             classic_params.log_prefix
                 = "[" + pad_index(batch_num, 2)
                   + "/" + pad_index(num_pages, 2) + "] ";
+            classic_params.keep_temporary = params.keep_temporary;
 
             LOG1 << "Classic Sub-Index Parameters: "
                  << classic_params.log_prefix << '\n'
@@ -275,7 +319,8 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
     // combine classic indexes
     while (!combine_classic_index(tmp_path / pad_index(iteration),
                                   tmp_path / pad_index(iteration + 1),
-                                  params.mem_bytes, params.num_threads)) {
+                                  params.mem_bytes, params.num_threads,
+                                  params.keep_temporary)) {
         iteration++;
     }
 
@@ -283,10 +328,10 @@ void compact_construct(const fs::path& in_dir, const fs::path& index_file,
     compact_combine_into_compact(
         tmp_path / pad_index(iteration + 1),
         index_file,
-        params.page_size, params.mem_bytes);
+        params.page_size, params.mem_bytes, params.keep_temporary);
 
     // cleanup: this will fail if not _all_ temporary files are removed
-    if (!gopt_keep_temporary) {
+    if (!params.keep_temporary) {
         fs::remove(tmp_path);
     }
 }

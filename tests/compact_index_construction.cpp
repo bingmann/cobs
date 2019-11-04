@@ -29,12 +29,10 @@ protected:
     void SetUp() final {
         cobs::error_code ec;
         fs::remove_all(base_dir, ec);
-        cobs::gopt_keep_temporary = false;
     }
     void TearDown() final {
         cobs::error_code ec;
         fs::remove_all(base_dir, ec);
-        cobs::gopt_keep_temporary = false;
     }
 };
 
@@ -78,8 +76,7 @@ TEST_F(compact_index_construction, deserialization) {
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
     index_params.page_size = 2;
-
-    cobs::gopt_keep_temporary = true;
+    index_params.keep_temporary = true;
 
     cobs::compact_construct(input_dir, index_file, tmp_path, index_params);
 

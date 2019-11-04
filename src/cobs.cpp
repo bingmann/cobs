@@ -213,14 +213,12 @@ int classic_construct(int argc, char** argv) {
         'c', "canonicalize", canonicalize,
         "canonicalize DNA k-mers, default: false");
 
-    bool clobber = false;
     cp.add_flag(
-        'C', "clobber", clobber,
+        'C', "clobber", index_params.clobber,
         "erase output directory if it exists");
 
-    bool continue_ = false;
     cp.add_flag(
-        "continue", continue_,
+        "continue", index_params.continue_,
         "continue in existing output directory");
 
     cp.add_size_t(
@@ -228,7 +226,7 @@ int classic_construct(int argc, char** argv) {
         "number of threads to use, default: max cores");
 
     cp.add_flag(
-        "keep-temporary", cobs::gopt_keep_temporary,
+        "keep-temporary", index_params.keep_temporary,
         "keep temporary files during construction");
 
     std::string tmp_path;
@@ -243,40 +241,6 @@ int classic_construct(int argc, char** argv) {
 
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
-
-    // check output and maybe clobber
-    if (!tlx::ends_with(out_file, cobs::ClassicIndexHeader::file_extension)) {
-        LOG1 << "Error: classic COBS index file must end with "
-             << cobs::ClassicIndexHeader::file_extension;
-        return -1;
-    }
-    if (cobs::fs::exists(out_file)) {
-        if (clobber) {
-            cobs::fs::remove_all(out_file);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Output file exists, will not overwrite without --clobber");
-        }
-    }
-
-    // if not set, make tmp path, and maybe clobber
-    if (tmp_path.empty()) {
-        tmp_path = out_file + ".tmp";
-    }
-    if (cobs::fs::exists(tmp_path)) {
-        if (clobber) {
-            cobs::fs::remove_all(tmp_path);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Temporary directory exists, will not delete without --clobber");
-        }
-    }
 
     // read file list
     cobs::DocumentList filelist(input, StringToFileType(file_type));
@@ -383,14 +347,12 @@ int compact_construct(int argc, char** argv) {
         'c', "canonicalize", canonicalize,
         "canonicalize DNA k-mers, default: false");
 
-    bool clobber = false;
     cp.add_flag(
-        'C', "clobber", clobber,
+        'C', "clobber", index_params.clobber,
         "erase output directory if it exists");
 
-    bool continue_ = false;
     cp.add_flag(
-        "continue", continue_,
+        "continue", index_params.continue_,
         "continue in existing output directory");
 
     cp.add_size_t(
@@ -398,7 +360,7 @@ int compact_construct(int argc, char** argv) {
         "number of threads to use, default: max cores");
 
     cp.add_flag(
-        "keep-temporary", cobs::gopt_keep_temporary,
+        "keep-temporary", index_params.keep_temporary,
         "keep temporary files during construction");
 
     std::string tmp_path;
@@ -413,40 +375,6 @@ int compact_construct(int argc, char** argv) {
 
     // bool to uint8_t
     index_params.canonicalize = canonicalize;
-
-    // check output and maybe clobber
-    if (!tlx::ends_with(out_file, cobs::CompactIndexHeader::file_extension)) {
-        LOG1 << "Error: classic COBS index file must end with "
-             << cobs::CompactIndexHeader::file_extension;
-        return -1;
-    }
-    if (cobs::fs::exists(out_file)) {
-        if (clobber) {
-            cobs::fs::remove_all(out_file);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Output file exists, will not overwrite without --clobber");
-        }
-    }
-
-    // if not set, make tmp path, and maybe clobber
-    if (tmp_path.empty()) {
-        tmp_path = out_file + ".tmp";
-    }
-    if (cobs::fs::exists(tmp_path)) {
-        if (clobber) {
-            cobs::fs::remove_all(tmp_path);
-        }
-        else if (continue_) {
-            // fall through
-        }
-        else {
-            die("Temporary directory exists, will not delete without --clobber");
-        }
-    }
 
     cobs::compact_construct(input, out_file, tmp_path, index_params);
 

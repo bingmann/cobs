@@ -120,7 +120,8 @@ TEST_F(classic_index_construction, combine) {
     fs::path result_file;
     cobs::classic_combine(
         index_dir, index_file, result_file,
-        /* mem_bytes */ 128 * 1024 * 1024, /* num_threads */ 4);
+        /* mem_bytes */ 128 * 1024 * 1024, /* num_threads */ 4,
+        /* keep_temporary */ false);
 
     // check result by querying for document terms
     cobs::ClassicIndexMMapSearchFile s_mmap(result_file);

@@ -36,6 +36,12 @@ struct CompactIndexParameters {
     uint64_t mem_bytes = get_memory_size(80);
     //! number of threads to use
     size_t num_threads = gopt_threads;
+    //! clobber erase output directory if it exists, default: false
+    bool clobber = false;
+    //! continue in existing output directory, default: false
+    bool continue_ = false;
+    //! keep temporary files during construction, default: false
+    bool keep_temporary = false;
 };
 
 /*!
@@ -44,12 +50,13 @@ struct CompactIndexParameters {
  */
 void compact_construct(
     const fs::path& in_dir, const fs::path& index_dir,
-    const fs::path& tmp_path, CompactIndexParameters index_params);
+    fs::path tmp_path, CompactIndexParameters index_params);
 
 void compact_combine_into_compact(
     const fs::path& in_dir, const fs::path& out_file,
     uint64_t page_size = get_page_size(),
-    uint64_t memory = get_memory_size(80));
+    uint64_t memory = get_memory_size(80),
+    bool keep_temporary = false);
 
 } // namespace cobs
 
