@@ -19,6 +19,9 @@ extern size_t gopt_threads;
 //! whether to load the complete index to RAM for queries.
 extern bool gopt_load_complete_index;
 
+//! whether to disable FastA/FastQ cache files globally.
+extern bool gopt_disable_cache;
+
 } // namespace cobs
 
 #endif // !COBS_SETTINGS_HEADER

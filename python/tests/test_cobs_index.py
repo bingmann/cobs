@@ -6,6 +6,8 @@ import cobs_index as cobs
 mydir = os.path.dirname(os.path.realpath(__file__))
 datadir = os.path.realpath(mydir + "/../../tests/data")
 
+cobs.disable_cache()
+
 class MainTest(unittest.TestCase):
     # read a directory containing FastA files
     def test_doc_list(self):

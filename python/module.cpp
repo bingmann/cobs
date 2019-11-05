@@ -123,6 +123,13 @@ PYBIND11_MODULE(cobs_index, m) {
            compact_construct_list
     )pbdoc";
 
+    m.def("disable_cache",
+          [](bool disable) {
+              cobs::gopt_disable_cache = disable;
+          },
+          "disable FastA/FastQ cache files globally",
+          py::arg("disable") = true);
+
     /**************************************************************************/
     // DocumentList and doc_list()
 

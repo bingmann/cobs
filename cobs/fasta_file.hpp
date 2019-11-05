@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/string_view.hpp>
@@ -34,7 +35,7 @@ public:
         is_.open(path);
         die_unless(is_.good());
 
-        if (!use_cache) {
+        if (!use_cache || gopt_disable_cache) {
             compute_index();
         }
         else if (read_cache_file()) {
@@ -53,7 +54,8 @@ public:
 
     //! read complete FASTA file for sub-documents
     void compute_index(std::istream& is) {
-        LOG1 << "FastaFile: computing index for " << path_;
+        LOGC(!gopt_disable_cache)
+            << "FastaFile: computing index for " << path_;
 
         std::string line;
         size_t sequence_size = 0;

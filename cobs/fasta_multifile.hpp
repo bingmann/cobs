@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/serialization.hpp>
@@ -124,7 +125,7 @@ public:
         ifstream_array_ =
             std::make_shared<ThreadObjectArray<std::ifstream> >(lru_set_);
 
-        if (!use_cache) {
+        if (!use_cache || gopt_disable_cache) {
             compute_index(path, is);
         }
         else if (cache_.lookup(path, index_)) {
@@ -142,7 +143,8 @@ public:
 
     //! read complete FASTA file for sub-documents
     void compute_index(std::string path, std::ifstream& is) {
-        LOG1 << "FastaMultifile: computing index for " << path;
+        LOGC(!gopt_disable_cache)
+            << "FastaMultifile: computing index for " << path;
 
         is.clear();
         is.seekg(0);
