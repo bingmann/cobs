@@ -11,6 +11,7 @@ addons:
       - python3
       - python3-pip
       - python3-setuptools
+      - python3-sphinx
 
 matrix:
   include:
@@ -35,8 +36,27 @@ before_script:
       $CMAKE_ARGS ..
 
 script:
-  #- make -j2 && ctest -V
+  # build and run tests
+  - make -j2 && ctest -V
+
   # install and test python module
-  - cd .. && rm -rf build
+  - cd $TRAVIS_BUILD_DIR && rm -rf build
   - pip3 install --user --verbose .
   - cd python && python3 -m unittest
+
+after_success:
+  # build docs
+  - pip3 install --user sphinx-rtd-theme
+  - cd $TRAVIS_BUILD_DIR/python/docs && make html
+  - touch _build/html/.nojekyll
+
+deploy:
+  provider: pages
+  local_dir: $TRAVIS_BUILD_DIR/python/docs/_build/html/
+  repo: bingmann/cobs-docs
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  keep_history: true
+  on:
+    branch: master
+    condition: $BUILD_TYPE = Release
