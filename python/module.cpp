@@ -8,10 +8,13 @@
 
 #include <pybind11/pybind11.h>
 
+#include <pybind11/stl.h>
+
 #include <cobs/construction/classic_index.hpp>
 #include <cobs/construction/compact_index.hpp>
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
+#include <cobs/query/classic_search.hpp>
 
 #include <cobs/settings.hpp>
 
@@ -360,6 +363,30 @@ Construct a COBS Compact Index from a pre-populated DocumentList object.
         py::arg("out_file"),
         py::arg("index_params"),
         py::arg("tmp_path") = "");
+
+    /**************************************************************************/
+    // Search (renamed from cobs::ClassicSearch)
+
+    using Search = cobs::ClassicSearch;
+    py::class_<Search>(
+        m, "Search",
+        "Search object to run queries on COBS indices")
+    .def(py::init<std::string>(),
+         "constructor, loads the given classic or compact index file.")
+    .def(
+        "search",
+        [](Search& s,
+           const std::string& query, double threshold, size_t num_results)
+        {
+            // lambda to allocate and return vector
+            std::vector<std::pair<uint16_t, std::string> > result;
+            s.search(query, result, threshold, num_results);
+            return result;
+        },
+        "search index for query returning vector of matches",
+        py::arg("query"),
+        py::arg("threshold") = 0.0,
+        py::arg("num_results") = 0);
 
     /**************************************************************************/
 

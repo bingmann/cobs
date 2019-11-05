@@ -25,7 +25,13 @@ class MainTest(unittest.TestCase):
             index_params=p)
         self.assertTrue(os.path.isfile(index_file))
 
-        # TODO: run queries
+        # run queries
+        s = cobs.Search(index_file)
+        r = s.search("AGTCAACGCTAAGGCATTTCCCCCCTGCCTCCTGCCTGCTGCCAAGCCCT")
+        #print(r)
+        self.assertEqual(len(r), 7)
+        self.assertEqual(r[0][0], 20)
+        self.assertEqual(r[0][1], "sample1")
 
     # construct compact index and run queries
     def test_compact_construct_query(self):
@@ -40,7 +46,13 @@ class MainTest(unittest.TestCase):
             index_params=p)
         self.assertTrue(os.path.isfile(index_file))
 
-        # TODO: run queries
+        # run queries
+        s = cobs.Search(index_file)
+        r = s.search("AGTCAACGCTAAGGCATTTCCCCCCTGCCTCCTGCCTGCTGCCAAGCCCT")
+        #print(r)
+        self.assertEqual(len(r), 7)
+        self.assertEqual(r[0][0], 20)
+        self.assertEqual(r[0][1], "sample1")
 
 if __name__ == '__main__':
     unittest.main()
