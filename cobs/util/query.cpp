@@ -60,9 +60,11 @@ MMapHandle initialize_mmap(const fs::path& path)
             print_errno("posix_memalign()");
         }
         uint8_t* data_ptr = reinterpret_cast<uint8_t*>(ptr);
+#if defined(MADV_HUGEPAGE)
         if (madvise(data_ptr, size, MADV_HUGEPAGE)) {
             print_errno("madvise failed for MADV_HUGEPAGE");
         }
+#endif
         lseek(fd, 0, SEEK_SET);
         uint64_t remain = size;
         size_t pos = 0;
