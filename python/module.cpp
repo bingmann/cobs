@@ -41,14 +41,6 @@ cobs::FileType StringToFileType(std::string& s) {
 
 /******************************************************************************/
 
-cobs::DocumentList doc_list(const std::string& path, std::string file_type)
-{
-    cobs::DocumentList filelist(path, StringToFileType(file_type));
-    return filelist;
-}
-
-/******************************************************************************/
-
 void classic_construct(
     const std::string& input, const std::string& out_file,
     const cobs::ClassicIndexParameters& index_params,
@@ -97,13 +89,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(cobs_index, m) {
     m.doc() = R"pbdoc(
-        COBS Python Interface
-        ---------------------
+        COBS Python API Reference
+        -------------------------
         .. currentmodule:: cobs_index
 
         .. rubric:: Classes and Types
         .. autosummary::
-           :toctree: _generate
+           :toctree: _generated
 
            FileType
            DocumentEntry
@@ -115,9 +107,8 @@ PYBIND11_MODULE(cobs_index, m) {
         .. rubric:: Methods
 
         .. autosummary::
-           :toctree: _generate
+           :toctree: _generated
 
-           doc_list
            classic_construct
            classic_construct_list
            compact_construct
@@ -133,7 +124,7 @@ PYBIND11_MODULE(cobs_index, m) {
           py::arg("disable") = true);
 
     /**************************************************************************/
-    // DocumentList and doc_list()
+    // DocumentList
 
     using cobs::FileType;
     py::enum_<FileType>(
@@ -176,9 +167,9 @@ PYBIND11_MODULE(cobs_index, m) {
     using cobs::DocumentList;
     py::class_<DocumentList>(
         m, "DocumentList",
-        "List of DocumentEntry objects returned by doc_list()")
+        "List of DocumentEntry objects for indexing")
     .def(py::init<>(),
-         "default constructor, construct empty list.")
+         "default constructor, constructs an empty list.")
     .def(py::init<std::string, FileType>(),
          "construct and add path recursively.",
          py::arg("root"),
@@ -212,18 +203,6 @@ PYBIND11_MODULE(cobs_index, m) {
          },
          // essential: keep object alive while iterator exists
          py::keep_alive<0, 1>());
-
-    m.def(
-        "doc_list", &doc_list, R"pbdoc(
-
-Read a list of documents and returns them as a DocumentList containing DocumentEntry objects
-
-:param str path: path to documents to list
-:param str file_type: filter input documents by file type (any, text, cortex, fasta, etc), default: any
-
-        )pbdoc",
-        py::arg("path"),
-        py::arg("file_type") = "any");
 
     /**************************************************************************/
     // ClassicIndexParameters
@@ -286,7 +265,7 @@ Construct a COBS Classic Index from a path of input files.
         )pbdoc",
         py::arg("input"),
         py::arg("out_file"),
-        py::arg("index_params"),
+        py::arg("index_params") = ClassicIndexParameters(),
         py::arg("file_type") = "any",
         py::arg("tmp_path") = "");
 
@@ -303,7 +282,7 @@ Construct a COBS Classic Index from a pre-populated DocumentList object.
         )pbdoc",
         py::arg("list"),
         py::arg("out_file"),
-        py::arg("index_params"),
+        py::arg("index_params") = ClassicIndexParameters(),
         py::arg("tmp_path") = "");
 
     /**************************************************************************/
@@ -365,7 +344,7 @@ Construct a COBS Compact Index from a path of input files.
         )pbdoc",
         py::arg("input"),
         py::arg("out_file"),
-        py::arg("index_params"),
+        py::arg("index_params") = CompactIndexParameters(),
         py::arg("file_type") = "any",
         py::arg("tmp_path") = "");
 
@@ -382,7 +361,7 @@ Construct a COBS Compact Index from a pre-populated DocumentList object.
         )pbdoc",
         py::arg("list"),
         py::arg("out_file"),
-        py::arg("index_params"),
+        py::arg("index_params") = CompactIndexParameters(),
         py::arg("tmp_path") = "");
 
     /**************************************************************************/

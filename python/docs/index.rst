@@ -1,3 +1,4 @@
+==========================================
 COBS: A Compact Bit-Sliced Signature Index
 ==========================================
 
@@ -21,8 +22,13 @@ Timo Bingmann, Phelim Bradley, Florian Gauger, and Zamin Iqbal.
 In: *26th International Symposium on String Processing and Information Retrieval (SPIRE)*. pages 285-303. Spinger. October 2019.
 preprint arXiv:1905.09624.
 
+:ref:`See the tutorial page<tutorial>` on how to use COBS in python scripts.
+
+Table of Contents
+=================
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   tutorial
    cobs_index
