@@ -47,8 +47,8 @@ TEST_F(compact_index_query, all_included_mmap) {
 
     cobs::compact_construct(
         cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -74,8 +74,8 @@ TEST_F(compact_index_query, one_included_mmap) {
 
     cobs::compact_construct(
         cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -100,8 +100,8 @@ TEST_F(compact_index_query, false_positive_mmap) {
 
     cobs::compact_construct(
         cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
-    cobs::CompactIndexMMapSearchFile s_mmap(index_file);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
     size_t num_tests = 10000;

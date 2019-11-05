@@ -46,8 +46,8 @@ TEST_F(classic_index_query, all_included_small_batch) {
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
-    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -72,8 +72,8 @@ TEST_F(classic_index_query, one_included_small_batch) {
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
-    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -97,8 +97,8 @@ TEST_F(classic_index_query, one_included_large_batch) {
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
-    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
     std::vector<std::pair<uint16_t, std::string> > result;
@@ -122,8 +122,8 @@ TEST_F(classic_index_query, false_positive) {
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
-    cobs::ClassicIndexMMapSearchFile s_mmap(index_path);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
     size_t num_tests = 10000;

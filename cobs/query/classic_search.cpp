@@ -10,14 +10,17 @@
 #include <cobs/query/classic_search.hpp>
 #include <cobs/util/error_handling.hpp>
 
-#include <algorithm>
 #include <cobs/kmer.hpp>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
+#include <cobs/query/compact_index/mmap_search_file.hpp>
 #include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/misc.hpp>
 #include <cobs/util/parallel_for.hpp>
 #include <cobs/util/query.hpp>
 #include <cobs/util/timer.hpp>
+
+#include <algorithm>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -35,13 +38,29 @@
 
 namespace cobs {
 
+ClassicSearch::ClassicSearch(const std::shared_ptr<IndexSearchFile>& index_file)
+    : index_file_(index_file) { }
+
+ClassicSearch::ClassicSearch(std::string path)
+{
+    if (file_has_header<ClassicIndexHeader>(path)) {
+        index_file_ = std::make_shared<ClassicIndexMMapSearchFile>(path);
+    }
+    else if (file_has_header<CompactIndexHeader>(path)) {
+        index_file_ = std::make_shared<CompactIndexMMapSearchFile>(path);
+    }
+    else {
+        die("Could not open index path \"" << path << "\"");
+    }
+}
+
 void ClassicSearch::create_hashes(
     std::vector<uint64_t>& hashes, const std::string& query,
     char* canonicalize_buffer)
 {
-    uint32_t term_size = index_file_.term_size();
-    size_t num_hashes = index_file_.num_hashes();
-    uint8_t canonicalize = index_file_.canonicalize();
+    uint32_t term_size = index_file_->term_size();
+    size_t num_hashes = index_file_->num_hashes();
+    uint8_t canonicalize = index_file_->canonicalize();
 
     size_t num_terms = query.size() - term_size + 1;
     hashes.resize(num_hashes * num_terms);
@@ -113,7 +132,7 @@ void ClassicSearch::compute_counts(
 #if __SSE2__
     auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
 #endif
-    uint64_t num_hashes = index_file_.num_hashes();
+    uint64_t num_hashes = index_file_->num_hashes();
 
 #if __SSE2__
     auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
@@ -136,7 +155,7 @@ void ClassicSearch::compute_counts(
 void ClassicSearch::aggregate_rows(size_t hashes_size, uint8_t* rows,
                                    const size_t size, size_t buffer_size)
 {
-    uint64_t num_hashes = index_file_.num_hashes();
+    uint64_t num_hashes = index_file_->num_hashes();
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         uint8_t* rows_8 = rows + i * buffer_size;
         uint64_t* rows_64 = reinterpret_cast<uint64_t*>(rows_8);
@@ -169,10 +188,10 @@ void ClassicSearch::search(
 {
     static constexpr bool debug = false;
 
-    uint32_t term_size = index_file_.term_size();
-    uint64_t page_size = index_file_.page_size();
-    size_t counts_size = index_file_.counts_size();
-    const std::vector<std::string>& file_names = index_file_.file_names();
+    uint32_t term_size = index_file_->term_size();
+    uint64_t page_size = index_file_->page_size();
+    size_t counts_size = index_file_->counts_size();
+    const std::vector<std::string>& file_names = index_file_->file_names();
 
     assert_exit(query.size() >= term_size,
                 "query too short, needs to be at least "
@@ -231,10 +250,10 @@ void ClassicSearch::search(
 
             LOG << "read_from_disk";
             thr_timer.active("io");
-            index_file_.read_from_disk(
+            index_file_->read_from_disk(
                 hashes, rows, score_begin, score_size, score_buffer_size);
 
-            if (index_file_.num_hashes() != 1) {
+            if (index_file_->num_hashes() != 1) {
                 LOG << "aggregate_rows";
                 thr_timer.active("and rows");
                 aggregate_rows(hashes.size(), rows, score_size,

@@ -30,8 +30,10 @@ private:
                        char* canonicalize_buffer);
 
 public:
-    ClassicSearch(IndexSearchFile& index_file)
-        : index_file_(index_file) { }
+    ClassicSearch(const std::shared_ptr<IndexSearchFile>& index_file);
+
+    //! method to try to auto-detect and load IndexSearchFile
+    ClassicSearch(std::string path);
 
     void search(
         const std::string& query,
@@ -40,7 +42,7 @@ public:
 
 protected:
     //! reference to index file query object to retrieve data
-    IndexSearchFile& index_file_;
+    std::shared_ptr<IndexSearchFile> index_file_;
 };
 
 } // namespace cobs

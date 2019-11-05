@@ -521,19 +521,8 @@ int query(int argc, char** argv) {
     }
     std::string index_file = index_files[0];
 
-    if (cobs::file_has_header<cobs::ClassicIndexHeader>(index_file)) {
-        cobs::ClassicIndexMMapSearchFile mmap(index_file);
-        cobs::ClassicSearch s(mmap);
-        process_query(s, threshold, num_results, query, query_file);
-    }
-    else if (cobs::file_has_header<cobs::CompactIndexHeader>(index_file)) {
-        cobs::CompactIndexMMapSearchFile mmap(index_file);
-        cobs::ClassicSearch s(mmap);
-        process_query(s, threshold, num_results, query, query_file);
-    }
-    else {
-        die("Could not open index path \"" << index_file << "\"");
-    }
+    cobs::ClassicSearch s(index_file);
+    process_query(s, threshold, num_results, query, query_file);
 
     return 0;
 }
@@ -707,8 +696,8 @@ void benchmark_fpr_run(const cobs::fs::path& p,
                        const std::vector<std::string>& queries,
                        const std::vector<std::string>& warmup_queries) {
 
-    cobs::ClassicIndexMMapSearchFile sf(p);
-    cobs::ClassicSearch s(sf);
+    cobs::ClassicSearch s(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(p));
 
     sync();
     std::ofstream ofs("/proc/sys/vm/drop_caches");

@@ -125,8 +125,8 @@ TEST_F(classic_index_construction, combine) {
         /* keep_temporary */ false);
 
     // check result by querying for document terms
-    cobs::ClassicIndexMMapSearchFile s_mmap(result_file);
-    cobs::ClassicSearch s_base(s_mmap);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::ClassicIndexMMapSearchFile>(result_file));
 
     std::vector<std::pair<uint16_t, std::string> > result;
 

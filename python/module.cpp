@@ -1,5 +1,5 @@
 /*******************************************************************************
- * python/main.cpp
+ * python/module.cpp
  *
  * Copyright (c) 2019 Timo Bingmann
  *
