@@ -110,6 +110,7 @@ PYBIND11_MODULE(cobs_index, m) {
            DocumentList
            ClassicIndexParameters
            CompactIndexParameters
+           Search
 
         .. rubric:: Methods
 
@@ -121,6 +122,7 @@ PYBIND11_MODULE(cobs_index, m) {
            classic_construct_list
            compact_construct
            compact_construct_list
+           disable_cache
     )pbdoc";
 
     m.def("disable_cache",
@@ -175,14 +177,27 @@ PYBIND11_MODULE(cobs_index, m) {
     py::class_<DocumentList>(
         m, "DocumentList",
         "List of DocumentEntry objects returned by doc_list()")
+    .def(py::init<>(),
+         "default constructor, construct empty list.")
+    .def(py::init<std::string, FileType>(),
+         "construct and add path recursively.",
+         py::arg("root"),
+         py::arg("filter") = FileType::Any)
     .def("size", &DocumentList::size,
          "return number of DocumentEntry in list")
     .def("add",
-         [](const DocumentList& l, const std::string& path) {
+         [](DocumentList& l, const std::string& path) {
              return l.add(path);
          },
          "identify and add new file to DocumentList",
          py::arg("path"))
+    .def("add_recursive",
+         [](DocumentList& l, const std::string& path, FileType filter) {
+             return l.add_recursive(path, filter);
+         },
+         "identify and add new file to DocumentList",
+         py::arg("path"),
+         py::arg("filter") = FileType::Any)
     .def("sort_by_path", &DocumentList::sort_by_path,
          "sort entries by path")
     .def("sort_by_size", &DocumentList::sort_by_size,
@@ -205,7 +220,6 @@ Read a list of documents and returns them as a DocumentList containing DocumentE
 
 :param str path: path to documents to list
 :param str file_type: filter input documents by file type (any, text, cortex, fasta, etc), default: any
-:param int term_size: term size (k-mer size), default: 31
 
         )pbdoc",
         py::arg("path"),

@@ -11,8 +11,12 @@ cobs.disable_cache()
 class MainTest(unittest.TestCase):
     # read a directory containing FastA files
     def test_doc_list(self):
-        l = cobs.doc_list(datadir + "/fasta")
-        self.assertEqual(l.size(), 7)
+        l1 = cobs.DocumentList(datadir + "/fasta")
+        self.assertEqual(l1.size(), 7)
+
+        l2 = cobs.DocumentList()
+        l2.add_recursive(datadir + "/fasta")
+        self.assertEqual(l2.size(), 7)
 
     # construct classic index and run queries
     def test_classic_construct_query(self):

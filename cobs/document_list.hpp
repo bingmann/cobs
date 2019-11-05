@@ -153,6 +153,9 @@ class DocumentList
 public:
     using DocumentEntryList = std::vector<DocumentEntry>;
 
+    //! empty document list
+    DocumentList() = default;
+
     //! accept a file list, sort by name
     explicit DocumentList(const DocumentEntryList& list)
         : list_(list) {
@@ -160,41 +163,9 @@ public:
     }
 
     //! read a directory, filter files
-    explicit DocumentList(const fs::path& root, FileType filter = FileType::Any) {
-        std::vector<fs::path> paths;
-        if (fs::is_directory(root)) {
-            fs::recursive_directory_iterator it(root), end;
-            while (it != end) {
-                if (accept(*it, filter)) {
-                    paths.emplace_back(*it);
-                }
-                ++it;
-            }
-        }
-        else if (fs::is_regular_file(root)) {
-            paths.emplace_back(root);
-        }
-
-        std::sort(paths.begin(), paths.end());
-
-        // process files in parallel such that indices are created in parallel
-        std::mutex list_mutex;
-        parallel_for(
-            0, paths.size(), gopt_threads,
-            [&](size_t i) {
-                try {
-                    DocumentEntryList l = add(paths[i]);
-                    std::unique_lock<std::mutex> lock(list_mutex);
-                    std::move(l.begin(), l.end(), std::back_inserter(list_));
-                }
-                catch (std::exception& e) {
-                    LOG1 << "EXCEPTION: " << e.what();
-                }
-            });
-
-        // sort again due to random thread execution order
-        if (gopt_threads > 1)
-            std::sort(list_.begin(), list_.end());
+    explicit DocumentList(const fs::path& root,
+                          FileType filter = FileType::Any) {
+        add_recursive(root, filter);
     }
 
     //! filter method to match file specifications
@@ -263,8 +234,8 @@ public:
         }
     }
 
-    //! add DocumentEntry for given file
-    DocumentEntryList add(const fs::path& path) const {
+    //! identify and load a DocumentEntry for given path
+    static DocumentEntryList load(const fs::path& path) {
         FileType ft = identify_filetype(path);
         if (ft == FileType::Text) {
             DocumentEntry de;
@@ -338,6 +309,53 @@ public:
         else {
             die("DocumentList: unknown file to add: " << path);
         }
+    }
+
+    //! add file to DocumentList
+    void add(const fs::path& path) {
+        DocumentEntryList l = load(path);
+        std::move(l.begin(), l.end(), std::back_inserter(list_));
+    }
+
+    //! scan path recursively and add files of given filter type
+    void add_recursive(const fs::path& root, FileType filter = FileType::Any)
+    {
+        std::vector<fs::path> paths;
+        if (fs::is_directory(root)) {
+            fs::recursive_directory_iterator it(root), end;
+            while (it != end) {
+                if (accept(*it, filter)) {
+                    paths.emplace_back(*it);
+                }
+                ++it;
+            }
+        }
+        else if (fs::is_regular_file(root)) {
+            paths.emplace_back(root);
+        }
+
+        std::sort(paths.begin(), paths.end());
+
+        // process files in parallel such that caches files are created in
+        // parallel
+        std::mutex list_mutex;
+        parallel_for(
+            0, paths.size(), gopt_threads,
+            [&](size_t i) {
+                try {
+                    DocumentEntryList l = load(paths[i]);
+
+                    std::unique_lock<std::mutex> lock(list_mutex);
+                    std::move(l.begin(), l.end(), std::back_inserter(list_));
+                }
+                catch (std::exception& e) {
+                    LOG1 << "EXCEPTION: " << e.what();
+                }
+            });
+
+        // sort again due to random thread execution order
+        if (gopt_threads > 1)
+            std::sort(list_.begin(), list_.end());
     }
 
     //! return list of paths
