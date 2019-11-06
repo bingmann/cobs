@@ -77,7 +77,7 @@ with open("README.md", "r") as fh:
 if __name__ == '__main__':
     setup(
         name='cobs_index',
-        version='0.1.1',
+        version='0.1.2',
         description='Compact Bit-Sliced Signature Index (COBS)',
         long_description=long_description,
         long_description_content_type="text/markdown",
