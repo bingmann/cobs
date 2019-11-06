@@ -61,6 +61,11 @@ or a fasta file of queries with
 src/cobs query -i example.cobs_compact -f query.fa
 ```
 
+## Python Interface
+
+COBS also has a Python frontend interface which can be used to construct and query an index.
+See https://bingmann.github.io/cobs-python-docs/ for a tutorial.
+
 # Experimental Results
 
 In our paper we compare COBS against seven other k-mer indexing software packages.

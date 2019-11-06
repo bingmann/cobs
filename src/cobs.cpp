@@ -1150,6 +1150,9 @@ int main_usage(const char* arg0) {
     }
     std::cout << std::endl;
 
+    std::cout << "See https://panthema.net/cobs for more information on COBS"
+              << std::endl << std::endl;
+
     return 0;
 }
 
