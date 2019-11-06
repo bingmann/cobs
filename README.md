@@ -9,7 +9,7 @@ However, unlike Mantis and other previous work, COBS does not need the complete 
 COBS has two interfaces:
 
 - a command line tool in C++ called `cobs` (see below)
-- a Python interface to the C++ library (see https://bingmann.github.io/cobs-python-docs/)
+- a Python interface to the C++ library [![PyPI version](https://badge.fury.io/py/cobs-index.svg)](https://badge.fury.io/py/cobs-index) (see https://bingmann.github.io/cobs-python-docs/)
 
 More information about COBS is presented in [our current research paper](https://arxiv.org/abs/1905.09624):
 Timo Bingmann, Phelim Bradley, Florian Gauger, and Zamin Iqbal.
