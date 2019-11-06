@@ -125,10 +125,10 @@ int doc_dump(int argc, char** argv) {
         'k', "term-size", term_size,
         "term size (k-mer size), default: 31");
 
-    bool canonicalize = false;
+    bool no_canonicalize = false;
     cp.add_flag(
-        'c', "canonicalize", canonicalize,
-        "canonicalize DNA k-mers, default: false");
+        "no-canonicalize", no_canonicalize,
+        "don't canonicalize DNA k-mers, default: false");
 
     std::string file_type = "any";
     cp.add_string(
@@ -149,7 +149,7 @@ int doc_dump(int argc, char** argv) {
         filelist[i].process_terms(
             term_size,
             [&](const cobs::string_view& t) {
-                if (canonicalize) {
+                if (!no_canonicalize) {
                     auto kmer = cobs::canonicalize_kmer(
                         t.data(), kmer_buffer.data(), term_size);
                     std::cout << std::string(kmer, term_size) << '\n';
@@ -208,10 +208,10 @@ int classic_construct(int argc, char** argv) {
         "term size (k-mer size), default: "
         + std::to_string(index_params.term_size));
 
-    bool canonicalize = false;
+    bool no_canonicalize = false;
     cp.add_flag(
-        'c', "canonicalize", canonicalize,
-        "canonicalize DNA k-mers, default: false");
+        "no-canonicalize", no_canonicalize,
+        "don't canonicalize DNA k-mers, default: false");
 
     cp.add_flag(
         'C', "clobber", index_params.clobber,
@@ -240,7 +240,7 @@ int classic_construct(int argc, char** argv) {
     cp.print_result(std::cerr);
 
     // bool to uint8_t
-    index_params.canonicalize = canonicalize;
+    index_params.canonicalize = !no_canonicalize;
 
     // read file list
     cobs::DocumentList filelist(input, StringToFileType(file_type));
@@ -347,10 +347,10 @@ int compact_construct(int argc, char** argv) {
         "the page size of the compact the index, "
         "default: sqrt(#documents)");
 
-    bool canonicalize = false;
+    bool no_canonicalize = false;
     cp.add_flag(
-        'c', "canonicalize", canonicalize,
-        "canonicalize DNA k-mers, default: false");
+        "no-canonicalize", no_canonicalize,
+        "don't canonicalize DNA k-mers, default: false");
 
     cp.add_flag(
         'C', "clobber", index_params.clobber,
@@ -379,7 +379,7 @@ int compact_construct(int argc, char** argv) {
     cp.print_result(std::cerr);
 
     // bool to uint8_t
-    index_params.canonicalize = canonicalize;
+    index_params.canonicalize = !no_canonicalize;
 
     // read file list
     cobs::DocumentList filelist(input, StringToFileType(file_type));

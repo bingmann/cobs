@@ -218,7 +218,7 @@ PYBIND11_MODULE(cobs_index, m) {
         "length of terms / k-mers, default 31")
     .def_readwrite(
         "canonicalize", &ClassicIndexParameters::canonicalize,
-        "canonicalization flag for base pairs, default false")
+        "canonicalization flag for base pairs, default true")
     .def_readwrite(
         "num_hashes", &ClassicIndexParameters::num_hashes,
         "number of hash functions, provided by user, default 1")
@@ -299,7 +299,7 @@ Construct a COBS Classic Index from a pre-populated DocumentList object.
         "length of terms / k-mers, default 31")
     .def_readwrite(
         "canonicalize", &CompactIndexParameters::canonicalize,
-        "canonicalization flag for base pairs, default false")
+        "canonicalization flag for base pairs, default true")
     .def_readwrite(
         "num_hashes", &CompactIndexParameters::num_hashes,
         "number of hash functions, provided by user, default 1")

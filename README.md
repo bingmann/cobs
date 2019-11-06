@@ -49,7 +49,6 @@ To construct a compact COBS index from these seven example documents run
 src/cobs compact-construct tests/data/fasta/ example.cobs_compact
 ```
 Check `--help` for many options.
-Maybe the most important is `--canonicalize` to enable k-mer DNA canonicalization.
 
 ## Query an Index
 

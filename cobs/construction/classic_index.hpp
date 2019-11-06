@@ -30,7 +30,7 @@ struct ClassicIndexParameters {
     //! length of terms / k-mers
     unsigned term_size = 31;
     //! canonicalization flag for base pairs
-    uint8_t canonicalize = 0;
+    uint8_t canonicalize = 1;
     //! number of hash functions, provided by user
     unsigned num_hashes = 1;
     //! false positive rate, provided by user
