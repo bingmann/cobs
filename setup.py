@@ -48,17 +48,24 @@ class CMakeBuild(build_ext):
             build_args += ['--', '-j2']
 
         env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
-                                                              self.distribution.get_version())
+        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
+            env.get('CXXFLAGS', ''), self.distribution.get_version())
+
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.', '--target', 'cobs_python'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(
+            ['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(
+            ['cmake', '--build', '.', '--target', 'cobs_python'] + build_args,
+            cwd=self.build_temp)
 
 def test_suite():
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover('python/tests', pattern='test_*.py')
     return test_suite
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 if __name__ == '__main__':
     setup(
@@ -67,10 +74,17 @@ if __name__ == '__main__':
         author='Timo Bingmann',
         author_email='tbdev@panthema.net',
         description='Compact Bit-Sliced Signature Index (COBS)',
-        long_description='',
-        url="https://github.com/bingmann/cobs",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        url="https://panthema.net/cobs",
         ext_modules=[CMakeExtension('cobs_index')],
         cmdclass=dict(build_ext=CMakeBuild),
         zip_safe=False,
+        include_package_data=True,
         test_suite='setup.test_suite',
+        classifiers=[
+            "Development Status :: 4 - Beta",
+            "Topic :: Scientific/Engineering :: Bio-Informatics",
+            "Topic :: Text Processing :: Indexing"
+        ],
     )

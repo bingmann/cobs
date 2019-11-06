@@ -1,0 +1,4 @@
+recursive-include extlib *
+recursive-exclude extlib .git
+recursive-include python/pybind11 *
+recursive-exclude python/pybind11 .git

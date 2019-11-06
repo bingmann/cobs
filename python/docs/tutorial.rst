@@ -88,8 +88,8 @@ most DNA k-mer applications.
    cobs.compact_construct("/path/to/documents", "my_index.cobs_compact", index_params=p)
 
 Besides compact indices, COBS also constructs and supports "classic"
-indices. These are however usually not be used in practice and thus not further
-discussed here.
+indices. These are however usually not be used in practice and thus not
+discussed here further.
 
 Querying an Index
 -----------------
