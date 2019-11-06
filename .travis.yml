@@ -53,10 +53,11 @@ after_success:
 deploy:
   provider: pages
   local_dir: $TRAVIS_BUILD_DIR/python/docs/_build/html/
-  repo: bingmann/cobs-docs
+  repo: bingmann/cobs-python-docs
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   keep_history: true
+  target_branch: master
   on:
     branch: master
     condition: $BUILD_TYPE = Release
