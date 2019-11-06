@@ -49,7 +49,7 @@ public:
 };
 
 /*!
- * Array of objects each local to the OpenMP thread.
+ * Array of objects each local to the current thread.
  */
 template <typename Type>
 class ThreadObjectArray

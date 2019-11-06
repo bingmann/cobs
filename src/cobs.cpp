@@ -723,15 +723,10 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     }
 
     std::string sse2 = "off";
-    std::string openmp = "on";
     std::string aio = "on";
 
 #if __SSE2__
     sse2 = "on";
-#endif
-
-#ifdef NO_OPENMP
-    openmp = "off";
 #endif
 
 #ifdef NO_AIO
@@ -747,7 +742,6 @@ void benchmark_fpr_run(const cobs::fs::path& p,
               << " warmup=" << warmup_queries.size()
               << " results=" << result.size()
               << " sse2=" << sse2
-              << " openmp=" << openmp
               << " aio=" << aio
               << " t_hashes=" << t.get("hashes")
               << " t_io=" << t.get("io")
@@ -1150,7 +1144,7 @@ int main_usage(const char* arg0) {
     }
     std::cout << std::endl;
 
-    std::cout << "See https://panthema.net/cobs for more information on COBS"
+    std::cout << "See https://panthema.net/cobs for more information on COBS."
               << std::endl << std::endl;
 
     return 0;

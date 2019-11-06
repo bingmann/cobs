@@ -48,8 +48,6 @@ set(COBS_DEFINITIONS "")
 set(COBS_INCLUDE_DIRS "")
 set(COBS_LINK_LIBRARIES "")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
-
 # enable more warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
 
