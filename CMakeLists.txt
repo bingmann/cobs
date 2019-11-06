@@ -35,6 +35,11 @@ endif()
 # make it prominent in the GUI.
 option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
 
+# Override CMAKE_EXECUTABLE_SUFFIX
+option(COBS_EXECUTABLE_SUFFIX "Suffix for executables."
+  ${CMAKE_EXECUTABLE_SUFFIX})
+set(CMAKE_EXECUTABLE_SUFFIX ${COBS_EXECUTABLE_SUFFIX})
+
 ################################################################################
 ### Compiler Flags
 

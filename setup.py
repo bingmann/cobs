@@ -34,6 +34,7 @@ class CMakeBuild(build_ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = ['-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=' + extdir,
                       '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DCOBS_EXECUTABLE_SUFFIX=.bin',
                       '-DPYTHON_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
@@ -63,6 +64,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(
             ['cmake', '--build', '.', '--target', 'cobs_python'] + build_args,
             cwd=self.build_temp)
+        subprocess.check_call(['strip', extdir + "/cobs.bin"])
 
 def test_suite():
     test_loader = unittest.TestLoader()
