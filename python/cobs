@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+import cobs_index, subprocess, sys, os
+path = os.path.abspath(os.path.dirname(cobs_index.__file__)) + "/cobs"
+subprocess.call([path] + sys.argv[1:])

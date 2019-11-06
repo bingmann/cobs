@@ -53,10 +53,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # enable warnings
 set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -march=native -fPIC")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -march=native -fPIC")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
 
 # with run-time STL checks
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")

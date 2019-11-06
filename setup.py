@@ -32,7 +32,8 @@ class CMakeBuild(build_ext):
 
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+        cmake_args = ['-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=' + extdir,
+                      '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
@@ -54,7 +55,11 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
         subprocess.check_call(
-            ['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+            ['cmake', ext.sourcedir] + cmake_args,
+            cwd=self.build_temp, env=env)
+        subprocess.check_call(
+            ['cmake', '--build', '.', '--target', 'cobs'] + build_args,
+            cwd=self.build_temp)
         subprocess.check_call(
             ['cmake', '--build', '.', '--target', 'cobs_python'] + build_args,
             cwd=self.build_temp)
@@ -71,16 +76,20 @@ if __name__ == '__main__':
     setup(
         name='cobs_index',
         version='0.1',
-        author='Timo Bingmann',
-        author_email='tbdev@panthema.net',
         description='Compact Bit-Sliced Signature Index (COBS)',
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://panthema.net/cobs",
+        author='Timo Bingmann',
+        author_email='tbdev@panthema.net',
         ext_modules=[CMakeExtension('cobs_index')],
         cmdclass=dict(build_ext=CMakeBuild),
         zip_safe=False,
+        # use MANIFEST.in for extra source files
         include_package_data=True,
+        # include cobs wrapper script
+        scripts=["python/cobs"],
+        # find test suite
         test_suite='setup.test_suite',
         classifiers=[
             "Development Status :: 4 - Beta",
