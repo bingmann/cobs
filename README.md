@@ -17,6 +17,21 @@ Timo Bingmann, Phelim Bradley, Florian Gauger, and Zamin Iqbal.
 In: *26th International Symposium on String Processing and Information Retrieval (SPIRE)*. pages 285-303. Spinger. October 2019.
 preprint arXiv:1905.09624.
 
+If you use COBS in an academic context or publication, please cite our paper
+```
+@InProceedings{bingmann2019cobs,
+  author =       {Timo Bingmann and Phelim Bradley and Florian Gauger and Zamin Iqbal},
+  title =        {{COBS}: a Compact Bit-Sliced Signature Index},
+  booktitle =    {26th International Conference on String Processing and Information Retrieval (SPIRE)},
+  year =         2019,
+  series =       {LNCS},
+  pages =        {285--303},
+  month =        oct,
+  organization = {Springer},
+  note =         {preprint arXiv:1905.09624},
+}
+```
+
 # Installation and First Steps
 
 ## Installation
