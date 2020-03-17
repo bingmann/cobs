@@ -62,22 +62,22 @@ TEST_F(classic_index_construction, deserialization) {
     std::vector<uint8_t> data;
     cobs::ClassicIndexHeader h;
     h.read_file(index_file, data);
-    ASSERT_EQ(h.file_names().size(), 33u);
-    ASSERT_EQ(h.num_hashes(), 3u);
-    ASSERT_EQ(h.file_names().size(), paths.size());
-    for (size_t i = 0; i < h.file_names().size(); i++) {
-        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i]));
+    ASSERT_EQ(h.file_names_.size(), 33u);
+    ASSERT_EQ(h.num_hashes_, 3u);
+    ASSERT_EQ(h.file_names_.size(), paths.size());
+    for (size_t i = 0; i < h.file_names_.size(); i++) {
+        ASSERT_EQ(h.file_names_[i], cobs::base_name(paths[i]));
     }
 
     // check ratio of zeros/ones
     std::map<std::string, size_t> num_ones;
-    for (size_t j = 0; j < h.signature_size(); j++) {
+    for (size_t j = 0; j < h.signature_size_; j++) {
         for (size_t k = 0; k < h.row_size(); k++) {
             uint8_t d = data[j * h.row_size() + k];
             for (size_t o = 0; o < 8; o++) {
                 size_t file_names_index = k * 8 + o;
-                if (file_names_index < h.file_names().size()) {
-                    std::string file_name = h.file_names()[file_names_index];
+                if (file_names_index < h.file_names_.size()) {
+                    std::string file_name = h.file_names_[file_names_index];
                     num_ones[file_name] += (d & (1 << o)) >> o;
                 }
             }
@@ -85,8 +85,8 @@ TEST_F(classic_index_construction, deserialization) {
     }
 
     double set_bit_ratio =
-        cobs::calc_average_set_bit_ratio(h.signature_size(), 3, 0.1);
-    double num_ones_average = set_bit_ratio * h.signature_size();
+        cobs::calc_average_set_bit_ratio(h.signature_size_, 3, 0.1);
+    double num_ones_average = set_bit_ratio * h.signature_size_;
     for (auto& no : num_ones) {
         ASSERT_LE(no.second, num_ones_average * 1.01);
     }

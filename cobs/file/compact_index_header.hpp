@@ -21,12 +21,12 @@ public:
         uint64_t num_hashes;
     };
 
-private:
     uint32_t term_size_;
     uint8_t canonicalize_;
     std::vector<parameter> parameters_;
     std::vector<std::string> file_names_;
     uint64_t page_size_;
+
     size_t padding_size(uint64_t curr_stream_pos) const;
 
 public:
@@ -39,12 +39,6 @@ public:
         uint32_t term_size, uint8_t canonicalize,
         const std::vector<parameter>& parameters,
         const std::vector<std::string>& file_names, uint64_t page_size = 4096);
-
-    uint32_t term_size() const;
-    uint8_t canonicalize() const;
-    const std::vector<parameter>& parameters() const;
-    const std::vector<std::string>& file_names() const;
-    uint64_t page_size() const;
 
     void serialize(std::ostream& os) const;
     void deserialize(std::istream& is);

@@ -70,34 +70,14 @@ void CompactIndexHeader::deserialize(std::istream& is) {
     deserialize_magic_end(is, magic_word);
 }
 
-uint32_t CompactIndexHeader::term_size() const {
-    return term_size_;
-}
-
-uint8_t CompactIndexHeader::canonicalize() const {
-    return canonicalize_;
-}
-
-const std::vector<CompactIndexHeader::parameter>& CompactIndexHeader::parameters() const {
-    return parameters_;
-}
-
-const std::vector<std::string>& CompactIndexHeader::file_names() const {
-    return file_names_;
-}
-
-uint64_t CompactIndexHeader::page_size() const {
-    return page_size_;
-}
-
 void CompactIndexHeader::read_file(std::istream& is,
                                    std::vector<std::vector<uint8_t> >& data) {
     is.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
     deserialize(is);
     data.clear();
-    data.resize(parameters().size());
-    for (size_t i = 0; i < parameters().size(); i++) {
-        size_t data_size = page_size() * parameters()[i].signature_size;
+    data.resize(parameters_.size());
+    for (size_t i = 0; i < parameters_.size(); i++) {
+        size_t data_size = page_size_ * parameters_[i].signature_size;
         std::vector<uint8_t> d(data_size);
         is.read(reinterpret_cast<char*>(d.data()), data_size);
         data[i] = std::move(d);

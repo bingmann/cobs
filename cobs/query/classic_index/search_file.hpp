@@ -19,14 +19,14 @@ class ClassicIndexSearchFile : public IndexSearchFile
 protected:
     explicit ClassicIndexSearchFile(const fs::path& path);
 
-    uint32_t term_size() const final { return header_.term_size(); }
-    uint8_t canonicalize() const final { return header_.canonicalize(); }
-    uint64_t num_hashes() const final { return header_.num_hashes(); }
+    uint32_t term_size() const final { return header_.term_size_; }
+    uint8_t canonicalize() const final { return header_.canonicalize_; }
+    uint64_t num_hashes() const final { return header_.num_hashes_; }
     uint64_t row_size() const final { return header_.row_size(); }
     uint64_t page_size() const final { return 1; }
     uint64_t counts_size() const final;
     const std::vector<std::string>& file_names() const override {
-        return header_.file_names();
+        return header_.file_names_;
     }
 
     ClassicIndexHeader header_;

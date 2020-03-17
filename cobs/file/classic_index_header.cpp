@@ -23,36 +23,12 @@ ClassicIndexHeader::ClassicIndexHeader(
       signature_size_(signature_size), num_hashes_(num_hashes),
       file_names_(file_names) { }
 
-uint32_t ClassicIndexHeader::term_size() const {
-    return term_size_;
-}
-
-uint8_t ClassicIndexHeader::canonicalize() const {
-    return canonicalize_;
-}
-
-uint64_t ClassicIndexHeader::signature_size() const {
-    return signature_size_;
-}
-
 uint64_t ClassicIndexHeader::row_bits() const {
     return file_names_.size();
 }
 
 uint64_t ClassicIndexHeader::row_size() const {
     return (file_names_.size() + 7) / 8;
-}
-
-uint64_t ClassicIndexHeader::num_hashes() const {
-    return num_hashes_;
-}
-
-const std::vector<std::string>& ClassicIndexHeader::file_names() const {
-    return file_names_;
-}
-
-std::vector<std::string>& ClassicIndexHeader::file_names() {
-    return file_names_;
 }
 
 void ClassicIndexHeader::serialize(std::ostream& os) const {

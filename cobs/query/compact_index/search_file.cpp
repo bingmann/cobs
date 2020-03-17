@@ -20,15 +20,15 @@ CompactIndexSearchFile::CompactIndexSearchFile(const fs::path& path) {
     stream_pos_ = get_stream_pos(ifs);
 
     // todo assertions that all the data in the Header is correct
-    row_size_ = header_.page_size() * header_.parameters().size();
-    num_hashes_ = header_.parameters()[0].num_hashes;
-    for (const auto& p : header_.parameters()) {
+    row_size_ = header_.page_size_ * header_.parameters_.size();
+    num_hashes_ = header_.parameters_[0].num_hashes;
+    for (const auto& p : header_.parameters_) {
         die_unless(num_hashes_ == p.num_hashes);
     }
 }
 
 uint64_t CompactIndexSearchFile::counts_size() const {
-    return 8 * header_.parameters().size() * header_.page_size();
+    return 8 * header_.parameters_.size() * header_.page_size_;
 }
 
 } // namespace cobs

@@ -68,16 +68,16 @@ void compact_combine_into_compact(
 
     for (size_t i = 0; i < paths.size(); i++) {
         auto h = deserialize_header<ClassicIndexHeader>(paths[i]);
-        parameters.push_back({ h.signature_size(), h.num_hashes() });
+        parameters.push_back({ h.signature_size_, h.num_hashes_ });
         file_names.insert(file_names.end(),
-                          h.file_names().begin(), h.file_names().end());
+                          h.file_names_.begin(), h.file_names_.end());
 
         if (term_size == 0) {
-            term_size = h.term_size();
-            canonicalize = h.canonicalize();
+            term_size = h.term_size_;
+            canonicalize = h.canonicalize_;
         }
-        die_unequal(term_size, h.term_size());
-        die_unequal(canonicalize, h.canonicalize());
+        die_unequal(term_size, h.term_size_);
+        die_unequal(canonicalize, h.canonicalize_);
 
         LOG1 << i << ": " << h.row_bits() << " documents "
              << tlx::format_iec_units(fs::file_size(paths[i])) << 'B'

@@ -47,12 +47,12 @@ TEST(file, classic_index_header) {
     h_in.deserialize(buffer);
 
     // compare results
-    ASSERT_EQ(h_out.term_size(), h_in.term_size());
-    ASSERT_EQ(h_out.canonicalize(), h_in.canonicalize());
-    ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
+    ASSERT_EQ(h_out.term_size_, h_in.term_size_);
+    ASSERT_EQ(h_out.canonicalize_, h_in.canonicalize_);
+    ASSERT_EQ(h_out.signature_size_, h_in.signature_size_);
     ASSERT_EQ(h_out.row_size(), h_in.row_size());
-    ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
-    ASSERT_EQ(file_names, h_in.file_names());
+    ASSERT_EQ(h_out.num_hashes_, h_in.num_hashes_);
+    ASSERT_EQ(file_names, h_in.file_names_);
 }
 
 TEST(file, classic_index) {
@@ -61,7 +61,7 @@ TEST(file, classic_index) {
     // write classic index file
     std::vector<std::string> file_names = { "n1", "n2", "n3", "n4" };
     cobs::ClassicIndexHeader h_out(31, 1, 123, 12, file_names);
-    std::vector<uint8_t> v_out(h_out.row_size() * h_out.signature_size(), 7);
+    std::vector<uint8_t> v_out(h_out.row_size() * h_out.signature_size_, 7);
     h_out.write_file(buffer, v_out);
 
     // read classic index file
@@ -70,13 +70,13 @@ TEST(file, classic_index) {
     h_in.read_file(buffer, v_in);
 
     // compare results
-    ASSERT_EQ(h_out.term_size(), h_in.term_size());
-    ASSERT_EQ(h_out.canonicalize(), h_in.canonicalize());
-    ASSERT_EQ(h_out.signature_size(), h_in.signature_size());
+    ASSERT_EQ(h_out.term_size_, h_in.term_size_);
+    ASSERT_EQ(h_out.canonicalize_, h_in.canonicalize_);
+    ASSERT_EQ(h_out.signature_size_, h_in.signature_size_);
     ASSERT_EQ(h_out.row_size(), h_in.row_size());
-    ASSERT_EQ(h_out.num_hashes(), h_in.num_hashes());
+    ASSERT_EQ(h_out.num_hashes_, h_in.num_hashes_);
     ASSERT_EQ(v_out, v_in);
-    ASSERT_EQ(file_names, h_in.file_names());
+    ASSERT_EQ(file_names, h_in.file_names_);
 }
 
 TEST(file, compact_index_header_values) {
@@ -98,10 +98,10 @@ TEST(file, compact_index_header_values) {
 
     // compare results
     for (size_t i = 0; i < parameters.size(); i++) {
-        ASSERT_EQ(parameters[i].num_hashes, h_in.parameters()[i].num_hashes);
-        ASSERT_EQ(parameters[i].signature_size, h_in.parameters()[i].signature_size);
+        ASSERT_EQ(parameters[i].num_hashes, h_in.parameters_[i].num_hashes);
+        ASSERT_EQ(parameters[i].signature_size, h_in.parameters_[i].signature_size);
     }
-    ASSERT_EQ(file_names, h_in.file_names());
+    ASSERT_EQ(file_names, h_in.file_names_);
 }
 
 TEST(file, compact_index_header_padding) {

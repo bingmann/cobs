@@ -1,4 +1,10 @@
 #!/bin/bash -x
+################################################################################
+# misc/python-wheels/manylinux_x86_64.sh
+#
+#
+# All rights reserved. Published under the MIT License in the LICENSE file.
+################################################################################
 
 # run script inside a docker with
 #
@@ -35,3 +41,5 @@ for w in /src/dist/cobs_index-*whl; do
     auditwheel repair $w -w /src/dist/
     rm -f $w
 done
+
+################################################################################

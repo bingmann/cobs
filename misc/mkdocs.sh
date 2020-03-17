@@ -1,11 +1,12 @@
 #!/bin/bash -x
 ################################################################################
-# mkdocs.sh
+# misc/mkdocs.sh
 #
-# Script to build and install python module and then to rebuild docs
 #
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
+
+# Script to build and install python module and then to rebuild docs
 
 set -e
 

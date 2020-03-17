@@ -46,19 +46,19 @@ static inline
 void process_term(const string_view& term, std::vector<uint8_t>& data,
                   size_t doc_index,
                   const ClassicIndexHeader& cih, char* canonicalize_buffer) {
-    if (cih.canonicalize() == 0) {
+    if (cih.canonicalize_ == 0) {
         process_hashes(term.data(), term.size(),
-                       cih.signature_size(), cih.num_hashes(),
+                       cih.signature_size_, cih.num_hashes_,
                        [&](uint64_t hash) {
                            set_bit(data, cih, hash, doc_index);
                        });
     }
-    else if (cih.canonicalize() == 1) {
+    else if (cih.canonicalize_ == 1) {
         const char* normalized_kmer =
             canonicalize_kmer(term.data(), canonicalize_buffer, term.size());
 
         process_hashes(normalized_kmer, term.size(),
-                       cih.signature_size(), cih.num_hashes(),
+                       cih.signature_size_, cih.num_hashes_,
                        [&](uint64_t hash) {
                            set_bit(data, cih, hash, doc_index);
                        });
@@ -76,14 +76,14 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
          << pad_index(batch_num) << '/' << pad_index(num_batches)
          << " documents " << paths.size()
          << " row_size " << cih.row_size()
-         << " signature_size " << cih.signature_size()
-         << " matrix_size " << cih.signature_size() * cih.row_size() << " = "
-         << tlx::format_iec_units(cih.signature_size() * cih.row_size()) << 'B';
+         << " signature_size " << cih.signature_size_
+         << " matrix_size " << cih.signature_size_ * cih.row_size() << " = "
+         << tlx::format_iec_units(cih.signature_size_ * cih.row_size()) << 'B';
 
     die_unless(paths.size() <= cih.row_size() * 8);
-    std::vector<uint8_t> data(cih.signature_size() * cih.row_size());
+    std::vector<uint8_t> data(cih.signature_size_* cih.row_size());
 
-    std::vector<char> canonicalize_buffer(cih.term_size());
+    std::vector<char> canonicalize_buffer(cih.term_size_);
 
     std::atomic<size_t> count = 0;
     t.active("process");
@@ -95,10 +95,10 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
         [&](size_t b) {
             size_t local_count = 0;
             for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
-                cih.file_names()[i] = paths[i].name_;
+                cih.file_names_[i] = paths[i].name_;
 
                 paths[i].process_terms(
-                    cih.term_size(),
+                    cih.term_size_,
                     [&](const string_view& term) {
                         process_term(term, data, i,
                                      cih, canonicalize_buffer.data());
@@ -167,7 +167,7 @@ void classic_construct_from_documents(
             ClassicIndexHeader cih(
                 params.term_size, params.canonicalize,
                 params.signature_size, params.num_hashes);
-            cih.file_names().resize(paths.size());
+            cih.file_names_.resize(paths.size());
             process_batch(batch_num, num_batches,
                           tlx::div_ceil(num_threads, num_batches),
                           params.log_prefix, paths, out_path, cih, thr_timer);
@@ -450,20 +450,20 @@ bool classic_combine(const fs::path& in_dir, const fs::path& out_dir,
                 die_unless(streams.back().good());
                 // check parameters for compatibility
                 if (signature_size == 0) {
-                    term_size = cih.term_size();
-                    canonicalize = cih.canonicalize();
-                    signature_size = cih.signature_size();
-                    num_hashes = cih.num_hashes();
+                    term_size = cih.term_size_;
+                    canonicalize = cih.canonicalize_;
+                    signature_size = cih.signature_size_;
+                    num_hashes = cih.num_hashes_;
                 }
-                die_unequal(cih.term_size(), term_size);
-                die_unequal(cih.canonicalize(), canonicalize);
-                die_unequal(cih.signature_size(), signature_size);
-                die_unequal(cih.num_hashes(), num_hashes);
+                die_unequal(cih.term_size_, term_size);
+                die_unequal(cih.canonicalize_, canonicalize);
+                die_unequal(cih.signature_size_, signature_size);
+                die_unequal(cih.num_hashes_, num_hashes);
                 // calculate new row length
                 row_bits.emplace_back(cih.row_bits());
                 new_row_bits += cih.row_bits();
                 // append file names
-                std::copy(cih.file_names().begin(), cih.file_names().end(),
+                std::copy(cih.file_names_.begin(), cih.file_names_.end(),
                           std::back_inserter(file_names));
             }
 
@@ -669,7 +669,7 @@ void classic_construct_random(const fs::path& out_file,
 
     t.active("generate");
     for (size_t i = 0; i < num_documents; ++i) {
-        cih.file_names()[i] = file_names[i];
+        cih.file_names_[i] = file_names[i];
         doc.data().clear();
         for (size_t j = 0; j < document_size; ++j) {
             KMer<31> m;

@@ -32,7 +32,7 @@ void ClassicIndexMMapSearchFile::read_from_disk(
     for (size_t i = 0; i < hashes.size(); i++) {
         auto data_8 =
             data_ + begin
-            + (hashes[i] % header_.signature_size()) * header_.row_size();
+            + (hashes[i] % header_.signature_size_) * header_.row_size();
         auto rows_8 = rows + i * buffer_size;
         // std::memcpy(rows_8, data_8, size);
         std::copy(data_8, data_8 + size, rows_8);

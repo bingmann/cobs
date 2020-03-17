@@ -86,11 +86,11 @@ TEST_F(compact_index_construction, deserialization) {
     std::vector<std::vector<uint8_t> > data;
     cobs::CompactIndexHeader h;
     h.read_file(index_file, data);
-    ASSERT_EQ(h.file_names().size(), 33U);
-    ASSERT_EQ(h.parameters().size(), 3U);
+    ASSERT_EQ(h.file_names_.size(), 33U);
+    ASSERT_EQ(h.parameters_.size(), 3U);
     ASSERT_EQ(data.size(), 3U);
-    for (size_t i = 0; i < h.file_names().size(); i++) {
-        ASSERT_EQ(h.file_names()[i], cobs::base_name(paths[i].path_));
+    for (size_t i = 0; i < h.file_names_.size(); i++) {
+        ASSERT_EQ(h.file_names_[i], cobs::base_name(paths[i].path_));
     }
 
     // check compact index parameters
@@ -109,21 +109,21 @@ TEST_F(compact_index_construction, deserialization) {
         if (i % 8 == 7) {
             uint64_t signature_size = cobs::calc_signature_size(
                 document_sizes[i] / 8, index_params.num_hashes, 0.1);
-            ASSERT_EQ(h.parameters()[i / 8].signature_size, signature_size);
-            ASSERT_EQ(h.parameters()[i / 8].num_hashes, index_params.num_hashes);
+            ASSERT_EQ(h.parameters_[i / 8].signature_size, signature_size);
+            ASSERT_EQ(h.parameters_[i / 8].num_hashes, index_params.num_hashes);
         }
     }
 
     // check ratio of ones and zeros
-    std::vector<std::map<std::string, size_t> > num_ones(h.parameters().size());
-    for (size_t i = 0; i < h.parameters().size(); i++) {
-        for (size_t j = 0; j < h.parameters()[i].signature_size; j++) {
-            for (size_t k = 0; k < h.page_size(); k++) {
-                uint8_t d = data[i][j * h.page_size() + k];
+    std::vector<std::map<std::string, size_t> > num_ones(h.parameters_.size());
+    for (size_t i = 0; i < h.parameters_.size(); i++) {
+        for (size_t j = 0; j < h.parameters_[i].signature_size; j++) {
+            for (size_t k = 0; k < h.page_size_; k++) {
+                uint8_t d = data[i][j * h.page_size_ + k];
                 for (size_t o = 0; o < 8; o++) {
-                    size_t file_names_index = i * h.page_size() * 8 + k * 8 + o;
-                    if (file_names_index < h.file_names().size()) {
-                        std::string file_name = h.file_names()[file_names_index];
+                    size_t file_names_index = i * h.page_size_ * 8 + k * 8 + o;
+                    if (file_names_index < h.file_names_.size()) {
+                        std::string file_name = h.file_names_[file_names_index];
                         num_ones[i][file_name] += (d & (1 << o)) >> o;
                     }
                 }
@@ -131,10 +131,10 @@ TEST_F(compact_index_construction, deserialization) {
         }
     }
 
-    for (size_t i = 0; i < h.parameters().size(); i++) {
+    for (size_t i = 0; i < h.parameters_.size(); i++) {
         double set_bit_ratio = cobs::calc_average_set_bit_ratio(
-            h.parameters()[i].signature_size, 3, 0.1);
-        double num_ones_average = set_bit_ratio * h.parameters()[i].signature_size;
+            h.parameters_[i].signature_size, 3, 0.1);
+        double num_ones_average = set_bit_ratio * h.parameters_[i].signature_size;
         for (auto& no : num_ones[i]) {
             ASSERT_LE(no.second, num_ones_average * 1.02);
         }
