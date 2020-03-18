@@ -15,14 +15,6 @@ const std::string ClassicIndexHeader::magic_word = "CLASSIC_INDEX";
 const uint32_t ClassicIndexHeader::version = 1;
 const std::string ClassicIndexHeader::file_extension = ".cobs_classic";
 
-ClassicIndexHeader::ClassicIndexHeader(
-    uint32_t term_size, uint8_t canonicalize,
-    uint64_t signature_size, uint64_t num_hashes,
-    const std::vector<std::string>& file_names)
-    : term_size_(term_size), canonicalize_(canonicalize),
-      signature_size_(signature_size), num_hashes_(num_hashes),
-      file_names_(file_names) { }
-
 uint64_t ClassicIndexHeader::row_bits() const {
     return file_names_.size();
 }

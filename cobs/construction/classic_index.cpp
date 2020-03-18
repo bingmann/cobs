@@ -164,9 +164,11 @@ void classic_construct_from_documents(
             if (fs::exists(out_path))
                 return;
 
-            ClassicIndexHeader cih(
-                params.term_size, params.canonicalize,
-                params.signature_size, params.num_hashes);
+            ClassicIndexHeader cih;
+            cih.term_size_ = params.term_size;
+            cih.canonicalize_ = params.canonicalize;
+            cih.signature_size_ = params.signature_size;
+            cih.num_hashes_ = params.num_hashes;
             cih.file_names_.resize(paths.size());
             process_batch(batch_num, num_batches,
                           tlx::div_ceil(num_threads, num_batches),
@@ -195,8 +197,12 @@ void classic_combine_streams(
         return;
 
     std::ofstream ofs;
-    ClassicIndexHeader cih(term_size, canonicalize, signature_size,
-                           num_hash, file_names);
+    ClassicIndexHeader cih;
+    cih.term_size_ = term_size;
+    cih.canonicalize_ = canonicalize;
+    cih.signature_size_ = signature_size;
+    cih.num_hashes_ = num_hash;
+    cih.file_names_ = file_names;
     serialize_header(ofs, out_file, cih);
 
     die_unequal(streams.size(), row_bits.size());
@@ -657,8 +663,12 @@ void classic_construct_random(const fs::path& out_file,
     unsigned term_size = 31;
     uint8_t canonicalize = 1;
 
-    ClassicIndexHeader cih(term_size, canonicalize, signature_size,
-                           num_hashes, file_names);
+    ClassicIndexHeader cih;
+    cih.term_size_ = term_size;
+    cih.canonicalize_ = canonicalize;
+    cih.signature_size_ = signature_size;
+    cih.num_hashes_ = num_hashes;
+    cih.file_names_ = file_names;
     std::vector<uint8_t> data;
     data.resize(signature_size * cih.row_size());
 

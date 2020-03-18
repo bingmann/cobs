@@ -14,14 +14,8 @@ const std::string CompactIndexHeader::magic_word = "COMPACT_INDEX";
 const uint32_t CompactIndexHeader::version = 1;
 const std::string CompactIndexHeader::file_extension = ".cobs_compact";
 
-CompactIndexHeader::CompactIndexHeader(uint64_t page_size) : page_size_(page_size) { }
-
-CompactIndexHeader::CompactIndexHeader(
-    uint32_t term_size, uint8_t canonicalize,
-    const std::vector<CompactIndexHeader::parameter>& parameters,
-    const std::vector<std::string>& file_names, uint64_t page_size)
-    : term_size_(term_size), canonicalize_(canonicalize),
-      parameters_(parameters), file_names_(file_names), page_size_(page_size) { }
+CompactIndexHeader::CompactIndexHeader(uint64_t page_size)
+    : page_size_(page_size) { }
 
 size_t CompactIndexHeader::padding_size(uint64_t curr_stream_pos) const {
     return (page_size_ - ((curr_stream_pos + CompactIndexHeader::magic_word.size()) % page_size_)) % page_size_;

@@ -16,10 +16,15 @@ namespace cobs {
 class ClassicIndexHeader
 {
 public:
+    //! k-mer or q-gram size = term size
     uint32_t term_size_;
+    //! 0 = don't modify k-mers, 1 = canonicalize
     uint8_t canonicalize_;
+    //! size of Bloom filters in bits = number of rows of matrix
     uint64_t signature_size_;
+    //! number of hashes per term, usually 1
     uint64_t num_hashes_;
+    //! list of document file names
     std::vector<std::string> file_names_;
 
 public:
@@ -28,12 +33,10 @@ public:
     static const std::string file_extension;
 
     ClassicIndexHeader() = default;
-    ClassicIndexHeader(
-        uint32_t term_size, uint8_t canonicalize,
-        uint64_t signature_size, uint64_t num_hashes,
-        const std::vector<std::string>& file_names = std::vector<std::string>());
 
+    //! number of bits in a row, which is the number of documents
     uint64_t row_bits() const;
+    //! number of bytes in a row, number of documents rounded up to bytes.
     uint64_t row_size() const;
 
     void serialize(std::ostream& os) const;

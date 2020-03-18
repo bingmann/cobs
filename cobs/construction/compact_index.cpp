@@ -94,8 +94,12 @@ void compact_combine_into_compact(
 
     Timer t;
 
-    CompactIndexHeader h(term_size, canonicalize, parameters,
-                         file_names, page_size);
+    CompactIndexHeader h;
+    h.term_size_ = term_size;
+    h.canonicalize_ = canonicalize;
+    h.parameters_ = parameters;
+    h.file_names_ = file_names;
+    h.page_size_ = page_size;
     std::ofstream ofs;
     serialize_header(ofs, out_file, h);
 
