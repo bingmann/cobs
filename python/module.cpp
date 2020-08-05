@@ -22,32 +22,13 @@
 
 /******************************************************************************/
 
-cobs::FileType StringToFileType(std::string& s) {
-    tlx::to_lower(&s);
-    if (s == "any" || s == "*")
-        return cobs::FileType::Any;
-    if (s == "text" || s == "txt")
-        return cobs::FileType::Text;
-    if (s == "cortex" || s == "ctx")
-        return cobs::FileType::Cortex;
-    if (s == "cobs" || s == "cobs_doc")
-        return cobs::FileType::KMerBuffer;
-    if (s == "fasta")
-        return cobs::FileType::Fasta;
-    if (s == "fastq")
-        return cobs::FileType::Fastq;
-    die("Unknown file type " << s);
-}
-
-/******************************************************************************/
-
 void classic_construct(
     const std::string& input, const std::string& out_file,
     const cobs::ClassicIndexParameters& index_params,
     std::string file_type, std::string tmp_path)
 {
     // read file list
-    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    cobs::DocumentList filelist(input, cobs::StringToFileType(file_type));
     cobs::classic_construct(filelist, out_file, tmp_path, index_params);
 }
 
@@ -67,7 +48,7 @@ void compact_construct(
     std::string file_type, std::string tmp_path)
 {
     // read file list
-    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    cobs::DocumentList filelist(input, cobs::StringToFileType(file_type));
     cobs::compact_construct(filelist, out_file, tmp_path, index_params);
 }
 

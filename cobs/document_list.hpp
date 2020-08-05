@@ -28,6 +28,8 @@
 
 namespace cobs {
 
+/******************************************************************************/
+
 enum class FileType {
     //! Accept any supported file types in dir scan
     Any,
@@ -48,6 +50,10 @@ enum class FileType {
     //! Special filelist file type (cannot actually be a document)
     List,
 };
+
+FileType StringToFileType(std::string& s);
+
+/******************************************************************************/
 
 /*!
  * DocumentEntry specifies a document or subdocument which can deliver a set of

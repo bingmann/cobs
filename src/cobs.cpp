@@ -30,25 +30,6 @@
 #include <unordered_set>
 
 /******************************************************************************/
-
-cobs::FileType StringToFileType(std::string& s) {
-    tlx::to_lower(&s);
-    if (s == "any" || s == "*")
-        return cobs::FileType::Any;
-    if (s == "text" || s == "txt")
-        return cobs::FileType::Text;
-    if (s == "cortex" || s == "ctx")
-        return cobs::FileType::Cortex;
-    if (s == "cobs" || s == "cobs_doc")
-        return cobs::FileType::KMerBuffer;
-    if (s == "fasta")
-        return cobs::FileType::Fasta;
-    if (s == "fastq")
-        return cobs::FileType::Fastq;
-    die("Unknown file type " << s);
-}
-
-/******************************************************************************/
 // Document List and Dump
 
 static void print_document_list(cobs::DocumentList& filelist,
@@ -106,7 +87,7 @@ int doc_list(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    cobs::DocumentList filelist(path, StringToFileType(file_type));
+    cobs::DocumentList filelist(path, cobs::StringToFileType(file_type));
     print_document_list(filelist, term_size);
 
     return 0;
@@ -138,7 +119,7 @@ int doc_dump(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    cobs::DocumentList filelist(path, StringToFileType(file_type));
+    cobs::DocumentList filelist(path, cobs::StringToFileType(file_type));
 
     std::cerr << "Found " << filelist.size() << " documents." << std::endl;
 
@@ -243,7 +224,7 @@ int classic_construct(int argc, char** argv) {
     index_params.canonicalize = !no_canonicalize;
 
     // read file list
-    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    cobs::DocumentList filelist(input, cobs::StringToFileType(file_type));
     print_document_list(filelist, index_params.term_size);
 
     cobs::classic_construct(filelist, out_file, tmp_path, index_params);
@@ -382,7 +363,7 @@ int compact_construct(int argc, char** argv) {
     index_params.canonicalize = !no_canonicalize;
 
     // read file list
-    cobs::DocumentList filelist(input, StringToFileType(file_type));
+    cobs::DocumentList filelist(input, cobs::StringToFileType(file_type));
     print_document_list(filelist, index_params.term_size);
 
     cobs::compact_construct(filelist, out_file, tmp_path, index_params);
@@ -876,7 +857,7 @@ int generate_queries(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    cobs::DocumentList filelist(path, StringToFileType(file_type));
+    cobs::DocumentList filelist(path, cobs::StringToFileType(file_type));
 
     std::vector<size_t> terms_prefixsum;
     terms_prefixsum.reserve(filelist.size());
