@@ -1,19 +1,15 @@
 ################################################################################
 # src/CMakeLists.txt
 #
-# Copyright (c) 2019 Timo Bingmann
+# Copyright (c) 2019-2020 Timo Bingmann
 #
 # All rights reserved. Published under the MIT License in the LICENSE file.
 ################################################################################
 
-# glob programs
-file(GLOB_RECURSE EXECUTABLE_FILES
-  "${PROJECT_SOURCE_DIR}/src/*.cpp")
+add_executable(cobs cobs.cpp)
+target_link_libraries(cobs cobs_static)
 
-foreach(target ${EXECUTABLE_FILES})
-  get_filename_component(target_name ${target} NAME_WE)
-  add_executable(${target_name} ${target})
-  target_link_libraries(${target_name} cobs_static)
-endforeach(target)
+add_executable(cobs_server cobs_server.cpp)
+target_link_libraries(cobs_server cobs_static)
 
 ################################################################################
