@@ -29,6 +29,13 @@
 #include <unordered_set>
 
 /******************************************************************************/
+
+// some often repeated strings
+static const char* s_help_file_type =
+    "\"list\" to read a file list, or "
+    "filter documents by file type (any, text, cortex, fasta, fastq, etc)";
+
+/******************************************************************************/
 // Document List and Dump
 
 static void print_document_list(cobs::DocumentList& filelist,
@@ -75,8 +82,7 @@ int doc_list(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        "file-type", file_type,
-        "filter documents by file type (any, text, cortex, fasta, etc)");
+        "file-type", file_type, s_help_file_type);
 
     unsigned term_size = 31;
     cp.add_unsigned(
@@ -112,8 +118,7 @@ int doc_dump(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        "file-type", file_type,
-        "filter documents by file type (any, text, cortex, fasta, etc)");
+        "file-type", file_type, s_help_file_type);
 
     if (!cp.sort().process(argc, argv))
         return -1;
@@ -165,8 +170,7 @@ int classic_construct(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        "file-type", file_type,
-        "filter input documents by file type (any, text, cortex, fasta, etc)");
+        "file-type", file_type, s_help_file_type);
 
     cp.add_bytes(
         'm', "memory", index_params.mem_bytes,
@@ -299,8 +303,7 @@ int compact_construct(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        "file-type", file_type,
-        "filter input documents by file type (any, text, cortex, fasta, etc)");
+        "file-type", file_type, s_help_file_type);
 
     cp.add_bytes(
         'm', "memory", index_params.mem_bytes,
@@ -715,8 +718,7 @@ int generate_queries(int argc, char** argv) {
 
     std::string file_type = "any";
     cp.add_string(
-        "file-type", file_type,
-        "filter documents by file type (any, text, cortex, fasta, etc)");
+        "file-type", file_type, s_help_file_type);
 
     cp.add_size_t(
         'T', "threads", cobs::gopt_threads,

@@ -63,6 +63,15 @@ To construct a compact COBS index from these seven example documents run
 ```
 src/cobs compact-construct tests/data/fasta/ example.cobs_compact
 ```
+
+Or construct a compact COBS index from a list of documents by running
+```
+src/cobs compact-construct tests/data/fasta_files.list example.cobs_compact
+```
+The paths in the file list can be absolute or relative to the file list's path.
+Note that `*.txt` files are read as verbatim text files.
+You can force COBS to read a `.txt` file as a file list using `--file-type list`.
+
 Check `--help` for many options.
 
 ## Query an Index
