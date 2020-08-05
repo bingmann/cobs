@@ -50,7 +50,8 @@ and optionally run `make test` to check the build.
 
 ## Building an Index
 
-COBS can read FASTA files (`*.fa`, `*.fasta`, `*.fa.gz`, `*.fasta.gz`), FASTQ files (`*.fq`, `*.fastq`, `*.fq.gz.`, `*.fastq.gz`), McCortex files (`*.ctx`), or text files (`*.txt`).
+COBS can read FASTA files (`*.fa`, `*.fasta`, `*.fa.gz`, `*.fasta.gz`), FASTQ files (`*.fq`, `*.fastq`, `*.fq.gz.`, `*.fastq.gz`), "Multi-FASTA" and "Multi-FASTQ" files (`*.mfasta`, `*.mfastq`), McCortex files (`*.ctx`), or text files (`*.txt`). 
+See below on [details how they are parsed](#file-types-and-how-they-are-parsed).
 
 You can either recursively scan a directory for all files matching any of these files, or pass a `*.list` file which lists all paths COBS should index.
 
@@ -97,3 +98,31 @@ These are the main results, scaling by number of documents in the index, and in 
 
 ![cobs-experiments-scaling](https://user-images.githubusercontent.com/2604907/58323544-94b01180-7e24-11e9-8c3a-be998eb790a4.png)
 ![cobs-experiments-scaling-per-documents](https://user-images.githubusercontent.com/2604907/58323546-9679d500-7e24-11e9-9fed-636889628050.png)
+
+# More Details
+
+## File Types and How They Are Parsed
+
+COBS can read FASTA files (`*.fa`, `*.fasta`, `*.fa.gz`, `*.fasta.gz`), FASTQ files (`*.fq`, `*.fastq`, `*.fq.gz.`, `*.fastq.gz`), "Multi-FASTA" and "Multi-FASTQ" files (`*.mfasta`, `*.mfastq`), McCortex files (`*.ctx`), or text files (`*.txt`). 
+Each file type is parsed slightly differently into q-grams or k-mers.
+
+FASTA files are parsed as one document each.
+If a FASTA file contains multiple sequences or reads then they are combined into one document.
+Multiple sequences (separated by comments) are NOT concatenated trivially, instead the k-mers are extracted separately from each sequence.
+This means there are no erroneous k-mers from the beginning or end of crossing sequences.
+
+FASTQ files are also parsed as one document each.
+The quality information is dropped and effectively everything is parsed identical to FASTA files.
+
+Multi-FASTA or Multi-FASTQ files are parsed as many documents.
+Each sequence in the FASTA or FASTQ file is considered a separate document in the COBS index.
+Their names are append with `_###` where ### is the index of the subdocument.
+
+McCortex files (`*.ctx`) contain a list of k-mers and these k-mers are indexes individually.
+The graph information is ignored.
+Only k=31 is currently supported.
+
+Text files (`*.txt`) are parsed as verbatim binary documents.
+All q-grams are extracted, including newlines and other whitespace.
+
+
