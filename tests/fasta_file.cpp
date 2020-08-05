@@ -92,4 +92,9 @@ TEST_F(fasta, document_list) {
     }
 }
 
+TEST_F(fasta, listfile) {
+    cobs::DocumentList doc_list("data/fasta_files.list");
+    die_unequal(doc_list.list().size(), 4u);
+}
+
 /******************************************************************************/

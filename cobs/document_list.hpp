@@ -20,6 +20,7 @@
 #include <cobs/util/parallel_for.hpp>
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 
 #include <tlx/logger.hpp>
@@ -44,6 +45,8 @@ enum class FileType {
     FastaMulti,
     //! FastQ multi-file, parsed as multiple documents
     FastqMulti,
+    //! Special filelist file type (cannot actually be a document)
+    List,
 };
 
 /*!
@@ -194,6 +197,8 @@ public:
             return (ft == FileType::FastaMulti);
         case FileType::FastqMulti:
             return (ft == FileType::FastqMulti);
+        case FileType::List:
+            return (ft == FileType::List);
         }
         return false;
     }
@@ -228,6 +233,9 @@ public:
         }
         else if (tlx::ends_with(spath, ".mfastq")) {
             return FileType::FastqMulti;
+        }
+        else if (tlx::ends_with(spath, ".list")) {
+            return FileType::List;
         }
         else {
             return FileType::Any;
@@ -307,7 +315,7 @@ public:
             return DocumentEntryList({ de });
         }
         else {
-            die("DocumentList: unknown file to add: " << path);
+            die("DocumentList: unknown document file to add: " << path);
         }
     }
 
@@ -317,21 +325,46 @@ public:
         std::move(l.begin(), l.end(), std::back_inserter(list_));
     }
 
-    //! scan path recursively and add files of given filter type
+    //! scan path recursively and add files of given filter type. if the root
+    //! path is a .list file, it is read and all files are added to the
+    //! DocumentList.
     void add_recursive(const fs::path& root, FileType filter = FileType::Any)
     {
-        std::vector<fs::path> paths;
+        std::vector<std::string> paths;
         if (fs::is_directory(root)) {
             fs::recursive_directory_iterator it(root), end;
             while (it != end) {
                 if (accept(*it, filter)) {
-                    paths.emplace_back(*it);
+                    paths.emplace_back(fs::path(*it).string());
                 }
                 ++it;
             }
         }
+        else if (tlx::ends_with(root.string(), ".list") ||
+                 filter == FileType::List)
+        {
+            std::ifstream in(root.string());
+            if (!in.good())
+                die("DocumentList: could not open .list file: " << root);
+
+            fs::path root_parent = root.parent_path();
+            std::string line;
+            while (std::getline(in, line)) {
+                // skip empty lines and comment lines
+                if (line.size() == 0 || line[0] == '#')
+                    continue;
+
+                fs::path file(line);
+                if (!file.is_absolute()) {
+                    // if path line is not absolute, add parent path of the
+                    // list file.
+                    file = root_parent / file;
+                }
+                paths.emplace_back(file.string());
+            }
+        }
         else if (fs::is_regular_file(root)) {
-            paths.emplace_back(root);
+            paths.emplace_back(root.string());
         }
 
         std::sort(paths.begin(), paths.end());
@@ -343,8 +376,9 @@ public:
             0, paths.size(), gopt_threads,
             [&](size_t i) {
                 try {
-                    DocumentEntryList l = load(paths[i]);
+                    DocumentEntryList l = load(fs::path(paths[i]));
 
+                    // append the list of documents loaded from the path
                     std::unique_lock<std::mutex> lock(list_mutex);
                     std::move(l.begin(), l.end(), std::back_inserter(list_));
                 }
