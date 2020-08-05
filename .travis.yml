@@ -5,21 +5,30 @@ language: cpp
 sudo: false
 dist: bionic
 
-addons:
-  apt:
-    packages:
-      - python3
-      - python3-pip
-      - python3-setuptools
-      - python3-sphinx
-
 matrix:
   include:
     # gcc 7.x, Debug with -O1
     - env: CMAKE_CC="gcc" CMAKE_CXX="g++" BUILD_TYPE="Debug" COMPILER_FLAGS="-O1"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+            - python3-setuptools
+            - python3-sphinx
 
     # gcc 7.x, Release
     - env: CMAKE_CC="gcc" CMAKE_CXX="g++" BUILD_TYPE="Release" COMPILER_FLAGS=""
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:mhier/libboost-latest'
+          packages:
+            - python3
+            - python3-pip
+            - python3-setuptools
+            - python3-sphinx
+            - libboost1.73-dev
 
 before_script:
 
