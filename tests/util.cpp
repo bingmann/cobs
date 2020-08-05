@@ -40,6 +40,7 @@ void test_kmer(const char* kmer_data, bool flipped) {
     char kmer_buffer[32];
     const char* kmer_canon = cobs::canonicalize_kmer(
         kmer_data, kmer_buffer, 31);
+    die_unless(kmer_canon != nullptr);
 
     kmer1.canonicalize();
     die_unequal(kmer_canon, kmer1.string());

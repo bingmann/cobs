@@ -78,6 +78,12 @@ void ClassicSearch::create_hashes(
         for (size_t i = 0; i < num_terms; i++) {
             const char* normalized_kmer =
                 canonicalize_kmer(query_8 + i, canonicalize_buffer, term_size);
+
+            if (normalized_kmer == nullptr) {
+                die("Invalid DNA base pair in query string. "
+                    "Only ACGT are allowed.");
+            }
+
             for (size_t j = 0; j < num_hashes; j++) {
                 hashes[i * num_hashes + j] = XXH64(normalized_kmer, term_size, j);
             }

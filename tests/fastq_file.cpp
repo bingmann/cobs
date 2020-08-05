@@ -63,6 +63,7 @@ TEST_F(fastq, document_list) {
     cobs::ClassicIndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 0;
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);

@@ -135,9 +135,13 @@ int doc_dump(int argc, char** argv) {
             term_size,
             [&](const cobs::string_view& t) {
                 if (!no_canonicalize) {
-                    auto kmer = cobs::canonicalize_kmer(
+                    const char* kmer = cobs::canonicalize_kmer(
                         t.data(), kmer_buffer.data(), term_size);
-                    std::cout << std::string(kmer, term_size) << '\n';
+                    if (kmer == nullptr)
+                        std::cout << "Invalid DNA base pair: " << t
+                                  << std::endl;
+                    else
+                        std::cout << std::string(kmer, term_size) << '\n';
                 }
                 else {
                     std::cout << t << '\n';
@@ -568,9 +572,15 @@ int print_kmers(int argc, char** argv) {
 
     std::vector<char> kmer_buffer(kmer_size);
     for (size_t i = 0; i < query.size() - kmer_size; i++) {
-        auto kmer = cobs::canonicalize_kmer(
+        const char* kmer = cobs::canonicalize_kmer(
             query.data() + i, kmer_buffer.data(), kmer_size);
-        std::cout << std::string(kmer, kmer_size) << '\n';
+
+        if (kmer == nullptr)
+            std::cout << "Invalid DNA base pair: "
+                      << std::string(query.data() + i, kmer_size)
+                      << std::endl;
+        else
+            std::cout << std::string(kmer, kmer_size) << '\n';
     }
 
     return 0;

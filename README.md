@@ -110,6 +110,11 @@ FASTA files are parsed as one document each.
 If a FASTA file contains multiple sequences or reads then they are combined into one document.
 Multiple sequences (separated by comments) are NOT concatenated trivially, instead the k-mers are extracted separately from each sequence.
 This means there are no erroneous k-mers from the beginning or end of crossing sequences.
+All newlines within a sequence are removed.
+
+The k-mers from DNA sequences are automatically canonicalized (the lexicographically smaller is indexed).
+By adding the flag `--no-canonicalize` this process can be skipped.
+With canonicalization only ACGT letters can be index. With the flag `--no-canonicalize` any letters or text can be indexed.
 
 FASTQ files are also parsed as one document each.
 The quality information is dropped and effectively everything is parsed identical to FASTA files.

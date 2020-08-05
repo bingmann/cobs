@@ -122,6 +122,14 @@ static const char canonicalize_basepair_map[256] = {
 
 const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t kmer_size) {
     const char* map = canonicalize_basepair_map;
+
+    for (size_t j = 0; j < kmer_size; j++) {
+        if (map[static_cast<uint8_t>(query_8[j])] == 0) {
+            // found unmappable character
+            return nullptr;
+        }
+    }
+
     const uint8_t* query_8_reverse =
         reinterpret_cast<const uint8_t*>(query_8) + kmer_size - 1;
     size_t i = 0;

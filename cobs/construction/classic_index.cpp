@@ -44,7 +44,7 @@ void set_bit(std::vector<uint8_t>& data, const ClassicIndexHeader& cih,
 
 static inline
 void process_term(const string_view& term, std::vector<uint8_t>& data,
-                  size_t doc_index,
+                  size_t doc_index, const std::string& path,
                   const ClassicIndexHeader& cih, char* canonicalize_buffer) {
     if (cih.canonicalize_ == 0) {
         process_hashes(term.data(), term.size(),
@@ -56,6 +56,12 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
     else if (cih.canonicalize_ == 1) {
         const char* normalized_kmer =
             canonicalize_kmer(term.data(), canonicalize_buffer, term.size());
+
+        if (normalized_kmer == nullptr) {
+            die("Invalid DNA base pair in document. "
+                "Only ACGT are allowed without the --no-canonicalize flag.\n"
+                "  Path: " << path << "\n" << "  died");
+        }
 
         process_hashes(normalized_kmer, term.size(),
                        cih.signature_size_, cih.num_hashes_,
@@ -100,7 +106,7 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
                 paths[i].process_terms(
                     cih.term_size_,
                     [&](const string_view& term) {
-                        process_term(term, data, i,
+                        process_term(term, data, i, paths[i].path_,
                                      cih, canonicalize_buffer.data());
                         ++local_count;
                     });
@@ -696,7 +702,8 @@ void classic_construct_random(const fs::path& out_file,
         for (uint64_t j = 0; j < doc.data().size(); j++) {
             doc.data()[j].canonicalize();
             doc.data()[j].to_string(&term);
-            process_term(term, data, i, cih, canonicalize_buffer.data());
+            process_term(term, data, i, "random",
+                         cih, canonicalize_buffer.data());
         }
     }
 

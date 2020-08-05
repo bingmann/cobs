@@ -110,6 +110,7 @@ TEST(parameters, canonical) {
         char* kmer_8 = query.data() + i;
         const char* canonic_kmer =
             cobs::canonicalize_kmer(kmer_8, kmer_buffer, 31);
+        die_unless(canonic_kmer != nullptr);
 
         std::string kmer_result(canonic_kmer, 31);
         std::string kmer_original(kmer_8, 31);
