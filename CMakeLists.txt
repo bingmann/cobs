@@ -110,8 +110,11 @@ set(COBS_LINK_LIBRARIES ${ZLIB_LIBRARIES} ${COBS_LINK_LIBRARIES})
 
 find_package(Boost 1.42.0 COMPONENTS system filesystem)
 if(${Boost_FOUND})
+  set(COBS_BOOST_FOUND ON)
   set(COBS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS} ${COBS_INCLUDE_DIRS})
   set(COBS_LINK_LIBRARIES ${Boost_LIBRARIES} ${COBS_LINK_LIBRARIES})
+else()
+  message(WARNING "Boost was not found, not building query web server.")
 endif()
 
 set(COBS_LINK_LIBRARIES stdc++fs ${COBS_LINK_LIBRARIES})
