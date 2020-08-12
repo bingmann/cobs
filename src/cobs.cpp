@@ -412,13 +412,13 @@ void process_query(
     cobs::Search& s, double threshold, unsigned num_results,
     const std::string& query_line, const std::string& query_file)
 {
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
 
     if (!query_line.empty()) {
         s.search(query_line, result, threshold, num_results);
 
         for (const auto& res : result) {
-            std::cout << res.second << '\t' << res.first << '\n';
+            std::cout << res.doc_name << '\t' << res.score << '\n';
         }
     }
     else if (!query_file.empty()) {
@@ -436,7 +436,7 @@ void process_query(
                     std::cout << comment << '\t' << result.size() << '\n';
 
                     for (const auto& res : result) {
-                        std::cout << res.second << '\t' << res.first << '\n';
+                        std::cout << res.doc_name << '\t' << res.score << '\n';
                     }
                 }
 
@@ -457,7 +457,7 @@ void process_query(
             std::cout << comment << '\t' << result.size() << '\n';
 
             for (const auto& res : result) {
-                std::cout << res.second << '\t' << res.first << '\n';
+                std::cout << res.doc_name << '\t' << res.score << '\n';
             }
         }
     }
@@ -615,7 +615,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     ofs << "3" << std::endl;
     ofs.close();
 
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < warmup_queries.size(); i++) {
         s.search(warmup_queries[i], result);
     }
@@ -628,7 +628,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
 
         if (FalsePositiveDist) {
             for (const auto& r : result) {
-                counts[r.first]++;
+                counts[r.score]++;
             }
         }
     }

@@ -28,7 +28,7 @@ public:
 
     void search(
         const std::string& query,
-        std::vector<std::pair<uint16_t, std::string> >& result,
+        std::vector<SearchResult>& result,
         double threshold = 0.0, size_t num_results = 0) final;
 
 protected:

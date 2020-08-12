@@ -51,12 +51,13 @@ TEST_F(compact_index_query, all_included_mmap) {
         std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
-        int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, documents[index].data().size());
+        std::string doc_name = r.doc_name;
+        int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+        ASSERT_GE(r.score, documents[index].data().size());
     }
 }
 
@@ -78,11 +79,11 @@ TEST_F(compact_index_query, one_included_mmap) {
         std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (size_t i = 0; i < result.size(); ++i) {
-        ASSERT_EQ(result[i].first, 1);
+        ASSERT_EQ(result[i].score, 1);
     }
 }
 
@@ -106,14 +107,14 @@ TEST_F(compact_index_query, false_positive_mmap) {
     // execute query and check results
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_base.search(query_2, result);
 
         for (auto& r : result) {
-            num_positive[r.second] += r.first;
-            ASSERT_TRUE(r.first == 0 || r.first == 1);
+            num_positive[r.doc_name] += r.score;
+            ASSERT_TRUE(r.score == 0 || r.score == 1);
         }
     }
 
@@ -161,7 +162,7 @@ TEST_F(compact_index_query, false_positive_aio) {
 
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<std::pair<uint16_t, const char*> > result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_aio.search(query_2, result);

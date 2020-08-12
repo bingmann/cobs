@@ -50,12 +50,13 @@ TEST_F(classic_index_query, all_included_small_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
-        int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, documents[index].data().size());
+        std::string doc = r.doc_name;
+        int index = std::stoi(doc.substr(doc.size() - 2));
+        ASSERT_GE(r.score, documents[index].data().size());
     }
 }
 
@@ -76,11 +77,11 @@ TEST_F(classic_index_query, one_included_small_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (size_t i = 0; i < result.size(); ++i) {
-        ASSERT_EQ(result[i].first, 1);
+        ASSERT_EQ(result[i].score, 1);
     }
 }
 
@@ -101,11 +102,11 @@ TEST_F(classic_index_query, one_included_large_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
-        ASSERT_EQ(r.first, 1);
+        ASSERT_EQ(r.score, 1);
     }
 }
 
@@ -128,14 +129,14 @@ TEST_F(classic_index_query, false_positive) {
     // execute query and check results
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_base.search(query_2, result);
 
         for (auto& r : result) {
-            num_positive[r.second] += r.first;
-            ASSERT_TRUE(r.first == 0 || r.first == 1);
+            num_positive[r.doc_name] += r.score;
+            ASSERT_TRUE(r.score == 0 || r.score == 1);
         }
     }
 
@@ -187,11 +188,11 @@ TEST_F(classic_index_query, one_included_large_batch_multi_index) {
     cobs::ClassicSearch s_base({ index1, index2, index3 });
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(33u + 44u + 55u, result.size());
     for (auto& r : result) {
-        ASSERT_EQ(r.first, 1u);
+        ASSERT_EQ(r.score, 1u);
     }
 }
 

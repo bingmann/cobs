@@ -128,7 +128,7 @@ TEST_F(classic_index_construction, combine) {
     cobs::ClassicSearch s_base(
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(result_file));
 
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
 
     for (size_t ds = 0; ds < 10; ++ds) {
         for (size_t d = 0; d < doc_sets[ds].size(); ++d) {
@@ -142,7 +142,7 @@ TEST_F(classic_index_construction, combine) {
 
                 bool found = false;
                 for (auto& r : result) {
-                    if (r.second == doc_match && r.first > 0)
+                    if (r.doc_name == doc_match && r.score > 0)
                         found = true;
                 }
                 ASSERT_TRUE(found);

@@ -360,7 +360,7 @@ Construct a COBS Compact Index from a pre-populated DocumentList object.
            const std::string& query, double threshold, size_t num_results)
         {
             // lambda to allocate and return vector
-            std::vector<std::pair<uint16_t, std::string> > result;
+            std::vector<cobs::SearchResult> result;
             s.search(query, result, threshold, num_results);
             return result;
         },

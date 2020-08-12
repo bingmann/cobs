@@ -110,7 +110,7 @@ static inline
 void counts_to_result(
     std::vector<std::shared_ptr<IndexSearchFile> >& index_files,
     const uint16_t* scores,
-    std::vector<std::pair<uint16_t, std::string> >& result,
+    std::vector<SearchResult>& result,
     const std::vector<size_t>& thresholds,
     size_t num_results, size_t max_counts,
     const std::vector<size_t>& sum_doc_counts)
@@ -152,9 +152,9 @@ void counts_to_result(
         size_t index_id = sorted_indices[i].second.first;
         size_t document_id = sorted_indices[i].second.second;
 
-        result[i] = std::make_pair(
-            sorted_indices[i].first,
-            index_files[index_id]->file_names()[document_id]);
+        result[i] = SearchResult(
+            index_files[index_id]->file_names()[document_id].c_str(),
+            sorted_indices[i].first);
     }
 }
 
@@ -214,7 +214,7 @@ void aggregate_rows(
 
 void ClassicSearch::search(
     const std::string& query,
-    std::vector<std::pair<uint16_t, std::string> >& result,
+    std::vector<SearchResult>& result,
     double threshold, size_t num_results)
 {
     static constexpr bool debug = false;
