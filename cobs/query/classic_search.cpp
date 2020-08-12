@@ -76,16 +76,17 @@ void ClassicSearch::create_hashes(
     }
     else if (canonicalize == 1) {
         for (size_t i = 0; i < num_terms; i++) {
-            const char* normalized_kmer =
+            bool good =
                 canonicalize_kmer(query_8 + i, canonicalize_buffer, term_size);
 
-            if (normalized_kmer == nullptr) {
+            if (!good) {
                 die("Invalid DNA base pair in query string. "
                     "Only ACGT are allowed.");
             }
 
             for (size_t j = 0; j < num_hashes; j++) {
-                hashes[i * num_hashes + j] = XXH64(normalized_kmer, term_size, j);
+                hashes[i * num_hashes + j] = XXH64(
+                    canonicalize_buffer, term_size, j);
             }
         }
     }
@@ -217,7 +218,7 @@ void ClassicSearch::search(
     uint16_t* scores = allocate_aligned<uint16_t>(scores_totalsize, 16);
     std::vector<uint64_t> hashes;
 
-    std::vector<char> canonicalize_buffer(term_size);
+    tlx::simple_vector<char> canonicalize_buffer(term_size);
     create_hashes(hashes, query, canonicalize_buffer.data());
     timer_.stop();
 

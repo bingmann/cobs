@@ -47,11 +47,10 @@ generate_documents_all(const std::string& query,
     cobs::KMer<31> k;
     char kmer_buffer[32];
     for (size_t i = 0; i < num_terms && i < query.size() - 31; i++) {
-        const char* normalized_kmer =
-            cobs::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
-        die_unless(normalized_kmer != nullptr);
+        bool good = cobs::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
+        die_unless(good);
 
-        k.init(normalized_kmer);
+        k.init(kmer_buffer);
         for (size_t j = 0; j < documents.size(); j++) {
             if (j % (i % (documents.size() - 1) + 1) == 0) {
                 documents[j].data().push_back(k);
@@ -70,11 +69,10 @@ generate_documents_one(const std::string& query, size_t num_documents = 33) {
     cobs::KMer<31> k;
     char kmer_buffer[32];
 
-    const char* normalized_kmer =
-        cobs::canonicalize_kmer(query.data(), kmer_buffer, 31);
-    die_unless(normalized_kmer != nullptr);
+    bool good = cobs::canonicalize_kmer(query.data(), kmer_buffer, 31);
+    die_unless(good);
 
-    k.init(normalized_kmer);
+    k.init(kmer_buffer);
     for (size_t i = 0; i < documents.size(); i++) {
         for (size_t j = 0; j < i * 10 + 1; j++) {
             documents[i].data().push_back(k);

@@ -54,16 +54,16 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
                        });
     }
     else if (cih.canonicalize_ == 1) {
-        const char* normalized_kmer =
+        bool good =
             canonicalize_kmer(term.data(), canonicalize_buffer, term.size());
 
-        if (normalized_kmer == nullptr) {
+        if (!good) {
             die("Invalid DNA base pair in document. "
                 "Only ACGT are allowed without the --no-canonicalize flag.\n"
                 "  Path: " << path << "\n" << "  died");
         }
 
-        process_hashes(normalized_kmer, term.size(),
+        process_hashes(canonicalize_buffer, term.size(),
                        cih.signature_size_, cih.num_hashes_,
                        [&](uint64_t hash) {
                            set_bit(data, cih, hash, doc_index);
@@ -89,8 +89,6 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size_* cih.row_size());
 
-    std::vector<char> canonicalize_buffer(cih.term_size_);
-
     std::atomic<size_t> count = 0;
     t.active("process");
 
@@ -99,6 +97,8 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     parallel_for(
         0, (paths.size() + 7) / 8, num_threads,
         [&](size_t b) {
+            tlx::simple_vector<char> canonicalize_buffer(cih.term_size_);
+
             size_t local_count = 0;
             for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
                 cih.file_names_[i] = paths[i].name_;

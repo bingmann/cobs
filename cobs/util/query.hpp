@@ -32,7 +32,8 @@ struct MMapHandle {
 MMapHandle initialize_mmap(const fs::path& path);
 void destroy_mmap(MMapHandle& handle);
 
-const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t kmer_size);
+//! Canonicalize a k-mer. Given
+bool canonicalize_kmer(const char* input, char* output, size_t size);
 
 } // namespace cobs
 
