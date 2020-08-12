@@ -114,7 +114,9 @@ All newlines within a sequence are removed.
 
 The k-mers from DNA sequences are automatically canonicalized (the lexicographically smaller is indexed).
 By adding the flag `--no-canonicalize` this process can be skipped.
-With canonicalization only ACGT letters can be index. With the flag `--no-canonicalize` any letters or text can be indexed.
+With canonicalization only ACGT letters are indexed, every other letter is mapped to binary zeros and index with the other data.
+A warning per FASTA/FASTQ file containing a non-ACGT letter is printed, but processing continues.
+With the flag `--no-canonicalize` any letters or text can be indexed.
 
 FASTQ files are also parsed as one document each.
 The quality information is dropped and effectively everything is parsed identical to FASTA files.
