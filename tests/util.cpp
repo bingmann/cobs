@@ -27,7 +27,7 @@ TEST(util, allocate_aligned) {
 
 void test_kmer(const char* kmer_data,
                const char* kmer_correct, bool is_good) {
-    char kmer_buffer[32];
+    char kmer_buffer[31];
     bool good = cobs::canonicalize_kmer(kmer_data, kmer_buffer, 31);
 
     die_unequal(std::string(kmer_buffer, 31),
