@@ -115,46 +115,89 @@ void counts_to_result(
     size_t num_results, size_t max_counts,
     const std::vector<size_t>& sum_doc_counts)
 {
-    // uninitialized index vector
-    tlx::simple_vector<
-        std::pair<uint16_t, std::pair<uint32_t, uint32_t> >
-        > sorted_indices(sum_doc_counts.back());
+    if (index_files.size() == 1)
+    {
+        std::shared_ptr<IndexSearchFile>& index_file = index_files.front();
 
-    size_t count_threshold = 0;
-    for (size_t i = 0; i < index_files.size(); ++i) {
-        for (size_t j = 0; j < index_files[i]->file_names().size(); ++j) {
-            size_t index = sum_doc_counts[i] + j;
+        // uninitialized index vector
+        tlx::simple_vector<std::pair<uint16_t, uint32_t> > sorted_indices(
+            sum_doc_counts.back());
 
-            if (scores[index] >= thresholds[i]) {
+        size_t count_threshold = 0;
+        for (size_t j = 0; j < index_file->file_names().size(); ++j) {
+            if (scores[j] >= thresholds[0]) {
                 sorted_indices[count_threshold++] =
-                    std::make_pair(scores[index], std::make_pair(i, j));
+                    std::make_pair(scores[j], j);
             }
         }
+
+        num_results = std::min(num_results, count_threshold);
+
+        if (max_counts > 1)
+        {
+            std::partial_sort(
+                sorted_indices.begin(), sorted_indices.begin() + num_results,
+                sorted_indices.begin() + count_threshold,
+                [&](auto v1, auto v2) {
+                    return (std::tie(v2.first, v1.second)
+                            < std::tie(v1.first, v2.second));
+                });
+        }
+
+        result.resize(num_results);
+
+        for (size_t i = 0; i < num_results; ++i)
+        {
+            size_t document_id = sorted_indices[i].second;
+
+            result[i] = SearchResult(
+                index_file->file_names()[document_id].c_str(),
+                sorted_indices[i].first);
+        }
     }
-
-    num_results = std::min(num_results, count_threshold);
-
-    if (max_counts > 1)
+    else
     {
-        std::partial_sort(
-            sorted_indices.begin(), sorted_indices.begin() + num_results,
-            sorted_indices.begin() + count_threshold,
-            [&](auto v1, auto v2) {
-                return (std::tie(v2.first, v1.second)
-                        < std::tie(v1.first, v2.second));
-            });
-    }
+        // uninitialized index vector
+        tlx::simple_vector<
+            std::pair<uint16_t, std::pair<uint32_t, uint32_t> >
+            > sorted_indices(sum_doc_counts.back());
 
-    result.resize(num_results);
+        size_t count_threshold = 0;
+        for (size_t k = 0; k < index_files.size(); ++k) {
+            for (size_t i = 0; i < index_files[k]->file_names().size(); ++i) {
+                size_t index = sum_doc_counts[k] + i;
 
-    for (size_t i = 0; i < num_results; ++i)
-    {
-        size_t index_id = sorted_indices[i].second.first;
-        size_t document_id = sorted_indices[i].second.second;
+                if (scores[index] >= thresholds[k]) {
+                    sorted_indices[count_threshold++] =
+                        std::make_pair(scores[index], std::make_pair(k, i));
+                }
+            }
+        }
 
-        result[i] = SearchResult(
-            index_files[index_id]->file_names()[document_id].c_str(),
-            sorted_indices[i].first);
+        num_results = std::min(num_results, count_threshold);
+
+        if (max_counts > 1)
+        {
+            std::partial_sort(
+                sorted_indices.begin(), sorted_indices.begin() + num_results,
+                sorted_indices.begin() + count_threshold,
+                [&](auto v1, auto v2) {
+                    return (std::tie(v2.first, v1.second)
+                            < std::tie(v1.first, v2.second));
+                });
+        }
+
+        result.resize(num_results);
+
+        for (size_t i = 0; i < num_results; ++i)
+        {
+            size_t index_id = sorted_indices[i].second.first;
+            size_t document_id = sorted_indices[i].second.second;
+
+            result[i] = SearchResult(
+                index_files[index_id]->file_names()[document_id].c_str(),
+                sorted_indices[i].first);
+        }
     }
 }
 
