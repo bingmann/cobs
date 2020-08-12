@@ -504,12 +504,23 @@ int query(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    if (index_files.size() != 1) {
-        die("Supply one index file, TODO: add support for multiple.");
-    }
-    std::string index_file = index_files[0];
+    std::vector<std::shared_ptr<cobs::IndexSearchFile> > indices;
 
-    cobs::ClassicSearch s(index_file);
+    for (auto& path : index_files)
+    {
+        if (cobs::file_has_header<cobs::ClassicIndexHeader>(path)) {
+            indices.push_back(
+                std::make_shared<cobs::ClassicIndexMMapSearchFile>(path));
+        }
+        else if (cobs::file_has_header<cobs::CompactIndexHeader>(path)) {
+            indices.push_back(
+                std::make_shared<cobs::CompactIndexMMapSearchFile>(path));
+        }
+        else
+            die("Could not open index path \"" << path << "\"");
+    }
+
+    cobs::ClassicSearch s(indices);
     process_query(s, threshold, num_results, query, query_file);
 
     return 0;

@@ -22,18 +22,21 @@ private:
     static const uint64_t s_expansion[16];
     alignas(16) static const uint16_t s_expansion_128[2048];
 
-    void compute_counts(size_t hashes_size, uint16_t* counts,
+    void compute_counts(uint64_t num_hashes, size_t hashes_size, uint16_t* counts,
                         const uint8_t* rows, size_t size, size_t buffer_size);
-    void aggregate_rows(size_t hashes_size, uint8_t* rows, size_t size,
-                        size_t buffer_size);
+    void aggregate_rows(uint64_t num_hashes, size_t hashes_size, uint8_t* rows,
+                        size_t size, size_t buffer_size);
     void create_hashes(std::vector<uint64_t>& hashes, const std::string& query,
-                       char* canonicalize_buffer);
+                       char* canonicalize_buffer,
+                       std::shared_ptr<IndexSearchFile> index_file);
 
 public:
-    ClassicSearch(const std::shared_ptr<IndexSearchFile>& index_file);
-
     //! method to try to auto-detect and load IndexSearchFile
     ClassicSearch(std::string path);
+
+    ClassicSearch(std::shared_ptr<IndexSearchFile> index);
+
+    ClassicSearch(std::vector<std::shared_ptr<IndexSearchFile> > indices);
 
     void search(
         const std::string& query,
@@ -42,7 +45,7 @@ public:
 
 protected:
     //! reference to index file query object to retrieve data
-    std::shared_ptr<IndexSearchFile> index_file_;
+    std::vector<std::shared_ptr<IndexSearchFile> > index_files_;
 };
 
 } // namespace cobs

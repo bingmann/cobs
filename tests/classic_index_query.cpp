@@ -144,4 +144,55 @@ TEST_F(classic_index_query, false_positive) {
     }
 }
 
+static fs::path input1_dir = base_dir / "input1";
+static fs::path input2_dir = base_dir / "input2";
+static fs::path input3_dir = base_dir / "input3";
+
+static fs::path index1_path = base_dir / "index1.cobs_classic";
+static fs::path index2_path = base_dir / "index2.cobs_classic";
+static fs::path index3_path = base_dir / "index3.cobs_classic";
+
+TEST_F(classic_index_query, one_included_large_batch_multi_index) {
+    // construct classic index and mmap query
+    cobs::ClassicIndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
+
+    // generate index 1
+    auto documents1 = generate_documents_one(query, /* documents */ 33);
+    generate_test_case(documents1, input1_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input1_dir), index1_path, tmp_path, index_params);
+
+    // generate index 2
+    auto documents2 = generate_documents_one(query, /* documents */ 44);
+    generate_test_case(documents2, input2_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input2_dir), index2_path, tmp_path, index_params);
+
+    // generate index 3
+    auto documents3 = generate_documents_one(query, /* documents */ 55);
+    generate_test_case(documents3, input3_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input3_dir), index3_path, tmp_path, index_params);
+
+    auto index1 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index1_path);
+    auto index2 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index2_path);
+    auto index3 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index3_path);
+
+    cobs::ClassicSearch s_base({ index1, index2, index3 });
+
+    // execute query and check results
+    std::vector<std::pair<uint16_t, std::string> > result;
+    s_base.search(query, result);
+    ASSERT_EQ(33u + 44u + 55u, result.size());
+    for (auto& r : result) {
+        ASSERT_EQ(r.first, 1u);
+    }
+}
+
 /******************************************************************************/
