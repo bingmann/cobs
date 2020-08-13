@@ -49,18 +49,19 @@ script:
   # build and run tests
   - make -j2 && ctest -V
 
+  # install and test python module
+  - cd $TRAVIS_BUILD_DIR
+  - mkdir build-python; cd build-python
+  - pip3 install --user --verbose ..
+  - cd $TRAVIS_BUILD_DIR/python && python3 -m unittest
+
+after_success:
   # upload coverage
   - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
       cd $TRAVIS_BUILD_DIR;
       coveralls --exclude extlib --exclude python --exclude build --gcov-options '\-lp';
     fi
 
-  # install and test python module
-  - cd $TRAVIS_BUILD_DIR && rm -rf build
-  - pip3 install --user --verbose .
-  - cd python && python3 -m unittest
-
-after_success:
   # build docs
   - pip3 install --user sphinx-rtd-theme
   - cd $TRAVIS_BUILD_DIR/python/docs && make html
