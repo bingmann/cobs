@@ -346,6 +346,22 @@ Construct a COBS Compact Index from a pre-populated DocumentList object.
         py::arg("tmp_path") = "");
 
     /**************************************************************************/
+    // SearchResult
+
+    using cobs::SearchResult;
+    py::class_<SearchResult>(
+        m, "SearchResult",
+        "Return objects for Search")
+    .def(py::init<>(),
+         "constructor, fills the object with default parameters.")
+    .def_readwrite(
+        "doc_name", &SearchResult::doc_name,
+        "document name string")
+    .def_readwrite(
+        "score", &SearchResult::score,
+        "score of document");
+
+    /**************************************************************************/
     // Search (renamed from cobs::ClassicSearch)
 
     using Search = cobs::ClassicSearch;
