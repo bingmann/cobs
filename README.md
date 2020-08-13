@@ -89,6 +89,7 @@ or a fasta file of queries with
 ```
 src/cobs query -i example.cobs_compact -f query.fa
 ```
+Multiple indices can be queried at once by adding more `-i` parameters.
 
 ## Python Interface
 
