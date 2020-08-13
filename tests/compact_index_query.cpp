@@ -136,6 +136,22 @@ TEST_F(compact_index_query, all_included_mmap) {
             ASSERT_GE(r.score, documents[index].data().size());
         }
     }
+    {
+        // 32-bit SSE
+        cobs::classic_search_disable_8bit = true;
+        cobs::classic_search_disable_16bit = true;
+        cobs::classic_search_disable_32bit = false;
+        cobs::classic_search_disable_sse2 = false;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
+    }
 }
 
 TEST_F(compact_index_query, one_included_mmap) {

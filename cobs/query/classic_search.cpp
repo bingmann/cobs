@@ -255,17 +255,23 @@ void compute_counts_u32_64(
     const uint8_t* rows, size_t size, size_t buffer_size);
 
 static inline
+void compute_counts_u32_128(
+    uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size);
+
+static inline
 void compute_counts(
     uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
     const uint8_t* rows, size_t size, size_t buffer_size)
 {
-// #if __SSE2__
-//     return compute_counts_u16_128(
-//         num_hashes, hashes_size, scores, rows, size, buffer_size);
-// #else
+#if __SSE2__
+    if (!classic_search_disable_sse2) {
+        return compute_counts_u32_128(
+            num_hashes, hashes_size, scores, rows, size, buffer_size);
+    }
+#endif
     return compute_counts_u32_64(
         num_hashes, hashes_size, scores, rows, size, buffer_size);
-// #endif
 }
 
 /******************************************************************************/
@@ -674,7 +680,7 @@ void compute_counts_u16_64(
 
 //! expansion table from an 8-bit value (byte) and expanding it into one
 //! 128-bit word containing 8x uint16_t indicators.
-alignas(16) static const uint16_t s_expansion_u16_128[2048] = {
+alignas(16) static const uint16_t s_expansion_u16_128[256 * 8] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -972,6 +978,47 @@ void compute_counts_u32_64(
             counts_64[4 * k + 3] += s_expansion_u32_64[(rows_8[k] >> 6) & 0x3];
         }
     }
+}
+
+//! expansion table from an 8-bit value (byte) and expanding it into one
+//! 128-bit word containing 8x uint32_t indicators.
+alignas(32) static const uint32_t s_expansion_u32_128[16 * 4] = {
+    0, 0, 0, 0,
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    1, 1, 0, 0,
+    0, 0, 1, 0,
+    1, 0, 1, 0,
+    0, 1, 1, 0,
+    1, 1, 1, 0,
+    0, 0, 0, 1,
+    1, 0, 0, 1,
+    0, 1, 0, 1,
+    1, 1, 0, 1,
+    0, 0, 1, 1,
+    1, 0, 1, 1,
+    0, 1, 1, 1,
+    1, 1, 1, 1,
+};
+
+static inline
+void compute_counts_u32_128(
+    uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size)
+{
+#if __SSE2__
+    auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_u32_128);
+    auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
+    for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
+        const uint8_t* rows_8 = rows + i * buffer_size;
+        for (size_t k = 0; k < size; k++) {
+            counts_128[2 * k + 0] =
+                _mm_add_epi32(counts_128[2 * k + 0], expansion_128[rows_8[k] & 0xF]);
+            counts_128[2 * k + 1] =
+                _mm_add_epi32(counts_128[2 * k + 1], expansion_128[rows_8[k] >> 4]);
+        }
+    }
+#endif
 }
 
 } // namespace cobs
