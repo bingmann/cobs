@@ -63,6 +63,7 @@ TEST_F(fastq, document_list) {
     cobs::ClassicIndexParameters index_params;
     index_params.num_hashes = 3;
     index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 0;
 
     cobs::classic_construct(
         cobs::DocumentList(input_dir), index_path, tmp_path, index_params);
@@ -77,15 +78,15 @@ TEST_F(fastq, document_list) {
             [&](const cobs::string_view& term) {
                 std::string query(term);
 
-                std::vector<std::pair<uint16_t, std::string> > result;
+                std::vector<cobs::SearchResult> result;
                 s_base.search(query, result);
                 ASSERT_EQ(3u, result.size());
 
                 for (size_t i = 0; i < result.size(); ++i) {
-                    sLOG << result[i].first << result[i].second;
+                    sLOG << result[i].score << result[i].doc_name;
 
-                    if (result[i].second == de.name_) {
-                        ASSERT_GE(result[i].first, 1u);
+                    if (result[i].doc_name == de.name_) {
+                        ASSERT_GE(result[i].score, 1u);
                     }
                 }
             });

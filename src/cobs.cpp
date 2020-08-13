@@ -135,9 +135,14 @@ int doc_dump(int argc, char** argv) {
             term_size,
             [&](const cobs::string_view& t) {
                 if (!no_canonicalize) {
-                    auto kmer = cobs::canonicalize_kmer(
+                    bool good = cobs::canonicalize_kmer(
                         t.data(), kmer_buffer.data(), term_size);
-                    std::cout << std::string(kmer, term_size) << '\n';
+                    if (!good)
+                        std::cout << "Invalid DNA base pair: " << t
+                                  << std::endl;
+                    else
+                        std::cout << std::string(
+                            kmer_buffer.data(), term_size) << '\n';
                 }
                 else {
                     std::cout << t << '\n';
@@ -407,13 +412,13 @@ void process_query(
     cobs::Search& s, double threshold, unsigned num_results,
     const std::string& query_line, const std::string& query_file)
 {
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
 
     if (!query_line.empty()) {
         s.search(query_line, result, threshold, num_results);
 
         for (const auto& res : result) {
-            std::cout << res.second << '\t' << res.first << '\n';
+            std::cout << res.doc_name << '\t' << res.score << '\n';
         }
     }
     else if (!query_file.empty()) {
@@ -431,7 +436,7 @@ void process_query(
                     std::cout << comment << '\t' << result.size() << '\n';
 
                     for (const auto& res : result) {
-                        std::cout << res.second << '\t' << res.first << '\n';
+                        std::cout << res.doc_name << '\t' << res.score << '\n';
                     }
                 }
 
@@ -452,7 +457,7 @@ void process_query(
             std::cout << comment << '\t' << result.size() << '\n';
 
             for (const auto& res : result) {
-                std::cout << res.second << '\t' << res.first << '\n';
+                std::cout << res.doc_name << '\t' << res.score << '\n';
             }
         }
     }
@@ -499,12 +504,23 @@ int query(int argc, char** argv) {
     if (!cp.sort().process(argc, argv))
         return -1;
 
-    if (index_files.size() != 1) {
-        die("Supply one index file, TODO: add support for multiple.");
-    }
-    std::string index_file = index_files[0];
+    std::vector<std::shared_ptr<cobs::IndexSearchFile> > indices;
 
-    cobs::ClassicSearch s(index_file);
+    for (auto& path : index_files)
+    {
+        if (cobs::file_has_header<cobs::ClassicIndexHeader>(path)) {
+            indices.push_back(
+                std::make_shared<cobs::ClassicIndexMMapSearchFile>(path));
+        }
+        else if (cobs::file_has_header<cobs::CompactIndexHeader>(path)) {
+            indices.push_back(
+                std::make_shared<cobs::CompactIndexMMapSearchFile>(path));
+        }
+        else
+            die("Could not open index path \"" << path << "\"");
+    }
+
+    cobs::ClassicSearch s(indices);
     process_query(s, threshold, num_results, query, query_file);
 
     return 0;
@@ -568,9 +584,16 @@ int print_kmers(int argc, char** argv) {
 
     std::vector<char> kmer_buffer(kmer_size);
     for (size_t i = 0; i < query.size() - kmer_size; i++) {
-        auto kmer = cobs::canonicalize_kmer(
+        bool good = cobs::canonicalize_kmer(
             query.data() + i, kmer_buffer.data(), kmer_size);
-        std::cout << std::string(kmer, kmer_size) << '\n';
+
+        if (!good)
+            std::cout << "Invalid DNA base pair: "
+                      << std::string(query.data() + i, kmer_size)
+                      << std::endl;
+        else
+            std::cout << std::string(
+                kmer_buffer.data(), kmer_size) << '\n';
     }
 
     return 0;
@@ -592,7 +615,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
     ofs << "3" << std::endl;
     ofs.close();
 
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < warmup_queries.size(); i++) {
         s.search(warmup_queries[i], result);
     }
@@ -605,7 +628,7 @@ void benchmark_fpr_run(const cobs::fs::path& p,
 
         if (FalsePositiveDist) {
             for (const auto& r : result) {
-                counts[r.first]++;
+                counts[r.score]++;
             }
         }
     }

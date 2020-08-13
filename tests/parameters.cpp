@@ -105,13 +105,13 @@ TEST(parameters, false_positive_hash) {
 }
 
 TEST(parameters, canonical) {
-    char kmer_buffer[32];
+    char kmer_buffer[31];
     for (size_t i = 0; i < query.size() - 31; i++) {
         char* kmer_8 = query.data() + i;
-        const char* canonic_kmer =
-            cobs::canonicalize_kmer(kmer_8, kmer_buffer, 31);
+        bool good = cobs::canonicalize_kmer(kmer_8, kmer_buffer, 31);
+        die_unless(good);
 
-        std::string kmer_result(canonic_kmer, 31);
+        std::string kmer_result(kmer_buffer, 31);
         std::string kmer_original(kmer_8, 31);
         std::string kmer_complement(31, 'X');
         for (size_t j = 0; j < 31; j++) {

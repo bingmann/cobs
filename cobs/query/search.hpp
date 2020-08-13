@@ -14,6 +14,18 @@
 
 namespace cobs {
 
+struct SearchResult {
+    //! string reference to document name
+    const char* doc_name;
+    //! score (number of matched k-mers)
+    uint32_t score;
+
+    SearchResult() = default;
+
+    SearchResult(const char* doc_name, uint32_t score)
+        : doc_name(doc_name), score(score) { }
+};
+
 class Search
 {
 public:
@@ -26,7 +38,7 @@ public:
 
     virtual void search(
         const std::string& query,
-        std::vector<std::pair<uint16_t, std::string> >& result,
+        std::vector<SearchResult>& result,
         double threshold = 0.0, size_t num_results = 0) = 0;
 
 public:

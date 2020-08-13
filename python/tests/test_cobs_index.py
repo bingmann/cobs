@@ -36,8 +36,8 @@ class MainTest(unittest.TestCase):
         r = s.search("AGTCAACGCTAAGGCATTTCCCCCCTGCCTCCTGCCTGCTGCCAAGCCCT")
         #print(r)
         self.assertEqual(len(r), 7)
-        self.assertEqual(r[0][0], 20)
-        self.assertEqual(r[0][1], "sample1")
+        self.assertEqual(r[0].doc_name, "sample1")
+        self.assertEqual(r[0].score, 20)
 
     # construct compact index and run queries
     def test_compact_construct_query(self):
@@ -57,8 +57,8 @@ class MainTest(unittest.TestCase):
         r = s.search("AGTCAACGCTAAGGCATTTCCCCCCTGCCTCCTGCCTGCTGCCAAGCCCT")
         #print(r)
         self.assertEqual(len(r), 7)
-        self.assertEqual(r[0][0], 20)
-        self.assertEqual(r[0][1], "sample1")
+        self.assertEqual(r[0].doc_name, "sample1")
+        self.assertEqual(r[0].score, 20)
 
 if __name__ == '__main__':
     unittest.main()

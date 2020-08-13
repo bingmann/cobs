@@ -44,7 +44,8 @@ void set_bit(std::vector<uint8_t>& data, const ClassicIndexHeader& cih,
 
 static inline
 void process_term(const string_view& term, std::vector<uint8_t>& data,
-                  size_t doc_index,
+                  size_t doc_index, const std::string& path,
+                  bool* shown_canonicalization_warning,
                   const ClassicIndexHeader& cih, char* canonicalize_buffer) {
     if (cih.canonicalize_ == 0) {
         process_hashes(term.data(), term.size(),
@@ -54,10 +55,16 @@ void process_term(const string_view& term, std::vector<uint8_t>& data,
                        });
     }
     else if (cih.canonicalize_ == 1) {
-        const char* normalized_kmer =
+        bool good =
             canonicalize_kmer(term.data(), canonicalize_buffer, term.size());
 
-        process_hashes(normalized_kmer, term.size(),
+        if (!good && !*shown_canonicalization_warning) {
+            LOG1 << "WARNING: Invalid DNA base pair (not ACGT) in document: "
+                 << path;
+            *shown_canonicalization_warning = true;
+        }
+
+        process_hashes(canonicalize_buffer, term.size(),
                        cih.signature_size_, cih.num_hashes_,
                        [&](uint64_t hash) {
                            set_bit(data, cih, hash, doc_index);
@@ -83,8 +90,6 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     die_unless(paths.size() <= cih.row_size() * 8);
     std::vector<uint8_t> data(cih.signature_size_* cih.row_size());
 
-    std::vector<char> canonicalize_buffer(cih.term_size_);
-
     std::atomic<size_t> count = 0;
     t.active("process");
 
@@ -93,14 +98,18 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
     parallel_for(
         0, (paths.size() + 7) / 8, num_threads,
         [&](size_t b) {
+            tlx::simple_vector<char> canonicalize_buffer(cih.term_size_);
+
             size_t local_count = 0;
             for (size_t i = 8 * b; i < 8 * (b + 1) && i < paths.size(); ++i) {
                 cih.file_names_[i] = paths[i].name_;
+                bool shown_canonicalization_warning = false;
 
                 paths[i].process_terms(
                     cih.term_size_,
                     [&](const string_view& term) {
-                        process_term(term, data, i,
+                        process_term(term, data, i, paths[i].path_,
+                                     &shown_canonicalization_warning,
                                      cih, canonicalize_buffer.data());
                         ++local_count;
                     });
@@ -692,11 +701,15 @@ void classic_construct_random(const fs::path& out_file,
         std::string term;
         term.reserve(32);
 
+        bool shown_canonicalization_warning = false;
+
         // TODO: parallel for over setting of bits of the SAME document
         for (uint64_t j = 0; j < doc.data().size(); j++) {
             doc.data()[j].canonicalize();
             doc.data()[j].to_string(&term);
-            process_term(term, data, i, cih, canonicalize_buffer.data());
+            process_term(term, data, i, "random",
+                         &shown_canonicalization_warning,
+                         cih, canonicalize_buffer.data());
         }
     }
 

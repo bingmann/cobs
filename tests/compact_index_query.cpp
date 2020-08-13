@@ -33,6 +33,43 @@ protected:
     }
 };
 
+TEST_F(compact_index_query, all_included_mmap_small) {
+    // generate
+    std::string query = cobs::random_sequence(160, 1);
+    auto documents = generate_documents_all(query);
+    generate_test_case(documents, input_dir.string());
+
+    // construct compact index and mmap query
+    cobs::CompactIndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.page_size = 2;
+    index_params.canonicalize = 1;
+
+    cobs::compact_construct(
+        cobs::DocumentList(input_dir), index_file, tmp_path, index_params);
+    cobs::ClassicSearch s_base(
+        std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
+
+    // execute query and check results. check all expansion tables
+    {
+        // 8-bit non-SSE
+        cobs::classic_search_disable_8bit = false;
+        cobs::classic_search_disable_16bit = true;
+        cobs::classic_search_disable_32bit = true;
+        cobs::classic_search_disable_sse2 = true;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
+    }
+}
+
 TEST_F(compact_index_query, all_included_mmap) {
     // generate
     auto documents = generate_documents_all(query);
@@ -50,13 +87,70 @@ TEST_F(compact_index_query, all_included_mmap) {
     cobs::ClassicSearch s_base(
         std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
-    // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
-    s_base.search(query, result);
-    ASSERT_EQ(documents.size(), result.size());
-    for (auto& r : result) {
-        int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, documents[index].data().size());
+    // execute query and check results. check all expansion tables
+    {
+        // 16-bit non-SSE
+        cobs::classic_search_disable_8bit = true;
+        cobs::classic_search_disable_16bit = false;
+        cobs::classic_search_disable_32bit = true;
+        cobs::classic_search_disable_sse2 = true;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
+    }
+    {
+        // 16-bit SSE
+        cobs::classic_search_disable_8bit = true;
+        cobs::classic_search_disable_16bit = false;
+        cobs::classic_search_disable_32bit = true;
+        cobs::classic_search_disable_sse2 = false;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
+    }
+    {
+        // 32-bit non-SSE
+        cobs::classic_search_disable_8bit = true;
+        cobs::classic_search_disable_16bit = true;
+        cobs::classic_search_disable_32bit = false;
+        cobs::classic_search_disable_sse2 = true;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
+    }
+    {
+        // 32-bit SSE
+        cobs::classic_search_disable_8bit = true;
+        cobs::classic_search_disable_16bit = true;
+        cobs::classic_search_disable_32bit = false;
+        cobs::classic_search_disable_sse2 = false;
+
+        std::vector<cobs::SearchResult> result;
+        s_base.search(query, result);
+        ASSERT_EQ(documents.size(), result.size());
+        for (auto& r : result) {
+            std::string doc_name = r.doc_name;
+            int index = std::stoi(doc_name.substr(doc_name.size() - 2));
+            ASSERT_GE(r.score, documents[index].data().size());
+        }
     }
 }
 
@@ -78,11 +172,11 @@ TEST_F(compact_index_query, one_included_mmap) {
         std::make_shared<cobs::CompactIndexMMapSearchFile>(index_file));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (size_t i = 0; i < result.size(); ++i) {
-        ASSERT_EQ(result[i].first, 1);
+        ASSERT_EQ(result[i].score, 1);
     }
 }
 
@@ -106,14 +200,14 @@ TEST_F(compact_index_query, false_positive_mmap) {
     // execute query and check results
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_base.search(query_2, result);
 
         for (auto& r : result) {
-            num_positive[r.second] += r.first;
-            ASSERT_TRUE(r.first == 0 || r.first == 1);
+            num_positive[r.doc_name] += r.score;
+            ASSERT_TRUE(r.score == 0 || r.score == 1);
         }
     }
 
@@ -161,7 +255,7 @@ TEST_F(compact_index_query, false_positive_aio) {
 
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<std::pair<uint16_t, const char*> > result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_aio.search(query_2, result);

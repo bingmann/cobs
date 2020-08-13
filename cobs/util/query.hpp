@@ -32,7 +32,14 @@ struct MMapHandle {
 MMapHandle initialize_mmap(const fs::path& path);
 void destroy_mmap(MMapHandle& handle);
 
-const char * canonicalize_kmer(const char* query_8, char* kmer_buffer, uint32_t kmer_size);
+//! Canonicalize a k-mer. Given an input k-mer of length size, checks if should
+//! be canonicalized into its reverse complement. If any letter other than ACGT
+//! occurs, the letter is replaced with a binary zero, and the function returns
+//! false, indicating an invalid input. The input k-mer is always written to the
+//! output buffer, replacing letters with zeros, or with the reverse
+//! complement. The output pointer must point to a memory area of size
+//! bytes. The output is not returned null-terminated!.
+bool canonicalize_kmer(const char* input, char* output, size_t size);
 
 } // namespace cobs
 

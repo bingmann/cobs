@@ -7,8 +7,8 @@
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
-#include <cobs/kmer.hpp>
 #include <cobs/util/misc.hpp>
+#include <cobs/util/query.hpp>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -25,35 +25,38 @@ TEST(util, allocate_aligned) {
     cobs::deallocate_aligned(ptr2);
 }
 
-void test_kmer(const char* kmer_data, bool flipped) {
-    cobs::KMer<31> kmer1(kmer_data);
-    die_unequal(kmer1.string(), kmer_data);
+void test_kmer(const char* kmer_data,
+               const char* kmer_correct, bool is_good) {
+    char kmer_buffer[31];
+    bool good = cobs::canonicalize_kmer(kmer_data, kmer_buffer, 31);
 
-    std::string kmer_at_test;
-    char letter[4] = { 'A', 'C', 'G', 'T' };
-    for (size_t i = 0; i < 31; ++i) {
-        kmer_at_test += letter[kmer1.at(i)];
-    }
-    die_unequal(kmer1.string(), kmer_at_test);
-
-    // check canonicalization
-    char kmer_buffer[32];
-    const char* kmer_canon = cobs::canonicalize_kmer(
-        kmer_data, kmer_buffer, 31);
-
-    kmer1.canonicalize();
-    die_unequal(kmer_canon, kmer1.string());
-
-    if (!flipped)
-        die_unequal(kmer_data, kmer1.string());
-    else
-        die_equal(kmer_data, kmer1.string());
+    die_unequal(std::string(kmer_buffer, 31),
+                std::string(kmer_correct, 31));
+    die_unequal(good, is_good);
 }
 
 TEST(util, kmer_canonicalize) {
-    test_kmer("AGGAAAGTCTTTTACGCTGGGGTAAGAGTGA", false);
-    test_kmer("TGGAAAGTCTTTTACGCTGGGGTAAGAGTGA", true);
-    test_kmer("TTTTTTGTCTTTTACGCTGGGGTTTAAAAAA", true);
+    // one already canonical one
+    test_kmer("AGGAAAGTCTTTTACGCTGGGGTAAGAGTGA",
+              "AGGAAAGTCTTTTACGCTGGGGTAAGAGTGA", true);
+    // two k-mers which need to be flipped
+    test_kmer("TGGAAAGTCTTTTACGCTGGGGTAAGAGTGA",
+              "TCACTCTTACCCCAGCGTAAAAGACTTTCCA", true);
+    test_kmer("TTTTTTGTCTTTTACGCTGGGGTTTAAAAAA",
+              "TTTTTTAAACCCCAGCGTAAAAGACAAAAAA", true);
+    // special case, lexicographically smaller until center
+    test_kmer("AAAAAAAAAAAAAAAATTTTTTTTTTTTTTT",
+              "AAAAAAAAAAAAAAAATTTTTTTTTTTTTTT", true);
+
+    // one kmer already canonical but containing invalid letters
+    test_kmer("AGGAAAGTCTTTTACGCTGGGXXXAGAGTGA",
+              "AGGAAAGTCTTTTACGCTGGG\0\0\0AGAGTGA", false);
+    // one k-mer needing flipping containing invalid letters
+    test_kmer("TGGAAAGTCTTTTACGCTGGGXXXAGAGTGA",
+              "TCACTCT\0\0\0CCCAGCGTAAAAGACTTTCCA", false);
+    // one kmer containing the invalid letter at the center
+    test_kmer("AAAAAAAAAAAAAAAXTTTTTTTTTTTTTTT",
+              "AAAAAAAAAAAAAAA\0TTTTTTTTTTTTTTT", false);
 }
 
 /******************************************************************************/

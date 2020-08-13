@@ -50,12 +50,13 @@ TEST_F(classic_index_query, all_included_small_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
-        int index = std::stoi(r.second.substr(r.second.size() - 2));
-        ASSERT_GE(r.first, documents[index].data().size());
+        std::string doc = r.doc_name;
+        int index = std::stoi(doc.substr(doc.size() - 2));
+        ASSERT_GE(r.score, documents[index].data().size());
     }
 }
 
@@ -76,11 +77,11 @@ TEST_F(classic_index_query, one_included_small_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (size_t i = 0; i < result.size(); ++i) {
-        ASSERT_EQ(result[i].first, 1);
+        ASSERT_EQ(result[i].score, 1);
     }
 }
 
@@ -101,11 +102,11 @@ TEST_F(classic_index_query, one_included_large_batch) {
         std::make_shared<cobs::ClassicIndexMMapSearchFile>(index_path));
 
     // execute query and check results
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     s_base.search(query, result);
     ASSERT_EQ(documents.size(), result.size());
     for (auto& r : result) {
-        ASSERT_EQ(r.first, 1);
+        ASSERT_EQ(r.score, 1);
     }
 }
 
@@ -128,19 +129,70 @@ TEST_F(classic_index_query, false_positive) {
     // execute query and check results
     size_t num_tests = 10000;
     std::map<std::string, uint64_t> num_positive;
-    std::vector<std::pair<uint16_t, std::string> > result;
+    std::vector<cobs::SearchResult> result;
     for (size_t i = 0; i < num_tests; i++) {
         std::string query_2 = cobs::random_sequence(31, i);
         s_base.search(query_2, result);
 
         for (auto& r : result) {
-            num_positive[r.second] += r.first;
-            ASSERT_TRUE(r.first == 0 || r.first == 1);
+            num_positive[r.doc_name] += r.score;
+            ASSERT_TRUE(r.score == 0 || r.score == 1);
         }
     }
 
     for (auto& np : num_positive) {
         ASSERT_LE(np.second, 1070U);
+    }
+}
+
+static fs::path input1_dir = base_dir / "input1";
+static fs::path input2_dir = base_dir / "input2";
+static fs::path input3_dir = base_dir / "input3";
+
+static fs::path index1_path = base_dir / "index1.cobs_classic";
+static fs::path index2_path = base_dir / "index2.cobs_classic";
+static fs::path index3_path = base_dir / "index3.cobs_classic";
+
+TEST_F(classic_index_query, one_included_large_batch_multi_index) {
+    // construct classic index and mmap query
+    cobs::ClassicIndexParameters index_params;
+    index_params.num_hashes = 3;
+    index_params.false_positive_rate = 0.1;
+    index_params.canonicalize = 1;
+
+    // generate index 1
+    auto documents1 = generate_documents_one(query, /* documents */ 33);
+    generate_test_case(documents1, input1_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input1_dir), index1_path, tmp_path, index_params);
+
+    // generate index 2
+    auto documents2 = generate_documents_one(query, /* documents */ 44);
+    generate_test_case(documents2, input2_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input2_dir), index2_path, tmp_path, index_params);
+
+    // generate index 3
+    auto documents3 = generate_documents_one(query, /* documents */ 55);
+    generate_test_case(documents3, input3_dir.string());
+
+    cobs::classic_construct(
+        cobs::DocumentList(input3_dir), index3_path, tmp_path, index_params);
+
+    auto index1 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index1_path);
+    auto index2 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index2_path);
+    auto index3 = std::make_shared<cobs::ClassicIndexMMapSearchFile>(index3_path);
+
+    cobs::ClassicSearch s_base({ index1, index2, index3 });
+
+    // execute query and check results
+    std::vector<cobs::SearchResult> result;
+    s_base.search(query, result);
+    ASSERT_EQ(33u + 44u + 55u, result.size());
+    for (auto& r : result) {
+        ASSERT_EQ(r.score, 1u);
     }
 }
 

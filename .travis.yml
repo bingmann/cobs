@@ -30,11 +30,28 @@ matrix:
             - python3-sphinx
             - libboost1.73-dev
 
+    # gcc 7.x, Debug with -O1 and coverage
+    - env: CMAKE_CC="gcc" CMAKE_CXX="g++" BUILD_TYPE="Debug" COMPILER_FLAGS="-O1" BUILD_COVERAGE="1"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+            - python3-setuptools
+            - python3-sphinx
+            - lcov
+
 before_script:
 
   # print out some version numbers
   - $CMAKE_CXX --version
   - cmake --version
+
+  # gcov coverage
+  - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
+      pip install --user cpp-coveralls;
+      CMAKE_ARGS="$CMAKE_ARGS -DCOBS_USE_GCOV=ON";
+    fi
 
   # configure
   - mkdir build; cd build
@@ -49,11 +66,18 @@ script:
   - make -j2 && ctest -V
 
   # install and test python module
-  - cd $TRAVIS_BUILD_DIR && rm -rf build
-  - pip3 install --user --verbose .
-  - cd python && python3 -m unittest
+  - cd $TRAVIS_BUILD_DIR
+  - mkdir build-python; cd build-python
+  - pip3 install --user --verbose ..
+  - cd $TRAVIS_BUILD_DIR/python && python3 -m unittest
 
 after_success:
+  # upload coverage
+  - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
+      cd $TRAVIS_BUILD_DIR;
+      coveralls --exclude extlib --exclude python --exclude build/CMakeFiles --gcov-options '\-lp';
+    fi
+
   # build docs
   - pip3 install --user sphinx-rtd-theme
   - cd $TRAVIS_BUILD_DIR/python/docs && make html
