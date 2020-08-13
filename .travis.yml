@@ -59,7 +59,7 @@ after_success:
   # upload coverage
   - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
       cd $TRAVIS_BUILD_DIR;
-      coveralls --exclude extlib --exclude python --exclude build --gcov-options '\-lp';
+      coveralls --exclude extlib --exclude python --exclude build/CMakeFiles --gcov-options '\-lp';
     fi
 
   # build docs
