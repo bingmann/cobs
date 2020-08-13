@@ -12,6 +12,7 @@ addons:
       - python3-pip
       - python3-setuptools
       - python3-sphinx
+      - lcov
 
 matrix:
   include:
@@ -21,11 +22,20 @@ matrix:
     # gcc 7.x, Release
     - env: CMAKE_CC="gcc" CMAKE_CXX="g++" BUILD_TYPE="Release" COMPILER_FLAGS=""
 
+    # gcc 7.x, Debug with -O1 and coverage
+    - env: CMAKE_CC="gcc" CMAKE_CXX="g++" BUILD_TYPE="Debug" COMPILER_FLAGS="-O1" BUILD_COVERAGE="1"
+
 before_script:
 
   # print out some version numbers
   - $CMAKE_CXX --version
   - cmake --version
+
+  # gcov coverage
+  - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
+      pip install --user cpp-coveralls;
+      CMAKE_ARGS="$CMAKE_ARGS -DCOBS_USE_GCOV=ON";
+    fi
 
   # configure
   - mkdir build; cd build
@@ -38,6 +48,12 @@ before_script:
 script:
   # build and run tests
   - make -j2 && ctest -V
+
+  # upload coverage
+  - if [ -n "$BUILD_COVERAGE" -a -n "$COVERALLS_REPO_TOKEN" ]; then
+      cd $TRAVIS_BUILD_DIR;
+      coveralls --exclude extlib --exclude python --exclude build --gcov-options '\-lp';
+    fi
 
   # install and test python module
   - cd $TRAVIS_BUILD_DIR && rm -rf build

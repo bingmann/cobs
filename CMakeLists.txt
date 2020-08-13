@@ -89,11 +89,14 @@ if(COBS_USE_GCOV)
 
   if(NOT LCOV OR NOT GENHTML)
     message(SEND_ERROR "Coverage analysis requires lcov and genhtml programs.")
+  else()
+    message(STATUS "Found lcov: ${LCOV}")
+    message(STATUS "Found genhtml: ${GENHTML}")
   endif()
 
   # add coverage anaylsis compile and link flags
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fprofile-arcs -ftest-coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcov")
 
   # add cached variable containing parameters for lcov/genhtml
