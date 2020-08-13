@@ -105,7 +105,7 @@ TEST(parameters, false_positive_hash) {
 }
 
 TEST(parameters, canonical) {
-    char kmer_buffer[32];
+    char kmer_buffer[31];
     for (size_t i = 0; i < query.size() - 31; i++) {
         char* kmer_8 = query.data() + i;
         bool good = cobs::canonicalize_kmer(kmer_8, kmer_buffer, 31);

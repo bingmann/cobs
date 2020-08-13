@@ -6,10 +6,14 @@ However, unlike Mantis and other previous work, COBS does not need the complete 
 
 ![cobs-architecture](https://user-images.githubusercontent.com/2604907/58323540-91b52100-7e24-11e9-933d-98b9b24ae041.png)
 
-COBS has two interfaces:
+COBS has two interfaces: (
+[![Build Status](https://travis-ci.org/bingmann/cobs.svg?branch=master)](https://travis-ci.org/bingmann/cobs)
+[![Coverage Status](https://coveralls.io/repos/github/bingmann/cobs/badge.svg?branch=master)](https://coveralls.io/github/bingmann/cobs?branch=master)
+)
 
 - a command line tool in C++ called `cobs` (see below)
 - a Python interface to the C++ library [![PyPI version](https://badge.fury.io/py/cobs-index.svg)](https://badge.fury.io/py/cobs-index) (see https://bingmann.github.io/cobs-python-docs/)
+
 
 More information about COBS is presented in [our current research paper](https://arxiv.org/abs/1905.09624):
 Timo Bingmann, Phelim Bradley, Florian Gauger, and Zamin Iqbal.
@@ -85,6 +89,7 @@ or a fasta file of queries with
 ```
 src/cobs query -i example.cobs_compact -f query.fa
 ```
+Multiple indices can be queried at once by adding more `-i` parameters.
 
 ## Python Interface
 

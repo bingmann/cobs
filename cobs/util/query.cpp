@@ -171,7 +171,6 @@ bool canonicalize_kmer(const char* input, char* output, size_t size)
                 *foutput++ = f;
                 good = good && (f != 0);
             }
-            *foutput = 0;
             return good;
         }
         else if (f > r) {
@@ -181,7 +180,6 @@ bool canonicalize_kmer(const char* input, char* output, size_t size)
                 output[size - j - 1] = x;
                 good = good && (x != 0);
             }
-            output[size] = 0;
             return good;
         }
 
@@ -197,7 +195,6 @@ bool canonicalize_kmer(const char* input, char* output, size_t size)
         *foutput++ = f;
         good = good && (f != 0);
     }
-    *foutput = 0;
     return good;
 }
 

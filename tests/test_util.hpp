@@ -49,6 +49,7 @@ generate_documents_all(const std::string& query,
     for (size_t i = 0; i < num_terms && i < query.size() - 31; i++) {
         bool good = cobs::canonicalize_kmer(query.data() + i, kmer_buffer, 31);
         die_unless(good);
+        kmer_buffer[31] = 0;
 
         k.init(kmer_buffer);
         for (size_t j = 0; j < documents.size(); j++) {
@@ -71,6 +72,7 @@ generate_documents_one(const std::string& query, size_t num_documents = 33) {
 
     bool good = cobs::canonicalize_kmer(query.data(), kmer_buffer, 31);
     die_unless(good);
+    kmer_buffer[31] = 0;
 
     k.init(kmer_buffer);
     for (size_t i = 0; i < documents.size(); i++) {

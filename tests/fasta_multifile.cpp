@@ -78,15 +78,15 @@ TEST_F(fasta_multi, document_list) {
             [&](const cobs::string_view& term) {
                 std::string query(term);
 
-                std::vector<std::pair<uint16_t, std::string> > result;
+                std::vector<cobs::SearchResult> result;
                 s_base.search(query, result);
                 ASSERT_EQ(6u, result.size());
 
                 for (size_t i = 0; i < result.size(); ++i) {
-                    sLOG << result[i].first << result[i].second;
+                    sLOG << result[i].score << result[i].doc_name;
 
-                    if (result[i].second == de.name_) {
-                        ASSERT_GE(result[i].first, 1u);
+                    if (result[i].doc_name == de.name_) {
+                        ASSERT_GE(result[i].score, 1u);
                     }
                 }
             });
