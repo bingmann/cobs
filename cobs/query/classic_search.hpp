@@ -36,6 +36,21 @@ protected:
     std::vector<std::shared_ptr<IndexSearchFile> > index_files_;
 };
 
+/*----------------------------------------------------------------------------*/
+// hacky variables to disable expansion table variants for better testing
+
+//! disable 8-bit expansion table
+extern bool classic_search_disable_8bit;
+//! disable 16-bit expansion table
+extern bool classic_search_disable_16bit;
+//! disable 32-bit expansion table
+extern bool classic_search_disable_32bit;
+
+//! disable SSE2 versions of expansion
+extern bool classic_search_disable_sse2;
+
+/*----------------------------------------------------------------------------*/
+
 } // namespace cobs
 
 #endif // !COBS_QUERY_CLASSIC_SEARCH_HEADER

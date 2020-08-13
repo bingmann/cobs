@@ -106,10 +106,10 @@ void create_hashes(
     }
 }
 
-static inline
+template <typename Score>
 void counts_to_result(
-    std::vector<std::shared_ptr<IndexSearchFile> >& index_files,
-    const uint16_t* scores,
+    const std::vector<std::shared_ptr<IndexSearchFile> >& index_files,
+    const Score* scores,
     std::vector<SearchResult>& result,
     const std::vector<size_t>& thresholds,
     size_t num_results, size_t max_counts,
@@ -117,10 +117,10 @@ void counts_to_result(
 {
     if (index_files.size() == 1)
     {
-        std::shared_ptr<IndexSearchFile>& index_file = index_files.front();
+        const std::shared_ptr<IndexSearchFile>& index_file = index_files.front();
 
         // uninitialized index vector
-        tlx::simple_vector<std::pair<uint16_t, uint32_t> > sorted_indices(
+        tlx::simple_vector<std::pair<Score, uint32_t> > sorted_indices(
             sum_doc_counts.back());
 
         size_t count_threshold = 0;
@@ -159,7 +159,7 @@ void counts_to_result(
     {
         // uninitialized index vector
         tlx::simple_vector<
-            std::pair<uint16_t, std::pair<uint32_t, uint32_t> >
+            std::pair<Score, std::pair<uint16_t, uint32_t> >
             > sorted_indices(sum_doc_counts.back());
 
         size_t count_threshold = 0;
@@ -201,13 +201,36 @@ void counts_to_result(
     }
 }
 
+/******************************************************************************/
+// Score Expansion and Aggregation
+
+bool classic_search_disable_8bit = false;
+bool classic_search_disable_16bit = false;
+bool classic_search_disable_32bit = false;
+
+bool classic_search_disable_sse2 = false;
+
 static inline
-void compute_counts_64(
+void compute_counts_u8_64(
+    uint64_t num_hashes, size_t hashes_size, uint8_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size);
+
+static inline
+void compute_counts(
+    uint64_t num_hashes, size_t hashes_size, uint8_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size)
+{
+    return compute_counts_u8_64(
+        num_hashes, hashes_size, scores, rows, size, buffer_size);
+}
+
+static inline
+void compute_counts_u16_64(
     uint64_t num_hashes, size_t hashes_size, uint16_t* scores,
     const uint8_t* rows, size_t size, size_t buffer_size);
 
 static inline
-void compute_counts_128(
+void compute_counts_u16_128(
     uint64_t num_hashes, size_t hashes_size, uint16_t* scores,
     const uint8_t* rows, size_t size, size_t buffer_size);
 
@@ -217,13 +240,35 @@ void compute_counts(
     const uint8_t* rows, size_t size, size_t buffer_size)
 {
 #if __SSE2__
-    return compute_counts_128(
-        num_hashes, hashes_size, scores, rows, size, buffer_size);
-#else
-    return compute_counts_64(
-        num_hashes, hashes_size, scores, rows, size, buffer_size);
+    if (!classic_search_disable_sse2) {
+        return compute_counts_u16_128(
+            num_hashes, hashes_size, scores, rows, size, buffer_size);
+    }
 #endif
+    return compute_counts_u16_64(
+        num_hashes, hashes_size, scores, rows, size, buffer_size);
 }
+
+static inline
+void compute_counts_u32_64(
+    uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size);
+
+static inline
+void compute_counts(
+    uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size)
+{
+// #if __SSE2__
+//     return compute_counts_u16_128(
+//         num_hashes, hashes_size, scores, rows, size, buffer_size);
+// #else
+    return compute_counts_u32_64(
+        num_hashes, hashes_size, scores, rows, size, buffer_size);
+// #endif
+}
+
+/******************************************************************************/
 
 static inline
 void aggregate_rows(
@@ -255,6 +300,100 @@ void aggregate_rows(
     }
 }
 
+template <typename Score>
+void search_index_file(
+    size_t file_num, const std::shared_ptr<IndexSearchFile>& index_file,
+    const std::string& query, Score* score_list,
+    size_t& total_hashes, const std::vector<size_t>& sum_doc_counts,
+    Timer& timer)
+{
+    static constexpr bool debug = false;
+
+    uint32_t num_hashes = index_file->num_hashes();
+    uint32_t term_size = index_file->term_size();
+    uint64_t page_size = index_file->page_size();
+    size_t score_total_size = index_file->counts_size();
+
+    assert_exit(query.size() - term_size < std::numeric_limits<Score>::max(),
+                "query too long, can not be longer than "
+                + std::to_string(
+                    std::numeric_limits<Score>::max() + term_size - 1)
+                + " characters");
+
+    timer.active("hashes");
+    std::vector<uint64_t> hashes;
+
+    tlx::simple_vector<char> canonicalize_buffer(term_size);
+    create_hashes(hashes, query, canonicalize_buffer.data(), index_file);
+
+    total_hashes += hashes.size();
+    timer.stop();
+
+    size_t score_batch_size = 128;
+    score_batch_size = std::max(score_batch_size, 8 * page_size);
+    score_batch_size = std::min(score_batch_size, score_total_size);
+    size_t score_batch_num = tlx::div_ceil(score_total_size, score_batch_size);
+    Score* score_start = score_list + sum_doc_counts[file_num];
+
+    LOG << "ClassicSearch::search()"
+        << " file_num=" << file_num
+        << " num_hashes=" << num_hashes
+        << " term_size=" << term_size
+        << " page_size=" << page_size
+        << " score_start=" << sum_doc_counts[file_num]
+        << " score_total_size=" << score_total_size
+        << " score_batch_size=" << score_batch_size
+        << " score_batch_num=" << score_batch_num
+        << " hashes.size=" << hashes.size();
+
+    parallel_for(
+        0, score_batch_num, gopt_threads,
+        [&](size_t b) {
+            Timer thr_timer;
+            size_t score_begin = b * score_batch_size;
+            size_t score_end =
+                std::min((b + 1) * score_batch_size, score_total_size);
+            size_t score_size = score_end - score_begin;
+            LOG << "search()"
+                << " score_begin=" << score_begin
+                << " score_end=" << score_end
+                << " score_size=" << score_size
+                << " rows buffer=" << score_size * hashes.size();
+
+            die_unless(score_begin % 8 == 0);
+            score_begin = tlx::div_ceil(score_begin, 8);
+            score_size = tlx::div_ceil(score_size, 8);
+            size_t score_buffer_size = tlx::round_up(score_size, 8);
+
+            // rows array: interleaved as
+            // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
+            uint8_t* rows = allocate_aligned<uint8_t>(
+                score_buffer_size * hashes.size(), get_page_size());
+
+            LOG << "read_from_disk";
+            thr_timer.active("io");
+            index_file->read_from_disk(
+                hashes, rows, score_begin, score_size, score_buffer_size);
+
+            if (num_hashes != 1) {
+                LOG << "aggregate_rows";
+                thr_timer.active("and rows");
+                aggregate_rows(num_hashes, hashes.size(), rows,
+                               score_size, score_buffer_size);
+            }
+
+            LOG << "compute_counts";
+            thr_timer.active("add rows");
+            compute_counts(num_hashes, hashes.size(),
+                           score_start + 8 * score_begin, rows,
+                           score_size, score_buffer_size);
+
+            deallocate_aligned(rows);
+
+            timer += thr_timer;
+        });
+}
+
 void ClassicSearch::search(
     const std::string& query,
     std::vector<SearchResult>& result,
@@ -267,6 +406,8 @@ void ClassicSearch::search(
 
     std::vector<size_t> sum_doc_counts(index_files_.size() + 1);
 
+    uint32_t max_term_size = 0;
+
     // sum_doc_counts[i] - always rounded up to the next multiple of 8.  this
     // way we guarantee that the score array will always be 128 byte aligned
     sum_doc_counts[0] = 0;
@@ -274,7 +415,16 @@ void ClassicSearch::search(
         size_t counts_size = index_files_[i - 1]->counts_size();
         die_unless(counts_size % 8 == 0);
         sum_doc_counts[i] += sum_doc_counts[i - 1] + counts_size;
+
+        // calculate largest term_size of indices and require query to be at
+        // least that length
+        uint32_t term_size = index_files_[i - 1]->term_size();
+        max_term_size = std::max(max_term_size, term_size);
     }
+
+    assert_exit(query.size() >= max_term_size,
+                "query too short, needs to be at least "
+                + std::to_string(max_term_size) + " characters long");
 
     const size_t total_documents = sum_doc_counts[index_files_.size()];
 
@@ -283,99 +433,7 @@ void ClassicSearch::search(
         << " sum_doc_counts=" << sum_doc_counts
         << " total_documents=" << total_documents;
 
-    uint16_t* score_list = allocate_aligned<uint16_t>(total_documents, 16);
-
     size_t total_hashes = 0;
-
-    for (size_t file_num = 0; file_num < index_files_.size(); ++file_num)
-    {
-        auto& index_file = index_files_[file_num];
-
-        uint32_t num_hashes = index_file->num_hashes();
-        uint32_t term_size = index_file->term_size();
-        uint64_t page_size = index_file->page_size();
-        size_t score_total_size = index_file->counts_size();
-
-        assert_exit(query.size() >= term_size,
-                    "query too short, needs to be at least "
-                    + std::to_string(term_size) + " characters long");
-        assert_exit(query.size() - term_size < UINT16_MAX,
-                    "query too long, can not be longer than "
-                    + std::to_string(UINT16_MAX + term_size - 1) + " characters");
-
-        timer_.active("hashes");
-        std::vector<uint64_t> hashes;
-
-        tlx::simple_vector<char> canonicalize_buffer(term_size);
-        create_hashes(hashes, query, canonicalize_buffer.data(), index_file);
-
-        total_hashes += hashes.size();
-        timer_.stop();
-
-        size_t score_batch_size = 128;
-        score_batch_size = std::max(score_batch_size, 8 * page_size);
-        score_batch_size = std::min(score_batch_size, score_total_size);
-        size_t score_batch_num = tlx::div_ceil(score_total_size, score_batch_size);
-        uint16_t* score_start = score_list + sum_doc_counts[file_num];
-
-        LOG << "ClassicSearch::search()"
-            << " file_num=" << file_num
-            << " num_hashes=" << num_hashes
-            << " term_size=" << term_size
-            << " page_size=" << page_size
-            << " score_start=" << sum_doc_counts[file_num]
-            << " score_total_size=" << score_total_size
-            << " score_batch_size=" << score_batch_size
-            << " score_batch_num=" << score_batch_num
-            << " hashes.size=" << hashes.size();
-
-        parallel_for(
-            0, score_batch_num, gopt_threads,
-            [&](size_t b) {
-                Timer thr_timer;
-                size_t score_begin = b * score_batch_size;
-                size_t score_end =
-                    std::min((b + 1) * score_batch_size, score_total_size);
-                size_t score_size = score_end - score_begin;
-                LOG << "search()"
-                    << " score_begin=" << score_begin
-                    << " score_end=" << score_end
-                    << " score_size=" << score_size
-                    << " rows buffer=" << score_size * hashes.size();
-
-                die_unless(score_begin % 8 == 0);
-                score_begin = tlx::div_ceil(score_begin, 8);
-                score_size = tlx::div_ceil(score_size, 8);
-                size_t score_buffer_size = tlx::round_up(score_size, 8);
-
-                // rows array: interleaved as
-                // [ hash0[doc0, doc1, ..., doc(score_size)], hash1[doc0, ...], ...]
-                uint8_t* rows = allocate_aligned<uint8_t>(
-                    score_buffer_size * hashes.size(), get_page_size());
-
-                LOG << "read_from_disk";
-                thr_timer.active("io");
-                index_file->read_from_disk(
-                    hashes, rows, score_begin, score_size, score_buffer_size);
-
-                if (num_hashes != 1) {
-                    LOG << "aggregate_rows";
-                    thr_timer.active("and rows");
-                    aggregate_rows(num_hashes, hashes.size(), rows,
-                                   score_size, score_buffer_size);
-                }
-
-                LOG << "compute_counts";
-                thr_timer.active("add rows");
-                compute_counts(num_hashes, hashes.size(),
-                               score_start + 8 * score_begin, rows,
-                               score_size, score_buffer_size);
-
-                deallocate_aligned(rows);
-
-                timer_ += thr_timer;
-            });
-    }
 
     std::vector<size_t> thresholds(index_files_.size());
     for (size_t i = 0; i < index_files_.size(); ++i) {
@@ -386,11 +444,213 @@ void ClassicSearch::search(
     num_results = num_results == 0 ? total_documents
                   : std::min(num_results, total_documents);
 
-    counts_to_result(index_files_, score_list, result, thresholds,
-                     num_results, total_hashes, sum_doc_counts);
+    if (!classic_search_disable_8bit &&
+        query.size() - max_term_size < UINT8_MAX)
+    {
+        uint8_t* score_list = allocate_aligned<uint8_t>(total_documents, 16);
+
+        for (size_t file_num = 0; file_num < index_files_.size(); ++file_num)
+        {
+            search_index_file(
+                file_num, index_files_[file_num],
+                query, score_list,
+                total_hashes, sum_doc_counts, timer_);
+        }
+
+        counts_to_result(index_files_, score_list, result, thresholds,
+                         num_results, total_hashes, sum_doc_counts);
+    }
+    else if (!classic_search_disable_16bit &&
+             query.size() - max_term_size < UINT16_MAX)
+    {
+        uint16_t* score_list = allocate_aligned<uint16_t>(total_documents, 16);
+
+        for (size_t file_num = 0; file_num < index_files_.size(); ++file_num)
+        {
+            search_index_file(
+                file_num, index_files_[file_num],
+                query, score_list,
+                total_hashes, sum_doc_counts, timer_);
+        }
+
+        counts_to_result(index_files_, score_list, result, thresholds,
+                         num_results, total_hashes, sum_doc_counts);
+    }
+    else if (!classic_search_disable_32bit &&
+             query.size() - max_term_size < UINT32_MAX)
+    {
+        uint32_t* score_list = allocate_aligned<uint32_t>(total_documents, 16);
+
+        for (size_t file_num = 0; file_num < index_files_.size(); ++file_num)
+        {
+            search_index_file(
+                file_num, index_files_[file_num],
+                query, score_list,
+                total_hashes, sum_doc_counts, timer_);
+        }
+
+        counts_to_result(index_files_, score_list, result, thresholds,
+                         num_results, total_hashes, sum_doc_counts);
+    }
+    else
+    {
+        assert_exit(false, "query too long");
+    }
 }
 
-static const uint64_t s_expansion[16] = {
+/******************************************************************************/
+// Score Expansion
+
+//! expansion table from an 8-bit value (byte) and expanding it into one 64-bit
+//! word containing 8x uint8_t indicators.
+static const uint64_t s_expansion_u8_64[256] = {
+    0x0000000000000000, 0x0000000000000001,
+    0x0000000000000100, 0x0000000000000101,
+    0x0000000000010000, 0x0000000000010001,
+    0x0000000000010100, 0x0000000000010101,
+    0x0000000001000000, 0x0000000001000001,
+    0x0000000001000100, 0x0000000001000101,
+    0x0000000001010000, 0x0000000001010001,
+    0x0000000001010100, 0x0000000001010101,
+    0x0000000100000000, 0x0000000100000001,
+    0x0000000100000100, 0x0000000100000101,
+    0x0000000100010000, 0x0000000100010001,
+    0x0000000100010100, 0x0000000100010101,
+    0x0000000101000000, 0x0000000101000001,
+    0x0000000101000100, 0x0000000101000101,
+    0x0000000101010000, 0x0000000101010001,
+    0x0000000101010100, 0x0000000101010101,
+    0x0000010000000000, 0x0000010000000001,
+    0x0000010000000100, 0x0000010000000101,
+    0x0000010000010000, 0x0000010000010001,
+    0x0000010000010100, 0x0000010000010101,
+    0x0000010001000000, 0x0000010001000001,
+    0x0000010001000100, 0x0000010001000101,
+    0x0000010001010000, 0x0000010001010001,
+    0x0000010001010100, 0x0000010001010101,
+    0x0000010100000000, 0x0000010100000001,
+    0x0000010100000100, 0x0000010100000101,
+    0x0000010100010000, 0x0000010100010001,
+    0x0000010100010100, 0x0000010100010101,
+    0x0000010101000000, 0x0000010101000001,
+    0x0000010101000100, 0x0000010101000101,
+    0x0000010101010000, 0x0000010101010001,
+    0x0000010101010100, 0x0000010101010101,
+    0x0001000000000000, 0x0001000000000001,
+    0x0001000000000100, 0x0001000000000101,
+    0x0001000000010000, 0x0001000000010001,
+    0x0001000000010100, 0x0001000000010101,
+    0x0001000001000000, 0x0001000001000001,
+    0x0001000001000100, 0x0001000001000101,
+    0x0001000001010000, 0x0001000001010001,
+    0x0001000001010100, 0x0001000001010101,
+    0x0001000100000000, 0x0001000100000001,
+    0x0001000100000100, 0x0001000100000101,
+    0x0001000100010000, 0x0001000100010001,
+    0x0001000100010100, 0x0001000100010101,
+    0x0001000101000000, 0x0001000101000001,
+    0x0001000101000100, 0x0001000101000101,
+    0x0001000101010000, 0x0001000101010001,
+    0x0001000101010100, 0x0001000101010101,
+    0x0001010000000000, 0x0001010000000001,
+    0x0001010000000100, 0x0001010000000101,
+    0x0001010000010000, 0x0001010000010001,
+    0x0001010000010100, 0x0001010000010101,
+    0x0001010001000000, 0x0001010001000001,
+    0x0001010001000100, 0x0001010001000101,
+    0x0001010001010000, 0x0001010001010001,
+    0x0001010001010100, 0x0001010001010101,
+    0x0001010100000000, 0x0001010100000001,
+    0x0001010100000100, 0x0001010100000101,
+    0x0001010100010000, 0x0001010100010001,
+    0x0001010100010100, 0x0001010100010101,
+    0x0001010101000000, 0x0001010101000001,
+    0x0001010101000100, 0x0001010101000101,
+    0x0001010101010000, 0x0001010101010001,
+    0x0001010101010100, 0x0001010101010101,
+    0x0100000000000000, 0x0100000000000001,
+    0x0100000000000100, 0x0100000000000101,
+    0x0100000000010000, 0x0100000000010001,
+    0x0100000000010100, 0x0100000000010101,
+    0x0100000001000000, 0x0100000001000001,
+    0x0100000001000100, 0x0100000001000101,
+    0x0100000001010000, 0x0100000001010001,
+    0x0100000001010100, 0x0100000001010101,
+    0x0100000100000000, 0x0100000100000001,
+    0x0100000100000100, 0x0100000100000101,
+    0x0100000100010000, 0x0100000100010001,
+    0x0100000100010100, 0x0100000100010101,
+    0x0100000101000000, 0x0100000101000001,
+    0x0100000101000100, 0x0100000101000101,
+    0x0100000101010000, 0x0100000101010001,
+    0x0100000101010100, 0x0100000101010101,
+    0x0100010000000000, 0x0100010000000001,
+    0x0100010000000100, 0x0100010000000101,
+    0x0100010000010000, 0x0100010000010001,
+    0x0100010000010100, 0x0100010000010101,
+    0x0100010001000000, 0x0100010001000001,
+    0x0100010001000100, 0x0100010001000101,
+    0x0100010001010000, 0x0100010001010001,
+    0x0100010001010100, 0x0100010001010101,
+    0x0100010100000000, 0x0100010100000001,
+    0x0100010100000100, 0x0100010100000101,
+    0x0100010100010000, 0x0100010100010001,
+    0x0100010100010100, 0x0100010100010101,
+    0x0100010101000000, 0x0100010101000001,
+    0x0100010101000100, 0x0100010101000101,
+    0x0100010101010000, 0x0100010101010001,
+    0x0100010101010100, 0x0100010101010101,
+    0x0101000000000000, 0x0101000000000001,
+    0x0101000000000100, 0x0101000000000101,
+    0x0101000000010000, 0x0101000000010001,
+    0x0101000000010100, 0x0101000000010101,
+    0x0101000001000000, 0x0101000001000001,
+    0x0101000001000100, 0x0101000001000101,
+    0x0101000001010000, 0x0101000001010001,
+    0x0101000001010100, 0x0101000001010101,
+    0x0101000100000000, 0x0101000100000001,
+    0x0101000100000100, 0x0101000100000101,
+    0x0101000100010000, 0x0101000100010001,
+    0x0101000100010100, 0x0101000100010101,
+    0x0101000101000000, 0x0101000101000001,
+    0x0101000101000100, 0x0101000101000101,
+    0x0101000101010000, 0x0101000101010001,
+    0x0101000101010100, 0x0101000101010101,
+    0x0101010000000000, 0x0101010000000001,
+    0x0101010000000100, 0x0101010000000101,
+    0x0101010000010000, 0x0101010000010001,
+    0x0101010000010100, 0x0101010000010101,
+    0x0101010001000000, 0x0101010001000001,
+    0x0101010001000100, 0x0101010001000101,
+    0x0101010001010000, 0x0101010001010001,
+    0x0101010001010100, 0x0101010001010101,
+    0x0101010100000000, 0x0101010100000001,
+    0x0101010100000100, 0x0101010100000101,
+    0x0101010100010000, 0x0101010100010001,
+    0x0101010100010100, 0x0101010100010101,
+    0x0101010101000000, 0x0101010101000001,
+    0x0101010101000100, 0x0101010101000101,
+    0x0101010101010000, 0x0101010101010001,
+    0x0101010101010100, 0x0101010101010101
+};
+
+static inline
+void compute_counts_u8_64(
+    uint64_t num_hashes, size_t hashes_size, uint8_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size)
+{
+    auto counts_64 = reinterpret_cast<uint64_t*>(scores);
+    for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
+        const uint8_t* rows_8 = rows + i * buffer_size;
+        for (size_t k = 0; k < size; k++) {
+            counts_64[k] += s_expansion_u8_64[rows_8[k]];
+        }
+    }
+}
+
+//! expansion table from an 4-bit value (nibble) and expanding it into one
+//! 64-bit word containing 4x uint16_t indicators.
+static const uint64_t s_expansion_u16_64[16] = {
     0x0000000000000, 0x0000000000001, 0x0000000010000, 0x0000000010001,
     0x0000100000000, 0x0000100000001, 0x0000100010000, 0x0000100010001,
     0x1000000000000, 0x1000000000001, 0x1000000010000, 0x1000000010001,
@@ -398,7 +658,7 @@ static const uint64_t s_expansion[16] = {
 };
 
 static inline
-void compute_counts_64(
+void compute_counts_u16_64(
     uint64_t num_hashes, size_t hashes_size, uint16_t* scores,
     const uint8_t* rows, size_t size, size_t buffer_size)
 {
@@ -406,13 +666,15 @@ void compute_counts_64(
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         const uint8_t* rows_8 = rows + i * buffer_size;
         for (size_t k = 0; k < size; k++) {
-            counts_64[2 * k] += s_expansion[rows_8[k] & 0xF];
-            counts_64[2 * k + 1] += s_expansion[rows_8[k] >> 4];
+            counts_64[2 * k] += s_expansion_u16_64[rows_8[k] & 0xF];
+            counts_64[2 * k + 1] += s_expansion_u16_64[rows_8[k] >> 4];
         }
     }
 }
 
-alignas(16) static const uint16_t s_expansion_128[2048] = {
+//! expansion table from an 8-bit value (byte) and expanding it into one
+//! 128-bit word containing 8x uint16_t indicators.
+alignas(16) static const uint16_t s_expansion_u16_128[2048] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -672,20 +934,44 @@ alignas(16) static const uint16_t s_expansion_128[2048] = {
 };
 
 static inline
-void compute_counts_128(
+void compute_counts_u16_128(
     uint64_t num_hashes, size_t hashes_size, uint16_t* scores,
     const uint8_t* rows, size_t size, size_t buffer_size)
 {
 #if __SSE2__
-    auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_128);
+    auto expansion_128 = reinterpret_cast<const __m128i_u*>(s_expansion_u16_128);
     auto counts_128 = reinterpret_cast<__m128i_u*>(scores);
     for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
         const uint8_t* rows_8 = rows + i * buffer_size;
         for (size_t k = 0; k < size; k++) {
-            counts_128[k] = _mm_add_epi16(counts_128[k], expansion_128[rows_8[k]]);
+            counts_128[k] = _mm_adds_epu16(counts_128[k], expansion_128[rows_8[k]]);
         }
     }
 #endif
+}
+
+//! expansion table from an 2-bit value and expanding it into one 64-bit word
+//! containing 2x uint32_t indicators.
+static const uint64_t s_expansion_u32_64[4] = {
+    0x0000000000000000, 0x0000000000000001,
+    0x0000000100000000, 0x0000000100000001
+};
+
+static inline
+void compute_counts_u32_64(
+    uint64_t num_hashes, size_t hashes_size, uint32_t* scores,
+    const uint8_t* rows, size_t size, size_t buffer_size)
+{
+    auto counts_64 = reinterpret_cast<uint64_t*>(scores);
+    for (uint64_t i = 0; i < hashes_size; i += num_hashes) {
+        const uint8_t* rows_8 = rows + i * buffer_size;
+        for (size_t k = 0; k < size; k++) {
+            counts_64[4 * k + 0] += s_expansion_u32_64[(rows_8[k] >> 0) & 0x3];
+            counts_64[4 * k + 1] += s_expansion_u32_64[(rows_8[k] >> 2) & 0x3];
+            counts_64[4 * k + 2] += s_expansion_u32_64[(rows_8[k] >> 4) & 0x3];
+            counts_64[4 * k + 3] += s_expansion_u32_64[(rows_8[k] >> 6) & 0x3];
+        }
+    }
 }
 
 } // namespace cobs
