@@ -14,12 +14,18 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
 
-#include <functional>
-#include <iostream>
-#include <thread>
+#include <cobs/query/classic_index/mmap_search_file.hpp>
+#include <cobs/query/classic_search.hpp>
+#include <cobs/query/compact_index/mmap_search_file.hpp>
+#include <cobs/util/file.hpp>
 
 #include <tlx/cmdline_parser.hpp>
 #include <tlx/logger.hpp>
+#include <tlx/string.hpp>
+
+#include <functional>
+#include <iostream>
+#include <thread>
 
 /******************************************************************************/
 
@@ -47,7 +53,7 @@ namespace http = boost::beast::http;
 using tcp = asio::ip::tcp;
 
 using UrlHandler = std::function<
-    bool(beast::string_view target, std::string& body)>;
+    bool(const http::request<http::string_body>& req, std::string& body)>;
 
 class WebSession;
 
@@ -217,6 +223,7 @@ protected:
     void do_read()
     {
         // read a request
+        request_ = { };
         http::async_read(
             socket_, buffer_, request_,
             [t = shared_from_this()](
@@ -345,13 +352,14 @@ void WebServer::on_accept(boost::system::error_code ec)
 void WebSession::handle_request(const http::request<http::string_body>& req)
 {
     // make sure we can handle the method
-    if (req.method() != http::verb::get && req.method() != http::verb::head)
+    if (req.method() != http::verb::get && req.method() != http::verb::post &&
+        req.method() != http::verb::head)
         return send_error(http::status::bad_request, "Unknown HTTP-method");
 
     // check for generated web page
     std::string string_body;
     if (server_->url_handler_ != nullptr &&
-        server_->url_handler_(req.target(), string_body)) {
+        server_->url_handler_(req, string_body)) {
         // respond to HEAD request
         if (req.method() == http::verb::head) {
             http::response<http::empty_body> res(http::status::ok, req.version());
@@ -434,16 +442,140 @@ void WebSession::handle_request(const http::request<http::string_body>& req)
 
 /******************************************************************************/
 
-bool make_page(beast::string_view target, std::string& body)
+std::vector<std::shared_ptr<cobs::IndexSearchFile> > s_indices;
+
+bool make_index(const http::request<http::string_body>& req, std::string& output)
 {
-    std::cout << "URL: " << target.to_string() << std::endl;
+    std::string query_string = req.body();
 
-    if (target == "/test") {
-        std::ostringstream os;
-        os << std::this_thread::get_id();
-        body = "hello, I am " + os.str();
+    LOG1 << query_string;
 
-        return true;
+    std::vector<std::string> keys, values;
+    tlx::parse_uri_form_data(query_string, &keys, &values);
+
+    std::string query;
+    for (size_t i = 0; i < keys.size(); ++i) {
+        if (keys[i] == "input")
+            query = values[i];
+    }
+
+    // remove newlines
+    tlx::erase_all(&query, "\n\r\t");
+
+    size_t threshold = 50;
+    for (size_t i = 0; i < keys.size(); ++i) {
+        if (keys[i] == "threshold") {
+            threshold = atoi(values[i].c_str());
+        }
+    }
+    if (threshold >= 100)
+        threshold = 100;
+
+    size_t limit = 100;
+    for (size_t i = 0; i < keys.size(); ++i) {
+        if (keys[i] == "limit") {
+            limit = atoi(values[i].c_str());
+        }
+    }
+    if (limit == 0)
+        limit = 100;
+    if (limit > 1000)
+        limit = 1000;
+
+    thread_local cobs::ClassicSearch* searcher = nullptr;
+
+    if (!searcher) {
+        LOG1 << "creating ClassicSearch object";
+        searcher = new cobs::ClassicSearch(s_indices);
+    }
+
+    std::ostringstream os;
+    os << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n";
+    os << "<html lang=\"en\">\n";
+    os << "  <head>\n";
+    os << "    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n";
+    os << "    <title>COBS Web/REST Server</title>\n";
+    os << "    <style>\n";
+    os << "    .my_th { display:table-cell; padding: 0 2pt; font-weight: bold }\n";
+    os << "    .my_td { display:table-cell; padding: 0 2pt; }\n";
+    os << "    </style>\n";
+    os << "  </head>\n";
+    os << "  <body>\n";
+    os << "    <h1>COBS Web/REST Server</h1>\n";
+    os << "    <p>This web server can be used to perform approximate pattern matching using COBS index on " << searcher->num_documents() << " documents.</p>\n";
+    os << "    <p>\n";
+    os << "      <form action=\"/\" method=\"post\">\n";
+    os << "        <textarea id=\"input\" name=\"input\" rows=\"3\" cols=\"80\" "
+       << "placeholder=\"ACGTACGTACGTACGTACGTACGTACGTACGT\"  wrap=\"soft\" autofocus=\"true\">";
+    os << tlx::escape_html(query);
+    os << "</textarea><br/>\n";
+    os << "        <input type=\"submit\" value=\"Submit\">\n";
+    os << "        <label for=\"threshold\">Threshold:</label>\n";
+    os << "        <input type=\"number\" id=\"threshold\" name=\"threshold\" min=\"0\" max=\"100\" style=\"width: 3em\" value=\"" << threshold << "\">\n";
+    os << "        <label for=\"limit\">Limit:</label>\n";
+    os << "        <input type=\"number\" id=\"limit\" name=\"limit\" style=\"width: 6em\" value=\"" << limit << "\">\n";
+    os << "      </form>\n";
+    os << "    </p>\n";
+
+    if (!query.empty())
+    {
+        try {
+            std::vector<cobs::SearchResult> result;
+            searcher->search(query, result, threshold * 0.01, limit);
+
+            size_t query_size = query.size() - 31 + 1;
+
+            os << "<p>Query returned " << result.size() << " results:</p>";
+
+            os << "<div style=\"display:table\">";
+
+            os << "<div style=\"display:table-header-group\">";
+            os << "<div class=\"my_th\">Document</div>";
+            os << "<div class=\"my_th\">%</div>";
+            os << "</div>";
+
+            for (const auto& res : result) {
+                os << "<div style=\"display:table-row\">";
+
+                os << "<div class=\"my_td\">";
+                os << "<a href=\"https://www.ebi.ac.uk/ena/browser/view/"
+                   << tlx::escape_uri(res.doc_name)
+                   << "\">" << tlx::escape_html(res.doc_name) << "</a>";
+                os << "</div>";
+
+                os << "<div style=\"my_td\">";
+                os << std::setprecision(2)
+                   << res.score / static_cast<float>(query_size);
+                os << "</div>";
+
+                os << "</div>";
+            }
+
+            os << "</div>";
+        }
+        catch (std::exception& e) {
+            os << "EXCEPTION: " << e.what();
+        }
+    }
+
+    os << "  </body>\n";
+    os << "</html>\n";
+
+    output = os.str();
+    return true;
+}
+
+bool make_page(const http::request<http::string_body>& req, std::string& output)
+{
+    std::string target = req.target().to_string();
+
+    tlx::string_view path, query_string, fragment;
+    tlx::parse_uri(target, &path, &query_string, &fragment);
+
+    LOG1 << "URL: path=" << path << " query=" << query_string;
+
+    if (path == "/") {
+        return make_index(req, output);
     }
 
     return false;
@@ -454,6 +586,7 @@ bool make_page(beast::string_view target, std::string& body)
 int main(int argc, char** argv) {
 
     tlx::set_logger_to_stderr();
+    tlx::set_die_with_exception(true);
 
     tlx::CmdlineParser cp;
 
@@ -478,10 +611,6 @@ int main(int argc, char** argv) {
 
     // check result of command line parsing
 
-    // if (index_files.size() != 1) {
-    //     die("Supply one index file, TODO: add support for multiple.");
-    // }
-
     boost::asio::ip::address address;
     if (listen_address.empty())
         address = boost::asio::ip::address_v4::any();
@@ -490,6 +619,22 @@ int main(int argc, char** argv) {
 
     if (num_threads == 0)
         num_threads = 4;
+
+    // load index files
+
+    for (auto& path : index_files)
+    {
+        if (cobs::file_has_header<cobs::ClassicIndexHeader>(path)) {
+            s_indices.push_back(
+                std::make_shared<cobs::ClassicIndexMMapSearchFile>(path));
+        }
+        else if (cobs::file_has_header<cobs::CompactIndexHeader>(path)) {
+            s_indices.push_back(
+                std::make_shared<cobs::CompactIndexMMapSearchFile>(path));
+        }
+        else
+            die("Could not open index path \"" << path << "\"");
+    }
 
     // Launch Server
 
@@ -501,7 +646,7 @@ int main(int argc, char** argv) {
     // create and launch a listening port
     auto ws = std::make_shared<WebServer>(
         io_context, tcp::endpoint(address, port));
-    ws->set_doc_root("./doc-root/");
+    ws->set_doc_root("./web-root/");
     ws->set_url_handler(make_page);
     ws->run();
 

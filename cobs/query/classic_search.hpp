@@ -26,6 +26,8 @@ public:
 
     ClassicSearch(std::vector<std::shared_ptr<IndexSearchFile> > indices);
 
+    size_t num_documents() const;
+
     void search(
         const std::string& query,
         std::vector<SearchResult>& result,

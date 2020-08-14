@@ -63,6 +63,15 @@ ClassicSearch::ClassicSearch(std::string path)
     }
 }
 
+size_t ClassicSearch::num_documents() const
+{
+    size_t total = 0;
+    for (const auto& p : index_files_) {
+        total += p->file_names().size();
+    }
+    return total;
+}
+
 static inline
 void create_hashes(
     std::vector<uint64_t>& hashes, const std::string& query,
@@ -320,11 +329,11 @@ void search_index_file(
     uint64_t page_size = index_file->page_size();
     size_t score_total_size = index_file->counts_size();
 
-    assert_exit(query.size() - term_size < std::numeric_limits<Score>::max(),
-                "query too long, can not be longer than "
-                + std::to_string(
-                    std::numeric_limits<Score>::max() + term_size - 1)
-                + " characters");
+    if (query.size() - term_size >= std::numeric_limits<Score>::max()) {
+        die("query too long, can not be longer than " <<
+            std::numeric_limits<Score>::max() + term_size - 1 <<
+            " characters");
+    }
 
     timer.active("hashes");
     std::vector<uint64_t> hashes;
@@ -428,9 +437,10 @@ void ClassicSearch::search(
         max_term_size = std::max(max_term_size, term_size);
     }
 
-    assert_exit(query.size() >= max_term_size,
-                "query too short, needs to be at least "
-                + std::to_string(max_term_size) + " characters long");
+    if (query.size() < max_term_size) {
+        die("query too short, needs to be at least " <<
+            max_term_size << " characters long");
+    }
 
     const size_t total_documents = sum_doc_counts[index_files_.size()];
 
@@ -500,7 +510,7 @@ void ClassicSearch::search(
     }
     else
     {
-        assert_exit(false, "query too long");
+        die("query too long");
     }
 }
 
