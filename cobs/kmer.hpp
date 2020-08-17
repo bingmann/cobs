@@ -60,8 +60,8 @@ public:
             else {
                 char c2 = i < -1 ? 'A' : chars[i + 1];
                 char c3 = i < -2 ? 'A' : chars[i + 2];
-                data()[size - 1] =
-                    kmer_bps_to_uint8_t.at(chars_to_int(chars[i + 3], c3, c2, 'A'));
+                data()[size - 1] = kmer_bps_to_uint8_t.at(
+                    chars_to_int(chars[i + 3], c3, c2, 'A'));
             }
         }
     }
@@ -71,10 +71,12 @@ public:
         result.reserve(N);
         for (size_t i = 0; i < size; ++i) {
             if (TLX_UNLIKELY(i == 0 && N % 4 != 0)) {
-                result += kmer_byte_to_base_pairs[data()[size - 1 - i]] + (4 - N % 4);
+                result += kmer_byte_to_base_pairs[
+                    data()[size - 1 - i]] + (4 - N % 4);
             }
             else {
-                result += kmer_byte_to_base_pairs[data()[size - 1 - i]];
+                result += kmer_byte_to_base_pairs[
+                    data()[size - 1 - i]];
             }
         }
         return result;
@@ -84,10 +86,12 @@ public:
         out->clear();
         for (size_t i = 0; i < size; ++i) {
             if (TLX_UNLIKELY(i == 0 && N % 4 != 0)) {
-                *out += kmer_byte_to_base_pairs[data()[size - 1 - i]] + (4 - N % 4);
+                *out += kmer_byte_to_base_pairs[
+                    data()[size - 1 - i]] + (4 - N % 4);
             }
             else {
-                *out += kmer_byte_to_base_pairs[data()[size - 1 - i]];
+                *out += kmer_byte_to_base_pairs[
+                    data()[size - 1 - i]];
             }
         }
         return *out;
