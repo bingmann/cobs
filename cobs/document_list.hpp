@@ -132,7 +132,7 @@ struct DocumentEntry {
 
             for (uint64_t j = 0; j < doc.data().size(); j++) {
                 doc.data()[j].to_string(&term);
-                callback(term);
+                callback(tlx::string_view(term));
             }
         }
         else if (type_ == FileType::Fasta) {

@@ -34,7 +34,7 @@ TEST(cortex, process_kmers) {
     std::vector<std::string> kmer_list;
     ctx.process_terms(
         31,
-        [&](const cobs::string_view& v) {
+        [&](const tlx::string_view& v) {
             kmer_list.emplace_back(v.to_string());
         });
 
@@ -58,7 +58,7 @@ TEST(cortex, sample1) {
     std::ifstream txt31(in_dir / "sample1-k31.txt");
     ctx31.process_terms(
         31,
-        [&](const cobs::string_view& v) {
+        [&](const tlx::string_view& v) {
             ASSERT_TRUE(std::getline(txt31, line));
             ASSERT_EQ(line, v.to_string());
         });
@@ -68,7 +68,7 @@ TEST(cortex, sample1) {
     std::ifstream txt19(in_dir / "sample1-k19.txt");
     ctx19.process_terms(
         19,
-        [&](const cobs::string_view& v) {
+        [&](const tlx::string_view& v) {
             ASSERT_TRUE(std::getline(txt19, line));
             ASSERT_EQ(line, v.to_string());
         });
@@ -78,7 +78,7 @@ TEST(cortex, sample1) {
     std::ifstream txt15(in_dir / "sample1-k15.txt");
     ctx15.process_terms(
         15,
-        [&](const cobs::string_view& v) {
+        [&](const tlx::string_view& v) {
             ASSERT_TRUE(std::getline(txt15, line));
             ASSERT_EQ(line, v.to_string());
         });

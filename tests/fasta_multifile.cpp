@@ -48,7 +48,7 @@ TEST_F(fasta_multi, process_kmers2) {
     die_unequal(fasta_multi.size(4), 438u);
 
     size_t count = 0;
-    fasta_multi.process_terms(0, 31, [&](const cobs::string_view&) { ++count; });
+    fasta_multi.process_terms(0, 31, [&](const tlx::string_view&) { ++count; });
     die_unequal(fasta_multi.size(0) - 30, count);
 }
 
@@ -75,8 +75,8 @@ TEST_F(fasta_multi, document_list) {
         LOG << de.name_;
         de.process_terms(
             /* term_size */ 31,
-            [&](const cobs::string_view& term) {
-                std::string query(term);
+            [&](const tlx::string_view& term) {
+                std::string query = term.to_string();
 
                 std::vector<cobs::SearchResult> result;
                 s_base.search(query, result);

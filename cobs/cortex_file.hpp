@@ -16,12 +16,12 @@
 #include <cobs/kmer_buffer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/string_view.hpp>
 #include <cobs/util/timer.hpp>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
 
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/unused.hpp>
@@ -140,7 +140,7 @@ public:
             }
 
             for (size_t i = 0; i + term_size <= kmer_size_; ++i) {
-                callback(string_view(kmer.data() + i, term_size));
+                callback(tlx::string_view(kmer.data() + i, term_size));
             }
         }
     }

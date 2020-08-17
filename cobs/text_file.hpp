@@ -15,8 +15,8 @@
 
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/string_view.hpp>
 
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
 
 namespace cobs {
@@ -55,7 +55,7 @@ public:
             size_t wb = is_.gcount();
 
             for (size_t i = 0; i + term_size <= pos + wb; ++i) {
-                callback(string_view(buffer + i, term_size));
+                callback(tlx::string_view(buffer + i, term_size));
             }
 
             if (wb + 1 < term_size)
