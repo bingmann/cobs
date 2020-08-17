@@ -20,7 +20,7 @@ TEST(text, process_txt1) {
     die_unequal(text.size(), 76u);
 
     size_t count = 0;
-    text.process_terms(31, [&](const cobs::string_view&) { ++count; });
+    text.process_terms(31, [&](const tlx::string_view&) { ++count; });
     die_unequal(text.size() - 30, count);
 }
 

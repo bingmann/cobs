@@ -2,12 +2,15 @@
  * tests/cortex_file.cpp
  *
  * Copyright (c) 2018 Florian Gauger
+ * Copyright (c) 2020 Timo Bingmann
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
 
 #include <cobs/cortex_file.hpp>
 #include <gtest/gtest.h>
+
+#include <tlx/logger.hpp>
 
 namespace fs = cobs::fs;
 
@@ -31,7 +34,7 @@ TEST(cortex, process_kmers) {
     std::vector<std::string> kmer_list;
     ctx.process_terms(
         31,
-        [&](const cobs::string_view& v) {
+        [&](const tlx::string_view& v) {
             kmer_list.emplace_back(v.to_string());
         });
 
@@ -46,6 +49,40 @@ TEST(cortex, process_kmers) {
         ASSERT_EQ(line, kmer_list[i]);
         i++;
     }
+}
+
+TEST(cortex, sample1) {
+    std::string line;
+
+    cobs::CortexFile ctx31(in_dir / "sample1-k31.ctx");
+    std::ifstream txt31(in_dir / "sample1-k31.txt");
+    ctx31.process_terms(
+        31,
+        [&](const tlx::string_view& v) {
+            ASSERT_TRUE(std::getline(txt31, line));
+            ASSERT_EQ(line, v.to_string());
+        });
+    ASSERT_FALSE(std::getline(txt31, line));
+
+    cobs::CortexFile ctx19(in_dir / "sample1-k19.ctx");
+    std::ifstream txt19(in_dir / "sample1-k19.txt");
+    ctx19.process_terms(
+        19,
+        [&](const tlx::string_view& v) {
+            ASSERT_TRUE(std::getline(txt19, line));
+            ASSERT_EQ(line, v.to_string());
+        });
+    ASSERT_FALSE(std::getline(txt31, line));
+
+    cobs::CortexFile ctx15(in_dir / "sample1-k15.ctx");
+    std::ifstream txt15(in_dir / "sample1-k15.txt");
+    ctx15.process_terms(
+        15,
+        [&](const tlx::string_view& v) {
+            ASSERT_TRUE(std::getline(txt15, line));
+            ASSERT_EQ(line, v.to_string());
+        });
+    ASSERT_FALSE(std::getline(txt31, line));
 }
 
 /******************************************************************************/

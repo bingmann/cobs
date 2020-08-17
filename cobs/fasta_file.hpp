@@ -16,9 +16,9 @@
 #include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/string_view.hpp>
 #include <cobs/util/zip_stream.hpp>
 
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/string/appendline.hpp>
@@ -166,7 +166,7 @@ public:
 
             // process terms continued on next line
             for (size_t i = 0; i + term_size <= line.size(); ++i) {
-                callback(string_view(line.data() + i, term_size));
+                callback(tlx::string_view(line.data() + i, term_size));
             }
             if (line.size() > term_size - 1) {
                 std::copy(line.data() + line.size() - (term_size - 1),

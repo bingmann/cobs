@@ -2,7 +2,7 @@
  * cobs/cortex_file.hpp
  *
  * Copyright (c) 2018 Florian Gauger
- * Copyright (c) 2018 Timo Bingmann
+ * Copyright (c) 2018-2020 Timo Bingmann
  *
  * All rights reserved. Published under the MIT License in the LICENSE file.
  ******************************************************************************/
@@ -16,13 +16,14 @@
 #include <cobs/kmer_buffer.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/string_view.hpp>
 #include <cobs/util/timer.hpp>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
 
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
+#include <tlx/logger.hpp>
 #include <tlx/unused.hpp>
 
 namespace cobs {
@@ -60,7 +61,6 @@ public:
             die("Invalid .ctx file version (" << version_);
 
         kmer_size_ = cast_advance<uint32_t>(is);
-        die_unequal(kmer_size_, 31u);
         num_words_per_kmer_ = cast_advance<uint32_t>(is);
         num_colors_ = cast_advance<uint32_t>(is);
         if (num_colors_ != 1)
@@ -84,6 +84,12 @@ public:
         }
         check_magic_number(is, path);
 
+        LOG0 << "CortexFile::read_header()"
+             << " version_=" << version_
+             << " kmer_size_=" << kmer_size_
+             << " num_words_per_kmer_=" << num_words_per_kmer_
+             << " num_colors_=" << num_colors_;
+
         pos_data_begin_ = is.tellg();
         is.seekg(0, std::ios::end);
         pos_data_end_ = is.tellg();
@@ -94,14 +100,16 @@ public:
                / (8 * num_words_per_kmer_ + 5 * num_colors_);
     }
 
-    template <unsigned N, typename Callback>
-    void process_kmers(size_t term_size, Callback callback) {
-        std::string term(N, 0);
-        KMer<N> kmer;
-        auto kmer_data = reinterpret_cast<char*>(kmer.data());
+    template <typename Callback>
+    void process_terms(size_t term_size, Callback callback) {
+        std::string kmer(kmer_size_, 0);
+        static const size_t kmer_packed_size = (kmer_size_ + 3) / 4;
 
-        size_t num_uint8_ts_per_kmer = 8 * num_words_per_kmer_;
-        die_unequal(num_uint8_ts_per_kmer, kmer.size);
+        // bytes per k-mer from 64-bit words per k-mer (<W>)
+        size_t bytes_per_kmer = sizeof(uint64_t) * num_words_per_kmer_;
+        die_unless(bytes_per_kmer >= kmer_packed_size);
+
+        std::vector<uint8_t> kmer_data(bytes_per_kmer);
 
         is_.clear();
         is_.seekg(pos_data_begin_);
@@ -112,30 +120,40 @@ public:
             if (!is_.good())
                 die("corrupted .ctx file");
 
-            is_.read(kmer_data, num_uint8_ts_per_kmer);
+            // read k-mer data bytes
+            is_.read(reinterpret_cast<char*>(kmer_data.data()), bytes_per_kmer);
+            // skip color information
             is_.ignore(5 * num_colors_);
 
-            kmer.to_string(&term);
-            for (size_t i = 0; i + term_size <= N; ++i) {
-                callback(string_view(term.data() + i, term_size));
+            // from KMer::to_string()
+            kmer.clear();
+            for (size_t i = 0; i < kmer_packed_size; ++i) {
+                if (TLX_UNLIKELY(i == 0 && kmer_size_ % 4 != 0)) {
+                    // fragment of last k-mer
+                    kmer += kmer_byte_to_base_pairs[
+                        kmer_data[kmer_packed_size - 1 - i]] + (4 - kmer_size_ % 4);
+                }
+                else {
+                    kmer += kmer_byte_to_base_pairs[
+                        kmer_data[kmer_packed_size - 1 - i]];
+                }
+            }
+
+            for (size_t i = 0; i + term_size <= kmer_size_; ++i) {
+                callback(tlx::string_view(kmer.data() + i, term_size));
             }
         }
     }
 
-    template <typename Callback>
-    void process_terms(size_t term_size, Callback callback) {
-        if (kmer_size_ == 31) {
-            return process_kmers<31>(term_size, callback);
-        }
-        else {
-            die("CortexFile: unsupported kmer_size_ " << kmer_size_);
-        }
-    }
-
+    //! version number
     uint32_t version_;
+    //! kmer size (<kmer_size>)
     uint32_t kmer_size_;
+    //! number of uint64_t (64 bit words) encoding a kmer (<W>)
     uint32_t num_words_per_kmer_;
+    //! number of colours (<cols>)
     uint32_t num_colors_;
+
     std::string name_;
 
 private:

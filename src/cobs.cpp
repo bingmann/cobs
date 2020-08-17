@@ -133,7 +133,7 @@ int doc_dump(int argc, char** argv) {
         std::vector<char> kmer_buffer(term_size);
         filelist[i].process_terms(
             term_size,
-            [&](const cobs::string_view& t) {
+            [&](const tlx::string_view& t) {
                 if (!no_canonicalize) {
                     bool good = cobs::canonicalize_kmer(
                         t.data(), kmer_buffer.data(), term_size);
@@ -867,7 +867,7 @@ int generate_queries(int argc, char** argv) {
 
             filelist[d].process_terms(
                 term_size,
-                [&](const cobs::string_view& term) {
+                [&](const tlx::string_view& term) {
                     if (index == next_index) {
                         // store positive term
                         Query& q = positives[pos_index];
