@@ -43,7 +43,7 @@ void set_bit(std::vector<uint8_t>& data, const ClassicIndexHeader& cih,
 }
 
 static inline
-void process_term(const string_view& term, std::vector<uint8_t>& data,
+void process_term(const tlx::string_view& term, std::vector<uint8_t>& data,
                   size_t doc_index, const std::string& path,
                   bool* shown_canonicalization_warning,
                   const ClassicIndexHeader& cih, char* canonicalize_buffer) {
@@ -107,7 +107,7 @@ void process_batch(size_t batch_num, size_t num_batches, size_t num_threads,
 
                 paths[i].process_terms(
                     cih.term_size_,
-                    [&](const string_view& term) {
+                    [&](const tlx::string_view& term) {
                         process_term(term, data, i, paths[i].path_,
                                      &shown_canonicalization_warning,
                                      cih, canonicalize_buffer.data());
@@ -707,7 +707,7 @@ void classic_construct_random(const fs::path& out_file,
         for (uint64_t j = 0; j < doc.data().size(); j++) {
             doc.data()[j].canonicalize();
             doc.data()[j].to_string(&term);
-            process_term(term, data, i, "random",
+            process_term(tlx::string_view(term), data, i, "random",
                          &shown_canonicalization_warning,
                          cih, canonicalize_buffer.data());
         }

@@ -16,9 +16,9 @@
 #include <cobs/settings.hpp>
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
-#include <cobs/util/string_view.hpp>
 #include <cobs/util/zip_stream.hpp>
 
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/string/ends_with.hpp>
@@ -167,7 +167,7 @@ public:
             else if (line_num % 4 == 1) {
                 // process terms in sequence/read line.
                 for (size_t i = 0; i + term_size <= line.size(); ++i) {
-                    callback(string_view(line.data() + i, term_size));
+                    callback(tlx::string_view(line.data() + i, term_size));
                 }
             }
             else if (line_num % 4 == 2) {

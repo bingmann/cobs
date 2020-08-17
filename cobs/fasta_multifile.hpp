@@ -18,10 +18,10 @@
 #include <cobs/util/file.hpp>
 #include <cobs/util/fs.hpp>
 #include <cobs/util/serialization.hpp>
-#include <cobs/util/string_view.hpp>
 #include <cobs/util/thread_object_array.hpp>
 
 #include <tlx/container/lru_cache.hpp>
+#include <tlx/container/string_view.hpp>
 #include <tlx/die.hpp>
 #include <tlx/logger.hpp>
 
@@ -57,7 +57,7 @@ public:
                 continue;
 
             for (size_t i = 0; i + term_size <= data.size(); ++i) {
-                callback(string_view(data.data() + i, term_size));
+                callback(tlx::string_view(data.data() + i, term_size));
             }
             data.erase(0, data.size() - term_size + 1);
         }

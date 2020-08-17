@@ -45,7 +45,7 @@ TEST_F(fastq, process_kmers) {
 
     size_t check = 0;
     fastq2.process_terms(
-        31, [&](const cobs::string_view& s) {
+        31, [&](const tlx::string_view& s) {
             LOG0 << s.to_string();
             check++;
         });
@@ -75,8 +75,8 @@ TEST_F(fastq, document_list) {
         LOG << de.name_;
         de.process_terms(
             /* term_size */ 31,
-            [&](const cobs::string_view& term) {
-                std::string query(term);
+            [&](const tlx::string_view& term) {
+                std::string query = term.to_string();
 
                 std::vector<cobs::SearchResult> result;
                 s_base.search(query, result);
