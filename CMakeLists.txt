@@ -45,6 +45,9 @@ endif()
 option(COBS_USE_GCOV
   "Compile and run tests with gcov for coverage analysis." OFF)
 
+option(COBS_FETCH_BOOST
+  "Download and compile a Boost library" OFF)
+
 ################################################################################
 ### Compiler Flags
 
@@ -169,13 +172,54 @@ set(COBS_LINK_LIBRARIES ${ZLIB_LIBRARIES} ${COBS_LINK_LIBRARIES})
 
 ### use Boost filesystem ###
 
-find_package(Boost 1.42.0 COMPONENTS system filesystem)
-if(${Boost_FOUND})
+if(COBS_FETCH_BOOST)
+
+  include(ExternalProject)
+  ExternalProject_Add(boost-src
+    URL https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/extlib/boost
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    )
+
+  set(Boost_BaseDir ${CMAKE_CURRENT_BINARY_DIR}/extlib/boost/src/boost-src/)
+
+  include_directories(SYSTEM ${Boost_BaseDir})
+
+  # glob boost sources
+  file(GLOB COBS_MINI_BOOST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/extlib/dummy.cpp
+    ${Boost_BaseDir}/libs/system/src/*.cpp
+    )
+
+  add_library(cobs_mini_boost STATIC "${COBS_MINI_BOOST_SOURCES}")
+  set_target_properties(cobs_mini_boost PROPERTIES LINKER_LANGUAGE CXX)
+
   set(COBS_BOOST_FOUND ON)
-  set(COBS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS} ${COBS_INCLUDE_DIRS})
-  set(COBS_LINK_LIBRARIES ${Boost_LIBRARIES} ${COBS_LINK_LIBRARIES})
+  set(COBS_INCLUDE_DIRS ${Boost_BaseDir} ${COBS_INCLUDE_DIRS})
+  set(COBS_LINK_LIBRARIES cobs_mini_boost ${COBS_LINK_LIBRARIES})
+
 else()
-  message(WARNING "Boost was not found, not building query web server.")
+
+  find_package(Boost 1.71.0 COMPONENTS system filesystem)
+  if(${Boost_FOUND})
+    set(COBS_BOOST_FOUND ON)
+    set(COBS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS} ${COBS_INCLUDE_DIRS})
+    set(COBS_LINK_LIBRARIES ${Boost_LIBRARIES} ${COBS_LINK_LIBRARIES})
+  else()
+    message(WARNING "Boost was not found, not building query web server.\n"
+      "NOTE:"
+      "If you want our cmake script to download and compile Boost, "
+      "then add the -DCOBS_FETCH_BOOST=ON flag."
+      "\n"
+      "Instructions: first add the flag when running cmake, "
+      "run make (which will fail, but download Boost), "
+      "then rerun cmake on the build directory "
+      "(using 'cmake .'), and make again (will work this time). "
+      "This is neceesary to correctly build the minimal Boost library.")
+  endif()
+
 endif()
 
 set(COBS_LINK_LIBRARIES stdc++fs ${COBS_LINK_LIBRARIES})
