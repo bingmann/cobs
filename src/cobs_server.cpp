@@ -22,6 +22,7 @@
 #include <tlx/cmdline_parser.hpp>
 #include <tlx/logger.hpp>
 #include <tlx/string.hpp>
+#include <tlx/timestamp.hpp>
 
 #include <functional>
 #include <iostream>
@@ -479,8 +480,8 @@ bool make_index(const http::request<http::string_body>& req, std::string& output
     }
     if (limit == 0)
         limit = 100;
-    if (limit > 1000)
-        limit = 1000;
+    if (limit > 10000)
+        limit = 10000;
 
     thread_local cobs::ClassicSearch* searcher = nullptr;
 
@@ -504,7 +505,7 @@ bool make_index(const http::request<http::string_body>& req, std::string& output
     os << "    <h1>COBS Web/REST Server</h1>\n";
     os << "    <p>This web server can be used to perform approximate pattern matching using COBS index on " << searcher->num_documents() << " documents.</p>\n";
     os << "    <p>\n";
-    os << "      <form action=\"/\" method=\"post\">\n";
+    os << "      <form action=\"\" method=\"post\">\n";
     os << "        <textarea id=\"input\" name=\"input\" rows=\"3\" cols=\"80\" "
        << "placeholder=\"ACGTACGTACGTACGTACGTACGTACGTACGT\"  wrap=\"soft\" autofocus=\"true\">";
     os << tlx::escape_html(query);
@@ -517,15 +518,23 @@ bool make_index(const http::request<http::string_body>& req, std::string& output
     os << "      </form>\n";
     os << "    </p>\n";
 
+    if (query.empty()) {
+        os << "<p>Your query is empty. Try searching for ATAAACTATTCTAGTTTTCCACAGAACGATGGATAATAGTTAGTTTTCCACAACCTGTGGAAAATAAATTAACACTG.";
+    }
+
     if (!query.empty())
     {
         try {
+            double ts1 = tlx::timestamp();
+
             std::vector<cobs::SearchResult> result;
             searcher->search(query, result, threshold * 0.01, limit);
 
+            double ts2 = tlx::timestamp();
+
             size_t query_size = query.size() - 31 + 1;
 
-            os << "<p>Query returned " << result.size() << " results:</p>";
+            os << "<p>Query took " << ts2 - ts1 << " seconds and returned " << result.size() << " results:</p>";
 
             os << "<div style=\"display:table\">";
 
