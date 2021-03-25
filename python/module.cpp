@@ -15,12 +15,20 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/query/classic_search.hpp>
+#include <cobs/util/fs.hpp>
 
 #include <cobs/settings.hpp>
 
 #include <tlx/string.hpp>
 
 /******************************************************************************/
+
+void classic_combine(
+        const std::string& in_dir, const std::string& out_dir, cobs::fs::path& result_file,
+        uint64_t mem_bytes, size_t num_threads, bool keep_temporary)
+{
+    cobs::classic_combine(in_dir, out_dir, result_file, mem_bytes, num_threads, keep_temporary);
+}
 
 void classic_construct(
     const std::string& input, const std::string& out_file,
