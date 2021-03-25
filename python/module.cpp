@@ -25,9 +25,10 @@
 
 void classic_combine(
         const std::string& in_dir, const std::string& out_dir, cobs::fs::path& result_file,
-        uint64_t mem_bytes, size_t num_threads, bool keep_temporary)
+        const cobs::ClassicIndexParameters& index_params)
 {
-    cobs::classic_combine(in_dir, out_dir, result_file, mem_bytes, num_threads, keep_temporary);
+    cobs::classic_combine(in_dir, out_dir, result_file,
+                          index_params.mem_bytes, index_params.num_threads, index_params.keep_temporary);
 }
 
 void classic_construct(
@@ -236,6 +237,25 @@ PYBIND11_MODULE(cobs_index, m) {
     .def_readwrite(
         "keep_temporary", &ClassicIndexParameters::keep_temporary,
         "keep temporary files during construction, default false");
+
+    /**************************************************************************/
+    // classic_combine()
+
+    m.def(
+            "classic_combine", &classic_combine, R"pbdoc(
+
+Combine COBS Classic Indexes of the same signature size.
+
+:param str in_dir: path to the input directory
+:param str out_dir: path to the temporary output directory
+:param file result_file: file object to write the final result to
+:param ClassicIndexParameters index_params: instance of classic index parameter object
+
+        )pbdoc",
+            py::arg("in_dir"),
+            py::arg("out_dir"),
+            py::arg("result_file"),
+            py::arg("index_params") = ClassicIndexParameters();
 
     /**************************************************************************/
     // classic_construct()
