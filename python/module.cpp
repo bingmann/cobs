@@ -255,7 +255,7 @@ Combine COBS Classic Indexes of the same signature size.
             py::arg("in_dir"),
             py::arg("out_dir"),
             py::arg("result_file"),
-            py::arg("index_params") = ClassicIndexParameters();
+            py::arg("index_params") = ClassicIndexParameters());
 
     /**************************************************************************/
     // classic_construct()
