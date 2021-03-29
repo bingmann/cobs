@@ -16,12 +16,20 @@
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/query/classic_search.hpp>
 #include <cobs/util/fs.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 
 #include <cobs/settings.hpp>
 
 #include <tlx/string.hpp>
 
 /******************************************************************************/
+
+uint64_t calc_signature_size(
+        uint64_t num_elements, double num_hashes,
+        double false_positive_rate)
+{
+    return cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
+}
 
 void classic_combine(
         const std::string& in_dir, const std::string& out_dir, cobs::fs::path& result_file,
@@ -237,6 +245,23 @@ PYBIND11_MODULE(cobs_index, m) {
     .def_readwrite(
         "keep_temporary", &ClassicIndexParameters::keep_temporary,
         "keep temporary files during construction, default false");
+
+    /**************************************************************************/
+    // calc_signature_size()
+
+    m.def(
+            "calc_signature_size", &calc_signature_size, R"pbdoc(
+
+Calculate the number of cells in a Bloom filter with k hash functions into which num_elements are inserted such that it has expected given fpr.
+
+:param uint64_t num_elements:
+:param double num_hashes:
+:param double false_positive_rate:
+
+        )pbdoc",
+            py::arg("num_elements"),
+            py::arg("num_hashes"),
+            py::arg("false_positive_rate"));
 
     /**************************************************************************/
     // classic_combine()
