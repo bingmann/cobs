@@ -15,12 +15,29 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/query/classic_search.hpp>
+#include <cobs/util/fs.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 
 #include <cobs/settings.hpp>
 
 #include <tlx/string.hpp>
 
 /******************************************************************************/
+
+uint64_t calc_signature_size(
+        uint64_t num_elements, double num_hashes,
+        double false_positive_rate)
+{
+    return cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
+}
+
+void classic_combine(
+        const std::string& in_dir, const std::string& out_dir, cobs::fs::path& result_file,
+        const cobs::ClassicIndexParameters& index_params)
+{
+    cobs::classic_combine(in_dir, out_dir, result_file,
+                          index_params.mem_bytes, index_params.num_threads, index_params.keep_temporary);
+}
 
 void classic_construct(
     const std::string& input, const std::string& out_file,
@@ -228,6 +245,42 @@ PYBIND11_MODULE(cobs_index, m) {
     .def_readwrite(
         "keep_temporary", &ClassicIndexParameters::keep_temporary,
         "keep temporary files during construction, default false");
+
+    /**************************************************************************/
+    // calc_signature_size()
+
+    m.def(
+            "calc_signature_size", &calc_signature_size, R"pbdoc(
+
+Calculate the number of cells in a Bloom filter with k hash functions into which num_elements are inserted such that it has expected given fpr.
+
+:param uint64_t num_elements:
+:param double num_hashes:
+:param double false_positive_rate:
+
+        )pbdoc",
+            py::arg("num_elements"),
+            py::arg("num_hashes"),
+            py::arg("false_positive_rate"));
+
+    /**************************************************************************/
+    // classic_combine()
+
+    m.def(
+            "classic_combine", &classic_combine, R"pbdoc(
+
+Combine COBS Classic Indexes of the same signature size.
+
+:param str in_dir: path to the input directory
+:param str out_dir: path to the temporary output directory
+:param file result_file: file object to write the final result to
+:param ClassicIndexParameters index_params: instance of classic index parameter object
+
+        )pbdoc",
+            py::arg("in_dir"),
+            py::arg("out_dir"),
+            py::arg("result_file"),
+            py::arg("index_params") = ClassicIndexParameters());
 
     /**************************************************************************/
     // classic_construct()
