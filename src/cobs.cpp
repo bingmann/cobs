@@ -15,6 +15,7 @@
 #include <cobs/query/compact_index/mmap_search_file.hpp>
 #include <cobs/settings.hpp>
 #include <cobs/util/calc_signature_size.hpp>
+#include <cobs/util/fs.hpp>
 #ifdef __linux__
     #include <cobs/query/compact_index/aio_search_file.hpp>
 #endif
@@ -401,6 +402,48 @@ int compact_construct_combine(int argc, char** argv) {
     cp.print_result(std::cerr);
 
     cobs::compact_combine_into_compact(in_dir, out_file, page_size);
+
+    return 0;
+}
+
+int classic_combine(int argc, char** argv) {
+    tlx::CmdlineParser cp;
+
+    cobs::ClassicIndexParameters index_params;
+
+    std::string in_dir;
+    cp.add_param_string(
+            "in-dir", in_dir, "path to the input directory");
+
+    std::string out_dir;
+    cp.add_param_string(
+            "out-dir", out_dir, "path to the output directory");
+
+    std::string out_file;
+    cp.add_param_string(
+            "out-file", out_file, "path to the output file");
+
+    cp.add_bytes(
+            'm', "memory", index_params.mem_bytes,
+            "memory in bytes to use, default: " +
+            tlx::format_iec_units(index_params.mem_bytes));
+
+    cp.add_size_t(
+            'T', "threads", index_params.num_threads,
+            "number of threads to use, default: max cores");
+
+    cp.add_flag(
+            "keep-temporary", index_params.keep_temporary,
+            "keep temporary files during construction");
+
+    if (!cp.sort().process(argc, argv))
+        return -1;
+
+    cp.print_result(std::cerr);
+
+    cobs::fs::path f;
+    cobs::classic_combine(in_dir, out_dir, f, index_params.mem_bytes, index_params.num_threads, index_params.keep_temporary);
+    cobs::fs::rename(f, out_file);
 
     return 0;
 }
@@ -991,6 +1034,10 @@ struct SubTool subtools[] = {
     {
         "compact-construct-combine", &compact_construct_combine, true,
         "combines the classic indices in <in_dir> to form a compact index"
+    },
+    {
+            "classic-combine", &classic_combine, true,
+            "combines the classic indices in <in_dir>"
     },
     {
         "query", &query, true,
