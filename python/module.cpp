@@ -31,14 +31,6 @@ uint64_t calc_signature_size(
     return cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
 }
 
-void classic_combine(
-        const std::string& in_dir, const std::string& out_dir, cobs::fs::path& result_file,
-        const cobs::ClassicIndexParameters& index_params)
-{
-    cobs::classic_combine(in_dir, out_dir, result_file,
-                          index_params.mem_bytes, index_params.num_threads, index_params.keep_temporary);
-}
-
 void classic_construct(
     const std::string& input, const std::string& out_file,
     const cobs::ClassicIndexParameters& index_params,
@@ -107,6 +99,7 @@ PYBIND11_MODULE(cobs_index, m) {
         .. autosummary::
            :toctree: _generated
 
+           calc_signature_size
            classic_construct
            classic_construct_list
            compact_construct
@@ -160,7 +153,13 @@ PYBIND11_MODULE(cobs_index, m) {
     .def_readwrite("term_size", &DocumentEntry::term_size_,
                    "fixed term (term) size or zero")
     .def_readwrite("term_count", &DocumentEntry::term_count_,
-                   "number of terms if fixed size");
+                   "number of terms if fixed size")
+    .def("num_terms",
+         [](DocumentEntry& e, const size_t k) {
+             return e.num_terms(k);
+         },
+         "number of terms",
+         py::arg("k"));
 
     using cobs::DocumentList;
     py::class_<DocumentList>(
@@ -262,25 +261,6 @@ Calculate the number of cells in a Bloom filter with k hash functions into which
             py::arg("num_elements"),
             py::arg("num_hashes"),
             py::arg("false_positive_rate"));
-
-    /**************************************************************************/
-    // classic_combine()
-
-    m.def(
-            "classic_combine", &classic_combine, R"pbdoc(
-
-Combine COBS Classic Indexes of the same signature size.
-
-:param str in_dir: path to the input directory
-:param str out_dir: path to the temporary output directory
-:param file result_file: file object to write the final result to
-:param ClassicIndexParameters index_params: instance of classic index parameter object
-
-        )pbdoc",
-            py::arg("in_dir"),
-            py::arg("out_dir"),
-            py::arg("result_file"),
-            py::arg("index_params") = ClassicIndexParameters());
 
     /**************************************************************************/
     // classic_construct()
