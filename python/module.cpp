@@ -49,6 +49,13 @@ void classic_construct_list(
     cobs::classic_construct(list, out_file, tmp_path, index_params);
 }
 
+void classic_construct_from_documents(
+        const cobs::DocumentList& list, const std::string& out_dir,
+        const cobs::ClassicIndexParameters& index_params)
+{
+    cobs::classic_construct_from_documents(list, out_dir, index_params);
+}
+
 /******************************************************************************/
 
 void compact_construct(
@@ -298,6 +305,20 @@ Construct a COBS Classic Index from a pre-populated DocumentList object.
         py::arg("out_file"),
         py::arg("index_params") = ClassicIndexParameters(),
         py::arg("tmp_path") = "");
+
+    m.def(
+            "classic_construct_from_documents", &classic_construct_from_documents, R"pbdoc(
+
+Construct a COBS Classic Index from a pre-populated DocumentList object.
+
+:param DocumentList input: DocumentList object of documents to index
+:param str out_dir: path to the output directory
+:param ClassicIndexParameters index_params: instance of classic index parameter object
+
+        )pbdoc",
+            py::arg("list"),
+            py::arg("out_dir"),
+            py::arg("index_params") = ClassicIndexParameters());
 
     /**************************************************************************/
     // CompactIndexParameters
