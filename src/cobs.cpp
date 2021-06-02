@@ -441,8 +441,17 @@ int classic_combine(int argc, char** argv) {
 
     cp.print_result(std::cerr);
 
+    cobs::fs::path tmp_path(out_dir);
     cobs::fs::path f;
-    cobs::classic_combine(in_dir, out_dir, f, index_params.mem_bytes, index_params.num_threads, index_params.keep_temporary);
+    size_t i = 1;
+
+    cobs::fs::copy(in_dir, tmp_path / cobs::pad_index(i));
+
+    while(!cobs::classic_combine(tmp_path / cobs::pad_index(i), tmp_path / cobs::pad_index(i + 1),
+                                 f, index_params.mem_bytes, index_params.num_threads,
+                                 index_params.keep_temporary)) {
+        i++;
+    };
     cobs::fs::rename(f, out_file);
 
     return 0;
