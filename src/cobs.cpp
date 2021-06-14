@@ -198,6 +198,11 @@ int classic_construct(int argc, char** argv) {
         "term size (k-mer size), default: "
         + std::to_string(index_params.term_size));
 
+    cp.add_bytes(
+        's', "sig-size", index_params.signature_size,
+        "signature size, default: "
+        + std::to_string(index_params.signature_size));
+
     bool no_canonicalize = false;
     cp.add_flag(
         "no-canonicalize", no_canonicalize,
