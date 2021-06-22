@@ -322,6 +322,7 @@ void classic_combine_streams(
 
         t.active("write");
         ofs.write(out_block.data(), new_row_bytes * this_batch);
+        std::fill(out_block.begin(), out_block.end(), '\0');
     }
     t.stop();
 }
