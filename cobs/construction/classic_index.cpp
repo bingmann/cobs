@@ -247,7 +247,7 @@ void classic_combine_streams(
 
     // read many blocks from each file, interleave them into new block, and
     // write it out
-    std::vector<std::vector<char> > in_blocks(streams.size());
+    std::vector<std::vector<unsigned char> > in_blocks(streams.size());
     for (size_t i = 0; i < streams.size(); ++i) {
         in_blocks[i].resize(row_bytes[i] * batch_size);
     }
@@ -266,7 +266,7 @@ void classic_combine_streams(
         // read data from streams
         for (size_t i = 0; i < streams.size(); ++i) {
             streams[i].read(
-                in_blocks[i].data(), row_bytes[i] * this_batch);
+                    (char*)(in_blocks[i].data()), row_bytes[i] * this_batch);
             LOG << "stream[" << i << "] read " << streams[i].gcount();
             die_unequal(row_bytes[i] * this_batch,
                         static_cast<size_t>(streams[i].gcount()));
