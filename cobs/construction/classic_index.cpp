@@ -322,6 +322,7 @@ void classic_combine_streams(
 
         t.active("write");
         ofs.write(out_block.data(), new_row_bytes * this_batch);
+        std::fill(out_block.begin(), out_block.end(), '\0');
     }
     t.stop();
 }
@@ -567,12 +568,12 @@ void classic_construct(
     fs::path tmp_path, ClassicIndexParameters params)
 {
     die_unless(params.num_hashes != 0);
-    die_unless(params.signature_size == 0);
 
     // estimate signature size by finding number of elements in the largest file
     uint64_t max_doc_size = get_max_file_size(filelist, params.term_size);
-    params.signature_size = calc_signature_size(
-        max_doc_size, params.num_hashes, params.false_positive_rate);
+    if (params.signature_size == 0)
+        params.signature_size = calc_signature_size(
+            max_doc_size, params.num_hashes, params.false_positive_rate);
 
     size_t docsize_roundup = tlx::round_up(filelist.size(), 8);
 

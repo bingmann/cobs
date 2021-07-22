@@ -8,6 +8,9 @@
 #include <fstream>
 #include <algorithm>
 
+#include <fstream>
+#include <algorithm>
+
 #include "test_util.hpp"
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/query/classic_index/mmap_search_file.hpp>
@@ -34,6 +37,26 @@ bool compare_classic_indices(const std::string& filename1, const std::string& fi
 
     std::istreambuf_iterator<char> begin1(ifs1);
     std::istreambuf_iterator<char> begin2(ifs2);
+  
+    return std::equal(begin1,std::istreambuf_iterator<char>(),begin2); //Second argument is end-of-range iterator
+}
+
+// Compare two files. Return true if the contents of both files are the same.
+bool compare_files(const std::string& filename1, const std::string& filename2)
+{
+    std::ifstream file1(filename1, std::ifstream::ate | std::ifstream::binary); //open file at the end
+    std::ifstream file2(filename2, std::ifstream::ate | std::ifstream::binary); //open file at the end
+    const std::ifstream::pos_type fileSize = file1.tellg();
+
+    if (fileSize != file2.tellg()) {
+        return false; //different file size
+    }
+
+    file1.seekg(0); //rewind
+    file2.seekg(0); //rewind
+
+    std::istreambuf_iterator<char> begin1(file1);
+    std::istreambuf_iterator<char> begin2(file2);
 
     return std::equal(begin1,std::istreambuf_iterator<char>(),begin2); //Second argument is end-of-range iterator
 }
@@ -166,6 +189,52 @@ TEST_F(classic_index_construction, combine) {
             }
         }
     }
+}
+
+TEST_F(classic_index_construction, combined_index_same_as_classic_constructed) {
+    // This test starts with 2 copies of the same randomly generated document.
+    // We build a classic index for each of these two documents.
+    // We then combine these two classic indices into one combined index.
+    // The combined index should be the same as the classic index generated
+    // through `cobs:classic_construct` on these two documents.
+    using cobs::pad_index;
+    fs::create_directories(index_dir);
+    fs::create_directories(index_dir/pad_index(0));
+    fs::create_directories(index_dir/pad_index(1));
+    fs::create_directories(index_dir/pad_index(2));
+
+    // prepare 2 copy of a randomly generated document
+    std::string random_doc_src_string = cobs::random_sequence(1000, 1);
+    auto random_docs = generate_documents_one(random_doc_src_string, 1);
+    generate_test_case(random_docs, "random_", input_dir/pad_index(0));
+    generate_test_case(random_docs, "random_", input_dir/pad_index(1));
+
+    cobs::ClassicIndexParameters index_params;
+    index_params.false_positive_rate = 0.001; // in order to use large signature size
+    index_params.mem_bytes = 80;
+    index_params.num_threads = 1;
+    index_params.continue_ = true;
+
+    // generate a classic index for each document
+    cobs::classic_construct(cobs::DocumentList(input_dir/pad_index(0)),
+                           index_dir/pad_index(0)/(pad_index(0) + ".cobs_classic"),
+                           tmp_path, index_params);
+    cobs::classic_construct(cobs::DocumentList(input_dir/pad_index(1)),
+                           index_dir/pad_index(0)/(pad_index(1) + ".cobs_classic"),
+                           tmp_path, index_params);
+
+    // generate a combined index fro both classic constructed index
+    fs::path combined_index;
+    cobs::classic_combine(index_dir/pad_index(0), index_dir/pad_index(1), combined_index,
+                          80, 1, false);
+
+    // generate a classic index for both docs through classic_construct
+    std::string classic_constructed_index = index_dir/pad_index(2)/(pad_index(0) +
+            ".cobs_classic");
+    cobs::classic_construct(cobs::DocumentList(input_dir), classic_constructed_index,
+            tmp_path, index_params);
+
+    ASSERT_TRUE(compare_files(combined_index.string(), classic_constructed_index));
 }
 
 TEST_F(classic_index_construction, same_documents_combined_into_same_index) {
