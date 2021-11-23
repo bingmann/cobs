@@ -225,7 +225,15 @@ public:
         else if (tlx::ends_with(spath, ".fa") ||
                  tlx::ends_with(spath, ".fa.gz") ||
                  tlx::ends_with(spath, ".fasta") ||
-                 tlx::ends_with(spath, ".fasta.gz")) {
+                 tlx::ends_with(spath, ".fasta.gz") ||
+                 tlx::ends_with(spath, ".fna") ||
+                 tlx::ends_with(spath, ".fna.gz") ||
+                 tlx::ends_with(spath, ".ffn") ||
+                 tlx::ends_with(spath, ".ffn.gz") ||
+                 tlx::ends_with(spath, ".faa") ||
+                 tlx::ends_with(spath, ".faa.gz") ||
+                 tlx::ends_with(spath, ".frn") ||
+                 tlx::ends_with(spath, ".frn.gz")){
             return FileType::Fasta;
         }
         else if (tlx::ends_with(spath, ".fq") ||

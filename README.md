@@ -54,7 +54,7 @@ and optionally run `make test` to check the build.
 
 ## Building an Index
 
-COBS can read FASTA files (`*.fa`, `*.fasta`, `*.fa.gz`, `*.fasta.gz`), FASTQ files (`*.fq`, `*.fastq`, `*.fq.gz.`, `*.fastq.gz`), "Multi-FASTA" and "Multi-FASTQ" files (`*.mfasta`, `*.mfastq`), McCortex files (`*.ctx`), or text files (`*.txt`). 
+COBS can read FASTA files (`*.fa`, `*.fasta`, `*.fna`, `*.ffn`, `*.faa`, `*.frn`, `*.fa.gz`, `*.fasta.gz`, `*.fna.gz`, `*.ffn.gz`, `*.faa.gz`, `*.frn.gz`), FASTQ files (`*.fq`, `*.fastq`, `*.fq.gz.`, `*.fastq.gz`), "Multi-FASTA" and "Multi-FASTQ" files (`*.mfasta`, `*.mfastq`), McCortex files (`*.ctx`), or text files (`*.txt`). 
 See below on [details how they are parsed](#file-types-and-how-they-are-parsed).
 
 You can either recursively scan a directory for all files matching any of these files, or pass a `*.list` file which lists all paths COBS should index.
