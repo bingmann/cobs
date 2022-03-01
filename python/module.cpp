@@ -15,12 +15,21 @@
 #include <cobs/file/classic_index_header.hpp>
 #include <cobs/file/compact_index_header.hpp>
 #include <cobs/query/classic_search.hpp>
+#include <cobs/util/fs.hpp>
+#include <cobs/util/calc_signature_size.hpp>
 
 #include <cobs/settings.hpp>
 
 #include <tlx/string.hpp>
 
 /******************************************************************************/
+
+uint64_t calc_signature_size(
+        uint64_t num_elements, double num_hashes,
+        double false_positive_rate)
+{
+    return cobs::calc_signature_size(num_elements, num_hashes, false_positive_rate);
+}
 
 void classic_construct(
     const std::string& input, const std::string& out_file,
@@ -38,6 +47,13 @@ void classic_construct_list(
     std::string tmp_path)
 {
     cobs::classic_construct(list, out_file, tmp_path, index_params);
+}
+
+void classic_construct_from_documents(
+        const cobs::DocumentList& list, const std::string& out_dir,
+        const cobs::ClassicIndexParameters& index_params)
+{
+    cobs::classic_construct_from_documents(list, out_dir, index_params);
 }
 
 /******************************************************************************/
@@ -90,6 +106,7 @@ PYBIND11_MODULE(cobs_index, m) {
         .. autosummary::
            :toctree: _generated
 
+           calc_signature_size
            classic_construct
            classic_construct_list
            compact_construct
@@ -143,7 +160,13 @@ PYBIND11_MODULE(cobs_index, m) {
     .def_readwrite("term_size", &DocumentEntry::term_size_,
                    "fixed term (term) size or zero")
     .def_readwrite("term_count", &DocumentEntry::term_count_,
-                   "number of terms if fixed size");
+                   "number of terms if fixed size")
+    .def("num_terms",
+         [](DocumentEntry& e, const size_t k) {
+             return e.num_terms(k);
+         },
+         "number of terms",
+         py::arg("k"));
 
     using cobs::DocumentList;
     py::class_<DocumentList>(
@@ -230,6 +253,23 @@ PYBIND11_MODULE(cobs_index, m) {
         "keep temporary files during construction, default false");
 
     /**************************************************************************/
+    // calc_signature_size()
+
+    m.def(
+            "calc_signature_size", &calc_signature_size, R"pbdoc(
+
+Calculate the number of cells in a Bloom filter with k hash functions into which num_elements are inserted such that it has expected given fpr.
+
+:param uint64_t num_elements:
+:param double num_hashes:
+:param double false_positive_rate:
+
+        )pbdoc",
+            py::arg("num_elements"),
+            py::arg("num_hashes"),
+            py::arg("false_positive_rate"));
+
+    /**************************************************************************/
     // classic_construct()
 
     m.def(
@@ -265,6 +305,20 @@ Construct a COBS Classic Index from a pre-populated DocumentList object.
         py::arg("out_file"),
         py::arg("index_params") = ClassicIndexParameters(),
         py::arg("tmp_path") = "");
+
+    m.def(
+            "classic_construct_from_documents", &classic_construct_from_documents, R"pbdoc(
+
+Construct a COBS Classic Index from a pre-populated DocumentList object.
+
+:param DocumentList input: DocumentList object of documents to index
+:param str out_dir: path to the output directory
+:param ClassicIndexParameters index_params: instance of classic index parameter object
+
+        )pbdoc",
+            py::arg("list"),
+            py::arg("out_dir"),
+            py::arg("index_params") = ClassicIndexParameters());
 
     /**************************************************************************/
     // CompactIndexParameters
